@@ -1,10 +1,10 @@
-node-rfc - The nodejs RFC Connector
-===================================
+The nodejs RFC Connector
+========================
 
 Description
 -----------
 
-This nodejs package provides bindings for SAP NetWeawer RFC Library, for a comfortable way of calling ABAP modules from nodejs, via SAP Remote Function Call (RFC) protocol.
+This node module provides bindings for SAP NetWeawer RFC Library, for a comfortable way of calling ABAP modules from nodejs, via SAP Remote Function Call (RFC) protocol.
 
 Platforms & Prerequisites
 -------------------------
@@ -129,6 +129,12 @@ For more examples, check files in the `demo` folder. Maintain your NW test syste
 node demo\demo
 node demo\demo1, 2 ...
 ```
+
+REST API
+--------
+
+More advanced example how to create REST API using node-rfc you may find in [this repository](https://github.com/Adracus/noderfc-restapi).
+
 
 Installation & Documentation
 ----------------------------
