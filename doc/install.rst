@@ -252,3 +252,5 @@ To update GitHub Pages, copy everyhing under ``_build/html`` and overwrite the e
 
   cp -R ~/tmp/html/. .
 
+  touch .nojekyll
+

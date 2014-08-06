@@ -4,7 +4,7 @@ node-rfc - SAP RFC Connector for NodeJS
 =======================================
 
 
-The `node-rfc package <https://github.com/SAP/nodejs-rfc>`_ provides NodeJS
+The `node-rfc package <https://github.com/SAP/node-rfc>`_ provides NodeJS
 bindings for the *SAP NetWeaver RFC Library*,
 for a comfortable way of calling ABAP modules from V8 engine Javascript, via SAP Remote Function Call (RFC) protocol.
 
