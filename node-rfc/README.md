@@ -1,24 +1,30 @@
-node-rfc - The nodejs RFC Connector
-===================================
+The nodejs RFC Connector
+========================
 
-Description
------------
+This node module provides bindings for SAP NetWeawer RFC Library, for a comfortable way of calling ABAP modules from nodejs, via SAP Remote Function Call (RFC) protocol.
 
-This nodejs package provides nodejs bindings for SAP NetWeawer RFC Library, for a comfortable way of calling ABAP modules from nodejs, via SAP Remote Function Call (RFC) protocol. 
+[![NPM](https://nodei.co/npm/through.png?compact=true)](https://nodei.co/npm/node-rfc/)
 
 Platforms & Prerequisites
 -------------------------
 
-The _node-rfc_ has been initially built with nodejs v0.10.26, on Linux 64 bit platform and later enhanced, mostly used and tested on Linux and Windows 64 platforms. 
+The _node-rfc_ has been initially built with nodejs v0.10.26, on Linux 64 bit platform and later enhanced, mostly used and tested on Linux and Windows 64 platforms.
 
-OS X and ARM platforms are currently not supported either, as _SAP NW RFC Library_ is not available for those platforms.
+OS X and ARM platforms are currently not supported, as _SAP NW RFC Library_ is not available for those platforms.
 
 To start using _node-rfc_ you need to obtain _SAP NW RFC Library_ from _SAP Service Marketplace_, following [these instructions](http://sap.github.io/PyRFC/install.html#install-c-connector).
 
 A prerequisite to download is having a **customer or partner account** on _SAP Service Marketplace_ and if you are SAP employee please check SAP OSS note [1037575 - Software download authorizations for SAP employees](http://service.sap.com/sap/support/notes/1037575).
 
-_SAP NW RFC Library_ is fully backwards compatible, supporting all NetWeaver systems, from today, down to release R/3 4.0. 
+_SAP NW RFC Library_ is fully backwards compatible, supporting all NetWeaver systems, from today, down to release R/3 4.0.
 You can therefore always use the newest version released on Service Marketplace and connect to older systems as well.
+
+Documentation
+-------------
+
+For full documentation please refer to [_node-rfc_ documentation](http://sap.github.io/node-rfc), complementing _SAP NW RFC Library_ [programming guide and documentation](http://service.sap.com/rfc-library)
+provided on SAP Service Marketplace.
+
 
 Install
 -------
@@ -29,7 +35,7 @@ Install from npm
 npm install node-rfc
 ```
 
-or clone from the [GitHub repository](https://github.com/SAP/node-rfc.git) to run tests and examples locally
+or clone from the [GitHub repository](https://github.com/SAP/node-rfc.git) to build and run tests and examples locally
 
 ```
 git clone https://github.com/SAP/node-rfc.git
@@ -42,7 +48,7 @@ Getting started
 
 In order to call remote enabled ABAP function module, we need to create a client
 with valid logon credentials, connect to NetWeaver system and then invoke a
-remote enabled ABAP function module from node. The client can be used for one or 
+remote enabled ABAP function module from node. The client can be used for one or
 more subsequent RFC calls.
 
 ```javascript
@@ -106,7 +112,7 @@ client.connect(function(err) {
     RFCDATA1: '1DATA1',
     RFCDATA2: 'DATA222'
   };
-  
+
   var importTable = [importStruct];
 
   client.invoke('STFC_STRUCTURE',
@@ -123,15 +129,16 @@ client.connect(function(err) {
 
 Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method on the client instance.
 
-See files in `demo` folder for more examples.
+For more examples, check files in the `demo` folder. Maintain your NW test system parameters first in the source code, before running those examples.
 
 ```
 node demo\demo
 node demo\demo1, 2 ...
 ```
 
-Installation & Documentation
-----------------------------
+REST API
+--------
 
-For further details on connection parameters, _node-rfc_ installation and usage, please refer to [_node-rfc_ documentation](https://github.wdf.sap.corp/pages/D037732/node-rfc), complementing _SAP NW RFC Library_ [programming guide and documentation](http://service.sap.com/rfc-library) 
-provided on SAP Service Marketplace.
+Example how to create REST APIs using node-rfc, node, express and gulp: https://github.com/Adracus/noderfc-restapi.
+
+
