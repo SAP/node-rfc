@@ -21,7 +21,7 @@ var connParams = {
   passwd: 'testpass',
   ashost: '11.12.13.14',
   sysnr: '00',
-  client: '820'
+  client: '820',
   saprouter: '/H/113.13.52.66/S/1876/G/hjjn7v/K/12.14.17.49/U/'
 };
 
