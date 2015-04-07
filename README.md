@@ -66,7 +66,7 @@ var abapSystem = {
 };
 
 // create new client
-var client = new rfc.Client(abapSystem, true);
+var client = new rfc.Client(abapSystem);
 
 // echo the client NW RFC lib version
 console.log('RFC client lib version: ', client.getVersion());
