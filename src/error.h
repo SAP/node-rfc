@@ -15,15 +15,16 @@
 #ifndef ERROR_H_
 #define ERROR_H_
 
-#include <v8.h>
+//#include <v8.h>
+#include <node.h>
 #include <sapnwrfc.h>
 
 
 using namespace v8;
 
 
-Handle<Value> RfclibError(RFC_ERROR_INFO* errorInfo);
-Handle<Value> AbapError(RFC_ERROR_INFO* errorInfo);
-Handle<Value> wrapError(RFC_ERROR_INFO* errorInfo);
+Local<Object> RfcLibError(RFC_ERROR_INFO* errorInfo);
+Local<Object> AbapError(RFC_ERROR_INFO* errorInfo);
+Local<Value> wrapError(RFC_ERROR_INFO* errorInfo);
 
 #endif

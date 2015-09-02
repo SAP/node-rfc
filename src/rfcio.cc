@@ -12,17 +12,20 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-#include <iostream>
 #include "rfcio.h"
 #include "error.h"
 
 
 using namespace v8;
 
+////////////////////////////////////////////////////////////////////////////////
+// FILL FUNCTIONS (to RFC)
+////////////////////////////////////////////////////////////////////////////////
 
 std::string convertToString(Handle<Value> const &str)
 {
-  v8::HandleScope scope;
+  Isolate* isolate = Isolate::GetCurrent();
+  HandleScope scope(isolate);
   static const std::string emptyString;
 
   v8::String::Utf8Value utf8String(str);
@@ -55,15 +58,17 @@ SAP_UC* fillString(const Handle<Value> &str) {
   return sapuc;
 }
 
-Handle<Value> fillVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP_UC* cName, Handle<Value> value, RFC_TYPE_DESC_HANDLE functionDescHandle) {
-  HandleScope scope;
+Local<Value> fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC* cName, Handle<Value> value, RFC_TYPE_DESC_HANDLE functionDescHandle) {
+  Isolate* isolate = Isolate::GetCurrent();
+  EscapableHandleScope scope(isolate);
   RFC_RC rc = RFC_OK;
   RFC_ERROR_INFO errorInfo;
   RFC_STRUCTURE_HANDLE structHandle;
   RFC_TABLE_HANDLE tableHandle;
   SAP_UC *cValue;
 
-  switch (type) {
+
+  switch (typ) {
     case RFCTYPE_STRUCTURE: {
       rc = RfcGetStructure(functionHandle, cName, &structHandle, &errorInfo);
       if (rc != RFC_OK) {
@@ -82,7 +87,7 @@ Handle<Value> fillVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
         rc = RfcGetFieldDescByName(functionDescHandle, cValue, &fieldDesc, &errorInfo);
         free(cValue);
         if (rc != RFC_OK) {
-          return scope.Close(wrapError(&errorInfo));
+          return scope.Escape(wrapError(&errorInfo));
         }
         fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
       }
@@ -93,7 +98,8 @@ Handle<Value> fillVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
       if (rc != RFC_OK) {
         break;
       }
-      Handle<Array> array = Local<Array>(Array::Cast(*value));
+      //Local<Array> array = Local<Array>(Array::Cast(*value); FIXME
+      Array* array = Array::Cast(*value);
       unsigned int rowCount = array->Length();
 
       for (unsigned int i=0; i < rowCount; i++) {
@@ -117,7 +123,7 @@ Handle<Value> fillVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
           rc = RfcGetFieldDescByName(functionDescHandle, cValue, &fieldDesc, &errorInfo);
           free(cValue);
           if (rc != RFC_OK) {
-            return scope.Close(wrapError(&errorInfo));
+            return scope.Escape(wrapError(&errorInfo));
           }
           fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
         }
@@ -131,7 +137,7 @@ Handle<Value> fillVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
       free(cValue);
       break;
     case RFCTYPE_BYTE: {
-      String::AsciiValue asciiValue(value->ToString());
+      v8::String::Utf8Value asciiValue(value->ToString());
       unsigned int size = asciiValue.length();
       SAP_RAW* byteValue = (SAP_RAW*)malloc(size);
       memcpy(byteValue, reinterpret_cast<SAP_RAW*>(*asciiValue), size);
@@ -140,7 +146,7 @@ Handle<Value> fillVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
       break;
     }
     case RFCTYPE_XSTRING: {
-      String::AsciiValue asciiValue(value->ToString());
+      v8::String::Utf8Value asciiValue(value->ToString());
       unsigned int size = asciiValue.length();
       SAP_RAW* byteValue = (SAP_RAW*)malloc(size);
       memcpy(byteValue, reinterpret_cast<SAP_RAW*>(*asciiValue), size);
@@ -184,19 +190,23 @@ Handle<Value> fillVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
       free(cValue);
       break;
     default:
-      // 'Unknown RFC type %d when filling %s' % (typ, wrapString(cName));
-      Handle<Value> e = Exception::Error(String::New("Unknown RFC type"));
-      return scope.Close(e->ToObject());
+      char cBuf[256];
+      String::Utf8Value s(wrapString(cName));
+      std::string fieldName(*s);
+      sprintf(cBuf, "Unknown RFC type %d when filling %s", typ, fieldName.c_str());
+      Handle<Value> e = Exception::Error(String::NewFromUtf8(isolate, cBuf));
+      return scope.Escape(e->ToObject());
       break;
   }
   if (rc != RFC_OK) {
-    return scope.Close(wrapError(&errorInfo));
+    return scope.Escape(wrapError(&errorInfo));
   }
-  return scope.Close(Null());
+  return Null(isolate);
 }
 
 Handle<Value> fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, Local<Value> name, Local<Value> value) {
-  HandleScope scope;
+  Isolate* isolate = Isolate::GetCurrent();
+  EscapableHandleScope scope(isolate);
   RFC_RC rc;
   RFC_ERROR_INFO errorInfo;
   RFC_PARAMETER_DESC paramDesc;
@@ -204,32 +214,39 @@ Handle<Value> fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle,
   rc = RfcGetParameterDescByName(functionDescHandle, cName, &paramDesc, &errorInfo);
   free(cName);
   if (rc != RFC_OK) {
-    return scope.Close(wrapError(&errorInfo));
+    // invalid parameter name
+    return scope.Escape(wrapError(&errorInfo));
   }
-  return scope.Close(fillVariable(paramDesc.type, functionHandle, paramDesc.name, value, paramDesc.typeDescHandle));
+  return scope.Escape(fillVariable(paramDesc.type, functionHandle, paramDesc.name, value, paramDesc.typeDescHandle));
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// WRAP FUNCTIONS (from RFC)
+////////////////////////////////////////////////////////////////////////////////
+
 Handle<Object> wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, bool rstrip) {
-  HandleScope scope;
+  Isolate* isolate = Isolate::GetCurrent();
+  EscapableHandleScope scope(isolate);
 
   RFC_PARAMETER_DESC paramDesc;
   unsigned int paramCount = 0;
 
   RfcGetParameterCount(functionDescHandle, &paramCount, NULL);
-  Handle<Object> resultObj = Object::New();
+  Local<Object> resultObj = Object::New(isolate);
 
   for (unsigned int i = 0; i < paramCount; i++) {
     RfcGetParameterDescByIndex(functionDescHandle, i, &paramDesc, NULL);
     resultObj->Set(wrapString(paramDesc.name), wrapVariable(paramDesc.type, functionHandle, paramDesc.name, paramDesc.nucLength, paramDesc.typeDescHandle, rstrip));
   }
 
-  return scope.Close(resultObj);
+  return scope.Escape(resultObj);
 }
 
 
 Handle<Value> wrapString(SAP_UC* uc, int length, bool rstrip) {
-  HandleScope scope;
+  Isolate* isolate = Isolate::GetCurrent();
+  EscapableHandleScope scope(isolate);
 
   RFC_RC rc;
   RFC_ERROR_INFO errorInfo;
@@ -238,7 +255,7 @@ Handle<Value> wrapString(SAP_UC* uc, int length, bool rstrip) {
     length = strlenU(uc);
   }
   if (length == 0) {
-    return scope.Close(String::New(""));
+    return scope.Escape(String::NewFromUtf8(isolate, ""));
   }
   unsigned int utf8Size = length * 2;
   char *utf8 = (char*) malloc(utf8Size + 1);
@@ -248,8 +265,7 @@ Handle<Value> wrapString(SAP_UC* uc, int length, bool rstrip) {
   rc = RfcSAPUCToUTF8(uc, length, (RFC_BYTE*) utf8, &utf8Size, &resultLen, &errorInfo);
 
   if (rc != RFC_OK) {
-    // TODO: throw wrapError
-    return scope.Close(String::New("Error"));
+    return scope.Escape(String::NewFromUtf8(isolate, "node-rfc internal error: wrapString"));
   }
 
   if (rstrip && strlen(utf8)) {
@@ -261,11 +277,12 @@ Handle<Value> wrapString(SAP_UC* uc, int length, bool rstrip) {
     utf8[i+1] = '\0';
   }
 
-  return scope.Close(String::New(utf8));
+  return scope.Escape(String::NewFromUtf8(isolate, utf8));
 }
 
 Handle<Value> wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle, bool rstrip) {
-  HandleScope scope;
+  Isolate* isolate = Isolate::GetCurrent();
+  EscapableHandleScope scope(isolate);
 
   RFC_RC rc;
   RFC_ERROR_INFO errorInfo;
@@ -273,32 +290,33 @@ Handle<Value> wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE 
   unsigned int fieldCount;
   rc = RfcGetFieldCount(typeDesc, &fieldCount, &errorInfo);
   if (rc != RFC_OK) {
-    //FIXME: error
+      // FIXME error handling
   }
 
-  Handle<Object> resultObj = Object::New();
+  Local<Object> resultObj = Object::New(isolate);
 
   for (unsigned int i = 0; i < fieldCount; i++) {
     rc = RfcGetFieldDescByIndex(typeDesc, i, &fieldDesc, &errorInfo);
     if (rc != RFC_OK) {
-      // FIXME: error handling
+      // FIXME error handling
     }
     resultObj->Set(wrapString(fieldDesc.name), wrapVariable(fieldDesc.type, structHandle, fieldDesc.name, fieldDesc.nucLength, fieldDesc.typeDescHandle, rstrip));
   }
 
-  return scope.Close(resultObj);
+  return scope.Escape(resultObj);
 }
 
-Handle<Value> wrapVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP_UC* cName, unsigned int cLen, RFC_TYPE_DESC_HANDLE typeDesc, bool rstrip) {
-  HandleScope scope;
+Handle<Value> wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC* cName, unsigned int cLen, RFC_TYPE_DESC_HANDLE typeDesc, bool rstrip) {
+  Isolate* isolate = Isolate::GetCurrent();
+  EscapableHandleScope scope(isolate);
 
-  Handle<Value> resultValue;
+  Local<Value> resultValue;
 
   RFC_RC rc = RFC_OK;
   RFC_ERROR_INFO errorInfo;
   RFC_STRUCTURE_HANDLE structHandle;
 
-  switch(type) {
+  switch(typ) {
     case RFCTYPE_STRUCTURE:
       rc = RfcGetStructure(functionHandle, cName, &structHandle, &errorInfo);
       if (rc != RFC_OK) {
@@ -315,13 +333,13 @@ Handle<Value> wrapVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
       //RFC_FIELD_DESC fieldDesc;
       unsigned int rowCount;
       rc = RfcGetRowCount(tableHandle, &rowCount, &errorInfo);
-      Handle<Array> table = Array::New();
+      Handle<Array> table = Array::New(isolate);
 
       for (unsigned int i=0; i < rowCount; i++) {
         RfcMoveTo(tableHandle, i, NULL);
         structHandle = RfcGetCurrentRow(tableHandle, NULL);
         Handle<Value> row = wrapStructure(typeDesc, structHandle, rstrip);
-        table->Set(Integer::New(i), row);
+        table->Set(Integer::New(isolate, i), row);
       }
 
       resultValue = table;
@@ -367,7 +385,7 @@ Handle<Value> wrapVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
         free(byteValue);
         break;
       }
-      resultValue = String::New(reinterpret_cast<const char*>(byteValue));
+      resultValue = String::NewFromUtf8(isolate, reinterpret_cast<const char*>(byteValue));
       free(byteValue);
       break;
     }
@@ -382,7 +400,7 @@ Handle<Value> wrapVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
         free(byteValue);
         break;
       }
-      resultValue = String::New(reinterpret_cast<const char*>(byteValue));
+      resultValue = String::NewFromUtf8(isolate, reinterpret_cast<const char*>(byteValue));
       free(byteValue);
       break;
     }
@@ -390,7 +408,7 @@ Handle<Value> wrapVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
     case RFCTYPE_FLOAT: {
       RFC_FLOAT floatValue;
       rc = RfcGetFloat(functionHandle, cName, &floatValue, &errorInfo);
-      resultValue = Number::New(floatValue);
+      resultValue = Number::New(isolate, floatValue);
       break;
     }
     case RFCTYPE_INT: {
@@ -399,7 +417,7 @@ Handle<Value> wrapVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
       if (rc != RFC_OK) {
         break;
       }
-      resultValue = Integer::New(intValue);
+      resultValue = Integer::New(isolate, intValue);
       break;
     }
     case RFCTYPE_INT1: {
@@ -408,7 +426,7 @@ Handle<Value> wrapVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
       if (rc != RFC_OK) {
         break;
       }
-      resultValue = Integer::New(int1Value);
+      resultValue = Integer::New(isolate, int1Value);
       break;
     }
     case RFCTYPE_INT2: {
@@ -417,7 +435,7 @@ Handle<Value> wrapVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
       if (rc != RFC_OK) {
         break;
       }
-      resultValue = Integer::New(int2Value);
+      resultValue = Integer::New(isolate, int2Value);
       break;
     }
     case RFCTYPE_DATE: {
@@ -439,13 +457,18 @@ Handle<Value> wrapVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
       break;
     }
     default:
-      resultValue = String::New("FIXME UNKNOWN TYPE");
-      // raise RfcException('Unknown RFC type %d when wrapping %s' % (typ, wrapString(cName)))
+      resultValue = String::NewFromUtf8(isolate, "FIXME UNKNOWN TYPE");
+      char cBuf[256];
+      String::Utf8Value s(wrapString(cName));
+      std::string fieldName(*s);
+      sprintf(cBuf, "Unknown RFC type %d when wrapping %s", typ, fieldName.c_str());
+      Handle<Value> e = Exception::Error(String::NewFromUtf8(isolate, cBuf));
+      return scope.Escape(e->ToObject());
       break;
   }
   if (rc != RFC_OK) {
-    return scope.Close(wrapError(&errorInfo));
+    return scope.Escape(wrapError(&errorInfo));
   }
 
-  return scope.Close(resultValue);
+  return scope.Escape(resultValue);
 }

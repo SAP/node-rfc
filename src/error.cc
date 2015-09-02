@@ -13,62 +13,69 @@
 // language governing permissions and limitations under the License.
 
 #include "error.h"
-#include "wrappers.h"
-
+#include "rfcio.h"
 using namespace v8;
 
 
-Handle<Value> RfclibError(RFC_ERROR_INFO* errorInfo) {
-  HandleScope scope;
-
-  Local<Value> e = Exception::Error(wrapString(errorInfo->message)->ToString());
+Local<Object> RfcLibError(RFC_ERROR_INFO* errorInfo, Isolate* isolate) {
+  Local<Value> e = Exception::Error(wrapString(errorInfo->message)->ToString());;
   Local<Object> errorObj = e->ToObject();
-  errorObj->Set(String::New("code"), Integer::New(errorInfo->code));
-  errorObj->Set(String::New("key"), wrapString(errorInfo->key));
 
-  return scope.Close(errorObj);
+  errorObj->Set(String::NewFromUtf8(isolate, "code"), Integer::New(isolate, errorInfo->code));
+  errorObj->Set(String::NewFromUtf8(isolate, "key"), wrapString(errorInfo->key));
+
+  return errorObj;
 }
 
 
-Handle<Value> AbapError(RFC_ERROR_INFO* errorInfo) {
-  HandleScope scope;
-
+Local<Object> AbapError(RFC_ERROR_INFO* errorInfo, Isolate* isolate) {
   Local<Value> e = Exception::Error(wrapString(errorInfo->message)->ToString());
   Local<Object> errorObj = e->ToObject();
-  errorObj->Set(String::New("code"), Integer::New(errorInfo->code));
-  errorObj->Set(String::New("key"), wrapString(errorInfo->key));
-  errorObj->Set(String::New("message"), wrapString(errorInfo->message));
-  errorObj->Set(String::New("abapMsgClass"), wrapString(errorInfo->abapMsgClass));
-  errorObj->Set(String::New("abapMsgType"), wrapString(errorInfo->abapMsgType));
-  errorObj->Set(String::New("abapMsgNumber"), wrapString(errorInfo->abapMsgNumber));
-  errorObj->Set(String::New("abapMsgV1"), wrapString(errorInfo->abapMsgV1));
-  errorObj->Set(String::New("abapMsgV2"), wrapString(errorInfo->abapMsgV2));
-  errorObj->Set(String::New("abapMsgV3"), wrapString(errorInfo->abapMsgV3));
-  errorObj->Set(String::New("abapMsgV4"), wrapString(errorInfo->abapMsgV4));
-  return scope.Close(errorObj);
+
+  errorObj->Set(String::NewFromUtf8(isolate, "code"), Integer::New(isolate, errorInfo->code));
+  errorObj->Set(String::NewFromUtf8(isolate, "key"), wrapString(errorInfo->key));
+  errorObj->Set(String::NewFromUtf8(isolate, "message"), wrapString(errorInfo->message));
+  errorObj->Set(String::NewFromUtf8(isolate, "abapMsgClass"), wrapString(errorInfo->abapMsgClass));
+  errorObj->Set(String::NewFromUtf8(isolate, "abapMsgType"), wrapString(errorInfo->abapMsgType));
+  errorObj->Set(String::NewFromUtf8(isolate, "abapMsgNumber"), wrapString(errorInfo->abapMsgNumber));
+  errorObj->Set(String::NewFromUtf8(isolate, "abapMsgV1"), wrapString(errorInfo->abapMsgV1));
+  errorObj->Set(String::NewFromUtf8(isolate, "abapMsgV2"), wrapString(errorInfo->abapMsgV2));
+  errorObj->Set(String::NewFromUtf8(isolate, "abapMsgV3"), wrapString(errorInfo->abapMsgV3));
+  errorObj->Set(String::NewFromUtf8(isolate, "abapMsgV4"), wrapString(errorInfo->abapMsgV4));
+
+  return errorObj;
 }
 
-Handle<Value> wrapError(RFC_ERROR_INFO* errorInfo) {
-  HandleScope scope;
-  Handle<Object> errorObj;
-  Handle<Value> e;
+Local<Value> wrapError(RFC_ERROR_INFO* errorInfo) {
+  Isolate* isolate = Isolate::GetCurrent();
+  EscapableHandleScope scope(isolate);
+  Local <Value> e;
+  char cBuf[256];
+
+  //errorInfo->group = OK;
 
   switch (errorInfo->group) {
-    case ABAP_APPLICATION_FAILURE:  // fall throu
-    case ABAP_RUNTIME_FAILURE:
-      return scope.Close(AbapError(errorInfo));
-
-    case COMMUNICATION_FAILURE:  // fall throu
-    case EXTERNAL_RUNTIME_FAILURE:
-      return scope.Close(RfclibError(errorInfo));
-
-    case LOGON_FAILURE:
-      e = Exception::Error(wrapString(errorInfo->message)->ToString());
+    case OK:                              // 0: should never happen
+      e = Exception::Error(String::NewFromUtf8(isolate, "node-rfc internal error: Error handling invoked with the RFC error group OK"));
+      return scope.Escape(e->ToObject());
       break;
 
-    default:
-      return scope.Close(AbapError(errorInfo));
-      //e = Exception::Error(String::New("NODE-RFC-ERROR: Unknown error group"));
+    case LOGON_FAILURE:                   // 3: Error message raised when logon fails
+    case COMMUNICATION_FAILURE:           // 4: Problems with the network connection (or backend broke down and killed the connection)
+    case EXTERNAL_RUNTIME_FAILURE:        // 5: Problems in the RFC runtime of the external program (i.e "this" library)
+      return scope.Escape(RfcLibError(errorInfo, isolate));
+      break;
+
+	case ABAP_APPLICATION_FAILURE:        // 1: ABAP Exception raised in ABAP function modules
+	case ABAP_RUNTIME_FAILURE:            // 2: ABAP Message raised in ABAP function modules or in ABAP runtime of the backend (e.g Kernel)
+	case EXTERNAL_APPLICATION_FAILURE:    // 6: Problems in the external program (e.g in the external server implementation)
+	case EXTERNAL_AUTHORIZATION_FAILURE:  // 7: Problems raised in the authorization check handler provided by the external server implementation
+      return scope.Escape(AbapError(errorInfo, isolate));
+      break;
   }
-  return scope.Close(e->ToObject());
+
+  // unknown error group
+  sprintf(cBuf, "node-rfc internal error: Unknown error group: %u", errorInfo->group);
+  e = Exception::Error(String::NewFromUtf8(isolate, cBuf));
+  return scope.Escape(e->ToObject());
 }

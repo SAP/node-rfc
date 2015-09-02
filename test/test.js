@@ -232,7 +232,9 @@ describe("Error handling", function() {
     wrongClient.connect(function(err) {
       should.exist(err);
       err.should.have.properties({
-        message: "Name or password is incorrect (repeat logon)"
+        message: "Name or password is incorrect (repeat logon)",
+        code: 2,
+        key: 'RFC_LOGON_FAILURE'
       });
       done();
     });

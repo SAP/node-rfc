@@ -129,11 +129,30 @@ client.connect(function(err) {
 
 Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method on the client instance.
 
-For more examples, check files in the `demo` folder. Maintain your NW test system parameters first in the source code, before running those examples.
+For more examples check the unit tests source code. Maintain your NW test system parameters first in the source code, before running those examples.
 
+
+Running the Unit Tests
+----------------------
+
+To run the unit tests, first ensure that you have followed the [Build from Source](http://sap.github.io/node-rfc/install.html#building-from-source) documentation, 
+in order to install all dependencies and successfully build the node-rfc connector. 
+Once you have done that, ensure that [mocha](https://mochajs.org) and [should](https://github.com/shouldjs/should.js) are installed, either as dependencies:
+
+```shell
+npm install
 ```
-node demo\demo
-node demo\demo1, 2 ...
+
+or globally:
+
+```shell
+npm install -g mocha should
+```
+
+Run the tests with:
+
+```shell
+mocha
 ```
 
 REST API
@@ -141,4 +160,34 @@ REST API
 
 Example how to create REST APIs using node-rfc, node, express and gulp: https://github.com/Adracus/noderfc-restapi.
 
+Links
+-----
 
+Nodejs Addons
+
+* Embedders Guide https://developers.google.com/v8/embed
+* nodejs addods docs https://nodejs.org/api/addons.html
+* nodejs addons examples https://github.com/nodejs/node-addon-examples
+* 10 to 12 breaking API changes https://strongloop.com/strongblog/node-js-v0-12-c-apis-breaking
+
+node-gyp
+
+* https://chromium.googlesource.com/external/gyp/+/master/docs/InputFormatReference.md
+
+Classes
+
+* http://izs.me/v8-docs/classv8_1_1Object.html
+* http://v8.paulfryzel.com/docs/master/namespacev8.html
+
+Libuv
+
+* http://nikhilm.github.io/uvbook/index.html
+
+Exceptions
+
+* http://stackoverflow.com/questions/17988639/how-to-create-node-js-error-object-in-native-addon
+
+C++ Strings
+
+* http://stackoverflow.com/questions/347949/how-to-convert-a-stdstring-to-const-char-or-char
+* http://stackoverflow.com/questions/10865957/c-printf-with-stdstring

@@ -21,13 +21,14 @@
 #include <sapnwrfc.h>
 #include "error.h"
 
+
 using namespace v8;
 
 
 std::string convertToString(v8::Handle<v8::Value> const &str);
 SAP_UC* fillString(const Handle<Value> &str);
 Handle<Value> fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, Local<Value> name, Local<Value> value);
-Handle<Value> fillVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP_UC* cName, Handle<Value> value, RFC_TYPE_DESC_HANDLE functionDescHandle);
+Local<Value> fillVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP_UC* cName, Handle<Value> value, RFC_TYPE_DESC_HANDLE functionDescHandle);
 
 Handle<Object> wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, bool rstrip=false);
 Handle<Value> wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle, bool rstrip=false);

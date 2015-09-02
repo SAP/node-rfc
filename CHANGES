@@ -1,8 +1,13 @@
 Change log
 ==========
 
+0.1.5 (2015-09-02)
+------------------
+- nodejs 0.12 api
+- error handling
+
 0.1.4 (2014-08-07)
-----------------
+------------------
 - documentation fix
 - Linux binary tested on Ubuntu 14.04
 

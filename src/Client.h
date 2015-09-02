@@ -15,8 +15,10 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#include <v8.h>
+#include <uv.h>
+//#include <v8.h>
 #include <node.h>
+#include <node_object_wrap.h>
 #include <string>
 #include <sapnwrfc.h>
 
@@ -26,37 +28,40 @@ using namespace v8;
 
 class Client: public node::ObjectWrap {
   public:
-    static void Init(v8::Handle<v8::Object> exports);
+    static void Init(Handle<Object> exports);
 
   private:
-    Client();
+    explicit Client();
     ~Client();
 
-    static Handle<Value> GetVersion(const Arguments& args);
+    static void GetVersion(const FunctionCallbackInfo<Value>& args);
 
-    static Handle<Value> New(const Arguments& args);
-    static Handle<Value> Close(const Arguments& args);
-    static Handle<Value> Reopen(const Arguments& args);
-    static Handle<Value> IsAlive(const Arguments& args);
-    static Handle<Value> ConnectionInfo(const Arguments& args);
-    static Handle<Value> Ping(const Arguments& args);
+    static void New(const FunctionCallbackInfo<Value>& args);
+    static void Close(const FunctionCallbackInfo<Value>& args);
+    static void Reopen(const FunctionCallbackInfo<Value>& args);
+    static void IsAlive(const FunctionCallbackInfo<Value>& args);
+    static void ConnectionInfo(const FunctionCallbackInfo<Value>& args);
+    static void Ping(const FunctionCallbackInfo<Value>& args);
+    static void RunCallback(const FunctionCallbackInfo<Value>& args);
 
-    static Handle<Value> Connect(const Arguments& args);
+    static Persistent<Function> constructor;
+
+    static void Connect(const FunctionCallbackInfo<Value>& args);
     static void ConnectAsync(uv_work_t *req);
     static void ConnectAsyncAfter(uv_work_t *req);;
 
     void LockMutex(void);
     void UnlockMutex(void);
-    static Handle<Value> Invoke(const Arguments& args);
+    static void Invoke(const FunctionCallbackInfo<Value>& args);
     static void InvokeAsync(uv_work_t *req);
     static void InvokeAsyncAfter(uv_work_t *req);;
 
     RFC_CONNECTION_HANDLE connectionHandle;
     RFC_CONNECTION_PARAMETER *connectionParams;
     unsigned int paramSize;
-
     bool rstrip;
     bool alive;
+
     uv_mutex_t invocationMutex;
 };
 
