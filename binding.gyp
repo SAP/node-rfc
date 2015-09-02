@@ -1,6 +1,6 @@
 {
   "variables": {
-    "linux_nwrfcsdk_path": "/usr/sap/nwrfcsdk",
+    "linux_nwrfcsdk_path": "/usr/local/sap/nwrfcsdk",
     "msvs_nwrfcsdk_path": "c:\\nwrfcsdk-64",
     # _todo: http://stackoverflow.com/questions/17023442/referring-to-environment-variables-from-binding-gyp-node-gyp
     # "msvs_nwrfcsdk_path": '! (echo %SAPNWRFC_HOME%)'
@@ -10,7 +10,7 @@
     {
       "target_name": "rfc",
 
-      "sources": [ "src/rfc.cc", "src/error.cc", "src/wrappers.cc", "src/Client.cc" ],
+      "sources": [ "src/rfc.cc", "src/error.cc", "src/rfcio.cc", "src/Client.cc" ],
       "defines": [
         "SAPwithUNICODE",
         "SAPwithTHREADS",

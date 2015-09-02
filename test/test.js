@@ -19,13 +19,16 @@ var rfc = require('./../build/Release/rfc');
 //var rfc = require('node-rfc');
 
 var connParams = {
-  user: 'testuser',
-  passwd: 'testpass',
-  ashost: '11.12.13.14',
+  user: 'DEMO',
+  passwd: 'welcome',
+  ashost: '10.117.24.158',
+  saprouter: '/H/203.13.155.17/S/3299/W/xjkb3d/H/172.19.137.194/H/',
   sysnr: '00',
-  client: '820'
-  saprouter: '/H/113.13.52.66/S/1876/G/hjjn7v/K/12.14.17.49/U/'
+  client: '800',
+  //   trace     : '3',
+  lang: 'EN'
 };
+
 
 describe("Connection", function() {
   var client;
@@ -148,6 +151,32 @@ describe("Connection", function() {
 
 });
 
+describe("More complex RFCs", function() {
+  var client;
+  beforeEach(function(done) {
+    client = new rfc.Client(connParams);
+    client.connect(function() { setTimeout(function() { done(); }, 0); });
+  });
+
+  afterEach(function() {
+    client.close();
+  });
+
+  it('Invoke BAPI_USER_GET_DETAIL', function(done) {
+    client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' },
+      function(err, res) {
+        should.not.exist(err);
+        res.should.be.an.Object;
+        res.should.have.properties(
+          'ADDRESS', 'ACTIVITYGROUPS',
+          'DEFAULTS', 'GROUPS','ISLOCKED', 'LOGONDATA',
+          'PARAMETER','PROFILES', 'RETURN'
+        );
+        done();
+      });
+  });
+});
+
 describe("Error handling", function() {
   var client;
   beforeEach(function(done) {
@@ -204,15 +233,13 @@ describe("Error handling", function() {
       should.exist(err);
       err.should.have.properties({
         message: "Name or password is incorrect (repeat logon)"
-        //code: 2,
-        //key: 'RFC_LOGON_FAILURE'
       });
       done();
     });
     wrongClient.close();
   });
 
-  it('Logon with missing parameters', function(done) {
+  it('Connection parameter missing', function(done) {
     var wrongParams = {};
     for (var attr in connParams) {
       if (connParams.hasOwnProperty(attr)) {
@@ -223,7 +250,7 @@ describe("Error handling", function() {
 
     var wrongClient = new rfc.Client(wrongParams);
     wrongClient.connect(function(err) {
-      should.exist(err);
+      should.exist( err);
       err.should.have.properties({
         message: "Parameter ASHOST, GWHOST or MSHOST is missing.",
         code: 20,

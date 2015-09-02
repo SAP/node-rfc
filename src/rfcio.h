@@ -12,14 +12,14 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-#ifndef WRAPPERS_H
-#define WRAPPERS_H
+#ifndef RFCIO_H
+#define RFCIO_H
 
 #include <string>
 #include <node.h>
 #include <v8.h>
 #include <sapnwrfc.h>
-
+#include "error.h"
 
 using namespace v8;
 
@@ -32,7 +32,6 @@ Handle<Value> fillVariable(RFCTYPE type, RFC_FUNCTION_HANDLE functionHandle, SAP
 Handle<Object> wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, bool rstrip=false);
 Handle<Value> wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle, bool rstrip=false);
 Handle<Value> wrapString(SAP_UC* uc, int length=-1, bool rstrip=false);
-Handle<Value> wrapError(RFC_ERROR_INFO* errorInfo);
 Handle<Value> wrapVariable(RFCTYPE type, RFC_FUNCTION_HANDLE container, SAP_UC* cName, unsigned int cLen, RFC_TYPE_DESC_HANDLE typeDesc, bool rstrip=false);
 
 #endif

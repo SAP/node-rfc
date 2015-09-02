@@ -14,7 +14,7 @@
 
 #include <string>
 #include <iostream>
-#include "wrappers.h"
+#include "rfcio.h"
 #include "Client.h"
 
 
@@ -134,8 +134,8 @@ void Client::ConnectAsyncAfter(uv_work_t* req) {
     }
   } else {
     // connect
-    baton->callback->Call(Context::GetCurrent()->Global(), 0, NULL);
     baton->wrapper->alive = true;
+    baton->callback->Call(Context::GetCurrent()->Global(), 0, NULL);
   }
 
   baton->callback.Dispose();
