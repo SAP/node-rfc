@@ -6,7 +6,7 @@
 *.iml
 *.exp
 *.lib
-atlassian-ide-plugin.xml
-/build
+.deps
+obj.target
 node_modules
 doc/_build
