@@ -44,6 +44,7 @@ Client::~Client() {
 
 void Client::Init(Handle<Object> exports) {
     Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
 
     // Prepare constructor template
     Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate, New);
@@ -66,6 +67,7 @@ void Client::Init(Handle<Object> exports) {
 
 void Client::New(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
 
     if (!args.IsConstructCall()) {
         args.GetReturnValue().Set(isolate->ThrowException(Exception::TypeError(
@@ -128,6 +130,7 @@ void Client::ConnectAsync(uv_work_t* req) {
 
 void Client::ConnectAsyncAfter(uv_work_t* req) {
     Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
 
     ClientBaton* baton = static_cast<ClientBaton*>(req->data);
 
@@ -139,7 +142,7 @@ void Client::ConnectAsyncAfter(uv_work_t* req) {
         localCallback->Call(isolate->GetCurrentContext()->Global(), 1, argv);
 
         if (try_catch.HasCaught()) {
-            FatalException(try_catch);
+            FatalException(isolate, try_catch);
         }
     } 
     else {
@@ -154,6 +157,7 @@ void Client::ConnectAsyncAfter(uv_work_t* req) {
 
 void Client::Connect(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
 
     if (!args[0]->IsFunction()) {
        args.GetReturnValue().Set(isolate->ThrowException(Exception::TypeError(
@@ -211,6 +215,7 @@ void Client::InvokeAsync(uv_work_t* req) {
 
 void Client::InvokeAsyncAfter(uv_work_t* req) {
     Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
 
     InvokeBaton* baton = static_cast<InvokeBaton*>(req->data);
 
@@ -226,7 +231,7 @@ void Client::InvokeAsyncAfter(uv_work_t* req) {
         localCallback->Call(isolate->GetCurrentContext()->Global(), 1, argv);
 
         if (try_catch.HasCaught()) {
-            FatalException(try_catch);
+            FatalException(isolate, try_catch);
         }
     } else {
         argv[1] = wrapResult(baton->functionDescHandle, baton->functionHandle, baton->wrapper->rstrip);
@@ -238,7 +243,7 @@ void Client::InvokeAsyncAfter(uv_work_t* req) {
         localCallback->Call(isolate->GetCurrentContext()->Global(), 2, argv);
 
         if (try_catch.HasCaught()) {
-            FatalException(try_catch);
+            FatalException(isolate, try_catch);
         }
     }
 
@@ -248,6 +253,7 @@ void Client::InvokeAsyncAfter(uv_work_t* req) {
 
 void Client::Invoke(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
 
     if (args.Length() < 3) {
         args.GetReturnValue().Set(isolate->ThrowException(String::NewFromUtf8(isolate, "Please provide function module, parameters and callback as parameters")));
@@ -320,6 +326,7 @@ void Client::Invoke(const FunctionCallbackInfo<Value>& args) {
 
 void Client::Ping(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
     Client *wrapper = Unwrap<Client>(args.This());
 
     RFC_RC rc;
@@ -334,6 +341,7 @@ void Client::Ping(const FunctionCallbackInfo<Value>& args) {
 
 void Client::ConnectionInfo(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
     Client *wrapper = Unwrap<Client>(args.This());
     Local<Object> infoObj = Object::New(isolate);
 
@@ -375,6 +383,7 @@ void Client::ConnectionInfo(const FunctionCallbackInfo<Value>& args) {
 
 void Client::GetVersion(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
     unsigned major, minor, patchLevel;
 
     RfcGetVersion(&major, &minor, &patchLevel);

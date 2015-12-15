@@ -15,7 +15,7 @@
 "use strict";
 
 var should = require("should");
-var rfc = require('./../build/Release/rfc');
+var rfc = require('./../build/Release/rfc.node');
 //var rfc = require('node-rfc');
 
 var connParams = {
@@ -163,6 +163,7 @@ describe("More complex RFCs", function() {
   });
 
   it('Invoke BAPI_USER_GET_DETAIL', function(done) {
+    this.timeout(15000);
     client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' },
       function(err, res) {
         should.not.exist(err);

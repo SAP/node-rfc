@@ -19,6 +19,11 @@ A prerequisite to download is having a **customer or partner account** on _SAP S
 _SAP NW RFC Library_ is fully backwards compatible, supporting all NetWeaver systems, from today, down to release R/3 4.0.
 You can therefore always use the newest version released on Service Marketplace and connect to older systems as well.
 
+Version
+-------
+
+The latest supported nodejs version is in master branch, for older versions check other branches.
+
 Documentation
 -------------
 

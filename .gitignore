@@ -10,3 +10,4 @@
 obj.target
 node_modules
 doc/_build
+.deps
