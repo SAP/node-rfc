@@ -1,4 +1,7 @@
 *.trc
+*.o
+*.o.d
+*.target.mk
 .DS_Store
 *.tmp
 *.log
@@ -11,3 +14,4 @@ obj.target
 node_modules
 doc/_build
 .deps
+*.gypi
