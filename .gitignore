@@ -11,3 +11,14 @@ obj.target
 node_modules
 doc/_build
 .deps
+build/.vs
+build/**.*/*.exp
+build/**.*/*.lib
+build/**.*/*.map
+build/*.vcxproj
+build/*.vcxproj.*
+build/Release/*.pdb
+build/Release/.deps
+build/Release/obj
+build/Release/obj.*
+
