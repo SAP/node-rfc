@@ -15,7 +15,7 @@
 "use strict";
 
 var should = require("should");
-var rfc = require('./../build/win32_x64/rfc-v4.1.2.node');
+var rfc = require('./../build/win32_x64/rfc-v5.3.0.node');
 //var rfc = require('node-rfc');
 
 var connParams = {

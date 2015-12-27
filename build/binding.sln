@@ -1,17 +1,17 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2015
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rfc-v5.1.1", "rfc-v5.1.1.vcxproj", "{4BF0FE92-A9DC-B680-5E42-69CBD866F221}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rfc-v4.0.0", "rfc-v4.0.0.vcxproj", "{C4A4C85A-74ED-58D4-D40D-B2E4CC4976F3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Release|x64 = Release|x64
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4BF0FE92-A9DC-B680-5E42-69CBD866F221}.Debug|x64.ActiveCfg = Debug|x64
-		{4BF0FE92-A9DC-B680-5E42-69CBD866F221}.Debug|x64.Build.0 = Debug|x64
-		{4BF0FE92-A9DC-B680-5E42-69CBD866F221}.Release|x64.ActiveCfg = Release|x64
-		{4BF0FE92-A9DC-B680-5E42-69CBD866F221}.Release|x64.Build.0 = Release|x64
+		{C4A4C85A-74ED-58D4-D40D-B2E4CC4976F3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C4A4C85A-74ED-58D4-D40D-B2E4CC4976F3}.Debug|Win32.Build.0 = Debug|Win32
+		{C4A4C85A-74ED-58D4-D40D-B2E4CC4976F3}.Release|Win32.ActiveCfg = Release|Win32
+		{C4A4C85A-74ED-58D4-D40D-B2E4CC4976F3}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
