@@ -1,4 +1,4 @@
-// Copyright 2014 SAP AG.
+﻿// Copyright 2014 SAP AG.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 "use strict";
 
 var should = require("should");
-var rfc = require('./../build/Release/rfc.node');
+var rfc = require('./../build/win32_x64/rfc-v5.3.0.node');
 //var rfc = require('node-rfc');
 
 var connParams = {

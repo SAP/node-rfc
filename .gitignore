@@ -1,7 +1,4 @@
 *.trc
-*.o
-*.o.d
-*.target.mk
 .DS_Store
 *.tmp
 *.log
@@ -14,4 +11,13 @@ obj.target
 node_modules
 doc/_build
 .deps
-*.gypi
+build/.vs
+build/**.*/*.exp
+build/**.*/*.lib
+build/**.*/*.map
+build/*.vcxproj
+build/*.vcxproj.*
+build/Release/*.pdb
+build/Release/.deps
+build/Release/obj
+build/Release/obj.*
