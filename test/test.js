@@ -15,7 +15,7 @@
 "use strict";
 
 var should = require("should");
-var rfc = require('./../build/win32_x64/rfc-v5.3.0.node');
+var rfc = require('./../build/linux_x64/rfc-v5.3.0.node');
 //var rfc = require('node-rfc');
 
 var connParams = {
@@ -58,6 +58,23 @@ describe("Connection", function() {
   });
   it('isAlive() should return true when connected', function() {
     client.isAlive().should.be.true;
+  });
+
+
+  it('STFC_CONNECTION should work in a loop', function(done) {
+    var count = 10
+    var j = count;
+    for (var i = 0; i < count; i++) {
+      client.invoke('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' },
+        function(err, res) {
+          should.not.exist(err);
+          should.exist(res);
+          res.should.be.an.Object;
+          res.should.have.property('ECHOTEXT');
+          res.ECHOTEXT.should.startWith('Hello SAP!');
+          if (--j === 0) done();
+        });
+    }
   });
 
   it('STFC_CONNECTION should return "Hello SAP!" string', function(done) {
