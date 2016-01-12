@@ -1,7 +1,7 @@
 {
   "variables": {
-    # "linux_nwrfcsdk_path": '$(SAPNWRFC_HOME)',
-      "msvs_nwrfcsdk_path": "c:\\Tools\\nwrfcsdk-32",
+     "linux_nwrfcsdk_path": '$(SAPNWRFC_HOME)',
+    #  "msvs_nwrfcsdk_path": "c:\\Tools\\nwrfcsdk-32",
     # _todo: http://stackoverflow.com/questions/17023442/referring-to-environment-variables-from-binding-gyp-node-gyp
     # "linux_nwrfcsdk_path": "/usr/local/sap/nwrfcsdk",
     # "msvs_nwrfcsdk_path": "! (echo %SAPNWRFC_HOME%)",
