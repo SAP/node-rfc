@@ -3,8 +3,6 @@ The nodejs RFC Connector
 
 This node module provides bindings for SAP NetWeawer RFC Library, for a comfortable way of calling ABAP modules from nodejs, via SAP Remote Function Call (RFC) protocol.
 
-[![NPM](https://nodei.co/npm/node-rfc.png?compact=true)](https://nodei.co/npm/node-rfc/)
-
 Platforms & Prerequisites
 -------------------------
 
@@ -34,13 +32,7 @@ provided on SAP Service Marketplace.
 Install
 -------
 
-Install from npm
-
-```
-npm install node-rfc
-```
-
-or clone from the [GitHub repository](https://github.com/SAP/node-rfc.git) to build and run tests and examples locally
+Clone from the [GitHub repository](https://github.com/SAP/node-rfc.git) to build and run tests and examples locally
 
 ```
 git clone https://github.com/SAP/node-rfc.git
