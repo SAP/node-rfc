@@ -4,9 +4,9 @@ var rfc = null;
 var plattformPath = null;
 
 if (process.platform === "linux" && process.arch === "x64") {
-    plattformPath = './build/linux_x64/rfc';
+    plattformPath = './build/linux_x64/rfc-' + process.version;
 } else if (process.platform === "win32" && process.arch === "x64") {
-    plattformPath = './build/win32_x64/rfc';
+    plattformPath = './build/win32_x64/rfc-' + process.version;
 } else {
     console.log('Platform not supported', process.platform, process.arch);
 }
