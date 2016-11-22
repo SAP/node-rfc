@@ -1,1 +1,0 @@
-cmd_linux_x64/rfc.node := g++ -shared -pthread -rdynamic -m64  -Wl,-soname=rfc.node -o linux_x64/rfc.node -Wl,--start-group Release/obj.target/rfc/src/rfc.o Release/obj.target/rfc/src/error.o Release/obj.target/rfc/src/rfcio.o Release/obj.target/rfc/src/Client.o -Wl,--end-group -L/usr/local/sap/nwrfcsdk/lib -lsapnwrfc -lsapucum

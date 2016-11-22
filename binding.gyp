@@ -1,11 +1,9 @@
 {
   "variables": {
-     "linux_nwrfcsdk_path": '$(SAPNWRFC_HOME)',
-    #  "msvs_nwrfcsdk_path": "c:\\Tools\\nwrfcsdk-32",
-    # _todo: http://stackoverflow.com/questions/17023442/referring-to-environment-variables-from-binding-gyp-node-gyp
-    # "linux_nwrfcsdk_path": "/usr/local/sap/nwrfcsdk",
-    # "msvs_nwrfcsdk_path": "! (echo %SAPNWRFC_HOME%)",
-    "target_name": 'rfc-<!(node -v)'
+	"linux_nwrfcsdk_path": "$(SAPNWRFC_HOME)",
+    "msvs_nwrfcsdk_path": "<!(echo %SAPNWRFC_HOME%)",
+    #"target_name": 'rfc-<!(node -v)'
+    "target_name": 'rfc'
   },
 
   "targets": [
@@ -13,7 +11,6 @@
       "target_name": "<(target_name)",
 
       "sources": [ "src/rfc.cc", "src/error.cc", "src/rfcio.cc", "src/Client.cc" ],
-      # "sources": [ "src/Client12.cc" ],
       "defines": [
         "SAPwithUNICODE",
         "SAPwithTHREADS",
@@ -39,7 +36,8 @@
                     "libraries": ["-L<(linux_nwrfcsdk_path)/lib", "-lsapnwrfc", "-lsapucum"]
                 },
                 "include_dirs": [
-                    "<(linux_nwrfcsdk_path)/include/"
+					"<(linux_nwrfcsdk_path)/include/",
+					"<!(node -e \"require('nan')\")"
                 ],
                 'product_dir' : 'linux_x64'
             }],
@@ -62,7 +60,8 @@
                     [ 'target_arch=="x64"' ,  {'defines':  ['_AMD64_'], 'product_dir': 'win32_x64' }]
                 ],
                 'include_dirs': [
-                    '<(msvs_nwrfcsdk_path)/include'
+                    '<(msvs_nwrfcsdk_path)/include',
+					"<!(node -e \"require('nan')\")"
                 ],
                 'msvs_configuration_attributes': {
                     'OutputDirectory': '$(SolutionDir)$(ConfigurationName)',

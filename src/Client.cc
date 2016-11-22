@@ -16,25 +16,27 @@
 #include "rfcio.h"
 #include "Client.h"
 
+#include <stdio.h>
 
 using namespace v8;
 using namespace node;
 
-Persistent<Function> Client::constructor;
+Nan::Persistent<Function> Client::constructor;
 
 Client::Client() :
     connectionHandle(NULL),
     connectionParams(NULL),
     paramSize(0),
-    alive(false)
-{ uv_mutex_init(&this->invocationMutex); }
+    alive(false) { 
+	uv_sem_init(&this->invocationMutex, 1);
+}
 
 Client::~Client() {
     RFC_ERROR_INFO errorInfo;
     RFC_RC rc = RfcCloseConnection(this->connectionHandle, &errorInfo);
     rc = rc; // FIXME check rc ...
     this->alive = false;
-    uv_mutex_destroy(&this->invocationMutex);
+    uv_sem_destroy(&this->invocationMutex);
     for (unsigned int i = 0; i < this->paramSize; i++) {
         free(const_cast<SAP_UC*>(connectionParams[i].name));
         free(const_cast<SAP_UC*>(connectionParams[i].value));
@@ -42,62 +44,61 @@ Client::~Client() {
     free(connectionParams);
 }
 
-void Client::Init(Handle<Object> exports) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
-
+NAN_MODULE_INIT(Client::Init) {
     // Prepare constructor template
-    Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate, New);
-    tpl->SetClassName(String::NewFromUtf8(isolate, "Client"));
-    tpl->InstanceTemplate()->SetInternalFieldCount(1);
+	Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(New);
+	tpl->SetClassName(Nan::New("Client").ToLocalChecked());
+	tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
     // Prototype
-    NODE_SET_PROTOTYPE_METHOD(tpl, "connect", Connect);
-    NODE_SET_PROTOTYPE_METHOD(tpl, "close", Close);
-    NODE_SET_PROTOTYPE_METHOD(tpl, "reopen", Reopen);
-    NODE_SET_PROTOTYPE_METHOD(tpl, "isAlive", IsAlive);
-    NODE_SET_PROTOTYPE_METHOD(tpl, "invoke", Invoke);
-    NODE_SET_PROTOTYPE_METHOD(tpl, "getVersion", GetVersion);
-    NODE_SET_PROTOTYPE_METHOD(tpl, "connectionInfo", ConnectionInfo);
-    NODE_SET_PROTOTYPE_METHOD(tpl, "ping", Ping);
+	Nan::SetPrototypeMethod(tpl, "connect", Connect);
+    Nan::SetPrototypeMethod(tpl, "close", Close);
+    Nan::SetPrototypeMethod(tpl, "reopen", Reopen);
+    Nan::SetPrototypeMethod(tpl, "isAlive", IsAlive);
+    Nan::SetPrototypeMethod(tpl, "invoke", Invoke);
+    Nan::SetPrototypeMethod(tpl, "getVersion", GetVersion);
+    Nan::SetPrototypeMethod(tpl, "connectionInfo", ConnectionInfo);
+    Nan::SetPrototypeMethod(tpl, "ping", Ping);
 
-    constructor.Reset(isolate, tpl->GetFunction());
-    exports->Set(String::NewFromUtf8(isolate, "Client"), tpl->GetFunction());
+	constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
+	Nan::Set(target, Nan::New("Client").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
 }
 
-void Client::New(const FunctionCallbackInfo<Value>& args) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
-
-    if (!args.IsConstructCall()) {
-        args.GetReturnValue().Set(isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "Use the new operator to create instances of Rfc connection."))));
+NAN_METHOD(Client::New) {
+    if (!info.IsConstructCall()) {
+		Local<Value> e = Nan::TypeError("Use the new operator to create instances of Rfc connection.");
+		Nan::ThrowError(e);
+        info.GetReturnValue().Set(e);
     }   
 
-    if (args.Length() < 1) {
-        args.GetReturnValue().Set(isolate->ThrowException(String::NewFromUtf8(isolate, "Please provide connection parameters as argument")));
+    if (info.Length() < 1) {
+		Local<Value> e = Nan::Error("Please provide connection parameters as argument");
+		Nan::ThrowError(e);
+        info.GetReturnValue().Set(e);
     }
 
-    if (!args[0]->IsObject()) {
-        args.GetReturnValue().Set(isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Connection parameters must be an object"))));
+    if (!info[0]->IsObject()) {
+		Local<Value> e = Nan::TypeError("Connection parameters must be an object");
+		Nan::ThrowError(e);
+        info.GetReturnValue().Set(e);
     }
 
     Client *wrapper = new Client();
-    wrapper->Wrap(args.This());
+    wrapper->Wrap(info.This());
 
-    if (args.Length() > 1) {
-        if (!args[1]->IsBoolean()) {
-            args.GetReturnValue().Set(isolate->ThrowException(Exception::TypeError(
-                String::NewFromUtf8(isolate, "Third parameter for 'rstrip' must be true or false"))));
+    if (info.Length() > 1) {
+        if (!info[1]->IsBoolean()) {
+			Local<Value> e = Nan::TypeError("Third parameter for 'rstrip' must be true or false");
+			Nan::ThrowError(e);
+			info.GetReturnValue().Set(e);
         }
 
-        wrapper->rstrip = args[1]->BooleanValue();
+        wrapper->rstrip = info[1]->BooleanValue();
     } else {
         wrapper->rstrip = true;
     }
 
-    Local<Object> connectionParams = args[0]->ToObject();
+    Local<Object> connectionParams = info[0]->ToObject();
     Local<Array> paramNames = connectionParams->GetPropertyNames();
     wrapper->paramSize = paramNames->Length();
     wrapper->connectionParams = static_cast<RFC_CONNECTION_PARAMETER*>(malloc(wrapper->paramSize * sizeof(RFC_CONNECTION_PARAMETER)));
@@ -110,15 +111,15 @@ void Client::New(const FunctionCallbackInfo<Value>& args) {
         wrapper->connectionParams[i].value = fillString(value);
     }
 
-    args.GetReturnValue().Set(args.This());
+    info.GetReturnValue().Set(info.This());
 }
 
 void Client::LockMutex(void) {
-    uv_mutex_lock(&this->invocationMutex);
+	uv_sem_wait(&this->invocationMutex);
 }
 
 void Client::UnlockMutex(void) {
-    uv_mutex_unlock(&this->invocationMutex);
+    uv_sem_post(&this->invocationMutex);
 }
 
 
@@ -129,80 +130,75 @@ void Client::ConnectAsync(uv_work_t* req) {
 }
 
 void Client::ConnectAsyncAfter(uv_work_t* req) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
+	Nan::HandleScope scope;
 
     ClientBaton* baton = static_cast<ClientBaton*>(req->data);
 
     if (baton->errorInfo.code != RFC_OK) {
         Local<Value> argv[] =  { wrapError(&baton->errorInfo) };
 
-        TryCatch try_catch;
-        Local<Function> localCallback = Local<Function>::New(isolate, baton->callback);
-        localCallback->Call(isolate->GetCurrentContext()->Global(), 1, argv);
+        Nan::TryCatch try_catch;
+        Local<Function> localCallback = Nan::New(baton->callback);
+        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 1, argv);
 
         if (try_catch.HasCaught()) {
-            FatalException(isolate, try_catch);
+            Nan::FatalException(try_catch);
         }
     } 
     else {
         baton->wrapper->alive = true;
-        Local<Function> localCallback = Local<Function>::New(isolate, baton->callback);
-        localCallback->Call(isolate->GetCurrentContext()->Global(), 0, NULL);
+        Local<Function> localCallback = Nan::New(baton->callback);
+		Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 0, NULL);
     }
 
     baton->callback.Reset();
     delete baton;
 }
 
-void Client::Connect(const FunctionCallbackInfo<Value>& args) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
-
-    if (!args[0]->IsFunction()) {
-       args.GetReturnValue().Set(isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "First Argument must be callback function"))));
+NAN_METHOD(Client::Connect) {
+    if (!info[0]->IsFunction()) {
+       Local<Value> e = Nan::TypeError("First Argument must be callback function");
+       Nan::ThrowError(e);
+       info.GetReturnValue().Set(e);
     }
 
-    Client *wrapper = Unwrap<Client>(args.This());
+    Client *wrapper = Unwrap<Client>(info.This());
 
     ClientBaton* baton = new ClientBaton();
     baton->request.data = baton;
     baton->wrapper = wrapper;
 
-    Local<Function> callback = Local <Function>::Cast(args[0]);
-    baton->callback.Reset(isolate, callback);
+    Local<Function> callback = info[0].As<Function>();
+    baton->callback.Reset(callback);
 
     uv_queue_work(uv_default_loop(), &baton->request, ConnectAsync, (uv_after_work_cb)ConnectAsyncAfter);
 
-    args.GetReturnValue().SetUndefined();
+    info.GetReturnValue().SetUndefined();
 }
 
-void Client::Close(const FunctionCallbackInfo<Value>& args) {
-    Client *wrapper = Unwrap<Client>(args.This());
+NAN_METHOD(Client::Close) {
+    Client *wrapper = Unwrap<Client>(info.This());
     RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
     rc = RfcCloseConnection(wrapper->connectionHandle, &errorInfo);
     wrapper->alive = false;
     if (rc != RFC_OK) {
-        args.GetReturnValue().Set(wrapError(&errorInfo));
+        info.GetReturnValue().Set(wrapError(&errorInfo));
+		return;
     }
-
-    args.GetReturnValue().SetUndefined();
+    info.GetReturnValue().SetUndefined();
 }
 
-void Client::Reopen(const FunctionCallbackInfo<Value>& args) {
-    Client *wrapper = Unwrap<Client>(args.This());
+NAN_METHOD(Client::Reopen) {
+    Client *wrapper = Unwrap<Client>(info.This());
 
-    wrapper->Close(args);
-    return wrapper->Connect(args);
+    wrapper->Close(info);
+    wrapper->Connect(info);
 }
 
-void Client::IsAlive(const FunctionCallbackInfo<Value>& args) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
-    Client *wrapper = Unwrap<Client>(args.This());
-    args.GetReturnValue().Set(Boolean::New(isolate, wrapper->alive));
+NAN_METHOD(Client::IsAlive) {
+    Client *wrapper = Unwrap<Client>(info.This());
+    info.GetReturnValue().Set(Nan::New(wrapper->alive));
 }
 
 
@@ -214,36 +210,35 @@ void Client::InvokeAsync(uv_work_t* req) {
 }
 
 void Client::InvokeAsyncAfter(uv_work_t* req) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
+	Nan::HandleScope scope;
 
     InvokeBaton* baton = static_cast<InvokeBaton*>(req->data);
 
-    Local<Value> argv[] = { Null(isolate), Null(isolate) };
+    Local<Value> argv[] = { Nan::Null(), Nan::Null() };
 
     if (baton->errorInfo.code != RFC_OK) {
         argv[0] = wrapError(&baton->errorInfo) ;
         RfcDestroyFunction(baton->functionHandle, NULL);
 
-        TryCatch try_catch;
+        Nan::TryCatch try_catch;
 
-        Local<Function> localCallback = Local<Function>::New(isolate, baton->callback);
-        localCallback->Call(isolate->GetCurrentContext()->Global(), 1, argv);
+        Local<Function> localCallback = Nan::New(baton->callback);
+        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 1, argv);
 
         if (try_catch.HasCaught()) {
-            FatalException(isolate, try_catch);
+            Nan::FatalException(try_catch);
         }
     } else {
         argv[1] = wrapResult(baton->functionDescHandle, baton->functionHandle, baton->wrapper->rstrip);
         RfcDestroyFunction(baton->functionHandle, NULL);
 
-        TryCatch try_catch;
+        Nan::TryCatch try_catch;
 
-        Local<Function> localCallback = Local<Function>::New(isolate, baton->callback);
-        localCallback->Call(isolate->GetCurrentContext()->Global(), 2, argv);
+        Local<Function> localCallback = Nan::New(baton->callback);
+        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 2, argv);
 
         if (try_catch.HasCaught()) {
-            FatalException(isolate, try_catch);
+            Nan::FatalException(try_catch);
         }
     }
 
@@ -251,40 +246,42 @@ void Client::InvokeAsyncAfter(uv_work_t* req) {
     delete baton;
 }
 
-void Client::Invoke(const FunctionCallbackInfo<Value>& args) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
+NAN_METHOD(Client::Invoke) {
+    if (info.Length() < 3) {
+        Local<Value> e = Nan::Error("Please provide function module, parameters and callback as parameters");
+        Nan::ThrowError(e);
+        info.GetReturnValue().Set(e);
+        return;
+    }
+    if (!info[0]->IsString()) {
+        Local<Value> e = Nan::TypeError("First parameter (rfc function name) must be an string");
+        Nan::ThrowError(e);
+        info.GetReturnValue().Set(e);
+        return;
+    }
+    if (!info[1]->IsObject()) {
+        Local<Value> e = Nan::TypeError("Second parameter (rfc function arguments) must be an object");
+        Nan::ThrowError(e);
+        info.GetReturnValue().Set(e);
+        return;
+    }
+    if (!info[2]->IsFunction()) {
+        Local<Value> e = Nan::TypeError("Third Argument must be callback function");
+        Nan::ThrowError(e);
+        info.GetReturnValue().Set(e);
+        return;
+    }
 
-    if (args.Length() < 3) {
-        args.GetReturnValue().Set(isolate->ThrowException(String::NewFromUtf8(isolate, "Please provide function module, parameters and callback as parameters")));
-        return;
-    }
-    if (!args[0]->IsString()) {
-        args.GetReturnValue().Set(isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "First parameter (rfc function name) must be an string"))));
-        return;
-    }
-    if (!args[1]->IsObject()) {
-        args.GetReturnValue().Set(isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "Second parameter (rfc function arguments) must be an object"))));
-        return;
-    }
-    if (!args[2]->IsFunction()) {
-        args.GetReturnValue().Set(isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "Third Argument must be callback function"))));
-        return;
-    }
-
-    Client *wrapper = Unwrap<Client>(args.This());
+    Client *wrapper = Unwrap<Client>(info.This());
 
     InvokeBaton* baton = new InvokeBaton();
     baton->request.data = baton;
     baton->wrapper = wrapper;
-    Local<Function> callback = Local <Function>::Cast(args[2]);
-    baton->callback.Reset(isolate, callback);   // baton->callback = Persistent<Function>::New(callback);
+    Local<Function> callback = info[2].As<Function>();
+    baton->callback.Reset(callback);
 
-    Handle<Value> argv[2] = { Null(isolate), Null(isolate) };
-    SAP_UC *funcName = fillString(args[0]);
+    Handle<Value> argv[2] = { Nan::Null(), Nan::Null() };
+    SAP_UC *funcName = fillString(info[0]);
 
     baton->wrapper->LockMutex();
     baton->functionDescHandle = RfcGetFunctionDesc(wrapper->connectionHandle, funcName, &baton->errorInfo);
@@ -292,14 +289,14 @@ void Client::Invoke(const FunctionCallbackInfo<Value>& args) {
     if (baton->functionDescHandle == NULL) {
         // ABAP function module not found
         argv[0] = wrapError(&baton->errorInfo);
-        callback->Call(isolate->GetCurrentContext()->Global(), 1, argv);
+        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), callback, 1, argv);
         delete baton;
-        args.GetReturnValue().SetUndefined();
+        info.GetReturnValue().SetUndefined();
     } else {
 
         baton->functionHandle = RfcCreateFunction(baton->functionDescHandle, &baton->errorInfo);
 
-        Local<Object> params = args[1]->ToObject();
+        Local<Object> params = info[1]->ToObject();
         Local<Array> paramNames = params->GetPropertyNames();
         unsigned int paramSize = paramNames->Length();
 
@@ -309,41 +306,40 @@ void Client::Invoke(const FunctionCallbackInfo<Value>& args) {
             argv[0] = fillFunctionParameter(baton->functionDescHandle, baton->functionHandle, name, value);
             if (!argv[0]->IsNull()) {
                 // Invalid parameter name
-                Local<Function> localCallback = Local<Function>::New(isolate, baton->callback);
-                localCallback->Call(isolate->GetCurrentContext()->Global(), 1, argv);
+                Local<Function> localCallback = Nan::New(baton->callback);
+				printf ("Calling");
+                Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 1, argv);
+				printf ("Called");
                 delete baton;
-                args.GetReturnValue().SetUndefined();
+                info.GetReturnValue().SetUndefined();
                 return; // skip RFC invoke
             }
         }
 
         uv_queue_work(uv_default_loop(), &baton->request, InvokeAsync, (uv_after_work_cb)InvokeAsyncAfter);
 
-        args.GetReturnValue().SetUndefined();
+        info.GetReturnValue().SetUndefined();
     }
 }
 
 
-void Client::Ping(const FunctionCallbackInfo<Value>& args) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
-    Client *wrapper = Unwrap<Client>(args.This());
+
+NAN_METHOD(Client::Ping) {
+    Client *wrapper = Unwrap<Client>(info.This());
 
     RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
     rc = RfcPing(wrapper->connectionHandle, &errorInfo);
     if (rc != RFC_OK) {
-        args.GetReturnValue().Set(False(isolate));
+        info.GetReturnValue().Set(Nan::False());
     } else {
-        args.GetReturnValue().Set(True(isolate));
+        info.GetReturnValue().Set(Nan::True());
     }
 }
 
-void Client::ConnectionInfo(const FunctionCallbackInfo<Value>& args) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
-    Client *wrapper = Unwrap<Client>(args.This());
-    Local<Object> infoObj = Object::New(isolate);
+NAN_METHOD(Client::ConnectionInfo) {
+    Client *wrapper = Unwrap<Client>(info.This());
+    Local<Object> infoObj = Nan::New<Object>();
 
     RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
@@ -352,47 +348,45 @@ void Client::ConnectionInfo(const FunctionCallbackInfo<Value>& args) {
     rc = RfcGetConnectionAttributes(wrapper->connectionHandle, &connInfo, &errorInfo);
 
     if (rc != RFC_OK) {
-        args.GetReturnValue().Set(wrapError(&errorInfo));
+        info.GetReturnValue().Set(wrapError(&errorInfo));
     }
 
-    infoObj->Set(String::NewFromUtf8(isolate, "dest"), wrapString(connInfo.dest, 64));
-    infoObj->Set(String::NewFromUtf8(isolate, "host"), wrapString(connInfo.host, 100));
-    infoObj->Set(String::NewFromUtf8(isolate, "partnerHost"), wrapString(connInfo.partnerHost, 100));
-    infoObj->Set(String::NewFromUtf8(isolate, "sysNumber"), wrapString(connInfo.sysNumber, 2));
-    infoObj->Set(String::NewFromUtf8(isolate, "sysId"), wrapString(connInfo.sysId, 8));
-    infoObj->Set(String::NewFromUtf8(isolate, "client"), wrapString(connInfo.client, 3));
-    infoObj->Set(String::NewFromUtf8(isolate, "user"), wrapString(connInfo.user, 8));
-    infoObj->Set(String::NewFromUtf8(isolate, "language"), wrapString(connInfo.language, 2));
-    infoObj->Set(String::NewFromUtf8(isolate, "trace"), wrapString(connInfo.trace, 1));
-    infoObj->Set(String::NewFromUtf8(isolate, "isoLanguage"), wrapString(connInfo.isoLanguage, 2));
-    infoObj->Set(String::NewFromUtf8(isolate, "codepage"), wrapString(connInfo.codepage, 4));
-    infoObj->Set(String::NewFromUtf8(isolate, "partnerCodepage"), wrapString(connInfo.partnerCodepage, 4));
-    infoObj->Set(String::NewFromUtf8(isolate, "rfcRole"), wrapString(connInfo.rfcRole, 1));
-    infoObj->Set(String::NewFromUtf8(isolate, "type"), wrapString(connInfo.type, 1));
-    infoObj->Set(String::NewFromUtf8(isolate, "partnerType"), wrapString(connInfo.partnerType, 1));
-    infoObj->Set(String::NewFromUtf8(isolate, "rel"), wrapString(connInfo.rel, 4));
-    infoObj->Set(String::NewFromUtf8(isolate, "partnerRel"), wrapString(connInfo.partnerRel, 4));
-    infoObj->Set(String::NewFromUtf8(isolate, "kernelRel"), wrapString(connInfo.kernelRel, 4));
-    infoObj->Set(String::NewFromUtf8(isolate, "cpicConvId"), wrapString(connInfo.cpicConvId, 8));
-    infoObj->Set(String::NewFromUtf8(isolate, "progName"), wrapString(connInfo.progName, 128));
-    infoObj->Set(String::NewFromUtf8(isolate, "partnerBytesPerChar"), wrapString(connInfo.partnerBytesPerChar, 1));
-    infoObj->Set(String::NewFromUtf8(isolate, "reserved"), wrapString(connInfo.reserved, 84));
+	Nan::Set(infoObj, Nan::New("dest").ToLocalChecked(),					wrapString(connInfo.dest, 64));
+    Nan::Set(infoObj, Nan::New("host").ToLocalChecked(),					wrapString(connInfo.host, 100));
+    Nan::Set(infoObj, Nan::New("partnerHost").ToLocalChecked(), 			wrapString(connInfo.partnerHost, 100));
+    Nan::Set(infoObj, Nan::New("sysNumber").ToLocalChecked(), 				wrapString(connInfo.sysNumber, 2));
+    Nan::Set(infoObj, Nan::New("sysId").ToLocalChecked(),					wrapString(connInfo.sysId, 8));
+    Nan::Set(infoObj, Nan::New("client").ToLocalChecked(),					wrapString(connInfo.client, 3));
+    Nan::Set(infoObj, Nan::New("user").ToLocalChecked(),					wrapString(connInfo.user, 8));
+    Nan::Set(infoObj, Nan::New("language").ToLocalChecked(), 				wrapString(connInfo.language, 2));
+    Nan::Set(infoObj, Nan::New("trace").ToLocalChecked(),					wrapString(connInfo.trace, 1));
+    Nan::Set(infoObj, Nan::New("isoLanguage").ToLocalChecked(), 			wrapString(connInfo.isoLanguage, 2));
+    Nan::Set(infoObj, Nan::New("codepage").ToLocalChecked(), 				wrapString(connInfo.codepage, 4));
+    Nan::Set(infoObj, Nan::New("partnerCodepage").ToLocalChecked(), 		wrapString(connInfo.partnerCodepage, 4));
+    Nan::Set(infoObj, Nan::New("rfcRole").ToLocalChecked(), 				wrapString(connInfo.rfcRole, 1));
+    Nan::Set(infoObj, Nan::New("type").ToLocalChecked(),					wrapString(connInfo.type, 1));
+    Nan::Set(infoObj, Nan::New("partnerType").ToLocalChecked(), 			wrapString(connInfo.partnerType, 1));
+    Nan::Set(infoObj, Nan::New("rel").ToLocalChecked(),						wrapString(connInfo.rel, 4));
+    Nan::Set(infoObj, Nan::New("partnerRel").ToLocalChecked(), 				wrapString(connInfo.partnerRel, 4));
+    Nan::Set(infoObj, Nan::New("kernelRel").ToLocalChecked(), 				wrapString(connInfo.kernelRel, 4));
+    Nan::Set(infoObj, Nan::New("cpicConvId").ToLocalChecked(), 				wrapString(connInfo.cpicConvId, 8));
+    Nan::Set(infoObj, Nan::New("progName").ToLocalChecked(), 				wrapString(connInfo.progName, 128));
+    Nan::Set(infoObj, Nan::New("partnerBytesPerChar").ToLocalChecked(), 	wrapString(connInfo.partnerBytesPerChar, 1));
+    Nan::Set(infoObj, Nan::New("reserved").ToLocalChecked(), 				wrapString(connInfo.reserved, 84));
 
-    args.GetReturnValue().Set(infoObj);
+    info.GetReturnValue().Set(infoObj);
 }
 
-void Client::GetVersion(const FunctionCallbackInfo<Value>& args) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
+NAN_METHOD(Client::GetVersion) {
     unsigned major, minor, patchLevel;
 
     RfcGetVersion(&major, &minor, &patchLevel);
-    Local<Array> version = Array::New(isolate, 3);
+    Local<Array> version = Nan::New<Array>(3);
 
-    version->Set(Integer::New(isolate, 0), Integer::New(isolate, major));
-    version->Set(Integer::New(isolate, 1), Integer::New(isolate, minor));
-    version->Set(Integer::New(isolate, 2), Integer::New(isolate, patchLevel));
+	Nan::Set(version, Nan::New(0), Nan::New(major));
+    Nan::Set(version, Nan::New(1), Nan::New(minor));
+    Nan::Set(version, Nan::New(2), Nan::New(patchLevel));
 
-    args.GetReturnValue().Set(version);
+    info.GetReturnValue().Set(version);
 }
 

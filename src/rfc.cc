@@ -12,18 +12,11 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-#define RFC_NODE_EXTENSION
-
-// #include <v8.h>
-#include <node.h>
+#include <nan.h>
 #include "Client.h"
 
-
-using namespace v8;
-
-
-void InitAll(Handle<Object> exports) {
-  Client::Init(exports);
+NAN_MODULE_INIT(InitAll) {
+  Client::Init(target);
 }
 
 NODE_MODULE(rfc, InitAll)

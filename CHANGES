@@ -1,6 +1,13 @@
 Change log
 ==========
 
+0.1.6 (2016-11-22)
+------------------
+- NAN for easier nodejs release independent development
+- Fix issue 19, nodejs 6 support
+- Fix issue 11, locking on Windows, by replacing the mutex with semaphore
+- Fix issue 17, avoid binding.gyp manual editing on Windows
+
 0.1.5 (2015-09-02)
 ------------------
 - nodejs 0.12 api

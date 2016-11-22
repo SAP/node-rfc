@@ -21,38 +21,39 @@
 #include <node_object_wrap.h>
 #include <string>
 #include <sapnwrfc.h>
+#include <nan.h>
 
 
 using namespace v8;
 
 
-class Client: public node::ObjectWrap {
+class Client: public Nan::ObjectWrap {
   public:
-    static void Init(Handle<Object> exports);
+    static NAN_MODULE_INIT(Init);
 
   private:
     explicit Client();
     ~Client();
 
-    static void GetVersion(const FunctionCallbackInfo<Value>& args);
+    static NAN_METHOD(GetVersion);
 
-    static void New(const FunctionCallbackInfo<Value>& args);
-    static void Close(const FunctionCallbackInfo<Value>& args);
-    static void Reopen(const FunctionCallbackInfo<Value>& args);
-    static void IsAlive(const FunctionCallbackInfo<Value>& args);
-    static void ConnectionInfo(const FunctionCallbackInfo<Value>& args);
-    static void Ping(const FunctionCallbackInfo<Value>& args);
-    static void RunCallback(const FunctionCallbackInfo<Value>& args);
+    static NAN_METHOD(New);
+	static NAN_METHOD(Close);
+	static NAN_METHOD(Reopen);
+    static NAN_METHOD(IsAlive);
+    static NAN_METHOD(ConnectionInfo);
+    static NAN_METHOD(Ping);
+    static NAN_METHOD(RunCallback);
 
-    static Persistent<Function> constructor;
+    static Nan::Persistent<Function> constructor;
 
-    static void Connect(const FunctionCallbackInfo<Value>& args);
+	static NAN_METHOD(Connect);
     static void ConnectAsync(uv_work_t *req);
     static void ConnectAsyncAfter(uv_work_t *req);;
 
     void LockMutex(void);
     void UnlockMutex(void);
-    static void Invoke(const FunctionCallbackInfo<Value>& args);
+    static NAN_METHOD(Invoke);
     static void InvokeAsync(uv_work_t *req);
     static void InvokeAsyncAfter(uv_work_t *req);;
 
@@ -62,13 +63,13 @@ class Client: public node::ObjectWrap {
     bool rstrip;
     bool alive;
 
-    uv_mutex_t invocationMutex;
+	uv_sem_t invocationMutex;
 };
 
 
 struct ClientBaton {
   uv_work_t request;
-  Persistent<Function> callback;
+	Nan::Persistent<Function> callback;
 
   RFC_ERROR_INFO errorInfo;
   Client *wrapper;
@@ -76,7 +77,7 @@ struct ClientBaton {
 
 struct InvokeBaton {
   uv_work_t request;
-  Persistent<Function> callback;
+	Nan::Persistent<Function> callback;
 
   RFC_FUNCTION_HANDLE functionHandle;
   RFC_FUNCTION_DESC_HANDLE functionDescHandle;

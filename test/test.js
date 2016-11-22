@@ -15,20 +15,35 @@
 "use strict";
 
 var should = require("should");
-var rfc = require('./../build/linux_x64/rfc-v5.3.0.node');
-//var rfc = require('node-rfc');
+var rfc = require('./../build/Release/rfc.node');
+// var rfc = require('./../build/linux_x64/rfc.node');
+// var rfc = require('./../build/win32_x64/rfc.node');
+// var rfc = require('node-rfc');
+// var SegfaultHandler = require('segfault-handler');
+
+//SegfaultHandler.registerHandler("crash.log")
+
+
+// var connParams = {
+//  user: 'DEMO',
+//  passwd: 'welcome',
+//  ashost: '10.117.24.158',
+//  saprouter: '/H/203.13.155.17/S/3299/W/xjkb3d/H/172.19.137.194/H/',
+//  sysnr: '00',
+//  client: '800',
+//  //   trace     : '3',
+//  lang: 'EN'
+//};
 
 var connParams = {
-  user: 'DEMO',
+  user: 'DEMO    ',
   passwd: 'welcome',
-  ashost: '10.117.24.158',
-  saprouter: '/H/203.13.155.17/S/3299/W/xjkb3d/H/172.19.137.194/H/',
+  ashost: 'coe-he-66',
   sysnr: '00',
-  client: '800',
-  //   trace     : '3',
-  lang: 'EN'
+  client: '620',
+  trace: '3',
+  lang: 'EN'	
 };
-
 
 describe("Connection", function() {
   var client;
@@ -61,21 +76,43 @@ describe("Connection", function() {
   });
 
 
-  it('STFC_CONNECTION should work in a loop', function(done) {
-    var count = 10
+  it('STFC_CONNECTION should work in parallel', function(done) {
+    var count = 5; //10
     var j = count;
     for (var i = 0; i < count; i++) {
-      client.invoke('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' },
+      client.invoke('STFC_CONNECTION', { REQUTEXT: 'Hello SAP! ' + i },
         function(err, res) {
           should.not.exist(err);
           should.exist(res);
           res.should.be.an.Object;
           res.should.have.property('ECHOTEXT');
           res.ECHOTEXT.should.startWith('Hello SAP!');
-          if (--j === 0) done();
+          if (--j === 0)
+						done();
         });
     }
   });
+
+	it('STFC_CONNECTION should run sequentially', function(done) {
+		var iterations = 10;
+		var rec = function(depth) {
+			if (depth == iterations) {
+				done();
+				return;
+			}
+      client.invoke('STFC_CONNECTION', { REQUTEXT: 'Hello SAP! ' + depth },
+        function(err, res) {
+          should.not.exist(err);
+          should.exist(res);
+          res.should.be.an.Object;
+          res.should.have.property('ECHOTEXT');
+          res.ECHOTEXT.should.startWith('Hello SAP! ' + depth);
+					rec(depth+1);
+        });
+		}
+		rec(0);
+	});
+
 
   it('STFC_CONNECTION should return "Hello SAP!" string', function(done) {
     client.invoke('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' },
@@ -272,7 +309,7 @@ describe("Error handling", function() {
     wrongClient.connect(function(err) {
       should.exist( err);
       err.should.have.properties({
-        message: "Parameter ASHOST, GWHOST or MSHOST is missing.",
+        message: "Parameter ASHOST, GWHOST, MSHOST or SERVER_PORT is missing.",
         code: 20,
         key: 'RFC_INVALID_PARAMETER'
       });

@@ -1,51 +1,46 @@
 {
   "name": "node-rfc",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "nodejs bindings for SAP NW RFC Library",
   "main": "index.js",
   "directories": {
     "doc": "doc",
     "test": "test"
   },
-
   "dependencies": {
+    "nan": "^2.4.0"
   },
-
   "devDependencies": {
-    "node-gyp": "^2.0.2",
-    "mocha": "^2.3.0",
-    "should": "^7.1.0"
+    "mocha": "^3.1.2",
+    "node-gyp": "^3.4.0",
+    "should": "^11.1.1"
   },
-
   "scripts": {
     "test": "mocha",
-    "install": "node-gyp rebuild"
+    "install": "node-gyp configure build"
   },
-
   "engines": {
-    "node": ">= 0.12.x"
+    "node": ">= 4"
   },
-
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SAP/node-rfc.git"
   },
-
   "keywords": [
-    "sap", "rfc", "rfc sdk", "node", "nodejs"
+    "sap",
+    "rfc",
+    "rfc sdk",
+    "node",
+    "nodejs"
   ],
-
   "author": {
     "name": "Srdjan Boskovic",
     "email": "srdjan.boskovic@sap.com"
   },
-
   "license": "Apache-2.0",
-
   "gypfile": true,
   "bugs": {
     "url": "https://github.com/SAP/node-rfc/issues"
   },
-
   "homepage": "https://github.com/SAP/node-rfc#readme"
 }

@@ -6,16 +6,16 @@ This node module provides bindings for SAP NetWeawer RFC Library, for a comforta
 Platforms & Prerequisites
 -------------------------
 
-The _node-rfc_ has been initially built with nodejs v0.10.26, on Linux 64 bit platform and later enhanced, mostly used and tested on Linux and Windows 64 platforms.
+Combiled binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows and Linux platforms.
 
 OS X and ARM platforms are currently not supported, as _SAP NW RFC Library_ is not available for those platforms.
 
-To start using _node-rfc_ you need to obtain _SAP NW RFC Library_ from _SAP Service Marketplace_, following [these instructions](http://sap.github.io/PyRFC/install.html#install-c-connector).
+To start using _node-rfc_ you need to obtain the _SAP NW RFC Library_ from the _SAP Service Marketplace_ [Software Download Center](https://support.sap.com/swdc), 
+following [these instructions](http://sap.github.io/node-rfc/install.html#sap-nw-rfc-library-installation).
 
-A prerequisite to download is having a **customer or partner account** on _SAP Service Marketplace_ and if you are SAP employee please check SAP OSS note [1037575 - Software download authorizations for SAP employees](http://service.sap.com/sap/support/notes/1037575).
+A prerequisite to download is having a **customer or partner account** on _SAP Service Marketplace_ and if you are SAP employee check SAP OSS note [1037575 - Software download authorizations for SAP employees](http://service.sap.com/sap/support/notes/1037575).
 
-_SAP NW RFC Library_ is fully backwards compatible, supporting all NetWeaver systems, from today, down to release R/3 4.0.
-You can therefore always use the newest version released on Service Marketplace and connect to older systems as well.
+_SAP NW RFC Library_ is fully backwards compatible, supporting all NetWeaver systems, from today, down to release R/3 4.0. You can use the newest version released on Service Marketplace and connect to older systems as well.
 
 Version
 -------
@@ -28,17 +28,35 @@ Documentation
 For full documentation please refer to [_node-rfc_ documentation](http://sap.github.io/node-rfc), complementing _SAP NW RFC Library_ [programming guide and documentation](http://service.sap.com/rfc-library)
 provided on SAP Service Marketplace.
 
+Useful links:
+
+* https://service.sap.com/connectors
+
+* https://wiki.scn.sap.com/wiki/display/ABAPConn/ABAP+Connectivity+-+RFC
+
+* [SAP HANA Cloud Connector](https://help.hana.ondemand.com/help/frameset.htm?e6c7616abb5710148cfcf3e75d96d596.html)
+
+Developer resources:
+
+* https://github.com/nodejs/node-gyp 
+* [Google V8 Wiki](https://github.com/v8/v8/wiki) and [V8 Namespace Reference](http://v8.paulfryzel.com/docs/master/namespacev8.html)
+* [Google V8 Embedders Guide](https://github.com/v8/v8/wiki/Embedder's%20Guide)
+* nodejs addons [docs and examples](https://nodejs.org/api/addons.html)
+* libuv [documentation](http://docs.libuv.org/) and [book](http://nikhilm.github.io/uvbook/index.html)
 
 Install
 -------
 
-Clone from the [GitHub repository](https://github.com/SAP/node-rfc.git) to build and run tests and examples locally
+Clone the repository, edit your backend system connection parameters, build and run tests locally:
 
-```
+```shell
 git clone https://github.com/SAP/node-rfc.git
 cd node-rfc
 npm install
+mocha
 ```
+
+Pre-compiled binaries for currently active nodejs LTS releases are provided in the [lib](https://github.com/SAP/node-rfc/tree/master/lib) folder.
 
 Getting started
 ---------------
@@ -162,29 +180,7 @@ Links
 
 Nodejs Addons
 
-* Embedders Guide https://developers.google.com/v8/embed
-* nodejs addods docs https://nodejs.org/api/addons.html
-* nodejs addons examples https://github.com/nodejs/node-addon-examples
-* 10 to 12 breaking API changes https://strongloop.com/strongblog/node-js-v0-12-c-apis-breaking
+Getting Started with Embedding https://github.com/v8/v8/wiki/Getting%20Started%20with%20Embedding
 
-node-gyp
 
-* https://chromium.googlesource.com/external/gyp/+/master/docs/InputFormatReference.md
 
-Classes
-
-* http://izs.me/v8-docs/classv8_1_1Object.html
-* http://v8.paulfryzel.com/docs/master/namespacev8.html
-
-Libuv
-
-* http://nikhilm.github.io/uvbook/index.html
-
-Exceptions
-
-* http://stackoverflow.com/questions/17988639/how-to-create-node-js-error-object-in-native-addon
-
-C++ Strings
-
-* http://stackoverflow.com/questions/347949/how-to-convert-a-stdstring-to-const-char-or-char
-* http://stackoverflow.com/questions/10865957/c-printf-with-stdstring

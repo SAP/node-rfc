@@ -3,4 +3,4 @@
 export builddir_name ?= ./build/.
 .PHONY: all
 all:
-	$(MAKE) rfc-v5.1.1
+	$(MAKE) rfc
