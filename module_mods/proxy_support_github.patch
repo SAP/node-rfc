@@ -1,0 +1,32 @@
+--- node_modules/github/index.js	2015-04-19 17:08:16.000000000 +0200
++++ node_modules/github/index.js	2016-12-22 12:23:47.526437485 +0100
+@@ -674,7 +674,7 @@
+         if (this.config.proxy !== undefined) {
+             proxyUrl = this.config.proxy;
+         } else {
+-            proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
++            //proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+         }
+         if (proxyUrl) {
+             path = Url.format({
+@@ -775,7 +775,10 @@
+             console.log("REQUEST: ", options);
+ 
+         function httpSendRequest() {
+-            var req = require(protocol).request(options, function(res) {
++			options.uri = protocol + "://" + host + ":" + port + path;
++			var req = require("request")(options);
++			req.on("response", function(res) {		
++            //var req = require(protocol).request(options, function(res) {
+                 if (self.debug) {
+                     console.log("STATUS: " + res.statusCode);
+                     console.log("HEADERS: " + JSON.stringify(res.headers));
+@@ -800,7 +803,7 @@
+ 
+             var timeout = (block.timeout !== undefined) ? block.timeout : self.config.timeout;
+             if (timeout) {
+-                req.setTimeout(timeout);
++                //req.setTimeout(timeout);
+             }
+ 
+             req.on("error", function(e) {

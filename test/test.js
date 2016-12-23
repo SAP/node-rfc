@@ -15,33 +15,18 @@
 "use strict";
 
 var should = require("should");
-var rfc = require('./../build/Release/rfc.node');
-// var rfc = require('./../build/linux_x64/rfc.node');
-// var rfc = require('./../build/win32_x64/rfc.node');
-// var rfc = require('node-rfc');
-// var SegfaultHandler = require('segfault-handler');
-
-//SegfaultHandler.registerHandler("crash.log")
-
-
-// var connParams = {
-//  user: 'DEMO',
-//  passwd: 'welcome',
-//  ashost: '10.117.24.158',
-//  saprouter: '/H/203.13.155.17/S/3299/W/xjkb3d/H/172.19.137.194/H/',
-//  sysnr: '00',
-//  client: '800',
-//  //   trace     : '3',
-//  lang: 'EN'
-//};
+var binary = require('node-pre-gyp');
+var path = require('path');
+var rfc_path = binary.find(path.resolve(path.join(__dirname,'../package.json')));
+var rfc = require(rfc_path);
 
 var connParams = {
   user: 'DEMO    ',
   passwd: 'welcome',
-  ashost: 'coe-he-66',
+  ashost: '10.68.104.164',
   sysnr: '00',
   client: '620',
-  trace: '3',
+//  trace: '3',
   lang: 'EN'	
 };
 

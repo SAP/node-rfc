@@ -3,7 +3,14 @@
 	"linux_nwrfcsdk_path": "$(SAPNWRFC_HOME)",
     "msvs_nwrfcsdk_path": "<!(echo %SAPNWRFC_HOME%)",
     #"target_name": 'rfc-<!(node -v)'
-    "target_name": 'rfc'
+    "target_name": 'rfc',
+	"build_dir": '<(PRODUCT_DIR)',
+	"conditions": [
+		[ 'OS=="win"', {
+				"build_dir": "<(PRODUCT_DIR)/../win32_x64"
+			}
+		]
+	]
   },
 
   "targets": [
@@ -76,8 +83,18 @@
                 #'libraries': [ '-lsapnwrfc.lib', '-llibsapucum.lib' ],
             }]
 
-      ] # conditions
-
-    }
+      ] # conditions	
+    },
+		{
+			"target_name": "action_after_build",
+      "type": "none",
+      "dependencies": [ "<(module_name)" ],
+      "copies": [
+        {
+          "files": [ "<(build_dir)/<(module_name).node" ],
+          "destination": "<(module_path)"
+        }
+      ]
+		}
   ]
 }

@@ -16,8 +16,6 @@
 #include "rfcio.h"
 #include "Client.h"
 
-#include <stdio.h>
-
 using namespace v8;
 using namespace node;
 
@@ -307,9 +305,7 @@ NAN_METHOD(Client::Invoke) {
             if (!argv[0]->IsNull()) {
                 // Invalid parameter name
                 Local<Function> localCallback = Nan::New(baton->callback);
-				printf ("Calling");
                 Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 1, argv);
-				printf ("Called");
                 delete baton;
                 info.GetReturnValue().SetUndefined();
                 return; // skip RFC invoke

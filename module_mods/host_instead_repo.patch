@@ -1,0 +1,31 @@
+--- node_modules/node-pre-gyp-github/index.js	2016-06-03 03:39:54.000000000 +0200
++++ node_modules/node-pre-gyp-github/index.js	2016-12-08 12:23:04.768025670 +0100
+@@ -35,17 +35,17 @@
+ 	
+ 	this.package_json = JSON.parse(fs.readFileSync(path.join(cwd,'package.json')));
+ 	
+-	if(!this.package_json.repository || !this.package_json.repository.url){
+-		throw new Error('Missing repository.url in package.json');
++	if(!this.package_json.binary || !this.package_json.binary.host){
++		throw new Error('Missing binary.host in package.json');
+ 	}
+ 	else {
+-		ownerRepo = this.package_json.repository.url.match(/github\.com\/(.*)(?=\.git)/i);
++		ownerRepo = this.package_json.binary.host.match(/github\.com\/(.*)(?=\/releases\/download\/)/i);
+ 		if(ownerRepo) {
+ 			ownerRepo = ownerRepo[1].split('/');
+ 			this.owner = ownerRepo[0];
+ 			this.repo = ownerRepo[1];
+ 		}
+-		else throw new Error('A correctly formatted GitHub repository.url was not found within package.json');
++		else throw new Error('A correctly formatted GitHub binary.host was not found within package.json');
+ 	}
+ 	
+ 	hostPrefix = 'https://github.com/' + this.owner + '/' + this.repo + '/releases/download/';
+@@ -185,4 +185,4 @@
+ 	}.bind(this));
+ };
+ 
+-module.exports = NodePreGypGithub;
+\ No newline at end of file
++module.exports = NodePreGypGithub;
