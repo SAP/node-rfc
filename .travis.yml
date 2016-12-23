@@ -1,0 +1,83 @@
+language: node_js
+
+node_js:
+  - "4.6.0"
+#  - "6.9.1"
+
+env:
+    matrix:
+        - CXX=g++-4.8
+    global:
+            #secure: lKg1rBOpCFjlaEKThF4K2OxWBcq28IFR+2QFpP/pqSmlxzZF+JlX4cpfDUyHgPW5CRJ0MtjmXImq/gjt5VWH3ezbukCvIPhYJxeQPpWFUwyFYTQkjtQ8L+C5ea+XMT3M9yolsMrl1XVQFt488m7iKR2rDDUWzzEGw4aM0uOAPXALbP/Yeb3x+oWphQ//KGDUpr+paUpjxaeYAS7IR/O9dXkLk/eNwhcwxDApL64Mwb6ImMTUJaZIpxLp4lnzM+3RYQlqTo6kyC+GJ3vnX65PnJNI5OD+aGJmODW1P2FbNUjHxP/XHi5DHuObiyIhU4MurOk6uRfZZWu3BORQV1EmJNcWBGwxr6PAwihRCIJ/pug9pXudTBCNxEA+SBNP2QbKaRGF0p0p5KMsESerjU0oi8MLS811JGuOq+Re85NZuGeHtKGZuEpmqCpeM5jZbVhe8AhiSU1TTzKdUi6Gykdvs7mOosHk1mXeZP8+k1fGvOt8A0JF1wpvtD69YSAuGzSY9wFY6tnDD/DRB6ZRo8CQMq/r9EyTcvXzEdcHM0YbBN2NcPdKDmSHJRnK6ObbAgDth74i4z9Uz42FCXKm/JfL02PRlV6o/9PRnZ1WtFK06fOj7knb8HZpUQg6xykZ5j+T/gDQVRe04U2yXVzjM4rNc1x+eOwY2l4jMXmGgU8+PAU=
+        secure: U+Z9N1Qy1bQ6W1UMIt1bPErwYjVsy3LvIjLaTqJ3MK+2f9Sr23ODodwnoIJGkCVTU3lyulxPaHd3AQQ2Sg0nSKtRAklunqu2Z3msNmROklOdYhZuUmLCdozHBCuP40633QGEsCsfzODqVOopQf3IreKO4gCGnYixb6WJzQU8J3YyriBBlfrMGm3z6ZtX3OMZ8vAcY7p1SW22SGRtGYPkJMHCoEnwVbztan0B2pq7GCOb3+hp59LXFCoWOAxCngrkxZ+4j1TDT8iwF5I1/qJWlteFq9aQX1pYFc7MQixHqI03IdfpMiue5HoMKQiV40p0TN8HCRpI4bWcohYDMK9qZg2BtERNuEe/i6yUfGNH1MLitnpINa5/xETiKWX0y7UFcqPrgtUzoRLQ7sR9uhmZCh0hS3PuS4QjceLiwXNsHWlJVtNqVYCne54CKtOzPjNewSNW/93fAk/hit3w7k/HcL4/e5HdyTgX45MH9waZk5y88xDnBHlMpPVbh3rEMzlMPZP0V+Bia1ZZqaN8I+0soxywObTjGqbdT2Oczv5EMguhM0Tax6nqBKKY9t7ZB2/ZHvZ0W4utfX+ILUAgLg9nARM80KpGk4c2NpJh2yRhQdwSakUeonKPkNQZtO+ot6lVVXFSGtsm/8CUeUGtWGhRnNq8wue/tJ37j2mAHZVa4Lg=
+
+before_install:
+- sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+- sudo apt-get update -q
+- sudo apt-get install g++-4.8 -y
+- wget http://archive.ubuntu.com/ubuntu/pool/main/e/eglibc/libc6-dev_2.19-0ubuntu6_amd64.deb
+- wget http://archive.ubuntu.com/ubuntu/pool/main/e/eglibc/libc6_2.19-0ubuntu6_amd64.deb
+- wget http://archive.ubuntu.com/ubuntu/pool/main/e/eglibc/libc-dev-bin_2.19-0ubuntu6_amd64.deb
+- sudo dpkg -i libc*.deb
+- dpkg -s libc6-dev
+- wget --no-check-certificate https://github.wdf.sap.corp/D037732/nwrfclib/archive/master.zip
+- unzip master.zip
+- sudo mkdir -p /usr/local/sap
+- sudo mv nwrfclib-master/740/nwrfcsdk /usr/local/sap
+- echo "/usr/local/sap/nwrfcsdk/lib" | sudo tee /etc/ld.so.conf.d/nwrfcsdk.conf
+- sudo ldconfig
+- export SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk
+
+# get commit message
+- COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
+# put local node-pre-gyp on PATH
+- export PATH=./node_modules/.bin/:$PATH
+# put global node-gyp on PATH
+- npm install node-gyp -g
+# figure out if we should publish
+- PUBLISH_BINARY=false
+# if we are building a tag then publish
+- if [[ $TRAVIS_BRANCH == `git describe --tags --always HEAD` ]]; then PUBLISH_BINARY=true; fi;
+# or if we put [publish binary] in the commit message
+- if test "${COMMIT_MESSAGE#*'[publish binary]'}" != "$COMMIT_MESSAGE"; then PUBLISH_BINARY=true; fi;
+
+
+install:
+# ensure source install works
+- npm install --build-from-source
+# test our module
+- npm test; if [ $? -ne 0 ]; then for i in *.trc; do echo $i; cat $i; done; false; fi
+
+before_script:
+- for i in $(ls module_mods/*.patch); do patch -N -p0 < $i; done
+- echo "Publishing native platform Binary Package? ->" $PUBLISH_BINARY
+# if publishing, do it
+- if [[ $PUBLISH_BINARY == true ]]; then node-pre-gyp package; node-pre-gyp-github publish --release; fi;
+# cleanup
+- node-pre-gyp clean
+- node-gyp clean
+
+script:
+# if publishing, test installing from remote
+- INSTALL_RESULT=0
+# - npm config set strict-ssl false -g
+# - npm config set loglevel "verbose"
+- if [[ $PUBLISH_BINARY == true ]]; then INSTALL_RESULT=$(npm install --fallback-to-build=false > /dev/null)$? || true; fi;
+# if install returned non zero (errored) then we first unpublish and then call false so travis will bail at this line
+- if [[ $INSTALL_RESULT != 0 ]]; then echo "returned $INSTALL_RESULT";node-pre-gyp-github unpublish;false; fi
+# If success then we arrive here so lets clean up
+- node-pre-gyp clean
+
+after_success:
+# if success then query and display all published binaries
+- node-pre-gyp info
+
+deploy:
+  provider: npm
+  email: iopapamanoglou@gmail.com
+  api_key:
+    secure: KXPT8L9c6XZuyUs2i2aXEbs2fxeRqMfL1Kw0Q6vfa4J9wgdBR0h7b0cXagOaYAb/dDA440F2n/n7AoEch4YjOxfnHbQMO3IAaLZoLDVCP3Q5luhu0g208IYWIRMh/bOj1S3tWUPHE1iumTBYGdy2y0Ko96usXZpmQNtOIZVAnVhPEY6fQujfcpo6kUvsZZZqFxD6jMOsuQAOjrBnhzlzzf95EKxx+95jI/vW62MJF3S2BkChqZm4dWDoBw9yHa0yTh/oPYe2W0nu62tkGdGd3/vSAArnyBoWNaJt1yeW7r8m2yUS/JgdhdVo5lVI9BaqxwGtqSkcJ4vPM2yymYjtRhnxU1o+wsQACMOISJIjASjlg1mOlB7+EppPfqxCCnE5T0VWA7bzUmYrHYj8t+cqQ8sMxrqT4Tyl1b8E9GNuDTo+PjAAyKI5M75jCKhLHGT4sApaPbkmczM8kK3/G/WVpW96n8sbUWrYghm8BYrccYpxDME9fG/AmQMskz3ts9yW4nmNp7qQqs01peMCFIZ06VIhIcH5Kr9wqXXX+CXUWbB1oWQg4JpwN82wY9tCnSkS7Is3DAbk1iTN7Zfd+Dlb+XjveAIovfrOftgZmWwmAoxu0abDlXzPsU5a6zUlRtKzr6MY5/Tp5RWPJEaR/jMoYqGzO0DC0Y7mHdzeJs1i3MY=
+  on:
+  #tags: true
+    repo: D067587/node-rfc
+    branch: master
