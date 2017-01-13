@@ -28,6 +28,8 @@ before_install:
 - echo "/usr/local/sap/nwrfcsdk/lib" | sudo tee /etc/ld.so.conf.d/nwrfcsdk.conf
 - sudo ldconfig
 - export SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk
+# needed for patched github (proxy)
+- npm install -g request
 
 # get commit message
 - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
