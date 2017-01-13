@@ -29,7 +29,7 @@ before_install:
 - sudo ldconfig
 - export SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk
 # needed for patched github (proxy)
-- npm install -g request
+- npm install request
 
 # get commit message
 - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
