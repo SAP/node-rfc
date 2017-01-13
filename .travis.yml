@@ -2,7 +2,7 @@ language: node_js
 
 node_js:
   - "4.6.0"
-#  - "6.9.1"
+  - "6.9.1"
 
 env:
     matrix:
