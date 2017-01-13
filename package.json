@@ -1,6 +1,6 @@
 {
   "name": "node-rfc",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "nodejs bindings for SAP NW RFC Library",
   "main": "index.js",
   "directories": {

@@ -1,6 +1,14 @@
 Change log
 ==========
 
+0.1.11 (2017-01-13)
+-------------------
+- Deployment test, no changes
+
+0.1.7 (2016-12-23)
+------------------
+- CI support
+
 0.1.6 (2016-11-22)
 ------------------
 - NAN for easier nodejs release independent development
