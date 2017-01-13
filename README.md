@@ -182,5 +182,31 @@ Nodejs Addons
 
 Getting Started with Embedding https://github.com/v8/v8/wiki/Getting%20Started%20with%20Embedding
 
+Maintainer Information
+-----
+Version is found/has to be changed in package.json.
 
+### Continuous Integration
+
+The project is built using Travis (.travis.yml) for GNU/Linux and the build.sh script for Windows.
+Npm releases are managed by Travis.
+
+The repository to publish to is specified in package.json: binary.host
+
+#### GNU/Linux (Travis)
+To publish binaries add prefix: [publish binary] to commit.
+
+* Target node versions can be specified in .travis.yml: node_js
+* The npm api key is found in .travis.yml: deploy.api_key
+* The github access token is located in .travis.yml: env.global
+* The build repository is specified in package.json: repository.url
+
+
+#### Windows (<span>build.sh</span>)
+Setup the machine like described here: http://sap.github.io/node-rfc/install.html
+
+Node, npm and either nvm or nodist have to be installed.
+To build/publish execute <span>build.sh</span>.
+If test results shall be ignored use the flag -i.
+Target node versions are specified in top of the file in the array "NODE_VERSIONS".
 
