@@ -47,13 +47,17 @@ Developer resources:
 Install
 -------
 
-Clone the repository, edit your backend system connection parameters, build and run tests locally:
+```shell
+npm install node-rfc
+```
+
+To test and develop, clone the repository, edit your backend system connection parameters, build and run tests locally:
 
 ```shell
 git clone https://github.com/SAP/node-rfc.git
 cd node-rfc
 npm install
-mocha
+npm test
 ```
 
 Pre-compiled binaries for currently active nodejs LTS releases are provided in the [lib](https://github.com/SAP/node-rfc/tree/master/lib) folder.
