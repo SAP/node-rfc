@@ -6,7 +6,7 @@ This node module provides bindings for SAP NetWeawer RFC Library, for a comforta
 Platforms & Prerequisites
 -------------------------
 
-Combiled binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows and Linux platforms.
+Compiled binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows and Linux platforms.
 
 OS X and ARM platforms are currently not supported, as _SAP NW RFC Library_ is not available for those platforms.
 
@@ -46,6 +46,8 @@ Developer resources:
 
 Install
 -------
+
+To install and use:
 
 ```shell
 npm install node-rfc
