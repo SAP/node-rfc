@@ -191,6 +191,7 @@ Getting Started with Embedding https://github.com/v8/v8/wiki/Getting%20Started%2
 Maintainer Information
 -----
 Version is found/has to be changed in package.json.
+There are two origins with the same repository: https://github.com/SAP/node-rfc and https://github.wdf.sap.corp/D037732/node-rfc.
 
 ### Continuous Integration
 
