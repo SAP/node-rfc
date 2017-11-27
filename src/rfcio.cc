@@ -383,8 +383,8 @@ Handle<Value> wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_
 				free(byteValue);
 				break;
 			}
-			resultValue = Nan::New(reinterpret_cast<const char*>(byteValue)).ToLocalChecked();
-			free(byteValue);
+			resultValue = Nan::NewBuffer(reinterpret_cast<char*>(byteValue), cLen).ToLocalChecked();
+			// do not free byteValue - it will be freed when the buffer is garbage collected
 			break;
 		}
 		case RFCTYPE_XSTRING: {
