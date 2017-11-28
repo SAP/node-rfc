@@ -318,8 +318,6 @@ NAN_METHOD(Client::Invoke) {
     }
 }
 
-
-
 NAN_METHOD(Client::Ping) {
     Client *wrapper = Unwrap<Client>(info.This());
 
@@ -353,7 +351,7 @@ NAN_METHOD(Client::ConnectionInfo) {
     Nan::Set(infoObj, Nan::New("sysNumber").ToLocalChecked(), 				wrapString(connInfo.sysNumber, 2));
     Nan::Set(infoObj, Nan::New("sysId").ToLocalChecked(),					wrapString(connInfo.sysId, 8));
     Nan::Set(infoObj, Nan::New("client").ToLocalChecked(),					wrapString(connInfo.client, 3));
-    Nan::Set(infoObj, Nan::New("user").ToLocalChecked(),					wrapString(connInfo.user, 8));
+    Nan::Set(infoObj, Nan::New("user").ToLocalChecked(),					wrapString(connInfo.user, 8, true));
     Nan::Set(infoObj, Nan::New("language").ToLocalChecked(), 				wrapString(connInfo.language, 2));
     Nan::Set(infoObj, Nan::New("trace").ToLocalChecked(),					wrapString(connInfo.trace, 1));
     Nan::Set(infoObj, Nan::New("isoLanguage").ToLocalChecked(), 			wrapString(connInfo.isoLanguage, 2));
@@ -362,11 +360,11 @@ NAN_METHOD(Client::ConnectionInfo) {
     Nan::Set(infoObj, Nan::New("rfcRole").ToLocalChecked(), 				wrapString(connInfo.rfcRole, 1));
     Nan::Set(infoObj, Nan::New("type").ToLocalChecked(),					wrapString(connInfo.type, 1));
     Nan::Set(infoObj, Nan::New("partnerType").ToLocalChecked(), 			wrapString(connInfo.partnerType, 1));
-    Nan::Set(infoObj, Nan::New("rel").ToLocalChecked(),						wrapString(connInfo.rel, 4));
-    Nan::Set(infoObj, Nan::New("partnerRel").ToLocalChecked(), 				wrapString(connInfo.partnerRel, 4));
-    Nan::Set(infoObj, Nan::New("kernelRel").ToLocalChecked(), 				wrapString(connInfo.kernelRel, 4));
+    Nan::Set(infoObj, Nan::New("rel").ToLocalChecked(),						wrapString(connInfo.rel, 4, True));
+    Nan::Set(infoObj, Nan::New("partnerRel").ToLocalChecked(), 				wrapString(connInfo.partnerRel, 4, true));
+    Nan::Set(infoObj, Nan::New("kernelRel").ToLocalChecked(), 				wrapString(connInfo.kernelRel, 4, true));
     Nan::Set(infoObj, Nan::New("cpicConvId").ToLocalChecked(), 				wrapString(connInfo.cpicConvId, 8));
-    Nan::Set(infoObj, Nan::New("progName").ToLocalChecked(), 				wrapString(connInfo.progName, 128));
+    Nan::Set(infoObj, Nan::New("progName").ToLocalChecked(), 				wrapString(connInfo.progName, 128, true));
     Nan::Set(infoObj, Nan::New("partnerBytesPerChar").ToLocalChecked(), 	wrapString(connInfo.partnerBytesPerChar, 1));
     Nan::Set(infoObj, Nan::New("reserved").ToLocalChecked(), 				wrapString(connInfo.reserved, 84));
 

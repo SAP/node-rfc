@@ -51,8 +51,8 @@ SAP_UC* fillString(const Handle<Value> &str) {
 	rc = RfcUTF8ToSAPUC((RFC_BYTE*)cStr, strlen(cStr), sapuc, &sapucSize, &resultLen, &errorInfo);
 
 	if (rc != RFC_OK) {
-	// FIXME: error handling
-	printf("Unhandled Error");
+    	// FIXME: error handling
+	    printf("Unhandled Error");
 	}
 
 	return sapuc;

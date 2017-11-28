@@ -18,17 +18,18 @@ var should = require("should");
 var binary = require('node-pre-gyp');
 var path = require('path');
 var rfc_path = binary.find(path.resolve(path.join(__dirname,'../package.json')));
+console.log(rfc_path)
 var rfc = require(rfc_path);
 
 var connParams = {
-  user: 'DEMO    ',
-  passwd: 'welcome',
-  ashost: '10.68.104.164',
+  user: 'demo',
+  passwd: 'Welcome',
+  ashost:  '10.117.19.101',
+  saprouter: '/H/203.13.155.17/W/xjkb3d/H/172.19.138.120/H/',
   sysnr: '00',
-  client: '620',
-//  trace: '3',
-  lang: 'EN'	
-};
+  lang: 'EN',
+  client: '100'
+}
 
 describe("Connection", function() {
   var client;
@@ -48,7 +49,7 @@ describe("Connection", function() {
       'rfcRole', 'type', 'partnerType', 'rel', 'partnerRel', 'kernelRel', 'cpicConvId',
       'progName', 'partnerBytesPerChar', 'reserved');
     info.should.have.properties({
-      user: connParams.user,
+      user: connParams.user.toUpperCase(),
       sysNumber: connParams.sysnr,
       client: connParams.client
     });
