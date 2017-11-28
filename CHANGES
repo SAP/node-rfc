@@ -1,6 +1,11 @@
 Change log
 ==========
 
+0.1.12 (2017-11-29)
+-------------------
+- 4, 6 and 8 lts binaries
+- byte arrays handling
+
 0.1.11 (2017-01-13)
 -------------------
 - Deployment test, no changes

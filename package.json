@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "nan": "^2.4.0",
-    "node-pre-gyp": "^0.6.38"
+    "node-pre-gyp": "^0.6.39"
   },
   "devDependencies": {
     "mocha": "^3.1.2",
@@ -29,7 +29,7 @@
     "remote_path": "{version}"
   },
   "engines": {
-    "node": "4.x || 6.x"
+    "node": "4.x || 6.x || 8.x"
   },
   "os": [
     "!darwin"
