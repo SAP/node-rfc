@@ -19,7 +19,7 @@ if [ "$(expr substr $(uname -s) 1 4)" == "MSYS" ]; then
     nvm use 8.9.1
     node-pre-gyp clean configure
     node-pre-gyp build
-    tar -czvf $release_otput/rfc-v0.1.13-node-v57-win32-x64.tar.gz build/win32_x64/rfc.node
+    tar -czvf $release_output/rfc-v0.1.13-node-v57-win32-x64.tar.gz build/win32_x64/rfc.node
 
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
 
