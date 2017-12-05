@@ -4,6 +4,7 @@ Change log
 0.1.13
 ------------------
 - Catching constuctor errors
+- libstdc++ location fix
 - Tabs and formatting
 
 0.1.12 (2017-11-29)
