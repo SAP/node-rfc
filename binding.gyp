@@ -39,6 +39,9 @@
                     "_FILE_OFFSET_BITS=64",
                     "__NO_MATH_INLINES"
                 ],
+                "ldflags": [
+                    "-Wl,-rpath,'$$ORIGIN'"
+                ],
                 "link_settings": {
                     "libraries": ["-L<(linux_nwrfcsdk_path)/lib", "-lsapnwrfc", "-lsapucum"]
                 },
