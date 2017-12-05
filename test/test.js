@@ -14,7 +14,7 @@
 
 "use strict";
 
-var should = require("should");
+var should = require('should');
 var binary = require('node-pre-gyp');
 var path = require('path');
 var rfc_path = binary.find(path.resolve(path.join(__dirname,'../package.json')));
@@ -293,7 +293,7 @@ describe("Error handling", function() {
 
     var wrongClient = new rfc.Client(wrongParams);
     wrongClient.connect(function(err) {
-      should.exist( err);
+      should.exist(err);
       err.should.have.properties({
         message: "Parameter ASHOST, GWHOST, MSHOST or SERVER_PORT is missing.",
         code: 20,
@@ -304,4 +304,15 @@ describe("Error handling", function() {
     wrongClient.close();
   });
 
+  it('No connection parameters provided at all', function(done) {
+    try {
+      var noClient = new rfc.Client();
+    } catch (err) {
+      should.exist(err);
+      err.should.have.properties({
+        message: "Please provide connection parameters as argument"
+      });
+      done();
+    }
+  });
 });

@@ -26,13 +26,15 @@ Client::Client() :
     connectionParams(NULL),
     paramSize(0),
     alive(false) { 
-	uv_sem_init(&this->invocationMutex, 1);
+    uv_sem_init(&this->invocationMutex, 1);
 }
 
 Client::~Client() {
     RFC_ERROR_INFO errorInfo;
     RFC_RC rc = RfcCloseConnection(this->connectionHandle, &errorInfo);
-    rc = rc; // FIXME check rc ...
+    if (rc != RFC_OK) {
+        printf ("Error closing connection: %u", rc); // FIXME error handling
+    }
     this->alive = false;
     uv_sem_destroy(&this->invocationMutex);
     for (unsigned int i = 0; i < this->paramSize; i++) {
@@ -44,12 +46,12 @@ Client::~Client() {
 
 NAN_MODULE_INIT(Client::Init) {
     // Prepare constructor template
-	Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(New);
-	tpl->SetClassName(Nan::New("Client").ToLocalChecked());
-	tpl->InstanceTemplate()->SetInternalFieldCount(1);
+    Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(New);
+    tpl->SetClassName(Nan::New("Client").ToLocalChecked());
+    tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
     // Prototype
-	Nan::SetPrototypeMethod(tpl, "connect", Connect);
+    Nan::SetPrototypeMethod(tpl, "connect", Connect);
     Nan::SetPrototypeMethod(tpl, "close", Close);
     Nan::SetPrototypeMethod(tpl, "reopen", Reopen);
     Nan::SetPrototypeMethod(tpl, "isAlive", IsAlive);
@@ -58,27 +60,29 @@ NAN_MODULE_INIT(Client::Init) {
     Nan::SetPrototypeMethod(tpl, "connectionInfo", ConnectionInfo);
     Nan::SetPrototypeMethod(tpl, "ping", Ping);
 
-	constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
-	Nan::Set(target, Nan::New("Client").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
+    constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
+    Nan::Set(target, Nan::New("Client").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
 }
 
 NAN_METHOD(Client::New) {
     if (!info.IsConstructCall()) {
-		Local<Value> e = Nan::TypeError("Use the new operator to create instances of Rfc connection.");
-		Nan::ThrowError(e);
+        Local<Value> e = Nan::TypeError("Use the new operator to create instances of Rfc connection.");
+        Nan::ThrowError(e);
         info.GetReturnValue().Set(e);
+        return;
     }   
 
     if (info.Length() < 1) {
-		Local<Value> e = Nan::Error("Please provide connection parameters as argument");
-		Nan::ThrowError(e);
-        info.GetReturnValue().Set(e);
+        Local<Value> e = Nan::Error("Please provide connection parameters as argument");
+        Nan::ThrowError(e);
+        return info.GetReturnValue().Set(e);
     }
 
     if (!info[0]->IsObject()) {
-		Local<Value> e = Nan::TypeError("Connection parameters must be an object");
-		Nan::ThrowError(e);
+        Local<Value> e = Nan::TypeError("Connection parameters must be an object");
+        Nan::ThrowError(e);
         info.GetReturnValue().Set(e);
+        return;
     }
 
     Client *wrapper = new Client();
@@ -86,9 +90,10 @@ NAN_METHOD(Client::New) {
 
     if (info.Length() > 1) {
         if (!info[1]->IsBoolean()) {
-			Local<Value> e = Nan::TypeError("Third parameter for 'rstrip' must be true or false");
-			Nan::ThrowError(e);
-			info.GetReturnValue().Set(e);
+            Local<Value> e = Nan::TypeError("Third parameter for 'rstrip' must be true or false");
+            Nan::ThrowError(e);
+            info.GetReturnValue().Set(e);
+            return;
         }
 
         wrapper->rstrip = info[1]->BooleanValue();
@@ -113,7 +118,7 @@ NAN_METHOD(Client::New) {
 }
 
 void Client::LockMutex(void) {
-	uv_sem_wait(&this->invocationMutex);
+    uv_sem_wait(&this->invocationMutex);
 }
 
 void Client::UnlockMutex(void) {
@@ -128,7 +133,7 @@ void Client::ConnectAsync(uv_work_t* req) {
 }
 
 void Client::ConnectAsyncAfter(uv_work_t* req) {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
 
     ClientBaton* baton = static_cast<ClientBaton*>(req->data);
 
@@ -146,7 +151,7 @@ void Client::ConnectAsyncAfter(uv_work_t* req) {
     else {
         baton->wrapper->alive = true;
         Local<Function> localCallback = Nan::New(baton->callback);
-		Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 0, NULL);
+        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 0, NULL);
     }
 
     baton->callback.Reset();
@@ -158,6 +163,7 @@ NAN_METHOD(Client::Connect) {
        Local<Value> e = Nan::TypeError("First Argument must be callback function");
        Nan::ThrowError(e);
        info.GetReturnValue().Set(e);
+       return;
     }
 
     Client *wrapper = Unwrap<Client>(info.This());
@@ -182,7 +188,7 @@ NAN_METHOD(Client::Close) {
     wrapper->alive = false;
     if (rc != RFC_OK) {
         info.GetReturnValue().Set(wrapError(&errorInfo));
-		return;
+        return;
     }
     info.GetReturnValue().SetUndefined();
 }
@@ -208,7 +214,7 @@ void Client::InvokeAsync(uv_work_t* req) {
 }
 
 void Client::InvokeAsyncAfter(uv_work_t* req) {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
 
     InvokeBaton* baton = static_cast<InvokeBaton*>(req->data);
 
@@ -248,26 +254,22 @@ NAN_METHOD(Client::Invoke) {
     if (info.Length() < 3) {
         Local<Value> e = Nan::Error("Please provide function module, parameters and callback as parameters");
         Nan::ThrowError(e);
-        info.GetReturnValue().Set(e);
-        return;
+        return info.GetReturnValue().Set(e);
     }
     if (!info[0]->IsString()) {
         Local<Value> e = Nan::TypeError("First parameter (rfc function name) must be an string");
         Nan::ThrowError(e);
-        info.GetReturnValue().Set(e);
-        return;
+        return info.GetReturnValue().Set(e);
     }
     if (!info[1]->IsObject()) {
         Local<Value> e = Nan::TypeError("Second parameter (rfc function arguments) must be an object");
         Nan::ThrowError(e);
-        info.GetReturnValue().Set(e);
-        return;
+        return info.GetReturnValue().Set(e);
     }
     if (!info[2]->IsFunction()) {
         Local<Value> e = Nan::TypeError("Third Argument must be callback function");
         Nan::ThrowError(e);
-        info.GetReturnValue().Set(e);
-        return;
+        return info.GetReturnValue().Set(e);
     }
 
     Client *wrapper = Unwrap<Client>(info.This());
@@ -303,12 +305,11 @@ NAN_METHOD(Client::Invoke) {
             Local<Value> value = params->Get(name->ToString());
             argv[0] = fillFunctionParameter(baton->functionDescHandle, baton->functionHandle, name, value);
             if (!argv[0]->IsNull()) {
-                // Invalid parameter name
+                // Invalid parameter name, skip RFC invoke
                 Local<Function> localCallback = Nan::New(baton->callback);
                 Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 1, argv);
                 delete baton;
-                info.GetReturnValue().SetUndefined();
-                return; // skip RFC invoke
+                return info.GetReturnValue().SetUndefined();
             }
         }
 
@@ -342,31 +343,31 @@ NAN_METHOD(Client::ConnectionInfo) {
     rc = RfcGetConnectionAttributes(wrapper->connectionHandle, &connInfo, &errorInfo);
 
     if (rc != RFC_OK) {
-        info.GetReturnValue().Set(wrapError(&errorInfo));
+        return info.GetReturnValue().Set(wrapError(&errorInfo));
     }
 
-	Nan::Set(infoObj, Nan::New("dest").ToLocalChecked(),					wrapString(connInfo.dest, 64));
-    Nan::Set(infoObj, Nan::New("host").ToLocalChecked(),					wrapString(connInfo.host, 100));
-    Nan::Set(infoObj, Nan::New("partnerHost").ToLocalChecked(), 			wrapString(connInfo.partnerHost, 100));
-    Nan::Set(infoObj, Nan::New("sysNumber").ToLocalChecked(), 				wrapString(connInfo.sysNumber, 2));
-    Nan::Set(infoObj, Nan::New("sysId").ToLocalChecked(),					wrapString(connInfo.sysId, 8));
-    Nan::Set(infoObj, Nan::New("client").ToLocalChecked(),					wrapString(connInfo.client, 3));
-    Nan::Set(infoObj, Nan::New("user").ToLocalChecked(),					wrapString(connInfo.user, 8, true));
-    Nan::Set(infoObj, Nan::New("language").ToLocalChecked(), 				wrapString(connInfo.language, 2));
-    Nan::Set(infoObj, Nan::New("trace").ToLocalChecked(),					wrapString(connInfo.trace, 1));
-    Nan::Set(infoObj, Nan::New("isoLanguage").ToLocalChecked(), 			wrapString(connInfo.isoLanguage, 2));
-    Nan::Set(infoObj, Nan::New("codepage").ToLocalChecked(), 				wrapString(connInfo.codepage, 4));
-    Nan::Set(infoObj, Nan::New("partnerCodepage").ToLocalChecked(), 		wrapString(connInfo.partnerCodepage, 4));
-    Nan::Set(infoObj, Nan::New("rfcRole").ToLocalChecked(), 				wrapString(connInfo.rfcRole, 1));
-    Nan::Set(infoObj, Nan::New("type").ToLocalChecked(),					wrapString(connInfo.type, 1));
-    Nan::Set(infoObj, Nan::New("partnerType").ToLocalChecked(), 			wrapString(connInfo.partnerType, 1));
-    Nan::Set(infoObj, Nan::New("rel").ToLocalChecked(),						wrapString(connInfo.rel, 4, True));
-    Nan::Set(infoObj, Nan::New("partnerRel").ToLocalChecked(), 				wrapString(connInfo.partnerRel, 4, true));
-    Nan::Set(infoObj, Nan::New("kernelRel").ToLocalChecked(), 				wrapString(connInfo.kernelRel, 4, true));
-    Nan::Set(infoObj, Nan::New("cpicConvId").ToLocalChecked(), 				wrapString(connInfo.cpicConvId, 8));
-    Nan::Set(infoObj, Nan::New("progName").ToLocalChecked(), 				wrapString(connInfo.progName, 128, true));
-    Nan::Set(infoObj, Nan::New("partnerBytesPerChar").ToLocalChecked(), 	wrapString(connInfo.partnerBytesPerChar, 1));
-    Nan::Set(infoObj, Nan::New("reserved").ToLocalChecked(), 				wrapString(connInfo.reserved, 84));
+    Nan::Set(infoObj, Nan::New("dest").ToLocalChecked(),                    wrapString(connInfo.dest, 64));
+    Nan::Set(infoObj, Nan::New("host").ToLocalChecked(),                    wrapString(connInfo.host, 100));
+    Nan::Set(infoObj, Nan::New("partnerHost").ToLocalChecked(),             wrapString(connInfo.partnerHost, 100));
+    Nan::Set(infoObj, Nan::New("sysNumber").ToLocalChecked(),               wrapString(connInfo.sysNumber, 2));
+    Nan::Set(infoObj, Nan::New("sysId").ToLocalChecked(),                   wrapString(connInfo.sysId, 8));
+    Nan::Set(infoObj, Nan::New("client").ToLocalChecked(),                  wrapString(connInfo.client, 3));
+    Nan::Set(infoObj, Nan::New("user").ToLocalChecked(),                    wrapString(connInfo.user, 8, true));
+    Nan::Set(infoObj, Nan::New("language").ToLocalChecked(),                wrapString(connInfo.language, 2));
+    Nan::Set(infoObj, Nan::New("trace").ToLocalChecked(),                   wrapString(connInfo.trace, 1));
+    Nan::Set(infoObj, Nan::New("isoLanguage").ToLocalChecked(),             wrapString(connInfo.isoLanguage, 2));
+    Nan::Set(infoObj, Nan::New("codepage").ToLocalChecked(),                wrapString(connInfo.codepage, 4));
+    Nan::Set(infoObj, Nan::New("partnerCodepage").ToLocalChecked(),         wrapString(connInfo.partnerCodepage, 4));
+    Nan::Set(infoObj, Nan::New("rfcRole").ToLocalChecked(),                 wrapString(connInfo.rfcRole, 1));
+    Nan::Set(infoObj, Nan::New("type").ToLocalChecked(),                    wrapString(connInfo.type, 1));
+    Nan::Set(infoObj, Nan::New("partnerType").ToLocalChecked(),             wrapString(connInfo.partnerType, 1));
+    Nan::Set(infoObj, Nan::New("rel").ToLocalChecked(),                     wrapString(connInfo.rel, 4, True));
+    Nan::Set(infoObj, Nan::New("partnerRel").ToLocalChecked(),              wrapString(connInfo.partnerRel, 4, true));
+    Nan::Set(infoObj, Nan::New("kernelRel").ToLocalChecked(),               wrapString(connInfo.kernelRel, 4, true));
+    Nan::Set(infoObj, Nan::New("cpicConvId").ToLocalChecked(),              wrapString(connInfo.cpicConvId, 8));
+    Nan::Set(infoObj, Nan::New("progName").ToLocalChecked(),                wrapString(connInfo.progName, 128, true));
+    Nan::Set(infoObj, Nan::New("partnerBytesPerChar").ToLocalChecked(),     wrapString(connInfo.partnerBytesPerChar, 1));
+    Nan::Set(infoObj, Nan::New("reserved").ToLocalChecked(),                wrapString(connInfo.reserved, 84));
 
     info.GetReturnValue().Set(infoObj);
 }
@@ -377,7 +378,7 @@ NAN_METHOD(Client::GetVersion) {
     RfcGetVersion(&major, &minor, &patchLevel);
     Local<Array> version = Nan::New<Array>(3);
 
-	Nan::Set(version, Nan::New(0), Nan::New(major));
+    Nan::Set(version, Nan::New(0), Nan::New(major));
     Nan::Set(version, Nan::New(1), Nan::New(minor));
     Nan::Set(version, Nan::New(2), Nan::New(patchLevel));
 
