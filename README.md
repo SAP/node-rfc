@@ -150,6 +150,9 @@ client.connect(function(err) {
 
 Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method on the client instance.
 
+[r3connect](https://github.com/hundeloh-consulting/r3connect) wrapper makes the node-rfc consumption even more comfortable,
+offering promise-based API and connections pool capabilities.
+
 For more examples check the unit tests source code. Maintain your NW test system parameters first in the source code, before running those examples.
 
 
