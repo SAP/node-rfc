@@ -260,6 +260,7 @@ Handle<Value> wrapString(SAP_UC* uc, int length, bool rstrip) {
     rc = RfcSAPUCToUTF8(uc, length, (RFC_BYTE*) utf8, &utf8Size, &resultLen, &errorInfo);
 
     if (rc != RFC_OK) {
+        free((void *)utf8);
         return scope.Escape(Nan::New("node-rfc internal error: wrapString").ToLocalChecked());
     }
 
