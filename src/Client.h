@@ -38,8 +38,8 @@ class Client: public Nan::ObjectWrap {
     static NAN_METHOD(GetVersion);
 
     static NAN_METHOD(New);
-	static NAN_METHOD(Close);
-	static NAN_METHOD(Reopen);
+    static NAN_METHOD(Close);
+    static NAN_METHOD(Reopen);
     static NAN_METHOD(IsAlive);
     static NAN_METHOD(ConnectionInfo);
     static NAN_METHOD(Ping);
@@ -47,7 +47,7 @@ class Client: public Nan::ObjectWrap {
 
     static Nan::Persistent<Function> constructor;
 
-	static NAN_METHOD(Connect);
+    static NAN_METHOD(Connect);
     static void ConnectAsync(uv_work_t *req);
     static void ConnectAsyncAfter(uv_work_t *req);;
 
@@ -63,13 +63,13 @@ class Client: public Nan::ObjectWrap {
     bool rstrip;
     bool alive;
 
-	uv_sem_t invocationMutex;
+    uv_sem_t invocationMutex;
 };
 
 
 struct ClientBaton {
   uv_work_t request;
-	Nan::Persistent<Function> callback;
+  Nan::Persistent<Function> callback;
 
   RFC_ERROR_INFO errorInfo;
   Client *wrapper;
@@ -77,7 +77,7 @@ struct ClientBaton {
 
 struct InvokeBaton {
   uv_work_t request;
-	Nan::Persistent<Function> callback;
+  Nan::Persistent<Function> callback;
 
   RFC_FUNCTION_HANDLE functionHandle;
   RFC_FUNCTION_DESC_HANDLE functionDescHandle;
