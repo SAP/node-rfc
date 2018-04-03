@@ -12,7 +12,7 @@ release_output="../../node-rfc-release"
 release_root="../node-rfc-release"
 version=`cat ./VERSION` 
 
-declare -a LTS_VERSIONS=("4.9.1" "6.13.1" "8.10.0")
+declare -a LTS_VERSIONS=("4.9.1" "6.13.1" "8.11.1")
 
 if [ "$(expr substr $(uname -s) 1 4)" == "MSYS" ]; then
 
@@ -20,12 +20,13 @@ if [ "$(expr substr $(uname -s) 1 4)" == "MSYS" ]; then
 
     for lts in "${LTS_VERSIONS[@]}"
     do
+        nvm install $lts
         nvm use $lts
         rm -rf node_modules
         npm install
         abi=`node --eval "console.log(require('node-abi').getAbi())"`
-        echo "nodejs $lts abi $abi ====================================="
-        npm uninstall node-pre-gyp # issues with local node-pre-gyp on windows
+        # echo "nodejs $lts abi $abi ====================================="
+        npm uninstall node-pre-gyp
         npm -g install node-pre-gyp
         node-pre-gyp clean configure
         node-pre-gyp build
@@ -40,11 +41,12 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
 
     for lts in "${LTS_VERSIONS[@]}"
     do
+        nvm install $lts
         nvm use $lts
         rm -rf node_modules
         npm install
         abi=`node --eval "console.log(require('node-abi').getAbi())"`
-        echo "nodejs $lts abi $abi ====================================="
+        # echo "nodejs $lts abi $abi ====================================="
         node-pre-gyp clean configure
         node-pre-gyp build
         cd build
@@ -53,3 +55,4 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     done
 
 fi
+
