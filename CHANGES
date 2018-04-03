@@ -1,6 +1,13 @@
 Change log
 ==========
 
+0.1.14
+------
+- Memory leak fix [CRITICAL]
+- Source code cleanup
+- vscode settings for editing on Mac
+
+
 0.1.13
 ------------------
 - Catching constuctor errors
