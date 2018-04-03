@@ -260,6 +260,7 @@ Handle<Value> wrapString(SAP_UC* uc, int length, bool rstrip) {
     rc = RfcSAPUCToUTF8(uc, length, (RFC_BYTE*) utf8, &utf8Size, &resultLen, &errorInfo);
 
     if (rc != RFC_OK) {
+        free((void *)utf8);
         return scope.Escape(Nan::New("node-rfc internal error: wrapString").ToLocalChecked());
     }
 
@@ -272,7 +273,9 @@ Handle<Value> wrapString(SAP_UC* uc, int length, bool rstrip) {
         utf8[i+1] = '\0';
     }
 
-    return scope.Escape(Nan::New(utf8).ToLocalChecked());
+    Local<Value> resultValue = Nan::New(utf8).ToLocalChecked();
+    free((void *)utf8);
+    return scope.Escape(resultValue);
 }
 
 Handle<Value> wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle, bool rstrip) {
