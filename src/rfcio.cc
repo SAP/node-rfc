@@ -275,7 +275,7 @@ Handle<Value> wrapString(SAP_UC* uc, int length, bool rstrip) {
 
     Local<Value> resultValue = Nan::New(utf8).ToLocalChecked();
     free((void *)utf8);
-    return scope.Escape(resultValue);}
+    return scope.Escape(resultValue);
 }
 
 Handle<Value> wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle, bool rstrip) {
