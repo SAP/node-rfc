@@ -1,5 +1,6 @@
-*.trc
 .DS_Store
+.idea
+*.trc
 *.tmp
 *.log
 .idea
