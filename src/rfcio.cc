@@ -167,13 +167,17 @@ Local<Value> fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_U
         rc = RfcSetFloat(functionHandle, cName, value.As<Number>()->Value(), &errorInfo);
         break;
     case RFCTYPE_INT:
-        rc = RfcSetInt(functionHandle, cName, value.As<Integer>()->Value(), &errorInfo);
-        break;
     case RFCTYPE_INT1:
-        rc = RfcSetInt1(functionHandle, cName, value.As<Integer>()->Value(), &errorInfo);
-        break;
     case RFCTYPE_INT2:
-        rc = RfcSetInt2(functionHandle, cName, value.As<Integer>()->Value(), &errorInfo);
+        if (!value->IsInt32()) {
+            char cBuf[256];
+            String::Utf8Value s(wrapString(cName));
+            std::string fieldName(*s);
+            sprintf(cBuf, "Number expected when filling field %s of type %d", fieldName.c_str(), typ);
+            Handle<Value> e = Nan::Error(cBuf);
+            return scope.Escape(e->ToObject());
+        }
+        rc = RfcSetInt(functionHandle, cName, value.As<Integer>()->Value(), &errorInfo);
         break;
     case RFCTYPE_DATE:
         //cValue = fillString(value.strftime('%Y%m%d'));
