@@ -189,6 +189,47 @@ describe("Connection", function() {
     });
   });
 
+  it('INT type check should detect strings', function(done) {
+    var importStruct = {
+
+      RFCINT1: "1",
+      RFCINT2: 2,
+      RFCINT4: 345
+
+    };
+    var importTable = [importStruct];
+    client.invoke('STFC_STRUCTURE',
+      { IMPORTSTRUCT: importStruct, RFCTABLE: importTable },
+      function(err) {
+        should.exist(err);
+        err.should.be.an.Object;
+        err.should.have.properties({
+          message: "Number expected when filling field RFCINT1 of type 10"
+        });
+        done();
+      });
+  });
+  
+  it('INT type check should detect floats', function(done) {
+    var importStruct = {
+
+      RFCINT1: 1,
+      RFCINT2: 2,
+      RFCINT4: 3.1
+
+    };
+    var importTable = [importStruct];
+    client.invoke('STFC_STRUCTURE',
+      { IMPORTSTRUCT: importStruct, RFCTABLE: importTable },
+      function(err) {
+        should.exist(err);
+        err.should.be.an.Object;
+        err.should.have.properties({
+          message: "Number expected when filling field RFCINT4 of type 8"
+        });
+        done();
+      });
+  });
 });
 
 describe("More complex RFCs", function() {
