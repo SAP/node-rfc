@@ -87,7 +87,10 @@ Local<Value> fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_U
             if (rc != RFC_OK) {
                 return scope.Escape(wrapError(&errorInfo));
             }
-            fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
+            Local<Value> fillError = fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
+            if (fillError != Nan::Null()) {
+                return scope.Escape(fillError);
+            }
         }
         break;
     }
@@ -123,7 +126,10 @@ Local<Value> fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_U
                 if (rc != RFC_OK) {
                     return scope.Escape(wrapError(&errorInfo));
                 }
-                fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
+                Local<Value> fillError = fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
+                if (fillError != Nan::Null()) {
+                    return scope.Escape(fillError);
+                }
             }
             // FIXME: END DRY
         }
