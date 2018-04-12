@@ -1,15 +1,21 @@
 Change log
 ==========
 
-0.1.14
-------
+0.1.15 (in preparation)
+-----------------------
+
+- Import parameters type checking
+
+
+0.1.14 (2018-04-03)
+-------------------
 - Memory leak fix [CRITICAL]
 - Source code cleanup
 - vscode settings for editing on Mac
 
 
-0.1.13
-------------------
+0.1.13 (2017-12-05)
+-------------------
 - Catching constuctor errors
 - Fix issue 35, libstdc++ location fix
 - Tabs and formatting
