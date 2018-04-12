@@ -136,6 +136,14 @@ Local<Value> fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_U
         break;
     }
     case RFCTYPE_CHAR:
+        if (!value->IsString()) {
+            char cBuf[256];
+            String::Utf8Value s(wrapString(cName));
+            std::string fieldName(*s);
+            sprintf(cBuf, "Char expected when filling field %s of type %d", fieldName.c_str(), typ);
+            Handle<Value> e = Nan::Error(cBuf);
+            return scope.Escape(e->ToObject());
+        }
         cValue = fillString(value);
         rc = RfcSetChars(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
         free(cValue);
@@ -159,17 +167,41 @@ Local<Value> fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_U
         break;
     }
     case RFCTYPE_STRING:
+        if (!value->IsString()) {
+            char cBuf[256];
+            String::Utf8Value s(wrapString(cName));
+            std::string fieldName(*s);
+            sprintf(cBuf, "Char expected when filling field %s of type %d", fieldName.c_str(), typ);
+            Handle<Value> e = Nan::Error(cBuf);
+            return scope.Escape(e->ToObject());
+        }
         cValue = fillString(value);
         rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
         free(cValue);
         break;
     case RFCTYPE_NUM:
+        if (!value->IsString()) {
+            char cBuf[256];
+            String::Utf8Value s(wrapString(cName));
+            std::string fieldName(*s);
+            sprintf(cBuf, "Char expected when filling field %s of type %d", fieldName.c_str(), typ);
+            Handle<Value> e = Nan::Error(cBuf);
+            return scope.Escape(e->ToObject());
+        }
         cValue = fillString(value);
         rc = RfcSetNum(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
         free(cValue);
         break;
     case RFCTYPE_BCD:   // fallthrough
     case RFCTYPE_FLOAT:
+        if (!value->IsNumber()) {
+            char cBuf[256];
+            String::Utf8Value s(wrapString(cName));
+            std::string fieldName(*s);
+            sprintf(cBuf, "Number expected when filling field %s of type %d", fieldName.c_str(), typ);
+            Handle<Value> e = Nan::Error(cBuf);
+            return scope.Escape(e->ToObject());
+        }
         rc = RfcSetFloat(functionHandle, cName, value.As<Number>()->Value(), &errorInfo);
         break;
     case RFCTYPE_INT:
@@ -186,12 +218,28 @@ Local<Value> fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_U
         rc = RfcSetInt(functionHandle, cName, value.As<Integer>()->Value(), &errorInfo);
         break;
     case RFCTYPE_DATE:
+        if (!value->IsString()) {
+            char cBuf[256];
+            String::Utf8Value s(wrapString(cName));
+            std::string fieldName(*s);
+            sprintf(cBuf, "Char expected when filling field %s of type %d", fieldName.c_str(), typ);
+            Handle<Value> e = Nan::Error(cBuf);
+            return scope.Escape(e->ToObject());
+        }
         //cValue = fillString(value.strftime('%Y%m%d'));
         cValue = fillString(value);
         rc = RfcSetDate(functionHandle, cName, cValue, &errorInfo);
         free(cValue);
         break;
     case RFCTYPE_TIME:
+        if (!value->IsString()) {
+            char cBuf[256];
+            String::Utf8Value s(wrapString(cName));
+            std::string fieldName(*s);
+            sprintf(cBuf, "Char expected when filling field %s of type %d", fieldName.c_str(), typ);
+            Handle<Value> e = Nan::Error(cBuf);
+            return scope.Escape(e->ToObject());
+        }
         //cValue = fillString(value.strftime('%H%M%S'))
         cValue = fillString(value);
         rc = RfcSetTime(functionHandle, cName, cValue, &errorInfo);
