@@ -115,9 +115,8 @@ Test
 
 Check if the module can be found and loaded:
 
-.. code-block:: sh
+.. code-block:: js
 
-  node
   var r = require ('node-rfc)
 
 Call remote enabled function modules in NW backend system (maintain your test system parameters first):
