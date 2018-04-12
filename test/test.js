@@ -189,6 +189,23 @@ describe("Connection", function() {
     });
   });
 
+  it('CHAR type check', function(done) {
+    var importStruct = {
+      RFCCHAR4: 65
+    };
+    var importTable = [importStruct];
+    client.invoke('STFC_STRUCTURE',
+      { IMPORTSTRUCT: importStruct, RFCTABLE: importTable },
+      function(err) {
+        should.exist(err);
+        err.should.be.an.Object;
+        err.should.have.properties({
+          message: "Char expected when filling field RFCCHAR4 of type 0"
+        });
+        done();
+      });
+  }); 
+
   it('INT type check should detect strings', function(done) {
     var importStruct = {
 
@@ -212,7 +229,6 @@ describe("Connection", function() {
   
   it('INT type check should detect floats', function(done) {
     var importStruct = {
-
       RFCINT1: 1,
       RFCINT2: 2,
       RFCINT4: 3.1
@@ -230,6 +246,24 @@ describe("Connection", function() {
         done();
       });
   });
+  
+  it('FLOAT type check', function(done) {
+    var importStruct = {
+      RFCFLOAT: "A"
+    };
+    var importTable = [importStruct];
+    client.invoke('STFC_STRUCTURE',
+      { IMPORTSTRUCT: importStruct, RFCTABLE: importTable },
+      function(err) {
+        should.exist(err);
+        err.should.be.an.Object;
+        err.should.have.properties({
+          message: "Number expected when filling field RFCFLOAT of type 7"
+        });
+        done();
+      });
+  });
+
 });
 
 describe("More complex RFCs", function() {
