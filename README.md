@@ -38,10 +38,7 @@ Useful links:
 
 Developer resources:
 
-* https://github.com/nodejs/node-gyp 
-* [Google V8 Wiki](https://github.com/v8/v8/wiki) and [V8 Namespace Reference](http://v8.paulfryzel.com/docs/master/namespacev8.html)
-* [Google V8 Embedders Guide](https://github.com/v8/v8/wiki/Embedder's%20Guide)
-* nodejs addons [docs and examples](https://nodejs.org/api/addons.html)
+* [nan](https://github.com/nodejs/nan) and [related documentation](https://github.com/nodejs/nan#api)
 * libuv [documentation](http://docs.libuv.org/) and [book](http://nikhilm.github.io/uvbook/index.html)
 
 Install

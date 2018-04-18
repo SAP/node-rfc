@@ -15,14 +15,9 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#include <uv.h>
-//#include <v8.h>
-#include <node.h>
-#include <node_object_wrap.h>
-#include <string>
-#include <sapnwrfc.h>
 #include <nan.h>
-
+#include <node.h>
+#include <sapnwrfc.h>
 
 using namespace v8;
 
