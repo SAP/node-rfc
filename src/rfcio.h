@@ -15,9 +15,7 @@
 #ifndef RFCIO_H
 #define RFCIO_H
 
-#include <string>
 #include <node.h>
-#include <v8.h>
 #include <sapnwrfc.h>
 #include "error.h"
 
