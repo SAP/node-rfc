@@ -15,9 +15,6 @@
 #include "rfcio.h"
 #include "error.h"
 
-#include <nan.h>
-#include <stdio.h>
-
 using namespace v8;
 
 ////////////////////////////////////////////////////////////////////////////////

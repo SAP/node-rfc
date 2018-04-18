@@ -15,9 +15,9 @@
 #ifndef RFCIO_H
 #define RFCIO_H
 
+#include <nan.h>
 #include <node.h>
 #include <sapnwrfc.h>
-#include "error.h"
 
 
 using namespace v8;

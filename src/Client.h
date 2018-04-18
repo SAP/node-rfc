@@ -16,7 +16,6 @@
 #define CLIENT_H
 
 #include <nan.h>
-#include <node.h>
 #include <sapnwrfc.h>
 
 using namespace v8;
