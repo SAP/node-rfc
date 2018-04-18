@@ -12,7 +12,6 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-#include <nan.h>
 #include "Client.h"
 
 NAN_MODULE_INIT(InitAll) {

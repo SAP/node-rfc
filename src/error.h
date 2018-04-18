@@ -15,9 +15,6 @@
 #ifndef ERROR_H_
 #define ERROR_H_
 
-#include <node.h>
-#include <sapnwrfc.h>
-
 
 using namespace v8;
 

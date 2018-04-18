@@ -12,9 +12,9 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-#include <nan.h>
-#include "error.h"
 #include "rfcio.h"
+#include "error.h"
+
 using namespace v8;
 
 
