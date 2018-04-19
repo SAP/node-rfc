@@ -43,13 +43,13 @@ class Client: public Nan::ObjectWrap {
 
     static NAN_METHOD(Connect);
     static void ConnectAsync(uv_work_t *req);
-    static void ConnectAsyncAfter(uv_work_t *req);;
+    static void ConnectAsyncAfter(uv_work_t *req, int);;
 
     void LockMutex(void);
     void UnlockMutex(void);
     static NAN_METHOD(Invoke);
     static void InvokeAsync(uv_work_t *req);
-    static void InvokeAsyncAfter(uv_work_t *req);;
+    static void InvokeAsyncAfter(uv_work_t *req, int);;
 
     RFC_CONNECTION_HANDLE connectionHandle;
     RFC_CONNECTION_PARAMETER *connectionParams;

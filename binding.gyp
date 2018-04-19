@@ -88,8 +88,8 @@
 
       ] # conditions    
     },
-        {
-            "target_name": "action_after_build",
+    {
+      "target_name": "action_after_build",
       "type": "none",
       "dependencies": [ "<(module_name)" ],
       "copies": [
@@ -98,6 +98,6 @@
           "destination": "<(module_path)"
         }
       ]
-        }
+    }
   ]
 }

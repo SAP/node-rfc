@@ -132,7 +132,7 @@ void Client::ConnectAsync(uv_work_t* req) {
     baton->wrapper->connectionHandle = RfcOpenConnection(baton->wrapper->connectionParams, baton->wrapper->paramSize, &baton->errorInfo);
 }
 
-void Client::ConnectAsyncAfter(uv_work_t* req) {
+void Client::ConnectAsyncAfter(uv_work_t* req, int status) {
     Nan::HandleScope scope;
 
     ClientBaton* baton = static_cast<ClientBaton*>(req->data);
@@ -141,8 +141,8 @@ void Client::ConnectAsyncAfter(uv_work_t* req) {
         Local<Value> argv[] =  { wrapError(&baton->errorInfo) };
 
         Nan::TryCatch try_catch;
-        Local<Function> localCallback = Nan::New(baton->callback);
-        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 1, argv);
+        Local<Function> callback = Nan::New<Function>(baton->callback);
+        Nan::Call(callback, Nan::New<Object>(), 1, argv);
 
         if (try_catch.HasCaught()) {
             Nan::FatalException(try_catch);
@@ -150,8 +150,9 @@ void Client::ConnectAsyncAfter(uv_work_t* req) {
     } 
     else {
         baton->wrapper->alive = true;
-        Local<Function> localCallback = Nan::New(baton->callback);
-        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 0, NULL);
+        Local<Function> callback = Nan::New<Function>(baton->callback);
+        Nan::Call(callback, Nan::New<Object>(), 0, NULL);
+
     }
 
     baton->callback.Reset();
@@ -213,7 +214,7 @@ void Client::InvokeAsync(uv_work_t* req) {
     baton->wrapper->UnlockMutex();
 }
 
-void Client::InvokeAsyncAfter(uv_work_t* req) {
+void Client::InvokeAsyncAfter(uv_work_t* req, int status) {
     Nan::HandleScope scope;
 
     InvokeBaton* baton = static_cast<InvokeBaton*>(req->data);
@@ -226,8 +227,8 @@ void Client::InvokeAsyncAfter(uv_work_t* req) {
 
         Nan::TryCatch try_catch;
 
-        Local<Function> localCallback = Nan::New(baton->callback);
-        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 1, argv);
+        Local<Function> callback = Nan::New<Function>(baton->callback);
+        Nan::Call(callback, Nan::New<Object>(), 1, argv);
 
         if (try_catch.HasCaught()) {
             Nan::FatalException(try_catch);
@@ -238,8 +239,8 @@ void Client::InvokeAsyncAfter(uv_work_t* req) {
 
         Nan::TryCatch try_catch;
 
-        Local<Function> localCallback = Nan::New(baton->callback);
-        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 2, argv);
+        Local<Function> callback = Nan::New<Function>(baton->callback);
+        Nan::Call(callback, Nan::New<Object>(), 2, argv);
 
         if (try_catch.HasCaught()) {
             Nan::FatalException(try_catch);
@@ -289,7 +290,7 @@ NAN_METHOD(Client::Invoke) {
     if (baton->functionDescHandle == NULL) {
         // ABAP function module not found
         argv[0] = wrapError(&baton->errorInfo);
-        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), callback, 1, argv);
+        Nan::Call(callback, Nan::New<Object>(), 1, argv);
         delete baton;
         info.GetReturnValue().SetUndefined();
     } else {
@@ -306,8 +307,8 @@ NAN_METHOD(Client::Invoke) {
             argv[0] = fillFunctionParameter(baton->functionDescHandle, baton->functionHandle, name, value);
             if (!argv[0]->IsNull()) {
                 // Invalid parameter name, skip RFC invoke
-                Local<Function> localCallback = Nan::New(baton->callback);
-                Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCallback, 1, argv);
+                Local<Function> callback = Nan::New<Function>(baton->callback);
+                Nan::Call(callback, Nan::New<Object>(), 1, argv);
                 delete baton;
                 return info.GetReturnValue().SetUndefined();
             }
