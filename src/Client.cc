@@ -374,15 +374,14 @@ NAN_METHOD(Client::ConnectionInfo) {
 }
 
 NAN_METHOD(Client::GetVersion) {
+    Isolate* isolate = Isolate::GetCurrent();
     unsigned major, minor, patchLevel;
 
     RfcGetVersion(&major, &minor, &patchLevel);
-    Local<Array> version = Nan::New<Array>(3);
-
-    Nan::Set(version, Nan::New(0), Nan::New(major));
-    Nan::Set(version, Nan::New(1), Nan::New(minor));
-    Nan::Set(version, Nan::New(2), Nan::New(patchLevel));
-
+    Local<Object> version = Object::New(isolate);
+    version->Set(String::NewFromUtf8(isolate, "major"), Integer::New(isolate, major));
+    version->Set(String::NewFromUtf8(isolate, "minor"), Integer::New(isolate, minor));
+    version->Set(String::NewFromUtf8(isolate, "patchLevel"), Uint32::New(isolate, patchLevel));
     info.GetReturnValue().Set(version);
 }
 

@@ -5,6 +5,8 @@ Change log
 -----------------------
 
 - Import parameters type checking
+- Deprecated Nan::MakeCallback replaced with Nan:Call
+- getVersion() returns an object instead of array
 
 
 0.1.14 (2018-04-03)
