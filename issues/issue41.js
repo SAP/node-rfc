@@ -32,8 +32,8 @@ function run (i) {
             if (err) { // check for login/connection errors
                         return console.error('could not connect to server', err);
                     }
-
-            client.invoke("STFC_PERFORMANCE", {"CHECKTAB":"X","LGET0332":"999", "LGET1000": "999"}, function (err, res) {
+            client.invoke('SWNC_READ_SNAPSHOT', {READ_TIMEZONE: 'UTC', READ_START_DATE: '20180411', READ_START_TIME: '080000', READ_END_DATE: '20180418', READ_END_TIME: '000000', TIME_RESOLUTION: 60}, function (err, res) {
+            //client.invoke("STFC_PERFORMANCE", {"CHECKTAB":"X","LGET0332":"999", "LGET1000": "999"}, function (err, res) {
               if (err) {
                 console.log(err)
                 fs.appendFileSync(fileName, err);
