@@ -15,7 +15,7 @@ release_output="../../node-rfc-release"
 release_root="../node-rfc-release"
 version=`cat ./VERSION` 
 
-declare -a LTS_VERSIONS=("4.9.1" "6.13.1" "8.11.1", "9.11.1")
+declare -a LTS_VERSIONS=("4.9.1" "6.13.1" "8.11.1" "9.11.1")
 
 if [ "$(expr substr $(uname -s) 1 4)" == "MSYS" ]; then
 
