@@ -252,7 +252,6 @@ void Client::InvokeAsyncAfter(uv_work_t* req, int status) {
 
 NAN_METHOD(Client::Invoke) {
     RFC_RC rc;
-    RFC_ERROR_INFO errorInfo;
     Local <Array> notRequested = Nan::New<Array>();
 
     if (info.Length() < 3) {
