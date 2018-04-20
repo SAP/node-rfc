@@ -314,7 +314,7 @@ NAN_METHOD(Client::Invoke) {
         baton->functionHandle = RfcCreateFunction(baton->functionDescHandle, &baton->errorInfo);
 
         if (notRequested->Length() != 0) {
-              for (uint i = 0; i < notRequested->Length(); i++) {
+              for (unsigned int i = 0; i < notRequested->Length(); i++) {
                 Local<String> name = notRequested->Get(i)->ToString();
                 SAP_UC *paramName = fillString(name);
                 rc = RfcSetParameterActive(baton->functionHandle, paramName, 0, &baton->errorInfo);

@@ -3,7 +3,7 @@
 # Prerequisites:
 # 1. node-rfc-release, at the same level as node-rfc
 # 2. node-pre-gyp must be installed globally on windows
-# 3. Pythn 2.7, required by node-gyp
+# 3. Python 2.7, required by node-gyp
 #
 # Run:
 # source release.sh
