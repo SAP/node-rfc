@@ -31,6 +31,15 @@ let connParams = {
   client: '100'
 }
 
+connParams = {
+  user: 'demo',
+  passwd: 'welcome',
+  ashost: '10.68.110.51',
+  sysnr: '00',
+  client: '620',
+  lang: 'EN'
+}
+
 describe("Connection", function() {
   let client;
   beforeEach(function(done) {
@@ -68,7 +77,7 @@ describe("Connection", function() {
 
 
   it('STFC_CONNECTION should work in parallel', function(done) {
-    let count = 5; //10
+    let count = 5
     let j = count;
     for (let i = 0; i < count; i++) {
       client.invoke('STFC_CONNECTION', { REQUTEXT: 'Hello SAP! ' + i },
@@ -268,6 +277,63 @@ describe("Connection", function() {
         done();
       });
   });
+
+  it('Skip parameters, no error if some params skipped', function(done) {
+    let notRequested = [
+      'ET_COMPONENTS',
+      'ET_HDR_HIERARCHY',
+      'ET_MPACKAGES',
+      'ET_OPERATIONS',
+      'ET_OPR_HIERARCHY',
+      'ET_PRTS',
+      'ET_RELATIONS',
+    ] 
+    client.connect(function (err) {
+      if (err) {
+        return console.error('could not connect to server', err);
+      }
+      client.invoke('EAM_TASKLIST_GET_DETAIL',
+        { IV_PLNTY:'A',
+          IV_PLNNR:'00100000'
+        },
+        function (err, res) {
+          if (err) {
+            return console.error(err);
+          }
+          // No error if certain params skipped
+          res.should.be.an.Object;
+          res.should.have.properties('ET_RETURN');
+          res.ET_RETURN.should.have.length(0);
+          done();
+        },
+        {'notRequested': notRequested}
+      );
+    });
+  });
+
+  it('Skip parameters, error if all requested', function(done) {
+    client.connect(function (err) {
+      if (err) {
+        return console.error('could not connect to server', err);
+      }
+      client.invoke('EAM_TASKLIST_GET_DETAIL',
+        { IV_PLNTY:'A',
+          IV_PLNNR:'00100000'
+        },
+        function (err, res) {
+          if (err) {
+            return console.error(err);
+          }
+          // Error if all params requested
+          res.should.be.an.Object;
+          res.should.have.properties('ET_RETURN');
+          res.ET_RETURN.should.have.length(1);
+          done();
+        }
+      );
+    });
+  });
+
 
 });
 

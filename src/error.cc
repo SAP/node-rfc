@@ -81,3 +81,4 @@ Local<Value> wrapError(RFC_ERROR_INFO* errorInfo) {
     e = Nan::Error(cBuf);
     return scope.Escape(e->ToObject());
 }
+

@@ -152,7 +152,6 @@ void Client::ConnectAsyncAfter(uv_work_t* req, int status) {
         baton->wrapper->alive = true;
         Local<Function> callback = Nan::New<Function>(baton->callback);
         Nan::Call(callback, Nan::New<Object>(), 0, NULL);
-
     }
 
     baton->callback.Reset();
@@ -252,25 +251,42 @@ void Client::InvokeAsyncAfter(uv_work_t* req, int status) {
 }
 
 NAN_METHOD(Client::Invoke) {
+    RFC_RC rc;
+    RFC_ERROR_INFO errorInfo;
+    Local <Array> notRequested = Nan::New<Array>();
+
     if (info.Length() < 3) {
-        Local<Value> e = Nan::Error("Please provide function module, parameters and callback as parameters");
+        Local<Value> e = Nan::Error("Please provide function module, parameters and callback as arguments");
         Nan::ThrowError(e);
         return info.GetReturnValue().Set(e);
     }
     if (!info[0]->IsString()) {
-        Local<Value> e = Nan::TypeError("First parameter (rfc function name) must be an string");
+        Local<Value> e = Nan::TypeError("First argument (rfc function name) must be an string");
         Nan::ThrowError(e);
         return info.GetReturnValue().Set(e);
     }
     if (!info[1]->IsObject()) {
-        Local<Value> e = Nan::TypeError("Second parameter (rfc function arguments) must be an object");
+        Local<Value> e = Nan::TypeError("Second argument (rfc function arguments) must be an object");
         Nan::ThrowError(e);
         return info.GetReturnValue().Set(e);
     }
     if (!info[2]->IsFunction()) {
-        Local<Value> e = Nan::TypeError("Third Argument must be callback function");
+        Local<Value> e = Nan::TypeError("Third argument must be callback function");
         Nan::ThrowError(e);
         return info.GetReturnValue().Set(e);
+    }
+    if (info.Length() == 4) {
+        if (!info[3]->IsObject() ) {
+            Local<Value> e = Nan::TypeError("Fourth argument is optional object");
+            Nan::ThrowError(e);
+            return info.GetReturnValue().Set(e);
+        }
+        v8::Local<v8::Object> obj = info[3]->ToObject();
+        v8::Local<v8::Array> props = obj->GetPropertyNames();
+        for (unsigned int i = 0; i < props->Length(); i++) {
+            Local<Value> key = props->Get(i)->ToString();
+            notRequested = obj->Get(key->ToString()).As<Array>();
+        }
     }
 
     Client *wrapper = Unwrap<Client>(info.This());
@@ -296,6 +312,18 @@ NAN_METHOD(Client::Invoke) {
     } else {
 
         baton->functionHandle = RfcCreateFunction(baton->functionDescHandle, &baton->errorInfo);
+
+        if (notRequested->Length() != 0) {
+              for (uint i = 0; i < notRequested->Length(); i++) {
+                Local<String> name = notRequested->Get(i)->ToString();
+                SAP_UC *paramName = fillString(name);
+                rc = RfcSetParameterActive(baton->functionHandle, paramName, 0, &baton->errorInfo);
+                free(const_cast<SAP_UC*>(paramName));
+                if (rc != RFC_OK) {
+                    return info.GetReturnValue().Set(wrapError(&baton->errorInfo));
+                }   
+            } 
+        }
 
         Local<Object> params = info[1]->ToObject();
         Local<Array> paramNames = params->GetPropertyNames();
@@ -345,7 +373,7 @@ NAN_METHOD(Client::ConnectionInfo) {
 
     if (rc != RFC_OK) {
         return info.GetReturnValue().Set(wrapError(&errorInfo));
-    }
+    }   
 
     Nan::Set(infoObj, Nan::New("dest").ToLocalChecked(),                    wrapString(connInfo.dest, 64));
     Nan::Set(infoObj, Nan::New("host").ToLocalChecked(),                    wrapString(connInfo.host, 100));
