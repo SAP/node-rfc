@@ -1,12 +1,13 @@
 Change log
 ==========
 
-0.1.15 (in preparation)
------------------------
+0.1.15 (2018-20-04)
+------------------
 
-- Import parameters type checking
-- Deprecated Nan::MakeCallback replaced with Nan:Call
-- getVersion() returns an object instead of array
+- Import parameters type check added
+- Deprecated Nan::MakeCallback() replaced with Nan:Call()
+- getVersion() returns an object instead of array, unit test added as well
+- Skip not needed parameters (not "supplied" / "requested" on ABAP side)
 
 
 0.1.14 (2018-04-03)
