@@ -1,6 +1,11 @@
 Change log
 ==========
 
+0.1.16 (2018-27-04)
+-------------------
+- BCD and Float input conversions
+- Decimal libraries support, like decimal.js
+
 0.1.15 (2018-20-04)
 ------------------
 
