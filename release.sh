@@ -4,6 +4,7 @@
 # 1. node-rfc-release, at the same level as node-rfc
 # 2. node-pre-gyp must be installed globally on windows
 # 3. Python 2.7, required by node-gyp
+# 4. Version updated in VERSION and package.json
 #
 # Run:
 # source release.sh
@@ -31,8 +32,8 @@ if [ "$(expr substr $(uname -s) 1 4)" == "MSYS" ]; then
         # echo "nodejs $lts abi $abi ====================================="
         npm uninstall node-pre-gyp
         npm -g install node-pre-gyp
-        node-pre-gyp clean configure
-        node-pre-gyp build
+        node-pre-gyp clean configure build && mocha
+        #
         cd build
         tar -czvf $release_output/rfc-v${version}-node-v${abi}-win32-x64.tar.gz rfc
         cd ..
@@ -50,8 +51,8 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
         npm install
         abi=`node --eval "console.log(require('node-abi').getAbi())"`
         # echo "nodejs $lts abi $abi ====================================="
-        node-pre-gyp clean configure
-        node-pre-gyp build
+        node-pre-gyp clean configure build && mocha
+        #
         cd build
         tar -czvf $release_output/rfc-v${version}-node-v${abi}-linux-x64.tar.gz rfc
         cd ..

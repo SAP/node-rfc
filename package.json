@@ -1,6 +1,6 @@
 {
   "name": "node-rfc",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "nodejs bindings for SAP NW RFC Library",
   "main": "index.js",
   "directories": {
@@ -12,9 +12,10 @@
     "node-pre-gyp": "^0.8.0"
   },
   "devDependencies": {
+    "decimal.js": "^10.0.0",
     "mocha": "^5.0.5",
-    "should": "^13.1.3",
-    "node-abi": "^2.3.0"
+    "node-abi": "^2.3.0",
+    "should": "^13.1.3"
   },
   "scripts": {
     "test": "mocha",
@@ -28,7 +29,7 @@
     "remote_path": "{version}"
   },
   "engines": {
-    "node": "4.x || 6.x || 8.x"
+    "node": "4.x || 6.x || 8.x || 9.x"
   },
   "os": [
     "!darwin"

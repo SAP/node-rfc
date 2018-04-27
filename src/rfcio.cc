@@ -191,15 +191,17 @@ Local<Value> fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_U
         break;
     case RFCTYPE_BCD:   // fallthrough
     case RFCTYPE_FLOAT:
-        if (!value->IsNumber()) {
+        if (!value->IsNumber() && !value->IsObject() && !value->IsString()) {
             char cBuf[256];
             String::Utf8Value s(wrapString(cName));
             std::string fieldName(*s);
-            sprintf(cBuf, "Number expected when filling field %s of type %d", fieldName.c_str(), typ);
+            sprintf(cBuf, "Number, number object or string expected when filling field %s of type %d", fieldName.c_str(), typ);
             Handle<Value> e = Nan::Error(cBuf);
             return scope.Escape(e->ToObject());
         }
-        rc = RfcSetFloat(functionHandle, cName, value.As<Number>()->Value(), &errorInfo);
+        cValue = fillString(value->ToString());
+        rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
+        //rc = RfcSetFloat(functionHandle, cName, value.As<Number>()->Value(), &errorInfo);
         break;
     case RFCTYPE_INT:
     case RFCTYPE_INT1:
@@ -293,7 +295,6 @@ Handle<Object> wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCT
 
     return scope.Escape(resultObj);
 }
-
 
 Handle<Value> wrapString(SAP_UC* uc, int length, bool rstrip) {
     Nan::EscapableHandleScope scope;
@@ -458,7 +459,24 @@ Handle<Value> wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_
             free(byteValue);
             break;
         }
-        case RFCTYPE_BCD:   // fall through; BCD also just mapped to js float type
+        case RFCTYPE_BCD: {
+            // An upper bound for the length of the _string representation_
+            // of the BCD is given by (2*cLen)-1 (each digit is encoded in 4bit,
+            // the first 4 bit are reserved for the sign)
+            // Furthermore, a sign char, a decimal separator char may be present 
+            // => (2*cLen)+1
+            unsigned int resultLen;
+            unsigned int strLen = 2 * cLen + 1;
+            SAP_UC *sapuc = mallocU(strLen+1);
+            rc = RfcGetString(functionHandle, cName, sapuc, strLen+1, &resultLen, &errorInfo);
+            if (rc != RFC_OK) {
+                free(sapuc);
+                break;
+            }
+            resultValue = wrapString(sapuc, resultLen);
+            free(sapuc);
+            break;
+        }   
         case RFCTYPE_FLOAT: {
             RFC_FLOAT floatValue;
             rc = RfcGetFloat(functionHandle, cName, &floatValue, &errorInfo);

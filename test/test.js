@@ -14,12 +14,12 @@
 
 "use strict";
 
-let should = require('should');
-let binary = require('node-pre-gyp');
-let path = require('path');
-let rfc_path = binary.find(path.resolve(path.join(__dirname,'../package.json')));
-console.log(rfc_path)
-let rfc = require(rfc_path);
+const should = require('should');
+const binary = require('node-pre-gyp');
+const path = require('path');
+const rfc_path = binary.find(path.resolve(path.join(__dirname,'../package.json')));
+const rfc = require(rfc_path);
+const Decimal = require('decimal.js');
 
 let connParams = {
   user: 'demo',
@@ -261,7 +261,7 @@ describe("Connection", function() {
       });
   });
   
-  it('FLOAT type check', function(done) {
+  it('BCD and FLOAT not a number string', function(done) {
     let importStruct = {
       RFCFLOAT: "A"
     };
@@ -272,11 +272,111 @@ describe("Connection", function() {
         should.exist(err);
         err.should.be.an.Object;
         err.should.have.properties({
-          message: "Number expected when filling field RFCFLOAT of type 7"
-        });
+          code:22,
+          key: 'RFC_CONVERSION_FAILURE',
+          message: "Cannot convert string value A at position 0 for the field RFCFLOAT to type RFCTYPE_FLOAT"
+      });
+      done();
+    });
+  });
+
+
+  it('BCD and FLOAT input numbers', function(done) {
+    let isInput = {
+        // Float
+        ZFLTP: 0.123456789,
+      
+        // Decimal
+        ZDEC: 12345.67,
+      
+        // Currency, Quantity
+        ZCURR: 1234.56,
+        ZQUAN: 12.3456,
+        ZQUAN_SIGN: -12.345
+    };
+    client.invoke('/COE/RBP_FE_DATATYPES', {IS_INPUT: isInput},
+      function (err, res) {
+        if (err) {
+          return console.error(err);
+        }
+        for (let k in isInput) {
+          let inVal = isInput[k];
+          let outVal = res.ES_OUTPUT[k];
+          let outTyp = typeof outVal;
+          if (k === 'ZFLTP') {
+            outTyp.should.equal('number');
+            outVal.should.equal(inVal);
+          } else {
+            outTyp.should.equal('string');
+            outVal.should.equal(inVal.toString());
+          }
+        }
         done();
       });
   });
+
+  it('BCD and FLOAT input strings', function(done) {
+    let isInput = {
+      // Float
+      ZFLTP: '0.123456789',
+    
+      // Decimal
+      ZDEC: '12345.67',
+    
+      // Currency, Quantity
+      ZCURR: '1234.56',
+      ZQUAN: '12.3456',
+      ZQUAN_SIGN: '-12.345'
+    };
+    client.invoke('/COE/RBP_FE_DATATYPES', {IS_INPUT: isInput},
+      function (err, res) {
+        if (err) {
+          return console.error(err);
+        }
+        for (let k in isInput) {
+          let inVal = isInput[k];
+          let outVal = res.ES_OUTPUT[k];
+          let outTyp = typeof outVal;
+          if (k === 'ZFLTP') {
+            outTyp.should.equal('number');
+            inVal.should.equal(outVal.toString());
+          } else {
+            outTyp.should.equal('string');
+            outVal.should.equal(inVal);
+          }
+        }
+        done();
+      });
+  });
+
+  it('BCD and FLOAT input Decimals', function(done) {
+    let isInput = {
+      ZFLTP: Decimal('0.123456789'),
+
+      // Decimal
+      ZDEC: Decimal('12345.67'),
+  
+      // Currency, Quantity
+      ZCURR: Decimal('1234.56'),
+      ZQUAN: Decimal('12.3456'),
+      ZQUAN_SIGN: Decimal('-12.345')
+    };
+    client.invoke('/COE/RBP_FE_DATATYPES', {IS_INPUT: isInput},
+      function (err, res) {
+        if (err) {
+          return console.error(err);
+        }
+        for (let k in isInput) {
+          let inVal = isInput[k];
+          let outVal = res.ES_OUTPUT[k];
+          let outTyp = typeof outVal;
+          inVal.equals(outVal).should.equal(true);
+
+        }
+        done();
+      });
+  });
+
 
   it('Skip parameters, no error if some params skipped', function(done) {
     let notRequested = [
