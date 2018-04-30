@@ -70,12 +70,12 @@ built-in types.
   http://help.sap.com/saphelp_nw04/helpdata/en/fc/eb2fd9358411d1829f0000e829fbfe/content.htm
   http://msdn.microsoft.com/en-us/library/cc185537%28v=bts.10%29.aspx
 
-================= ========== ========================================== =========== ============== ==================================================================
+================= ========== ========================================== =========== ============== =====================================================================
 Type Category     ABAP       Meaning                                    RFC         Javascript     Remark
-================= ========== ========================================== =========== ============== ==================================================================
+================= ========== ========================================== =========== ============== =====================================================================
 numeric           I          Integer (whole number)                     INT         Integer        Internal 1 and 2 byte integers (INT1, INT2) are also mapped to int
 numeric           F          Floating point number                      FLOAT       Number
-numeric           P          Packed number / BCD number                 BCD         Number
+numeric           P          Packed number / BCD number                 BCD         see remark     Input as Number, string or decimal (decimal.js ...), output as string
 character         C          Text field (alphanumeric characters)       CHAR        string
 character         D          Date field (Format: YYYYMMDD)              DATE        string
 character         T          Time field (Format: HHMMSS)                TIME        string
@@ -83,7 +83,7 @@ character         N          Numeric text field (numeric characters)    NUM     
 hexadecimal       X          Hexadecimal field                          BYTE        string
 variable length   STRING     Dynamic length string                      STRING      string
 variable length   XSTRING    Dynamic length hexadecimal string          BYTE        string
-================= ========== ========================================== =========== ============== ==================================================================
+================= ========== ========================================== =========== ============== =====================================================================
 
 Further `details on predefined ABAP types`_ are available online.
 
