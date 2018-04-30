@@ -7,7 +7,7 @@
 # 4. Version updated in VERSION and package.json
 #
 # Run:
-# source release.sh
+# source release.sh (bash release.sh)
 #
 # Ref: https://nodejs.org/en/download/releases/
 
@@ -30,11 +30,14 @@ if [ "$(expr substr $(uname -s) 1 4)" == "MSYS" ]; then
         npm install
         abi=`node --eval "console.log(require('node-abi').getAbi())"`
         # echo "nodejs $lts abi $abi ====================================="
-        npm uninstall node-pre-gyp
-        npm -g install node-pre-gyp
-        node-pre-gyp clean configure build && mocha
+        
+	# on windows, build with global, test with local node-pre-gyp
+	npm uninstall node-pre-gyp && npm -g install node-pre-gyp
+        node-pre-gyp clean configure build
+	npm -g uninstall node-pre-gyp && npm i node-pre-gyp
+	npm run test
         #
-        cd build
+	cd build
         tar -czvf $release_output/rfc-v${version}-node-v${abi}-win32-x64.tar.gz rfc
         cd ..
     done
@@ -51,7 +54,7 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
         npm install
         abi=`node --eval "console.log(require('node-abi').getAbi())"`
         # echo "nodejs $lts abi $abi ====================================="
-        node-pre-gyp clean configure build && mocha
+        node-pre-gyp clean configure build && npm run test mocha
         #
         cd build
         tar -czvf $release_output/rfc-v${version}-node-v${abi}-linux-x64.tar.gz rfc
