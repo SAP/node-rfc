@@ -7,7 +7,7 @@ Change log
 - Decimal libraries support, like decimal.js
 
 0.1.15 (2018-20-04)
-------------------
+-------------------
 
 - Import parameters type check added
 - Deprecated Nan::MakeCallback() replaced with Nan:Call()
