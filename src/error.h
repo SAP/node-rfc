@@ -15,12 +15,10 @@
 #ifndef ERROR_H_
 #define ERROR_H_
 
-
 using namespace v8;
 
-
-Local<Object> RfcLibError(RFC_ERROR_INFO* errorInfo);
-Local<Object> AbapError(RFC_ERROR_INFO* errorInfo);
-Local<Value> wrapError(RFC_ERROR_INFO* errorInfo);
+Local<Object> RfcLibError(RFC_ERROR_INFO *errorInfo);
+Local<Object> AbapError(RFC_ERROR_INFO *errorInfo);
+Local<Value> wrapError(RFC_ERROR_INFO *errorInfo);
 
 #endif

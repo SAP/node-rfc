@@ -14,7 +14,8 @@
 
 #include "Client.h"
 
-NAN_MODULE_INIT(InitAll) {
+NAN_MODULE_INIT(InitAll)
+{
   Client::Init(target);
 }
 
