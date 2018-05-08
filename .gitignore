@@ -13,4 +13,6 @@ obj.target
 build
 node_modules
 doc/_build
+.buildinfo
+_sources
 

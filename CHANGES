@@ -1,6 +1,12 @@
 Change log
 ==========
 
+0.1.17 (XXXX-XX-XX)
+-------------------
+
+* C/C++ style guide
+* string handling optimization
+
 0.1.16 (2018-27-04)
 -------------------
 - Decimal and Float input conversions #52 fix
