@@ -14,11 +14,11 @@
 
 "use strict";
 
-const should = require('should');
 const binary = require('node-pre-gyp');
 const path = require('path');
 const rfc_path = binary.find(path.resolve(path.join(__dirname,'../package.json')));
 const rfc = require(rfc_path);
+const should = require('should');
 const Decimal = require('decimal.js');
 
 let connParams = {

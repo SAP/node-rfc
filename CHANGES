@@ -5,7 +5,8 @@ Change log
 -------------------
 
 * C/C++ style guide
-* string handling optimization
+* String handling optimization
+* Conneciton handle check before close
 
 0.1.16 (2018-27-04)
 -------------------

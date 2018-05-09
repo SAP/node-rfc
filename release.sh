@@ -54,7 +54,7 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
         npm install
         abi=`node --eval "console.log(require('node-abi').getAbi())"`
         # echo "nodejs $lts abi $abi ====================================="
-        node-pre-gyp clean configure build && npm run test mocha
+        node-pre-gyp clean configure build && npm run test
         #
         cd build
         tar -czvf $release_output/rfc-v${version}-node-v${abi}-linux-x64.tar.gz rfc

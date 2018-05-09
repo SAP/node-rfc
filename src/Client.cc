@@ -31,11 +31,18 @@ Client::Client() : connectionHandle(NULL),
 
 Client::~Client()
 {
+    RFC_INT isValid;
     RFC_ERROR_INFO errorInfo;
-    RFC_RC rc = RfcCloseConnection(this->connectionHandle, &errorInfo);
-    if (rc != RFC_OK)
+    RFC_RC rc = RfcIsConnectionHandleValid(this->connectionHandle, &isValid, &errorInfo);
+    if (rc == RFC_OK && isValid)
     {
-        printf("Error closing connection: %u", rc); // FIXME error handling
+        rc = RfcCloseConnection(this->connectionHandle, &errorInfo);
+        if (rc != RFC_OK)
+        {
+            v8::String::Utf8Value utf8Error(wrapError(&errorInfo)->ToString());
+            std::string err = std::string(*utf8Error, utf8Error.length());
+            printf("\n%s", &err[0]);
+        }
     }
     this->alive = false;
     uv_sem_destroy(&this->invocationMutex);
@@ -204,16 +211,22 @@ NAN_METHOD(Client::Connect)
 NAN_METHOD(Client::Close)
 {
     Client *wrapper = Unwrap<Client>(info.This());
-    RFC_RC rc;
+    RFC_INT isValid;
     RFC_ERROR_INFO errorInfo;
-    rc = RfcCloseConnection(wrapper->connectionHandle, &errorInfo);
-    wrapper->alive = false;
-    if (rc != RFC_OK)
+    RFC_RC rc = RfcIsConnectionHandleValid(wrapper->connectionHandle, &isValid, &errorInfo);
+    if (rc == RFC_OK && isValid)
     {
-        info.GetReturnValue().Set(wrapError(&errorInfo));
-        return;
+        rc = RfcCloseConnection(wrapper->connectionHandle, &errorInfo);
+        if (rc != RFC_OK)
+        {
+            info.GetReturnValue().Set(wrapError(&errorInfo));
+        }
+        else
+        {
+            info.GetReturnValue().SetUndefined();
+        }
     }
-    info.GetReturnValue().SetUndefined();
+    wrapper->alive = false;
 }
 
 NAN_METHOD(Client::Reopen)
