@@ -296,9 +296,7 @@ describe('Connection', function() {
 			ZQUAN_SIGN: -12.345,
 		};
 		client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
-			if (err) {
-				err.should.equal(false);
-			}
+			should.not.exist(err);
 			for (let k in isInput) {
 				let inVal = isInput[k];
 				let outVal = res.ES_OUTPUT[k];
@@ -329,9 +327,7 @@ describe('Connection', function() {
 			ZQUAN_SIGN: '-12.345',
 		};
 		client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
-			if (err) {
-				err.should.equal(false);
-			}
+			should.not.exist(err);
 			for (let k in isInput) {
 				let inVal = isInput[k];
 				let outVal = res.ES_OUTPUT[k];
@@ -361,9 +357,7 @@ describe('Connection', function() {
 			ZQUAN_SIGN: Decimal('-12.345'),
 		};
 		client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
-			if (err) {
-				err.should.equal(false);
-			}
+			should.not.exist(err);
 			for (let k in isInput) {
 				let inVal = isInput[k];
 				let outVal = res.ES_OUTPUT[k];
@@ -385,9 +379,7 @@ describe('Connection', function() {
 			'ET_RELATIONS',
 		];
 		client.connect(function(err) {
-			if (err) {
-				return console.error('could not connect to server', err);
-			}
+			should.not.exist(err);
 			client.invoke(
 				'EAM_TASKLIST_GET_DETAIL',
 				{
@@ -395,9 +387,7 @@ describe('Connection', function() {
 					IV_PLNNR: '00100000',
 				},
 				function(err, res) {
-					if (err) {
-						error.should.equal(false);
-					}
+					should.not.exist(err);
 					// No error if certain params skipped
 					res.should.be.an.Object;
 					res.should.have.properties('ET_RETURN');
@@ -411,9 +401,7 @@ describe('Connection', function() {
 
 	it('Skip parameters, error if all requested', function(done) {
 		client.connect(function(err) {
-			if (err) {
-				return console.error('could not connect to server', err);
-			}
+			should.not.exist(err);
 			client.invoke(
 				'EAM_TASKLIST_GET_DETAIL',
 				{
