@@ -214,6 +214,9 @@ NAN_METHOD(Client::Close)
     RFC_INT isValid;
     RFC_ERROR_INFO errorInfo;
     RFC_RC rc = RfcIsConnectionHandleValid(wrapper->connectionHandle, &isValid, &errorInfo);
+
+    wrapper->alive = false;
+
     if (rc == RFC_OK && isValid)
     {
         rc = RfcCloseConnection(wrapper->connectionHandle, &errorInfo);
@@ -226,7 +229,6 @@ NAN_METHOD(Client::Close)
             info.GetReturnValue().SetUndefined();
         }
     }
-    wrapper->alive = false;
 }
 
 NAN_METHOD(Client::Reopen)
