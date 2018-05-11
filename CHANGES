@@ -6,7 +6,8 @@ Change log
 
 * C/C++ style guide
 * String handling optimization
-* Conneciton handle check before close
+* Conneciton handle check before closea
+* Unit tests fix
 
 0.1.16 (2018-27-04)
 -------------------
