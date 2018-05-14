@@ -15,4 +15,5 @@ node_modules
 doc/_build
 .buildinfo
 _sources
+lib/binding
 
