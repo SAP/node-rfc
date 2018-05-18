@@ -1,6 +1,6 @@
 ## :heavy_exclamation_mark: Experimental N-API Port :heavy_exclamation_mark:
 
-**Not for production use, see [open issues](#issues).**
+**See [open issues](#issues).**
 
 # The nodejs SAP NW RFC Connector
 
@@ -168,4 +168,3 @@ Pre-compiled binaries for currently active nodejs LTS releases are provided in t
 
 *   [AsyncWorker structural defects and limitations](https://github.com/nodejs/node-addon-api/issues/231)
 *   [Type checks](https://github.com/nodejs/node-addon-api/issues/265)
-*   [N-API memory leak](https://github.com/nodejs/node-addon-api/issues/237)
