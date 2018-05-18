@@ -34,9 +34,18 @@ describe('Connection', function() {
         client.close();
     });
 
-    it('getVersion() should return major, minor, patchLevel and node-rfc', function() {
+    it('getVersion() should return major, minor, patchLevel', function() {
         let version = rfc.Client.getVersion();
-        version.should.have.properties('major', 'minor', 'patchLevel', 'noderfc');
+        version.should.have.properties('major', 'minor', 'patchLevel');
+    });
+
+    it('addon VERSION should match file VERSION', function() {
+        let VERSION = require('fs')
+            .readFileSync('VERSION')
+            .toString()
+            .trim();
+        should.exist(rfc.VERSION);
+        rfc.VERSION.should.equal(VERSION);
     });
 
     it('connectionInfo() should return connection information', function() {

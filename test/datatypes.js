@@ -23,7 +23,7 @@ const connParams = require('./connParams');
 describe('Datatypes', function() {
     let client;
 
-    before(function(done) {
+    beforeEach(function(done) {
         client = new rfc.Client(connParams);
         client.connect(function(err) {
             if (err) return done(err);
@@ -31,8 +31,40 @@ describe('Datatypes', function() {
         });
     });
 
-    after(function() {
+    afterEach(function() {
         client.close();
+    });
+
+    it('CHAR type check', function(done) {
+        let importStruct = {
+            RFCCHAR4: 65,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object;
+            err.should.have.properties({
+                message: 'Char expected when filling field RFCCHAR4 of type 0',
+            });
+            done();
+        });
+    });
+
+    it('BCD and FLOAT not a number string', function(done) {
+        let importStruct = {
+            RFCFLOAT: 'A',
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object;
+            err.should.have.properties({
+                code: 22,
+                key: 'RFC_CONVERSION_FAILURE',
+                message: 'Cannot convert string value A at position 0 for the field RFCFLOAT to type RFCTYPE_FLOAT',
+            });
+            done();
+        });
     });
 
     it('BCD and FLOAT input numbers', function(done) {
@@ -192,6 +224,40 @@ describe('Datatypes', function() {
             Buffer(isInput.ZRAWSTRING)
                 .equals(res.ES_OUTPUT.ZRAWSTRING)
                 .should.equal(true);
+            done();
+        });
+    });
+
+    it('INT type check should detect strings', function(done) {
+        let importStruct = {
+            RFCINT1: '1',
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object;
+            err.should.have.properties({
+                name: 'TypeError',
+                message: 'Integer number expected when filling field RFCINT1 of type 10',
+            });
+            done();
+        });
+    });
+
+    xit('INT type check should detect floats [pending] https://github.com/nodejs/node-addon-api/issues/265', function(done) {
+        let importStruct = {
+            RFCINT1: 1,
+            RFCINT2: 2,
+            RFCINT4: 3.1,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object;
+            err.should.have.properties({
+                name: 'TypeError',
+                message: 'Integer number expected when filling field RFCINT4 of type 8',
+            });
             done();
         });
     });

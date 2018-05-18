@@ -25,7 +25,7 @@
                 "SAPwithUNICODE",
                 "SAPwithTHREADS",
                 "NDEBUG",
-                'NAPI_CPP_EXCEPTIONS'
+                "NAPI_CPP_EXCEPTIONS"
             ],
 
             "dependencies": ["<!(node -p \"require('node-addon-api').gyp\")"],

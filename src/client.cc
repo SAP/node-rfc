@@ -443,7 +443,7 @@ Napi::Value Client::GetVersion(const Napi::CallbackInfo &info)
     (version).Set(Napi::String::New(env, "major"), major);
     (version).Set(Napi::String::New(env, "minor"), minor);
     (version).Set(Napi::String::New(env, "patchLevel"), patchLevel);
-    (version).Set(Napi::String::New(env, "noderfc"), Napi::String::New(env, SAPNWRFC_VERSION));
+    (version).Set(Napi::String::New(env, "VERSION"), Napi::String::New(env, SAPNWRFC_VERSION));
     return version;
 }
 
