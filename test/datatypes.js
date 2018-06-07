@@ -156,7 +156,7 @@ describe('Datatypes', function() {
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
-            Buffer(isInput.ZRAW)
+            Buffer.alloc(isInput.ZRAW.length, isInput.ZRAW)
                 .equals(res.ES_OUTPUT.ZRAW)
                 .should.equal(true);
             done();
@@ -169,7 +169,7 @@ describe('Datatypes', function() {
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
-            Buffer(isInput.ZRAW)
+            Buffer.alloc(isInput.ZRAW.length, isInput.ZRAW)
                 .equals(res.ES_OUTPUT.ZRAW)
                 .should.equal(true);
             done();
@@ -178,13 +178,11 @@ describe('Datatypes', function() {
 
     it('RAW/BYTE as Buffer', function(done) {
         let isInput = {
-            ZRAW: Buffer('01234567890123456'),
+            ZRAW: Buffer.alloc(17, '01234567890123456'),
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
-            Buffer(isInput.ZRAW)
-                .equals(res.ES_OUTPUT.ZRAW)
-                .should.equal(true);
+            isInput.ZRAW.equals(res.ES_OUTPUT.ZRAW).should.equal(true);
             done();
         });
     });
@@ -195,7 +193,7 @@ describe('Datatypes', function() {
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
-            Buffer(isInput.ZRAWSTRING)
+            Buffer.alloc(isInput.ZRAWSTRING.length, isInput.ZRAWSTRING)
                 .equals(res.ES_OUTPUT.ZRAWSTRING)
                 .should.equal(true);
             done();
@@ -208,7 +206,7 @@ describe('Datatypes', function() {
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
-            Buffer(isInput.ZRAWSTRING)
+            Buffer.alloc(isInput.ZRAWSTRING.length, isInput.ZRAWSTRING)
                 .equals(res.ES_OUTPUT.ZRAWSTRING)
                 .should.equal(true);
             done();
@@ -217,13 +215,11 @@ describe('Datatypes', function() {
 
     it('XSTRING as Buffer', function(done) {
         let isInput = {
-            ZRAWSTRING: Buffer('01234567890123456'),
+            ZRAWSTRING: Buffer.alloc(17, '01234567890123456'),
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
-            Buffer(isInput.ZRAWSTRING)
-                .equals(res.ES_OUTPUT.ZRAWSTRING)
-                .should.equal(true);
+            isInput.ZRAWSTRING.equals(res.ES_OUTPUT.ZRAWSTRING).should.equal(true);
             done();
         });
     });
