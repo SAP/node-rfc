@@ -2,6 +2,9 @@
 
 **See [open issues](#issues).**
 
+[![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![downloads](https://img.shields.io/github/downloads/sap/node-rfc/total.svg)
+
 # The nodejs SAP NW RFC Connector
 
 Asynchronous, non-blocking [SAP NetWeawer RFC Library](http://service.sap.com/rfc-library) client bindings for [Node.js](http://nodejs.org/).
