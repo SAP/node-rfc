@@ -82,12 +82,7 @@ describe('Error handling', function() {
     });
 
     it('Connection parameter missing', function(done) {
-        let wrongParams = {};
-        for (let attr in connParams) {
-            if (connParams.hasOwnProperty(attr)) {
-                wrongParams[attr] = connParams[attr];
-            }
-        }
+        let wrongParams = Object.assign({}, connParams);
         delete wrongParams.ashost;
 
         let wrongClient = new rfc.Client(wrongParams);
@@ -135,20 +130,21 @@ describe('Error handling', function() {
         } catch (err) {
             should.exist(err);
             err.should.have.properties({
-                message: 'Please provide function module, parameters and callback as arguments',
+                message: 'Please provide rfc module name, parameters and callback as arguments',
             });
         } finally {
             done();
         }
     });
 
-    it('[invoke] First argument (rfc function name) must be an string', function(done) {
+    it('[invoke] First argument (rfc module name) must be an string', function(done) {
         try {
             client.invoke(23, {}, 2);
         } catch (err) {
             should.exist(err);
             err.should.have.properties({
-                message: 'First argument (rfc function name) must be an string',
+                name: 'TypeError',
+                message: 'First argument (rfc module name) must be an string',
             });
         } finally {
             done();

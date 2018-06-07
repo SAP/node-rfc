@@ -252,45 +252,52 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
     RFC_FUNCTION_DESC_HANDLE functionDescHandle;
     RFC_FUNCTION_HANDLE functionHandle;
 
+    Napi::Function callback;
+
     if (info.Length() < 3)
     {
-        throw Napi::TypeError::New(__genv, "Please provide function module, parameters and callback as arguments");
+        throw Napi::TypeError::New(__genv, "Please provide rfc module name, parameters and callback as arguments");
     }
 
     if (!info[0].IsString())
     {
-        throw Napi::TypeError::New(__genv, "First argument (rfc function name) must be an string");
+        throw Napi::TypeError::New(__genv, "First argument (rfc module name) must be an string");
     }
 
     if (!info[1].IsObject())
     {
-        throw Napi::TypeError::New(__genv, "Second argument (rfc function arguments) must be an object");
+        throw Napi::TypeError::New(__genv, "Second argument (rfc module parameters) must be an object");
     }
 
-    if (!info[2].IsFunction())
+    for (unsigned int i = 2; i < info.Length(); i++)
     {
-        throw Napi::TypeError::New(__genv, "Third argument must be callback function");
-    }
-
-    if (info.Length() == 4)
-    {
-        if (!info[3].IsObject())
+        if (info[i].IsFunction())
         {
-            throw Napi::TypeError::New(__genv, "Fourth argument is optional object");
+            callback = info[i].As<Napi::Function>();
         }
-        Napi::Object obj = info[3].ToObject();
-        Napi::Array props = obj.GetPropertyNames();
-        for (unsigned int i = 0; i < props.Length(); i++)
+        else if (info[i].IsObject())
         {
-            Napi::String key = props.Get(i).ToString();
-            if (key.Utf8Value().compare(std::string("notRequested")) == (int)0)
+            Napi::Object obj = info[i].ToObject();
+            Napi::Array props = obj.GetPropertyNames();
+            for (unsigned int i = 0; i < props.Length(); i++)
             {
-                notRequested = obj.Get(key).As<Napi::Array>();
+                Napi::String key = props.Get(i).ToString();
+                if (key.Utf8Value().compare(std::string("notRequested")) == (int)0)
+                {
+                    notRequested = obj.Get(key).As<Napi::Array>();
+                }
             }
         }
+        else
+        {
+            throw Napi::TypeError::New(__genv, "Call options argument, if provided, must be an object");
+        }
     }
 
-    Napi::Function callback = info[2].As<Napi::Function>();
+    if (!callback.IsFunction())
+    {
+        throw Napi::TypeError::New(__genv, "Callback function must be supplied");
+    }
 
     Napi::Value argv[] = {}; //env.Undefined(), env.Undefined()};
 
