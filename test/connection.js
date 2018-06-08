@@ -34,21 +34,23 @@ describe('Connection', function() {
         client.close();
     });
 
-    it('getVersion() should return major, minor, patchLevel', function() {
+    it('getVersion() should return major, minor, patchLevel', function(done) {
         let version = rfc.Client.getVersion();
         version.should.have.properties('major', 'minor', 'patchLevel');
+        done();
     });
 
-    it('addon VERSION should match file VERSION', function() {
+    it('addon VERSION should match file VERSION', function(done) {
         let VERSION = require('fs')
             .readFileSync('VERSION')
             .toString()
             .trim();
         should.exist(rfc.VERSION);
         rfc.VERSION.should.equal(VERSION);
+        done();
     });
 
-    it('connectionInfo() should return connection information', function() {
+    it('connectionInfo() should return connection information', function(done) {
         let info = client.connectionInfo();
         info.should.have.properties(
             'host',
@@ -78,17 +80,20 @@ describe('Connection', function() {
             sysNumber: connParams.sysnr,
             client: connParams.client,
         });
+        done();
     });
 
-    it('isAlive() and ping() should return true when connected', function() {
+    it('isAlive() and ping() should return true when connected', function(done) {
         client.isAlive().should.be.true;
         client.ping().should.be.true;
+        done();
     });
 
-    it('isAlive() and ping() should return false after close()', function() {
+    it('isAlive() and ping() should return false after close()', function(done) {
         client.close();
         client.isAlive().should.be.false;
         client.ping().should.be.false;
+        done();
     });
 
     it('reopen() should reopen the connection', function(done) {

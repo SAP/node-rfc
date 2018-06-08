@@ -165,7 +165,7 @@ describe('[promise] Error handling', function() {
         wrongClient.close();
     });
 
-    it('[new] No connection parameters provided at all', function(done) {
+    it('No connection parameters provided at all', function(done) {
         try {
             rfc.Client.new();
         } catch (err) {
@@ -178,7 +178,7 @@ describe('[promise] Error handling', function() {
         }
     });
 
-    it('[invoke] At least three arguments must be provided', function(done) {
+    it('At least three arguments must be provided', function(done) {
         client.call('rfc').catch(err => {
             should.exist(err);
             err.should.have.properties({
@@ -189,7 +189,7 @@ describe('[promise] Error handling', function() {
         });
     });
 
-    it('[invoke] First argument (rfc module name) must be an string', function(done) {
+    it('First argument (rfc module name) must be an string', function(done) {
         client.call(23, {}, 2).catch(err => {
             should.exist(err);
             err.should.have.properties({
@@ -200,7 +200,7 @@ describe('[promise] Error handling', function() {
         });
     });
 
-    it('[invoke] Second argument (rfc module parameters) must be an object', function(done) {
+    it('Second argument (rfc module parameters) must be an object', function(done) {
         client.call('rfc', 41, 2).catch(err => {
             should.exist(err);
             err.should.have.properties({

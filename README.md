@@ -7,7 +7,15 @@
 
 # The nodejs SAP NW RFC Connector
 
-Asynchronous, non-blocking [SAP NetWeawer RFC Library](http://service.sap.com/rfc-library) client bindings for [Node.js](http://nodejs.org/).
+Asynchronous, non-blocking [SAP NetWeawer RFC Library](http://service.sap.com/rfc-library) client bindings for [Node.js](http://nodejs.org/):
+
+-   Based on the latest nodejs [N-API](https://github.com/nodejs/node-addon-api) standard
+-   Promise and callback interface
+-   Connections pool (in progress)
+-   Sequential and parallel calls, using single or multiple node-rfc cliens
+-   Automatic conversion between JavaScript and ABAP datatypes
+-   Decimal objects support
+-   Extensive unit tests
 
 ## Prerequisites
 
@@ -20,8 +28,6 @@ SAP NW RFC Library is fully backwards compatible, supporting all NetWeaver syste
 Compiled binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows and Linux platforms.
 
 OS X and ARM platforms are currently not supported, as _SAP NW RFC Library_ is not available for those platforms.
-
-The `node-rfc` module works also with Nodejs v4.x versions.
 
 ## Usage
 
@@ -104,12 +110,7 @@ client.connect(function(err) {
 
 Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method on the client instance.
 
-[r3connect](https://github.com/hundeloh-consulting/r3connect) wrapper makes the node-rfc consumption even more comfortable,
-offering promise-based API and connections pool capabilities.
-
 For more examples check the unit tests source code.
-
-## Promises
 
 The same example with promises:
 
@@ -183,14 +184,6 @@ client.open
 	});
 ```
 
-## Features
-
--   Asynchronous, non-blocking SAP NW RFC client binding interface
--   Sequential and parallel calls, using single or multiple node-rfc cliens
--   Automatic conversion between JavaScript and ABAP datatypes
--   Decimal objects support
--   Extensive unit tests
-
 ## API and documentation
 
 For API And full documentation please refer to [_node-rfc_ documentation](http://sap.github.io/node-rfc), complementing _SAP NW RFC Library_ [programming guide and documentation](http://service.sap.com/rfc-library).
@@ -233,9 +226,6 @@ Pre-compiled binaries for currently active nodejs LTS releases are provided in t
 ## For Developers
 
 -   [Embedder's Guide](https://github.com/v8/v8/wiki/Embedder's%20Guide)
--   [Asynchronous Bindings and Multithreading](https://medium.com/@muehler.v/tutorial-to-native-node-js-df4118efb678)
--   [How does Node.js work asynchronously without multithreading?](https://softwareengineeringdaily.com/2015/08/02/how-does-node-js-work-asynchronously-without-multithreading/)
--   [Understanding the node.js event loop](http://blog.mixu.net/2011/02/01/understanding-the-node-js-event-loop/)
 -   [N-API enabled modules](https://github.com/nodejs/abi-stable-node)
 -   [N-API API docs](https://nodejs.github.io/node-addon-api/index.html)
 -   [v8 API docs](https://v8docs.nodesource.com/)
@@ -243,5 +233,4 @@ Pre-compiled binaries for currently active nodejs LTS releases are provided in t
 
 ## Issues
 
--   [AsyncWorker structural defects and limitations](https://github.com/nodejs/node-addon-api/issues/231)
 -   [Type checks](https://github.com/nodejs/node-addon-api/issues/265)

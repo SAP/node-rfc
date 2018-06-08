@@ -1,3 +1,5 @@
+const Promise = require('bluebird');
+
 const rfc = require('../sapnwrfc');
 
 const connParams = require('../test/connParams');
@@ -22,4 +24,7 @@ client
     })
     .catch(err => {
         console.error(err.name, err.message);
+    })
+    .finally(() => {
+        console.log('finally!');
     });
