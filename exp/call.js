@@ -2,13 +2,11 @@ const rfc = require('../sapnwrfc');
 
 const connParams = require('../test/connParams');
 
-const rfcClient = rfc.Client;
-
-let client = rfc.Client.new(connParams);
-
-console.log(client.connectionInfo());
-return;
-
+let c1 = rfc.Client.new(connParams);
+console.log(c1.id);
+let c2 = rfc.Client.new(connParams);
+console.log(c2.id);
+/*
 client
     .open(() => {})
     .then(() => {
@@ -29,3 +27,4 @@ client
     .finally(() => {
         console.log('finally!');
     });
+*/

@@ -51,6 +51,11 @@ public:
   ~Client(void);
 
 private:
+  static unsigned int __refCounter;
+  unsigned int __refId;
+
+  Napi::Value IdGetter(const Napi::CallbackInfo &info);
+
   static Napi::Value GetVersion(const Napi::CallbackInfo &info);
   Napi::Value ConnectionInfo(const Napi::CallbackInfo &info);
 

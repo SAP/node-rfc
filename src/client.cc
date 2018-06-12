@@ -20,6 +20,8 @@
 namespace node_rfc
 {
 
+unsigned int Client::__refCounter = 0;
+
 Napi::Env __genv = NULL;
 
 class ConnectAsync : public Napi::AsyncWorker
@@ -133,6 +135,8 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
         this->connectionParams[i].value = fillString(value);
     }
 
+    this->__refId = ++Client::__refCounter;
+
     uv_sem_init(&this->invocationMutex, 1);
 }
 
@@ -166,16 +170,18 @@ Napi::Object Client::Init(Napi::Env env, Napi::Object exports)
 {
     Napi::HandleScope scope(env);
 
-    Napi::Function t = DefineClass(env, "Client", {
-                                                      StaticMethod("getVersion", Client::GetVersion),
-                                                      InstanceMethod("connectionInfo", &Client::ConnectionInfo),
-                                                      InstanceMethod("connect", &Client::Connect),
-                                                      InstanceMethod("invoke", &Client::Invoke),
-                                                      InstanceMethod("ping", &Client::Ping),
-                                                      InstanceMethod("close", &Client::Close),
-                                                      InstanceMethod("reopen", &Client::Reopen),
-                                                      InstanceMethod("isAlive", &Client::IsAlive),
-                                                  });
+    Napi::Function t = DefineClass(env,
+                                   "Client", {
+                                                 StaticMethod("getVersion", Client::GetVersion),
+                                                 InstanceAccessor("id", &Client::IdGetter, nullptr),
+                                                 InstanceMethod("connectionInfo", &Client::ConnectionInfo),
+                                                 InstanceMethod("connect", &Client::Connect),
+                                                 InstanceMethod("invoke", &Client::Invoke),
+                                                 InstanceMethod("ping", &Client::Ping),
+                                                 InstanceMethod("close", &Client::Close),
+                                                 InstanceMethod("reopen", &Client::Reopen),
+                                                 InstanceMethod("isAlive", &Client::IsAlive),
+                                             });
 
     constructor = Napi::Persistent(t);
     constructor.SuppressDestruct();
@@ -520,6 +526,11 @@ Napi::Value Client::Reopen(const Napi::CallbackInfo &info)
 Napi::Value Client::IsAlive(const Napi::CallbackInfo &info)
 {
     return Napi::Boolean::New(info.Env(), this->alive);
+}
+
+Napi::Value Client::IdGetter(const Napi::CallbackInfo &info)
+{
+    return Napi::Number::New(info.Env(), this->__refId);
 }
 
 } // namespace node_rfc
