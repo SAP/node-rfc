@@ -1,5 +1,3 @@
-const Promise = require('bluebird');
-
 const rfc = require('../sapnwrfc');
 
 const connParams = require('../test/connParams');
@@ -7,6 +5,9 @@ const connParams = require('../test/connParams');
 const rfcClient = rfc.Client;
 
 let client = rfc.Client.new(connParams);
+
+console.log(client.connectionInfo());
+return;
 
 client
     .open(() => {})
