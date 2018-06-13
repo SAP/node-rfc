@@ -4,11 +4,6 @@
 // SAP NW RFC Client Binding Wrapper
 //
 
-const binary = require('node-pre-gyp');
-const path = require('path');
-const binding_path = binary.find(path.resolve(path.join(__dirname, '../../package.json')));
-const binding = require(binding_path);
-
 interface RfcClient {
 	new (connectionParameters: object): RfcClient;
 	(connectionParameters: object): RfcClient;
@@ -28,6 +23,11 @@ interface RfcClientBinding {
 	getVersion(): object;
 	verbose(): this;
 }
+
+const binary = require('node-pre-gyp');
+const path = require('path');
+const binding_path = binary.find(path.resolve(path.join(__dirname, '../../package.json')));
+const binding: RfcClientBinding = require(binding_path);
 
 class Client {
 	private __connectionParams: object;
@@ -119,91 +119,3 @@ class Client {
 }
 
 export = Client;
-
-/*
-//
-// Client Connections Pool
-//
-
-interface RfcPoolOptions {
-	low: number;
-	bucket: number;
-	max: number;
-}
-
-class Pool {
-	private __connectionParams: object = null;
-	private __clientBinding: RfcClientBinding = null;
-	private __poolOptions: RfcPoolOptions = null;
-
-	private __clients: { [key: string]: Map<number, Client> };
-
-	constructor(
-	    connectionParams: object,
-	    clientBinding: RfcClientBinding,
-	    poolOptions: RfcPoolOptions = {
-	        low: 2,
-	        bucket: 5,
-	        max: 50,
-	    }
-	) {
-	    this.__connectionParams = connectionParams;
-	    this.__clientBinding = clientBinding;
-	    this.__poolOptions = poolOptions;
-
-	    this.__clients = {
-	        ready: new Map(),
-	        active: new Map(),
-	    };
-	}
-
-	private activateClient() {
-	    let client = this.__clients.ready.values().next().value;
-	    this.__clients.active.set(client.id, client);
-	    this.__clients.ready.delete(client.id);
-	    return client;
-	}
-
-	acquire() {
-	    if (this.__clients.ready.size <= this.__poolOptions.low) {
-	        let client;
-	        let newClients = [];
-
-	        for (let i = this.__clients.ready.size; i < this.__poolOptions.bucket; i++) {
-	            client = new Client(this.__connectionParams);
-	            this.__clients.ready.set(client.id, client);
-	            newClients.push(client.open());
-	        }
-	        return new Promise(resolve => {
-	            Promise.all(newClients).then(() => {
-	                return new Promise(resolve => resolve(this.activateClient()));
-	            });
-	        });
-	    } else {
-	        return new Promise(resolve => resolve(this.activateClient()));
-	    }
-	}
-
-	release(client: Client) {
-	    if (this.__clients.active.has(client.id)) {
-	        this.__clients.ready.set(client.id, client);
-	        this.__clients.active.delete(client.id);
-	    } else if (this.__clients.ready.has(client.id)) {
-	        // do nothing
-	    } else {
-	        throw new Error('node-rfc Client Pool internal error:' + JSON.stringify(this.status));
-	    }
-	}
-
-	get status(): object {
-	    return {
-	        active: this.__clients.active.size,
-	        ready: this.__clients.ready.size,
-	        options: this.__poolOptions,
-	    };
-	}
-}
-
-
-
-*/
