@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfc = require('../sapnwrfc');
+const rfcClient = require('../sapnwrfc');
 const should = require('should');
 
 const connParams = require('./connParams');
@@ -23,7 +23,7 @@ describe('[promise] Error handling', function() {
     let client;
 
     beforeEach(function(done) {
-        client = rfc.Client.new(connParams);
+        client = new rfcClient(connParams);
         client
             .open()
             .then(() => {
@@ -37,25 +37,6 @@ describe('[promise] Error handling', function() {
     afterEach(function(done) {
         client.close();
         done();
-    });
-
-    it('No callback argument allowed in promise based open()', function(done) {
-        client
-            .open(() => {})
-            .then(res => {
-                should.not.exist(res);
-                return done(res);
-            })
-            .catch(err => {
-                should.exist(err);
-                err.should.be.an.Object;
-                err.should.have.properties({
-                    name: 'TypeError',
-                    message: 'No callback argument allowed in promise based open()',
-                });
-                done();
-                client.close();
-            });
     });
 
     it('No callback argument allowed in promise based call()', function(done) {
@@ -82,7 +63,7 @@ describe('[promise] Error handling', function() {
         let wrongParams = Object.assign({}, connParams);
         wrongParams.user = 'WRONGUSER';
 
-        let wrongClient = rfc.Client.new(wrongParams);
+        let wrongClient = new rfcClient(wrongParams);
         wrongClient
             .open()
             .then(res => {
@@ -146,7 +127,7 @@ describe('[promise] Error handling', function() {
         let wrongParams = Object.assign({}, connParams);
         delete wrongParams.ashost;
 
-        let wrongClient = rfc.Client.new(wrongParams);
+        let wrongClient = new rfcClient(wrongParams);
         wrongClient
             .open()
             .then(res => {
@@ -167,7 +148,7 @@ describe('[promise] Error handling', function() {
 
     it('No connection parameters provided at all', function(done) {
         try {
-            rfc.Client.new();
+            new rfcClient();
         } catch (err) {
             should.exist(err);
             err.should.have.properties({
@@ -183,7 +164,7 @@ describe('[promise] Error handling', function() {
             should.exist(err);
             err.should.have.properties({
                 name: 'TypeError',
-                message: 'Please provide rfc module name, parameters and callback as arguments',
+                message: 'Second argument (rfc module parameters) must be an object',
             });
             done();
         });

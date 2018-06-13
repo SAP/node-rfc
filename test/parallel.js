@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfc = require('../sapnwrfc');
+const rfcClient = require('../sapnwrfc');
 const should = require('should');
 
 const connParams = require('./connParams');
@@ -22,7 +22,7 @@ const connParams = require('./connParams');
 const CONNECTIONS = 50;
 
 describe('Parallel and Sequential', function() {
-    let client = new rfc.Client(connParams);
+    let client = new rfcClient(connParams);
 
     before(function(done) {
         client.connect(function(err) {
@@ -55,7 +55,7 @@ describe('Parallel and Sequential', function() {
         let count = CONNECTIONS;
         let CLIENTS = [];
         for (let i = 0; i < count; i++) {
-            CLIENTS.push(new rfc.Client(connParams));
+            CLIENTS.push(new rfcClient(connParams));
         }
         for (let client of CLIENTS) {
             client.connect(err => {
@@ -76,12 +76,12 @@ describe('Parallel and Sequential', function() {
     it(`${CONNECTIONS} parallel calls with single connection`, function(done) {
         let count = CONNECTIONS;
         for (let i = count; i > 0; i--) {
-            client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + i }, function(err, res) {
+            client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id }, function(err, res) {
                 should.not.exist(err);
                 should.exist(res);
                 res.should.be.an.Object;
                 res.should.have.property('ECHOTEXT');
-                res.ECHOTEXT.should.startWith(REQUTEXT + i);
+                res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
                 if (i === 1) done();
             });
         }

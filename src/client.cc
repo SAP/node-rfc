@@ -172,7 +172,7 @@ Napi::Object Client::Init(Napi::Env env, Napi::Object exports)
 
     Napi::Function t = DefineClass(env,
                                    "Client", {
-                                                 StaticMethod("getVersion", Client::GetVersion),
+                                                 InstanceAccessor("version", &Client::VersionGetter, nullptr),
                                                  InstanceAccessor("id", &Client::IdGetter, nullptr),
                                                  InstanceMethod("connectionInfo", &Client::ConnectionInfo),
                                                  InstanceMethod("connect", &Client::Connect),
@@ -294,7 +294,7 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
                 }
             }
         }
-        else
+        else if (!info[i].IsUndefined())
         {
             throw Napi::TypeError::New(__genv, "Call options argument, if provided, must be an object");
         }
@@ -445,21 +445,6 @@ Napi::Value Client::Close(const Napi::CallbackInfo &info)
     return info.Env().Undefined();
 }
 
-Napi::Value Client::GetVersion(const Napi::CallbackInfo &info)
-{
-    unsigned major, minor, patchLevel;
-    Napi::Env env = info.Env();
-
-    RfcGetVersion(&major, &minor, &patchLevel);
-
-    Napi::Object version = Napi::Object::New(env);
-    (version).Set(Napi::String::New(env, "major"), major);
-    (version).Set(Napi::String::New(env, "minor"), minor);
-    (version).Set(Napi::String::New(env, "patchLevel"), patchLevel);
-    (version).Set(Napi::String::New(env, "VERSION"), Napi::String::New(env, SAPNWRFC_VERSION));
-    return version;
-}
-
 Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
 {
     RFC_RC rc;
@@ -531,6 +516,21 @@ Napi::Value Client::IsAlive(const Napi::CallbackInfo &info)
 Napi::Value Client::IdGetter(const Napi::CallbackInfo &info)
 {
     return Napi::Number::New(info.Env(), this->__refId);
+}
+
+Napi::Value Client::VersionGetter(const Napi::CallbackInfo &info)
+{
+    unsigned major, minor, patchLevel;
+    Napi::Env env = info.Env();
+
+    RfcGetVersion(&major, &minor, &patchLevel);
+
+    Napi::Object version = Napi::Object::New(env);
+    (version).Set(Napi::String::New(env, "major"), major);
+    (version).Set(Napi::String::New(env, "minor"), minor);
+    (version).Set(Napi::String::New(env, "patchLevel"), patchLevel);
+    (version).Set(Napi::String::New(env, "binding"), Napi::String::New(env, SAPNWRFC_BINDING_VERSION));
+    return version;
 }
 
 } // namespace node_rfc

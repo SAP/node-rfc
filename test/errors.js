@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfc = require('../sapnwrfc');
+const rfcClient = require('../sapnwrfc');
 const should = require('should');
 
 const connParams = require('./connParams');
@@ -23,7 +23,7 @@ describe('Error handling', function() {
     let client;
 
     beforeEach(function(done) {
-        client = new rfc.Client(connParams);
+        client = new rfcClient(connParams);
         client.connect(function(err) {
             if (err) return done(err);
             done();
@@ -39,7 +39,7 @@ describe('Error handling', function() {
         let wrongParams = Object.assign({}, connParams);
         wrongParams.user = 'WRONGUSER';
 
-        let wrongClient = new rfc.Client(wrongParams);
+        let wrongClient = new rfcClient(wrongParams);
         wrongClient.connect(function(err) {
             should.exist(err);
             err.should.have.properties({
@@ -85,7 +85,7 @@ describe('Error handling', function() {
         let wrongParams = Object.assign({}, connParams);
         delete wrongParams.ashost;
 
-        let wrongClient = new rfc.Client(wrongParams);
+        let wrongClient = new rfcClient(wrongParams);
         wrongClient.connect(function(err) {
             should.exist(err);
             err.should.have.properties({
@@ -100,7 +100,7 @@ describe('Error handling', function() {
 
     it('[new] No connection parameters provided at all', function(done) {
         try {
-            new rfc.Client();
+            new rfcClient();
         } catch (err) {
             should.exist(err);
             err.should.have.properties({

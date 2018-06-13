@@ -15,7 +15,7 @@
 #ifndef NODE_SAPNWRFC_CLIENT_H_
 #define NODE_SAPNWRFC_CLIENT_H_
 
-#define SAPNWRFC_VERSION "0.0.1"
+#define SAPNWRFC_BINDING_VERSION "0.2"
 
 #include <uv.h>
 #include <napi.h>
@@ -55,8 +55,8 @@ private:
   unsigned int __refId;
 
   Napi::Value IdGetter(const Napi::CallbackInfo &info);
+  Napi::Value VersionGetter(const Napi::CallbackInfo &info);
 
-  static Napi::Value GetVersion(const Napi::CallbackInfo &info);
   Napi::Value ConnectionInfo(const Napi::CallbackInfo &info);
 
   Napi::Value Connect(const Napi::CallbackInfo &info);

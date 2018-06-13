@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfc = require('../sapnwrfc');
+const rfcClient = require('../sapnwrfc');
 const should = require('should');
 
 const connParams = require('./connParams');
@@ -26,7 +26,7 @@ function toABAPdate(date) {
 }
 
 describe('Performance', function() {
-    let client = new rfc.Client(connParams);
+    let client = new rfcClient(connParams);
 
     before(function(done) {
         client.connect(function(err) {

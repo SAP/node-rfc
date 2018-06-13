@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfc = require('../sapnwrfc');
+const rfcClient = require('../sapnwrfc');
 const should = require('should');
 
 const connParams = require('./connParams');
@@ -23,7 +23,7 @@ describe('Connection', function() {
     let client;
 
     before(function(done) {
-        client = new rfc.Client(connParams);
+        client = new rfcClient(connParams);
         client.connect(function(err) {
             if (err) return done(err);
             done();
@@ -34,10 +34,34 @@ describe('Connection', function() {
         client.close();
     });
 
-    it('getVersion() should return major, minor, patchLevel', function(done) {
-        let version = rfc.Client.getVersion();
-        version.should.have.properties('major', 'minor', 'patchLevel');
-        done();
+    it('sapnwrfc client id check', function(done) {
+        client.id.should.be.number;
+        client.id.should.be.greaterThan(0);
+        let n = client.id;
+        try {
+            client.id = n + 1;
+        } catch (ex) {
+            ex.should.have.properties({
+                name: 'TypeError',
+                message: 'Cannot set property id of #<Client> which has only a getter',
+            });
+            client.id.should.equal(n);
+            done();
+        }
+    });
+
+    it('sapnwrfc client version check', function(done) {
+        client.version.should.be.an.Object;
+        client.version.should.have.properties('major', 'minor', 'patchLevel', 'binding');
+        try {
+            client.version = { a: 1, b: 2 };
+        } catch (ex) {
+            ex.should.have.properties({
+                name: 'TypeError',
+                message: 'Cannot set property version of #<Client> which has only a getter',
+            });
+            done();
+        }
     });
 
     it('addon VERSION should match file VERSION', function(done) {
@@ -45,8 +69,7 @@ describe('Connection', function() {
             .readFileSync('VERSION')
             .toString()
             .trim();
-        should.exist(rfc.VERSION);
-        rfc.VERSION.should.equal(VERSION);
+        client.version.binding.should.equal(VERSION);
         done();
     });
 

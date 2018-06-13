@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfc = require('../sapnwrfc');
+const rfcClient = require('../sapnwrfc');
 const should = require('should');
 
 const connParams = require('./connParams');
@@ -22,7 +22,7 @@ const connParams = require('./connParams');
 describe('Options', function() {
     let client;
     beforeEach(function(done) {
-        client = new rfc.Client(connParams);
+        client = new rfcClient(connParams);
         client.connect(function(err) {
             if (err) return done(err);
             done();

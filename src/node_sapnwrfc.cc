@@ -22,7 +22,7 @@ Napi::Object RegisterModule(Napi::Env env, Napi::Object exports)
 
   Client::Init(env, exports);
 
-  exports.DefineProperties({DEFINE_CONSTANT_STRING(exports, SAPNWRFC_VERSION, VERSION)});
+  //exports.DefineProperties({DEFINE_CONSTANT_STRING(exports, SAPNWRFC_BINDING_VERSION, VERSION)});
 
   return exports;
 }
