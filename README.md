@@ -3,8 +3,8 @@
 **See [open issues](#issues).**
 
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-![release](https://img.shields.io/npm/v/node-rfc.svg)
-![downloads](https://img.shields.io/github/downloads/sap/node-rfc/total.svg)
+[![release](https://img.shields.io/npm/v/node-rfc.svg)]
+[![downloads](https://img.shields.io/github/downloads/sap/node-rfc/total.svg)]
 
 # The nodejs SAP NW RFC Connector
 
