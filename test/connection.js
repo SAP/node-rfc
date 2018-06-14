@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfcClient = require('../sapnwrfc');
+const rfcClient = require('../lib');
 const should = require('should');
 
 const connParams = require('./connParams');
@@ -64,11 +64,12 @@ describe('Connection', function() {
         }
     });
 
-    it('addon VERSION should match file VERSION', function(done) {
+    it('VERSION should match binding version and package.json version', function(done) {
         let VERSION = require('fs')
             .readFileSync('VERSION')
             .toString()
             .trim();
+        require('../package.json').version.should.be.equal(VERSION);
         client.version.binding.should.equal(VERSION);
         done();
     });

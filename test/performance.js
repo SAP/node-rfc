@@ -14,16 +14,10 @@
 
 'use strict';
 
-const rfcClient = require('../sapnwrfc');
+const rfcClient = require('../lib');
 const should = require('should');
 
 const connParams = require('./connParams');
-
-function toABAPdate(date) {
-    let mm = date.getMonth() + 1;
-    let dd = date.getDate();
-    return [date.getFullYear(), mm > 9 ? mm : '0' + mm, dd > 9 ? dd : '0' + dd].join('');
-}
 
 describe('Performance', function() {
     let client = new rfcClient(connParams);
@@ -73,8 +67,14 @@ describe('Performance', function() {
             }
         );
     });
+
     /*
     it('Invoke SWNC_READ_SNAPSHOT', function(done) {
+        function toABAPdate(date) {
+            let mm = date.getMonth() + 1;
+            let dd = date.getDate();
+            return [date.getFullYear(), mm > 9 ? mm : '0' + mm, dd > 9 ? dd : '0' + dd].join('');
+        }
         this.timeout(120000);
         let endDate = new Date();
         let startDate = new Date(endDate);

@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfcClient = require('../sapnwrfc');
+const rfcClient = require('../lib');
 const should = require('should');
 
 const connParams = require('./connParams');
@@ -104,27 +104,27 @@ describe('Error handling', function() {
         } catch (err) {
             should.exist(err);
             err.should.have.properties({
-                message: 'Please provide connection parameters as argument',
+                name: 'TypeError',
+                message: 'Connection parameters must be an object',
             });
-        } finally {
             done();
         }
     });
 
-    it('[connect] First connection arg must be a callback function', function(done) {
+    it('[connect] First arg must be a callback function', function(done) {
         try {
             client.connect();
         } catch (err) {
             should.exist(err);
             err.should.have.properties({
+                name: 'TypeError',
                 message: 'First argument must be callback function',
             });
-        } finally {
             done();
         }
     });
 
-    it('[invoke] At least three arguments must be provided', function(done) {
+    it('[invoke] At least three args must be provided', function(done) {
         try {
             client.invoke('rfc', {});
         } catch (err) {
@@ -137,7 +137,7 @@ describe('Error handling', function() {
         }
     });
 
-    it('[invoke] First argument (rfc module name) must be an string', function(done) {
+    it('[invoke] First arg (rfc module name) must be an string', function(done) {
         try {
             client.invoke(23, {}, 2);
         } catch (err) {

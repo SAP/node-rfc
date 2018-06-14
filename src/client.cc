@@ -100,24 +100,24 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
 
     if (!info.IsConstructCall())
     {
-        throw Napi::Error::New(__genv, "Use the new operator to create instances of Rfc connection.");
+        Napi::Error::New(__genv, "Use the new operator to create instances of Rfc connection.").ThrowAsJavaScriptException();
     }
 
     if (info.Length() < 1)
     {
-        throw Napi::Error::New(__genv, "Please provide connection parameters as argument");
+        Napi::Error::New(__genv, "Please provide connection parameters as argument").ThrowAsJavaScriptException();
     }
 
     if (!info[0].IsObject())
     {
-        throw Napi::TypeError::New(__genv, "Connection parameters must be an object");
+        Napi::TypeError::New(__genv, "Connection parameters must be an object").ThrowAsJavaScriptException();
     }
 
     if (info.Length() > 1)
     {
         if (!info[1].IsBoolean())
         {
-            throw Napi::TypeError::New(__genv, "The 'rstrip' parameter must be true or false");
+            Napi::TypeError::New(__genv, "The 'rstrip' parameter must be true or false").ThrowAsJavaScriptException();
         }
     }
 
@@ -192,9 +192,13 @@ Napi::Object Client::Init(Napi::Env env, Napi::Object exports)
 
 Napi::Value Client::Connect(const Napi::CallbackInfo &info)
 {
+    if (info[0].IsUndefined())
+    {
+        Napi::TypeError::New(__genv, "First argument must be callback function").ThrowAsJavaScriptException();
+    }
     if (!info[0].IsFunction())
     {
-        throw Napi::TypeError::New(__genv, "First argument must be callback function");
+        Napi::TypeError::New(__genv, "First argument must be callback function").ThrowAsJavaScriptException();
     }
     // AsyncWorker ==========================================
     Napi::Function callback = info[0].As<Napi::Function>();
@@ -262,17 +266,17 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
 
     if (info.Length() < 3)
     {
-        throw Napi::TypeError::New(__genv, "Please provide rfc module name, parameters and callback as arguments");
+        Napi::TypeError::New(__genv, "Please provide rfc module name, parameters and callback as arguments").ThrowAsJavaScriptException();
     }
 
     if (!info[0].IsString())
     {
-        throw Napi::TypeError::New(__genv, "First argument (rfc module name) must be an string");
+        Napi::TypeError::New(__genv, "First argument (rfc module name) must be an string").ThrowAsJavaScriptException();
     }
 
     if (!info[1].IsObject())
     {
-        throw Napi::TypeError::New(__genv, "Second argument (rfc module parameters) must be an object");
+        Napi::TypeError::New(__genv, "Second argument (rfc module parameters) must be an object").ThrowAsJavaScriptException();
     }
 
     for (unsigned int i = 2; i < info.Length(); i++)
@@ -296,13 +300,13 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
         }
         else if (!info[i].IsUndefined())
         {
-            throw Napi::TypeError::New(__genv, "Call options argument, if provided, must be an object");
+            Napi::TypeError::New(__genv, "Call options argument, if provided, must be an object").ThrowAsJavaScriptException();
         }
     }
 
     if (!callback.IsFunction())
     {
-        throw Napi::TypeError::New(__genv, "Callback function must be supplied");
+        Napi::TypeError::New(__genv, "Callback function must be supplied").ThrowAsJavaScriptException();
     }
 
     Napi::Value argv[] = {}; //env.Undefined(), env.Undefined()};

@@ -1,12 +1,22 @@
-const rfcClient = require('../sapnwrfc');
+const rfcClient = require('../lib');
 
 const connParams = require('../test/connParams');
-
-let c1 = new rfcClient(connParams);
+let c = new rfcClient(connParams);
+try {
+    function f() {
+        console.log('connected');
+    }
+    c.connect();
+} catch (ex) {
+    console.log(ex.name);
+    console.log(ex.message);
+}
+return;
 console.log(c1.id);
 console.log(c1.version);
 c1.call('rfc').catch(err => {
-    console.dir(err);
+    console.dir(err.name);
+    console.dir(err.message);
 });
 /*
 c1.invoke('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' }, function(err, res) {

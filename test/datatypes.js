@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfcClient = require('../sapnwrfc');
+const rfcClient = require('../lib');
 const should = require('should');
 const Decimal = require('decimal.js');
 

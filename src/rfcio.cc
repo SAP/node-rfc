@@ -357,7 +357,7 @@ Napi::Value wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE st
     rc = RfcGetFieldCount(typeDesc, &fieldCount, &errorInfo);
     if (rc != RFC_OK)
     {
-        throw Napi::Error::New(__genv, wrapError(&errorInfo).ToString());
+        Napi::Error::New(__genv, wrapError(&errorInfo).ToString()).ThrowAsJavaScriptException();
     }
 
     Napi::Object resultObj = Napi::Object::New(__genv);
@@ -367,7 +367,7 @@ Napi::Value wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE st
         rc = RfcGetFieldDescByIndex(typeDesc, i, &fieldDesc, &errorInfo);
         if (rc != RFC_OK)
         {
-            throw Napi::Error::New(__genv, wrapError(&errorInfo).ToString());
+            Napi::Error::New(__genv, wrapError(&errorInfo).ToString()).ThrowAsJavaScriptException();
         }
         (resultObj).Set(wrapString(fieldDesc.name), wrapVariable(fieldDesc.type, structHandle, fieldDesc.name, fieldDesc.nucLength, fieldDesc.typeDescHandle, rstrip));
     }
@@ -578,7 +578,7 @@ Napi::Value wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         char err[256];
         std::string fieldName = wrapString(cName).ToString().Utf8Value();
         sprintf(err, "Unknown RFC type %d when wrapping %s", typ, &fieldName[0]);
-        throw Napi::TypeError::New(__genv, err);
+        Napi::TypeError::New(__genv, err).ThrowAsJavaScriptException();
 
         break;
     }
