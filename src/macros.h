@@ -19,8 +19,6 @@
     Napi::PropertyDescriptor::Value(#name, Napi::String::New(env, constant), \
                                     static_cast<napi_property_attributes>(napi_enumerable | napi_configurable))
 
-#endif
-
 #define TRY_CATCH_CALL(context, callback, argc, argv) \
     Napi::Value *passed_argv = argv;                  \
     std::vector<napi_value> args;                     \
@@ -29,3 +27,6 @@
         args.assign(passed_argv, passed_argv + argc); \
     }                                                 \
     (callback).MakeCallback(Napi::Value(context), args);
+
+#endif
+

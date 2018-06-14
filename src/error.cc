@@ -20,7 +20,7 @@ using namespace Napi;
 namespace node_rfc
 {
 
-extern const Napi::Env __genv;
+extern Napi::Env __genv;
 
 ////////////////////////////////////////////////////////////////////////////////
 // RFC ERRORS

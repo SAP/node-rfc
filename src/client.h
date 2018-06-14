@@ -25,6 +25,7 @@ using namespace Napi;
 
 namespace node_rfc
 {
+
 class Client : public Napi::ObjectWrap<Client>
 {
 public:
@@ -33,8 +34,6 @@ public:
 
   static Napi::FunctionReference constructor;
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
-
-  //bool IsAlive() { return alive; };
 
   void init()
   {

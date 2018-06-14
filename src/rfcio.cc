@@ -18,7 +18,7 @@
 namespace node_rfc
 {
 
-extern const Napi::Env __genv;
+extern Napi::Env __genv;
 
 ////////////////////////////////////////////////////////////////////////////////
 // FILL FUNCTIONS (to RFC)
@@ -237,7 +237,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
             sprintf(err, "Integer number expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(__genv, err).Value());
         }
-        rc = RfcSetInt(functionHandle, cName, int64_t(value.ToNumber()), &errorInfo);
+        rc = RfcSetInt(functionHandle, cName, RFC_INT(value.ToNumber()), &errorInfo);
         break;
     case RFCTYPE_DATE:
         if (!value.IsString())

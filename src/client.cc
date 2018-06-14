@@ -20,9 +20,9 @@
 namespace node_rfc
 {
 
-unsigned int Client::__refCounter = 0;
-
 Napi::Env __genv = NULL;
+
+unsigned int Client::__refCounter = 0;
 
 class ConnectAsync : public Napi::AsyncWorker
 {
@@ -309,7 +309,7 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
         Napi::TypeError::New(__genv, "Callback function must be supplied").ThrowAsJavaScriptException();
     }
 
-    Napi::Value argv[] = {}; //env.Undefined(), env.Undefined()};
+    Napi::Value argv[] = { info.Env().Undefined(), info.Env().Undefined() };
 
     SAP_UC *funcName = fillString(info[0].As<Napi::String>());
 

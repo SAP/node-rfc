@@ -24,7 +24,8 @@
             "defines": [
                 "SAPwithUNICODE",
                 "SAPwithTHREADS",
-                "NDEBUG"
+                "NDEBUG",
+                "NAPI_CPP_EXCEPTIONS"
             ],
 
             "dependencies": ["<!(node -p \"require('node-addon-api').gyp\")"],
@@ -85,6 +86,7 @@
                         'IntermediateDirectory': '$(OutDir)\\obj'
                     },
                     'msvs_settings': {
+                        'VCCLCompilerTool': { 'ExceptionHandling': 1 },
                         'VCLinkerTool': {
                             'AdditionalLibraryDirectories': ['<(sapnwrfcsdk_path_windows)/lib'],
                             'AdditionalDependencies': ['sapnwrfc.lib', 'libsapucum.lib']

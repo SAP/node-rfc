@@ -13,7 +13,7 @@
 
 version=`cat ./VERSION` 
 
-declare -a LTS_VERSIONS=("6.14.3" "8.11.3" "9.11.2" "10.4.1")
+declare -a LTS_VERSIONS=("6.14.3" "8.11.3" "10.4.1")
 
 if [ "$(expr substr $(uname -s) 1 4)" == "MSYS" ]; then
 	osext="win32"
