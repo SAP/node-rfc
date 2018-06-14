@@ -1,4 +1,4 @@
-:exclamation: Experimental N-API based version provided for early adoperts in `napi` branch. Here the [roadmap](https://github.com/nodejs/abi-stable-node/issues/18)
+:exclamation: N-API based prerelease provided for early adoperts. Check `napi` branch.
 
 # The nodejs RFC Connector
 
@@ -28,16 +28,16 @@ provided on SAP Service Marketplace.
 
 Useful links:
 
-*   https://service.sap.com/connectors
+-   https://service.sap.com/connectors
 
-*   https://wiki.scn.sap.com/wiki/display/ABAPConn/ABAP+Connectivity+-+RFC
+-   https://wiki.scn.sap.com/wiki/display/ABAPConn/ABAP+Connectivity+-+RFC
 
-*   [SAP HANA Cloud Connector](https://help.hana.ondemand.com/help/frameset.htm?e6c7616abb5710148cfcf3e75d96d596.html)
+-   [SAP HANA Cloud Connector](https://help.hana.ondemand.com/help/frameset.htm?e6c7616abb5710148cfcf3e75d96d596.html)
 
 Developer resources:
 
-*   [nan](https://github.com/nodejs/nan) and [related documentation](https://github.com/nodejs/nan#api)
-*   libuv [documentation](http://docs.libuv.org/) and [book](http://nikhilm.github.io/uvbook/index.html)
+-   [nan](https://github.com/nodejs/nan) and [related documentation](https://github.com/nodejs/nan#api)
+-   libuv [documentation](http://docs.libuv.org/) and [book](http://nikhilm.github.io/uvbook/index.html)
 
 ## Install
 
@@ -192,10 +192,10 @@ The repository to publish to is specified in package.json: binary.host
 
 To publish binaries add prefix: [publish binary] to commit.
 
-*   Target node versions can be specified in .travis.yml: node_js
-*   The npm api key is found in .travis.yml: deploy.api_key
-*   The github access token is located in .travis.yml: env.global
-*   The build repository is specified in package.json: repository.url
+-   Target node versions can be specified in .travis.yml: node_js
+-   The npm api key is found in .travis.yml: deploy.api_key
+-   The github access token is located in .travis.yml: env.global
+-   The build repository is specified in package.json: repository.url
 
 #### Windows (<span>build.sh</span>)
 

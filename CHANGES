@@ -1,13 +1,16 @@
 Change log
 ==========
 
-0.1.17 (XXXX-XX-XX)
+0.2.0 (pre release)
 -------------------
 
+* N-API based
+* Promise and callback API
+* Typescript wrapper
 * C/C++ style guide
-* String handling optimization
-* Conneciton handle check before closea
-* Unit tests fix
+* Error handling harmonisation
+* String handling optimisation
+* More unit tests
 
 0.1.16 (2018-27-04)
 -------------------
