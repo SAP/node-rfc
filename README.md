@@ -1,12 +1,14 @@
-## :heavy_exclamation_mark: Experimental N-API Port :heavy_exclamation_mark:
-
-**[Open issues](#issues).**
+## :heavy_exclamation_mark: N-API based prerelease :heavy_exclamation_mark:
 
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![release](https://img.shields.io/npm/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![downloads](https://img.shields.io/github/downloads/sap/node-rfc/total.svg)](https://www.npmjs.com/package/node-rfc)
 
-# The nodejs SAP NW RFC Connector
+## Issues
+
+-   [Type checks](https://github.com/nodejs/node-addon-api/issues/265)
+
+## Features
 
 Asynchronous, non-blocking [SAP NetWeawer RFC Library](http://service.sap.com/rfc-library) client bindings for [Node.js](http://nodejs.org/):
 
@@ -16,6 +18,24 @@ Asynchronous, non-blocking [SAP NetWeawer RFC Library](http://service.sap.com/rf
 -   Automatic conversion between JavaScript and ABAP datatypes
 -   Decimal objects support
 -   Extensive unit tests
+
+## Installation
+
+From npm:
+
+```shell
+npm install node-rfc
+```
+
+Build from source:
+
+```shell
+git clone -b napi https://github.com/SAP/node-rfc.git
+cd node-rfc
+npm install
+node-pre-gyp configure build
+npm run test # adapt test/connParams
+```
 
 ## Prerequisites
 
@@ -31,7 +51,7 @@ OS X and ARM platforms are currently not supported, as _SAP NW RFC Library_ is n
 
 ## Usage
 
-**Note:** the module must be [installed](#install) before use.
+**Note:** the module must be [installed](#installation) before use.
 
 In order to call remote enabled ABAP function module, we need to create a client
 with valid logon credentials, connect to NetWeaver system and then invoke a
@@ -203,25 +223,6 @@ Developer resources:
 -   [N-API API docs](https://nodejs.github.io/node-addon-api/index.html)
 -   [Node.js ES2015 Support](http://node.green/)
 -   [Node.js LTS Releases](https://github.com/nodejs/LTS)
-
-## Install
-
-To install and use:
-
-```shell
-npm install node-rfc
-```
-
-To test and develop, clone the repository, edit your backend system connection parameters, build and run tests locally:
-
-```shell
-git clone https://github.com/SAP/node-rfc.git
-cd node-rfc
-npm install
-make test
-```
-
-Pre-compiled binaries for currently active nodejs LTS releases are provided in the [lib](https://github.com/SAP/node-rfc/tree/master/lib) folder.
 
 ## For Developers
 
