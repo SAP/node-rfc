@@ -24,10 +24,10 @@ Asynchronous, non-blocking [SAP NetWeawer RFC Library](http://service.sap.com/rf
 From npm:
 
 ```shell
-npm install node-rfc
+npm install node-rfc@next
 ```
 
-Build from source:
+Build from the latest source:
 
 ```shell
 git clone -b napi https://github.com/SAP/node-rfc.git
