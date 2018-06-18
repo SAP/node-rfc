@@ -10,7 +10,7 @@
 
 ## Features
 
-Asynchronous, non-blocking [SAP NetWeawer RFC Library](http://service.sap.com/rfc-library) client bindings for [Node.js](http://nodejs.org/):
+Asynchronous, non-blocking [SAP NetWeawer RFC Library](https://support.sap.com/en/products/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/):
 
 -   Based on the latest nodejs [N-API](https://github.com/nodejs/node-addon-api) standard
 -   Promise and callback interface
@@ -39,7 +39,7 @@ npm run test # adapt test/connParams
 
 ## Prerequisites
 
-SAP NW RFC Library must be locally installed. It can be downloaded from SAP Service Marketplace [Software Download Center](https://support.sap.com/swdc), following instrunctions in [SAP Note 2573790](https://websmp208.sap-ag.de/sap/support/notes/2573790). SAP partner or customer is required for download.
+SAP NW RFC Library must be locally installed and for download and installation information check the [Download and Documentation](https://support.sap.com/en/products/connectors/nwrfcsdk.html#section_1291717368) section of (SAP NW RFC SDK Support Portal)[https://support.sap.com/en/products/connectors/nwrfcsdk.html].SAP partner or customer is required for download.
 
 SAP NW RFC Library is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.0. Using the latest version is reccomended.
 
@@ -206,11 +206,11 @@ client.open
 
 ## API and documentation
 
-For API And full documentation please refer to [_node-rfc_ documentation](http://sap.github.io/node-rfc), complementing _SAP NW RFC Library_ [programming guide and documentation](http://service.sap.com/rfc-library).
+For API And full documentation please refer to [_node-rfc_ documentation](http://sap.github.io/node-rfc), complementing _SAP NW RFC Library_ [programming guide and documentation](https://support.sap.com/en/products/connectors/nwrfcsdk.html).
 
 Useful links:
 
--   https://service.sap.com/connectors
+-   https://support.sap.com/connectors
 
 -   https://wiki.scn.sap.com/wiki/display/ABAPConn/ABAP+Connectivity+-+RFC
 

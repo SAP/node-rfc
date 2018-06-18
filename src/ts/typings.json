@@ -1,4 +1,0 @@
-{
-	"name": "sapnwrfc-client",
-	"main": "lib/wrapper/sapnwrfc-client.d.ts"
-}

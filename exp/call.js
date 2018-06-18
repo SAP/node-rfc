@@ -1,50 +1,28 @@
 const rfcClient = require('../lib');
-
 const connParams = require('../test/connParams');
-let c = new rfcClient(connParams);
-try {
-    function f() {
-        console.log('connected');
-    }
-    c.connect();
-} catch (ex) {
-    console.log(ex.name);
-    console.log(ex.message);
-}
-return;
-console.log(c1.id);
-console.log(c1.version);
-c1.call('rfc').catch(err => {
-    console.dir(err.name);
-    console.dir(err.message);
-});
-/*
-c1.invoke('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' }, function(err, res) {
-    if (err) console.error(err);
-    else console.dir(res);
-});
 
-let c2 = new rfcClient(connParams);
-console.log(c2.id);
-/*
+let client = new rfcClient(connParams);
+
 client
-    .open(() => {})
+    .open()
+
     .then(() => {
-        client.call(23, {}).catch(err => {
-            console.log(err.name);
-            console.log(err.message);
-        });
+        let importStruct = {
+            RFCINT1: 1,
+            RFCINT2: 2.3,
+            RFCINT4: 3.7,
+        };
+        let importTable = [importStruct];
+        client
+            .call('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable })
+            .then(res => {
+                console.log('Res:', res);
+            })
+            .catch(err => {
+                console.log('Err:', err);
+            });
     })
-    .then(() => {
-        client.call('rfc', 21).catch(err => {
-            console.log(err.name);
-            console.log(err.message);
-        });
-    })
+
     .catch(err => {
-        console.error(err.name, err.message);
-    })
-    .finally(() => {
-        console.log('finally!');
+        console.error('Error open:', err);
     });
-*/

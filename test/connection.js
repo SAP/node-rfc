@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfcClient = require('../lib');
+const rfcClient = require('../lib/js/sapnwrfc-client');
 const should = require('should');
 
 const connParams = require('./connParams');
@@ -43,7 +43,7 @@ describe('Connection', function() {
         } catch (ex) {
             ex.should.have.properties({
                 name: 'TypeError',
-                message: 'Cannot set property id of #<Client> which has only a getter',
+                message: 'Cannot set property id of #<RfcClient> which has only a getter',
             });
             client.id.should.equal(n);
             done();
@@ -58,7 +58,7 @@ describe('Connection', function() {
         } catch (ex) {
             ex.should.have.properties({
                 name: 'TypeError',
-                message: 'Cannot set property version of #<Client> which has only a getter',
+                message: 'Cannot set property version of #<RfcClient> which has only a getter',
             });
             done();
         }
@@ -75,8 +75,7 @@ describe('Connection', function() {
     });
 
     it('connectionInfo() should return connection information', function(done) {
-        let info = client.connectionInfo();
-        info.should.have.properties(
+        client.connectionInfo.should.have.properties(
             'host',
             'partnerHost',
             'sysNumber',
@@ -99,7 +98,7 @@ describe('Connection', function() {
             'partnerBytesPerChar',
             'reserved'
         );
-        info.should.have.properties({
+        client.connectionInfo.should.have.properties({
             user: connParams.user.toUpperCase(),
             sysNumber: connParams.sysnr,
             client: connParams.client,
@@ -107,24 +106,24 @@ describe('Connection', function() {
         done();
     });
 
-    it('isAlive() and ping() should return true when connected', function(done) {
-        client.isAlive().should.be.true;
+    it('isAlive and ping() should return true when connected', function(done) {
+        client.isAlive.should.be.true;
         client.ping().should.be.true;
         done();
     });
 
-    it('isAlive() and ping() should return false after close()', function(done) {
+    it('isAlive and ping() should return false after close()', function(done) {
         client.close();
-        client.isAlive().should.be.false;
+        client.isAlive.should.be.false;
         client.ping().should.be.false;
         done();
     });
 
     it('reopen() should reopen the connection', function(done) {
-        client.isAlive().should.be.false;
+        client.isAlive.should.be.false;
         client.reopen(function(err) {
             should.not.exist(err);
-            client.isAlive().should.be.true;
+            client.isAlive.should.be.true;
             client.ping().should.be.true;
             done();
         });

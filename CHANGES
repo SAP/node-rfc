@@ -1,8 +1,8 @@
 Change log
 ==========
 
-0.2.0 (pre release)
--------------------
+0.2.0-rc2
+---------
 
 * N-API based
 * Promise and callback API
@@ -11,6 +11,7 @@ Change log
 * Error handling harmonisation
 * String handling optimisation
 * More unit tests
+* README links update, from Service Marketplace to Support Portal
 
 0.1.16 (2018-27-04)
 -------------------
