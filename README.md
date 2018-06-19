@@ -232,7 +232,3 @@ Developer resources:
 -   [N-API API docs](https://nodejs.github.io/node-addon-api/index.html)
 -   [v8 API docs](https://v8docs.nodesource.com/)
 -   [Node.js ES2015 Support](http://node.green/)
-
-## Issues
-
--   [Type checks](https://github.com/nodejs/node-addon-api/issues/265)
