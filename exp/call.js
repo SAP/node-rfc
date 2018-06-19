@@ -7,6 +7,7 @@ client
     .open()
 
     .then(() => {
+        console.log(client.connectionInfo.cpicConvId);
         let importStruct = {
             RFCINT1: 1,
             RFCINT2: 2.3,
@@ -16,7 +17,7 @@ client
         client
             .call('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable })
             .then(res => {
-                console.log('Res:', res);
+                //console.log('Res:', res);
             })
             .catch(err => {
                 console.log('Err:', err);
@@ -26,3 +27,4 @@ client
     .catch(err => {
         console.error('Error open:', err);
     });
+

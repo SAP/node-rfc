@@ -240,7 +240,8 @@ describe('Datatypes', function() {
         });
     });
 
-    xit('INT type check should detect floats [pending] https://github.com/nodejs/node-addon-api/issues/265', function(done) {
+    //xit('INT type check should detect floats [pending] https://github.com/nodejs/node-addon-api/issues/265', function(done) {
+    it('INT type check should detect floats [pending] https://github.com/nodejs/node-addon-api/issues/265', function(done) {
         let importStruct = {
             RFCINT1: 1,
             RFCINT2: 2,
@@ -252,7 +253,7 @@ describe('Datatypes', function() {
             err.should.be.an.Object;
             err.should.have.properties({
                 name: 'TypeError',
-                message: 'Integer number expected when filling field RFCINT4 of type 8',
+                message: 'Integer number expected when filling field RFCINT4 of type 8, got 3.100000',
             });
             done();
         });

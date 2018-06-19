@@ -37,6 +37,6 @@ do
     npm run tsbuild
     node-pre-gyp clean configure build && \
     npm run test && \
-    node-pre-gyp testbinary && node-pre-gyp package
+    node-pre-gyp testbinary && node-pre-gyp package && node-pre-gyp reveal
 done
 

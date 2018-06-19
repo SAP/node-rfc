@@ -73,6 +73,10 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
     RFC_TABLE_HANDLE tableHandle;
     SAP_UC *cValue;
 
+    // FIXME https://github.com/nodejs/node-addon-api/issues/265
+    bool isNumber, isInteger;
+    float numFloat;
+
     switch (typ)
     {
     case RFCTYPE_STRUCTURE:
@@ -230,14 +234,28 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
     case RFCTYPE_INT1:
     case RFCTYPE_INT2:
         // FIXME https://github.com/nodejs/node-addon-api/issues/265
-        if (!value.IsNumber())
+        isNumber = value.IsNumber();
+        if (isNumber)
+        {
+            numFloat = value.ToNumber().FloatValue();
+            //valid = std::trunc(numFloat) == numFloat;
+            isInteger = (int)numFloat == numFloat;
+        }
+        else
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
             sprintf(err, "Integer number expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(__genv, err).Value());
         }
-        rc = RfcSetInt(functionHandle, cName, RFC_INT(value.ToNumber()), &errorInfo);
+        if (!isInteger)
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Integer number expected when filling field %s of type %d, got %f", &fieldName[0], typ, numFloat);
+            return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+        }
+        rc = RfcSetInt(functionHandle, cName, RFC_INT(numFloat), &errorInfo);
         break;
     case RFCTYPE_DATE:
         if (!value.IsString())
