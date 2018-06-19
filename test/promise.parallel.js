@@ -68,7 +68,7 @@ describe('[promise] Parallel and Sequential', function() {
                     res.should.have.property('ECHOTEXT');
                     res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
                     client.close();
-                    if (--count === 0) done();
+                    if (--count === 1) done();
                 });
             });
         }

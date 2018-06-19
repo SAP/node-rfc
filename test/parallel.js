@@ -22,6 +22,7 @@ const connParams = require('./connParams');
 const CONNECTIONS = 50;
 
 describe('Parallel and Sequential', function() {
+    this.timeout(15000);
     let client = new rfcClient(connParams);
 
     before(function(done) {
@@ -67,7 +68,7 @@ describe('Parallel and Sequential', function() {
                     res.should.have.property('ECHOTEXT');
                     res.ECHOTEXT.should.startWith(REQUTEXT);
                     client.close();
-                    if (--count === 0) done();
+                    if (--count === 1) done();
                 });
             });
         }

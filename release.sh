@@ -34,9 +34,9 @@ do
     rm -rf node_modules
     npm install
     abi=`node --eval "console.log(require('node-abi').getAbi())"`
-    npm run tsbuild
+    npm run build
     node-pre-gyp clean configure build && \
-    npm run test && \
-    node-pre-gyp testbinary && node-pre-gyp package && node-pre-gyp reveal
+    node-pre-gyp testbinary && node-pre-gyp package && \
+    npm run test && node-pre-gyp reveal
 done
 
