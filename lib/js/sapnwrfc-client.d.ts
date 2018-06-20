@@ -1,4 +1,4 @@
-interface RfcCallOptions {
+export interface RfcCallOptions {
     notRequested?: Array<String>;
     timeout?: number;
 }
@@ -15,7 +15,7 @@ declare enum EnumTrace {
     Verbose = "2",
     Full = "3"
 }
-interface RfcConnectionParameters {
+export interface RfcConnectionParameters {
     saprouter?: string;
     snc_lib?: string;
     snc_myname?: string;
@@ -42,7 +42,7 @@ interface RfcConnectionParameters {
     tpname?: string;
     program_id?: string;
 }
-declare class RfcClient {
+export declare class RfcClient {
     private __connectionParams;
     private __client;
     constructor(connectionParams: RfcConnectionParameters);
@@ -59,4 +59,4 @@ declare class RfcClient {
     readonly version: object;
     readonly connectionParameters: RfcConnectionParameters;
 }
-export = RfcClient;
+export {};

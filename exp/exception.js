@@ -1,11 +1,10 @@
 const assert = require('assert');
-const rfc = require('../sapnwrfc');
+const rfcClient = require('../lib');
 const connParams = require('../test/connParams');
 
-const rfcClient = rfc.Client;
 client = new rfcClient(connParams);
 
-console.log(rfcClient.getVersion());
+console.log(client.version);
 let importStruct = {
     RFCINT1: '1',
 };

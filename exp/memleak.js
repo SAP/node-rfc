@@ -1,17 +1,16 @@
-const rfcClient = require('../sapnwrfc').Client;
+const rfcClient = require('../lib');
 const connParams = require('../test/connParams');
-const branchName = require('current-git-branch')();
 
 let fs = require('fs');
 
 const COUNT = 100;
 const SIZE = '10000';
 
-let fileName = `test/${branchName}-${COUNT}-x-${SIZE}-${process.version}.txt`;
+let fileName = `test/napi-${COUNT}-x-${SIZE}-${process.version}.txt`;
 fs.writeFileSync(fileName, `iteration\t\trss\t\theapTotal\t\theapUsed\t\texternal\n`);
 
 let client = new rfcClient(connParams);
-console.log(rfcClient.getVersion());
+console.log(rfcClient.version);
 
 let events = require('events');
 let eventEmitter = new events.EventEmitter();
@@ -21,7 +20,7 @@ let run = () => {
     console.log(i);
 
     if (i == COUNT) {
-        console.log(rfcClient.getVersion());
+        console.log(rfcClient.version);
         return;
     }
 

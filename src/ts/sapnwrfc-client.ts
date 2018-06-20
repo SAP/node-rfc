@@ -24,7 +24,7 @@ interface RfcClientBinding {
 	verbose(): this;
 }
 
-interface RfcCallOptions {
+export interface RfcCallOptions {
 	notRequested?: Array<String>;
 	timeout?: number;
 }
@@ -44,7 +44,7 @@ enum EnumTrace {
 	Full = '3',
 }
 
-interface RfcConnectionParameters {
+export interface RfcConnectionParameters {
 	// general
 	saprouter?: string;
 	snc_lib?: string;
@@ -98,7 +98,7 @@ const path = require('path');
 const binding_path = binary.find(path.resolve(path.join(__dirname, '../../package.json')));
 const binding: RfcClientBinding = require(binding_path);
 
-class RfcClient {
+export class RfcClient {
 	private __connectionParams: RfcConnectionParameters;
 	private __client: RfcClientInstance;
 
@@ -191,5 +191,3 @@ class RfcClient {
 	    return this.__connectionParams;
 	}
 }
-
-export = RfcClient;

@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfcClient = require('../lib');
+const rfcClient = require('../lib').RfcClient;
 const should = require('should');
 
 const connParams = require('./connParams');

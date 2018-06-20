@@ -61,9 +61,9 @@ remote enabled ABAP function module from nodejs. The client can be used for one 
 ```javascript
 'use strict';
 
-var rfc = require('node-rfc');
+const rfcClient = require('node-rfc').RfcClient;
 
-var abapSystem = {
+const abapSystem = {
 	user: 'name',
 	passwd: 'password',
 	ashost: '10.11.12.13',
@@ -72,7 +72,7 @@ var abapSystem = {
 };
 
 // create new client
-var client = new rfc.Client(abapSystem);
+const client = new rfcClient(abapSystem);
 
 // echo the client NW RFC lib version
 console.log('RFC client lib version: ', client.getVersion());
@@ -99,7 +99,7 @@ client.connect(function(err) {
 	});
 
 	// invoke more complex ABAP function module
-	var importStruct = {
+	let importStruct = {
 		RFCFLOAT: 1.23456789,
 		RFCCHAR1: 'A',
 		RFCCHAR2: 'BC',
@@ -118,7 +118,7 @@ client.connect(function(err) {
 		RFCDATA2: 'DATA222',
 	};
 
-	var importTable = [importStruct];
+	let importTable = [importStruct];
 
 	client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err, res) {
 		if (err) {
@@ -138,9 +138,9 @@ The same example with promises:
 ```javascript
 'use strict';
 
-let rfc = require('node-rfc');
+const rfc = require('node-rfc').RfcClient;
 
-let abapSystem = {
+const abapSystem = {
 	user: 'name',
 	passwd: 'password',
 	ashost: '10.11.12.13',
@@ -149,7 +149,7 @@ let abapSystem = {
 };
 
 // create new client
-let client = rfc.Client.new(abapSystem);
+const client = new rfcClient(abapSystem);
 
 // echo the client NW RFC lib version
 console.log('RFC client lib version: ', client.getVersion());
