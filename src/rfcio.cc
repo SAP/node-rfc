@@ -237,16 +237,13 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         isNumber = value.IsNumber();
         if (isNumber)
         {
-
-            Napi::Function isIntegerFunction = __genv.Global().Get("Number").As<Napi::Object>().Get("IsInteger").As<Napi::Function>();
-
-            //bool isInt = isIntegerFunction.Call({value}).ToBoolean().Value();
-
-            //printf("%u %f : %u", value.ToNumber(), value.ToNumber(), isInt);
+            // Napi::Function isIntegerFunction = value.Env().Global().Get("Number").As<Napi::Object>().Get("IsInteger").As<Napi::Function>();
+            // bool isInt = isIntegerFunction.MakeCallback(__genv.Global(), {value}).ToBoolean().Value();
+            // printf("%u %f : %u", value.ToNumber(), value.ToNumber(), isInt);
 
             numFloat = value.ToNumber().FloatValue();
-            //valid = std::trunc(numFloat) == numFloat;
             isInteger = (int)numFloat == numFloat;
+            // or isInteger = std::trunc(numFloat) == numFloat;
         }
         else
         {
@@ -265,11 +262,12 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         rc = RfcSetInt(functionHandle, cName, RFC_INT(numFloat), &errorInfo);
         break;
     case RFCTYPE_DATE:
+        // https: //github.com/nodejs/node-addon-api/issues/57#issuecomment-398970543
         if (!value.IsString())
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
+            sprintf(err, "Date object or string expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(__genv, err).Value());
         }
         //cValue = fillString(value.strftime('%Y%m%d'));
