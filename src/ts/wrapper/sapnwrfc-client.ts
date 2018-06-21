@@ -98,16 +98,16 @@ const path = require('path');
 const binding_path = binary.find(path.resolve(path.join(__dirname, '../../package.json')));
 const binding: RfcClientBinding = require(binding_path);
 
-export class RfcClient {
-	private __connectionParams: RfcConnectionParameters;
+export class Client {
+	//private __connectionParams: RfcConnectionParameters;
 	private __client: RfcClientInstance;
 
 	constructor(connectionParams: RfcConnectionParameters) {
-	    this.__connectionParams = connectionParams;
+	    //this.__connectionParams = connectionParams;
 	    this.__client = new binding.Client(connectionParams);
 	}
 
-	open(): Promise<{}> {
+	open(): Promise<Client> {
 	    return new Promise((resolve, reject) => {
 	        try {
 	            this.__client.connect((err: any) => {
@@ -187,7 +187,7 @@ export class RfcClient {
 	    return this.__client.version;
 	}
 
-	get connectionParameters(): RfcConnectionParameters {
-	    return this.__connectionParams;
-	}
+	//get connectionParameters(): RfcConnectionParameters {
+	//    return this.__connectionParams;
+	//}
 }

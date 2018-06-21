@@ -15,7 +15,8 @@ Asynchronous, non-blocking [SAP NetWeawer RFC Library](https://support.sap.com/e
 
 -   Based on the latest nodejs [N-API](https://github.com/nodejs/node-addon-api) standard
 -   Promise and callback interface
--   Sequential and parallel calls, using single or multiple node-rfc cliens
+-   Connection pool
+-   Sequential and parallel calls, using single or multiple node-rfc clients
 -   Automatic conversion between JavaScript and ABAP datatypes
 -   Decimal objects support
 -   Extensive unit tests

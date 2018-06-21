@@ -2,11 +2,18 @@
 
 all: build
 
-./node_modules:
-	npm install --build-from-source
+install:
+	rm -rf node_modules
+	npm install --save node-pre-gyp node-addon-api
+	npm install --save-dev typescript @types/node decimal.js eslint eslint-plugin-mocha mocha prettier-eslint should
 
-build: ./node_modules
+addon: 
 	node-pre-gyp build # --loglevel=silent
+
+wrapper:
+	npm run build
+
+all: addon wrapper
 
 debug:
 	node-pre-gyp rebuild --debug
@@ -24,7 +31,7 @@ rebuild:
 	@make
 
 test:
-	@make build && npm run test
+	npm run test
 
 check: test
 

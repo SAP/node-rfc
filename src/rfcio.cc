@@ -237,6 +237,13 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         isNumber = value.IsNumber();
         if (isNumber)
         {
+
+            Napi::Function isIntegerFunction = __genv.Global().Get("Number").As<Napi::Object>().Get("IsInteger").As<Napi::Function>();
+
+            //bool isInt = isIntegerFunction.Call({value}).ToBoolean().Value();
+
+            //printf("%u %f : %u", value.ToNumber(), value.ToNumber(), isInt);
+
             numFloat = value.ToNumber().FloatValue();
             //valid = std::trunc(numFloat) == numFloat;
             isInteger = (int)numFloat == numFloat;
@@ -295,7 +302,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         return scope.Escape(wrapError(&errorInfo));
     }
     return scope.Env().Null();
-}
+} // namespace node_rfc
 
 ////////////////////////////////////////////////////////////////////////////////
 // WRAP FUNCTIONS (from RFC)

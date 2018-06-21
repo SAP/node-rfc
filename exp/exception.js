@@ -1,5 +1,5 @@
 const assert = require('assert');
-const rfcClient = require('../lib');
+const rfcClient = require('../lib').Client;
 const connParams = require('../test/connParams');
 
 client = new rfcClient(connParams);

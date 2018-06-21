@@ -1,4 +1,4 @@
-const rfcClient = require('../lib');
+const rfcClient = require('../lib').Client;
 //const connParams = require('../test/connParams');
 
 let connParams = {

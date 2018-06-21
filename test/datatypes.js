@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfcClient = require('../lib').RfcClient;
+const rfcClient = require('../lib').Client;
 const should = require('should');
 const Decimal = require('decimal.js');
 

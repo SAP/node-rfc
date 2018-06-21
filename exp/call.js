@@ -1,8 +1,8 @@
-const rfcClient = require('../lib');
+const rfcClient = require('../lib').Client;
 const connParams = require('../test/connParams');
 
 let client = new rfcClient(connParams);
-
+return;
 client
     .open()
 
@@ -27,4 +27,3 @@ client
     .catch(err => {
         console.error('Error open:', err);
     });
-

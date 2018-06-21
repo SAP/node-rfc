@@ -1,9 +1,8 @@
-const rfc = require('../sapnwrfc');
+const rfcClient = require('../lib').Client;
 
 const connParams = require('../test/connParams');
 
-const rfcClient = rfc.Client;
-console.log(rfcClient.getVersion());
+console.log(rfcClient.version);
 
 //connParams.user = 'XXX';
 

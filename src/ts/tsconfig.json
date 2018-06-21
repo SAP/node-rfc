@@ -12,9 +12,8 @@
 		"listFiles": true,
 		"removeComments": true,
 		"lib": ["es2015"],
-		"outDir": "../../lib/js"
+		"outDir": "../../lib"
 	},
-	"files": ["sapnwrfc-client.ts"],
 	"exclude": ["node_modules", "dist", "build", "doc", "lib", "test", ".vscode"],
 	"atom": {
 		"rewriteTsconfig": false

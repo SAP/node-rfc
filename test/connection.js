@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfcClient = require('../lib').RfcClient;
+const rfcClient = require('../lib').Client;
 const should = require('should');
 
 const connParams = require('./connParams');
@@ -43,7 +43,7 @@ describe('Connection', function() {
         } catch (ex) {
             ex.should.have.properties({
                 name: 'TypeError',
-                message: 'Cannot set property id of #<RfcClient> which has only a getter',
+                message: 'Cannot set property id of #<Client> which has only a getter',
             });
             client.id.should.equal(n);
             done();
@@ -58,7 +58,7 @@ describe('Connection', function() {
         } catch (ex) {
             ex.should.have.properties({
                 name: 'TypeError',
-                message: 'Cannot set property version of #<RfcClient> which has only a getter',
+                message: 'Cannot set property version of #<Client> which has only a getter',
             });
             done();
         }

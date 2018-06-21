@@ -1,5 +1,4 @@
-const rfc = require('../sapnwrfc');
-const rfcClient = rfc.Client;
+const rfcClient = require('../lib').Client;
 const Decimal = require('decimal.js');
 
 const connParams = require('../test/connParams');

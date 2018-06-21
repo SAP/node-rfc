@@ -42,11 +42,10 @@ export interface RfcConnectionParameters {
     tpname?: string;
     program_id?: string;
 }
-export declare class RfcClient {
-    private __connectionParams;
+export declare class Client {
     private __client;
     constructor(connectionParams: RfcConnectionParameters);
-    open(): Promise<{}>;
+    open(): Promise<Client>;
     call(rfcName: string, rfcParams: object, callOptions?: RfcCallOptions): Promise<{}>;
     connect(callback: Function): void;
     invoke(rfcName: string, rfcParams: object, callback: Function, callOptions?: object): void;
@@ -57,6 +56,5 @@ export declare class RfcClient {
     readonly isAlive: boolean;
     readonly id: number;
     readonly version: object;
-    readonly connectionParameters: RfcConnectionParameters;
 }
 export {};
