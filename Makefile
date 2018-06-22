@@ -1,9 +1,9 @@
 #http://www.gnu.org/prep/standards/html_node/Standard-Targets.html#Standard-Targets
 
-install:
+node-modules:
 	rm -rf node_modules
-	npm install --save node-pre-gyp node-addon-api
-	npm install --save-dev typescript @types/node decimal.js eslint eslint-plugin-mocha mocha prettier-eslint should
+	npm install
+	node-pre-gyp configure
 
 addon: 
 	node-pre-gyp build # --loglevel=silent
@@ -23,9 +23,11 @@ clean:
 	@rm -rf ./build
 	rm -rf lib/binding/
 	rm -rf ./node_modules/
+	npm install --save node-pre-gyp node-addon-api
+	npm install --save-dev typescript @types/node decimal.js eslint eslint-plugin-mocha mocha prettier-eslint should
 
 rebuild:
-	@make clean
+	# @make clean
 	@make
 
 test:
