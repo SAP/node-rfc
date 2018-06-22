@@ -37,7 +37,7 @@ describe('[promise] Options', function() {
         client.close();
     });
 
-    it('Skip parameters, no error if some params skipped', function(done) {
+    it('Skip parameters, no error if some params skipped', function() {
         this.timeout(5000);
         let notRequested = [
             'ET_COMPONENTS',
@@ -48,7 +48,7 @@ describe('[promise] Options', function() {
             'ET_PRTS',
             'ET_RELATIONS',
         ];
-        client
+        return client
             .call(
                 'EAM_TASKLIST_GET_DETAIL',
                 {
@@ -61,15 +61,11 @@ describe('[promise] Options', function() {
                 res.should.be.an.Object;
                 res.should.have.properties('ET_RETURN');
                 res.ET_RETURN.should.have.length(0);
-                done();
-            })
-            .catch(err => {
-                done(err);
             });
     });
 
-    it('Skip parameters, error if all requested', function(done) {
-        client
+    it('Skip parameters, error if all requested', function() {
+        return client
             .call('EAM_TASKLIST_GET_DETAIL', {
                 IV_PLNTY: 'A',
                 IV_PLNNR: '00100000',
@@ -79,10 +75,6 @@ describe('[promise] Options', function() {
                 res.should.be.an.Object;
                 res.should.have.properties('ET_RETURN');
                 res.ET_RETURN.should.have.length(1);
-                done();
-            })
-            .catch(err => {
-                done(err);
             });
     });
 });

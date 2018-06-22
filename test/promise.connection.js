@@ -38,37 +38,25 @@ describe('[promise] Connection', function() {
         client.close();
     });
 
-    it('STFC_CONNECTION should return "Hello SAP!" string', function(done) {
-        client
-            .call('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' })
-            .then(res => {
-                should.exist(res);
-                res.should.be.an.Object;
-                res.should.have.property('ECHOTEXT');
-                res.ECHOTEXT.should.startWith('Hello SAP!');
-                done();
-            })
-            .catch(err => {
-                return done(err);
-            });
+    it('STFC_CONNECTION should return "Hello SAP!" string', function() {
+        return client.call('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' }).then(res => {
+            should.exist(res);
+            res.should.be.an.Object;
+            res.should.have.property('ECHOTEXT');
+            res.ECHOTEXT.should.startWith('Hello SAP!');
+        });
     });
 
-    it('STFC_CONNECTION should return Umlauts "H€llö SAP!" string', function(done) {
-        client
-            .call('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' })
-            .then(res => {
-                should.exist(res);
-                res.should.be.an.Object;
-                res.should.have.property('ECHOTEXT');
-                res.ECHOTEXT.should.startWith('H€llö SAP!');
-                done();
-            })
-            .catch(err => {
-                return done(err);
-            });
+    it('STFC_CONNECTION should return Umlauts "H€llö SAP!" string', function() {
+        return client.call('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' }).then(res => {
+            should.exist(res);
+            res.should.be.an.Object;
+            res.should.have.property('ECHOTEXT');
+            res.ECHOTEXT.should.startWith('H€llö SAP!');
+        });
     });
 
-    it('STFC_STRUCTURE should return structure and table', function(done) {
+    it('STFC_STRUCTURE should return structure and table', function() {
         let importStruct = {
             RFCFLOAT: 1.23456789,
             RFCCHAR1: 'A',
@@ -89,33 +77,27 @@ describe('[promise] Connection', function() {
         };
         let importTable = [importStruct];
 
-        client
-            .call('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable })
-            .then(res => {
-                should.exist(res);
-                res.should.be.an.Object;
-                res.should.have.properties('ECHOSTRUCT', 'RFCTABLE');
+        return client.call('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }).then(res => {
+            should.exist(res);
+            res.should.be.an.Object;
+            res.should.have.properties('ECHOSTRUCT', 'RFCTABLE');
 
-                res.ECHOSTRUCT.RFCCHAR1.should.equal(importStruct.RFCCHAR1);
-                res.ECHOSTRUCT.RFCCHAR2.should.equal(importStruct.RFCCHAR2);
-                res.ECHOSTRUCT.RFCCHAR4.should.equal(importStruct.RFCCHAR4);
-                res.ECHOSTRUCT.RFCFLOAT.should.equal(importStruct.RFCFLOAT);
-                res.ECHOSTRUCT.RFCINT1.should.equal(importStruct.RFCINT1);
-                res.ECHOSTRUCT.RFCINT2.should.equal(importStruct.RFCINT2);
-                res.ECHOSTRUCT.RFCINT4.should.equal(importStruct.RFCINT4);
-                res.ECHOSTRUCT.RFCDATA1.should.startWith(importStruct.RFCDATA1);
-                res.ECHOSTRUCT.RFCDATA2.should.startWith(importStruct.RFCDATA2);
-                res.ECHOSTRUCT.RFCHEX3.toString().should.equal(importStruct.RFCHEX3.toString());
+            res.ECHOSTRUCT.RFCCHAR1.should.equal(importStruct.RFCCHAR1);
+            res.ECHOSTRUCT.RFCCHAR2.should.equal(importStruct.RFCCHAR2);
+            res.ECHOSTRUCT.RFCCHAR4.should.equal(importStruct.RFCCHAR4);
+            res.ECHOSTRUCT.RFCFLOAT.should.equal(importStruct.RFCFLOAT);
+            res.ECHOSTRUCT.RFCINT1.should.equal(importStruct.RFCINT1);
+            res.ECHOSTRUCT.RFCINT2.should.equal(importStruct.RFCINT2);
+            res.ECHOSTRUCT.RFCINT4.should.equal(importStruct.RFCINT4);
+            res.ECHOSTRUCT.RFCDATA1.should.startWith(importStruct.RFCDATA1);
+            res.ECHOSTRUCT.RFCDATA2.should.startWith(importStruct.RFCDATA2);
+            res.ECHOSTRUCT.RFCHEX3.toString().should.equal(importStruct.RFCHEX3.toString());
 
-                res.RFCTABLE.should.have.length(2);
-                res.RFCTABLE[1].RFCFLOAT.should.equal(importStruct.RFCFLOAT + 1);
-                res.RFCTABLE[1].RFCINT1.should.equal(importStruct.RFCINT1 + 1);
-                res.RFCTABLE[1].RFCINT2.should.equal(importStruct.RFCINT2 + 1);
-                res.RFCTABLE[1].RFCINT4.should.equal(importStruct.RFCINT4 + 1);
-                done();
-            })
-            .catch(err => {
-                return done(err);
-            });
+            res.RFCTABLE.should.have.length(2);
+            res.RFCTABLE[1].RFCFLOAT.should.equal(importStruct.RFCFLOAT + 1);
+            res.RFCTABLE[1].RFCINT1.should.equal(importStruct.RFCINT1 + 1);
+            res.RFCTABLE[1].RFCINT2.should.equal(importStruct.RFCINT2 + 1);
+            res.RFCTABLE[1].RFCINT4.should.equal(importStruct.RFCINT4 + 1);
+        });
     });
 });

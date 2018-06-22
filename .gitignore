@@ -16,3 +16,4 @@ release/
 lib/binding/
 test/*.txt
 test/*.log
+samples/dist*

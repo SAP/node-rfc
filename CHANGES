@@ -1,12 +1,13 @@
 Change log
 ==========
 
-0.2.0-rc2
+0.2.0-rc3
 ---------
 
 * N-API based
-* Promise and callback API
-* Typescript wrapper
+* Callback, promise, async/await API examples
+* Connection pool
+* Typescript and ESnext syntax
 * C/C++ style guide
 * Error handling harmonisation
 * String handling optimisation

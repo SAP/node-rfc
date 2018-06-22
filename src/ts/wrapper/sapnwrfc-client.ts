@@ -123,7 +123,7 @@ export class Client {
 	    });
 	}
 
-	call(rfcName: string, rfcParams: object, callOptions: RfcCallOptions = {}): Promise<{}> {
+	call(rfcName: string, rfcParams: object, callOptions: RfcCallOptions = {}): Promise<any> {
 	    return new Promise((resolve, reject) => {
 	        if (typeof callOptions === 'function') {
 	            reject(new TypeError('No callback argument allowed in promise based call()'));

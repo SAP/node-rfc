@@ -1,7 +1,5 @@
 #http://www.gnu.org/prep/standards/html_node/Standard-Targets.html#Standard-Targets
 
-all: build
-
 install:
 	rm -rf node_modules
 	npm install --save node-pre-gyp node-addon-api
