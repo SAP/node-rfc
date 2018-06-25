@@ -3,13 +3,14 @@
 // const rfcClient = require('node-rfc').Client;
 const rfcClient = require('../../lib').Client;
 
+// RFC connection parameters
 const abapSystem = require('./abapSystem');
 
 // create new client
 const client = new rfcClient(abapSystem);
 
-// echo the node-rfc client and SAP NW RFC SDK version
-console.log('RFC client lib version: ', client.version);
+// echo SAP NW RFC SDK and nodejs/RFC binding version
+console.log('Client version: ', client.version);
 
 // open connection
 client.connect(function(err) {
@@ -19,7 +20,7 @@ client.connect(function(err) {
     }
 
     //
-    // invoke remote enabled ABAP function module
+    // invoke ABAP function module with string parameter
     //
     client.invoke('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' }, function(err, res) {
         if (err) {
@@ -35,20 +36,22 @@ client.connect(function(err) {
     });
 
     //
-    // invoke more complex ABAP function module
+    // invoke ABAP function module with structure and table parameters
     //
 
     // ABAP structure
-    const importStruct = {
-        RFCFLOAT: 1.23456789,
-        RFCCHAR4: 'DEFG',
+    const structure = {
         RFCINT4: 345,
+        RFCFLOAT: 1.23456789,
+        // or RFCFLOAT: require('decimal.js')('1.23456789'),
+        RFCCHAR4: 'ABCD',
+        RFCDATE: '20170927',
     };
 
     // ABAP table
-    let importTable = [importStruct];
+    let table = [structure];
 
-    client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err, res) {
+    client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: structure, RFCTABLE: table }, function(err, res) {
         if (err) {
             return console.error('Error invoking STFC_STRUCTURE:', err);
         }
@@ -62,7 +65,6 @@ client.connect(function(err) {
     client.invoke(
         'STFC_PERFORMANCE',
         { CHECKTAB: 'X', LGET0332: COUNT.toString(), LGET1000: COUNT.toString() },
-
         function(err, res) {
             if (err) {
                 return err;

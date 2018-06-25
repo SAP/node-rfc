@@ -12,7 +12,7 @@
 		"listFiles": true,
 		"removeComments": true,
 		"lib": ["es2015"],
-		"outDir": "../dist-ts"
+		"outDir": "../dist"
 	},
 	"files": ["async.ts", "abapSystem.ts"],
 	"exclude": ["node_modules", "dist", "build", "doc", "lib", "test", ".vscode"],

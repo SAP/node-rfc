@@ -25,7 +25,7 @@
 		"preinstall": "npm install node-pre-gyp node-addon-api",
 		"install": "node-pre-gyp install --fallback-to-build",
 		"test": "mocha",
-		"build": "tsc -p src/ts -p samples/readme"
+		"wrapper": "tsc -p src/ts -p samples/readme"
 	},
 	"binary": {
 		"module_name": "sapnwrfc",
@@ -50,16 +50,14 @@
 	},
 	"dependencies": {
 		"node-addon-api": "^1.3.0",
-		"node-pre-gyp": "^0.10.0"
+		"node-pre-gyp": "^0.10.2"
 	},
 	"bundledDependencies": [
 		"node-pre-gyp"
 	],
 	"devDependencies": {
 		"@babel/core": "^7.0.0-beta.51",
-		"@babel/preset-env": "^7.0.0-beta.51",
 		"@types/node": "^10.3.4",
-		"babel-cli": "^6.26.0",
 		"decimal.js": "^10.0.1",
 		"eslint": "^4.19.1",
 		"eslint-plugin-mocha": "^5.0.0",

@@ -14,7 +14,7 @@
 Asynchronous, non-blocking [SAP NetWeawer RFC Library](https://support.sap.com/en/products/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/):
 
 -   Based on the latest nodejs [N-API](https://github.com/nodejs/node-addon-api) standard
--   Promise and callback interface
+-   Async/await, promise, callback interface
 -   Connection pool
 -   Sequential and parallel calls, using single or multiple node-rfc clients
 -   Automatic conversion between JavaScript and ABAP datatypes
@@ -68,16 +68,16 @@ Callback, promise and async/await programming examples are provided here and for
 
 const rfcClient = require('node-rfc').Client;
 
+// RFC connection parameters
 const abapSystem = require('./abapSystem');
 
 // create new client
 const client = new rfcClient(abapSystem);
 
-// echo the node-rfc client and SAP NW RFC SDK version
-console.log('RFC client lib version: ', client.version);
+// echo SAP NW RFC SDK and nodejs/RFC binding version
+console.log('Client version: ', client.version);
 
 // open connection
-
 client.connect(function(err) {
 	if (err) {
 		// check for login/connection errors
@@ -85,14 +85,14 @@ client.connect(function(err) {
 	}
 
 	//
-	// invoke remote enabled ABAP function module
+	// invoke ABAP function module with string parameter
 	//
-
 	client.invoke('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' }, function(err, res) {
 		if (err) {
 			// check for errors (e.g. wrong parameters)
 			return console.error('Error invoking STFC_CONNECTION:', err);
 		}
+
 		// result should be something like:
 		// { ECHOTEXT: 'Hello SAP!',
 		//   RESPTEXT: 'SAP R/3 Rel. 702   Sysid: E1Q      Date: 20140613   Time: 142530   Logon_Data: 001/DEMO/E',
@@ -101,20 +101,22 @@ client.connect(function(err) {
 	});
 
 	//
-	// invoke more complex ABAP function module
+	// invoke ABAP function module with structure and table parameters
 	//
 
 	// ABAP structure
-	const importStruct = {
-		RFCFLOAT: 1.23456789,
-		RFCCHAR4: 'DEFG',
+	const structure = {
 		RFCINT4: 345,
+		RFCFLOAT: 1.23456789,
+		// or RFCFLOAT: require('decimal.js')('1.23456789'),
+		RFCCHAR4: 'ABCD',
+		RFCDATE: '20170927',
 	};
 
 	// ABAP table
-	let importTable = [importStruct];
+	let table = [structure];
 
-	client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err, res) {
+	client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: structure, RFCTABLE: table }, function(err, res) {
 		if (err) {
 			return console.error('Error invoking STFC_STRUCTURE:', err);
 		}
@@ -128,7 +130,6 @@ client.connect(function(err) {
 	client.invoke(
 		'STFC_PERFORMANCE',
 		{ CHECKTAB: 'X', LGET0332: COUNT.toString(), LGET1000: COUNT.toString() },
-
 		function(err, res) {
 			if (err) {
 				return err;
@@ -141,6 +142,40 @@ client.connect(function(err) {
 ```
 
 Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method on the client instance.
+
+### async/await (using nodejs > 7.6.0 or transpiler)
+
+```javascript
+'use strict';
+
+const rfcClient = require('node-rfc').Client;
+
+import abapSystem from './abapSystem';
+
+const client = new Client(abapSystem);
+
+async function getSomeAsyncData() {
+	await client.open();
+
+	let result = await client.call('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' });
+
+	result.ECHOTEXT += '#';
+
+	await client.call('STFC_CONNECTION', { REQUTEXT: result.ECHOTEXT });
+
+	return result.ECHOTEXT;
+}
+
+(async function() {
+	try {
+		let result = await getSomeAsyncData();
+
+		console.log(result); // should be 'H€llö SAP!#'
+	} catch (ex) {
+		console.error(ex);
+	}
+})();
+```
 
 ### Promises
 
@@ -180,40 +215,6 @@ client
 	.catch(err => {
 		console.error('could not connect to server', err);
 	});
-```
-
-### async/await
-
-```javascript
-'use strict';
-
-const rfcClient = require('node-rfc').Client;
-
-const abapSystem = require('./abapSystem');
-
-const client = new rfcClient(abapSystem);
-
-async function getData() {
-	await client.open(); // remove await to test the catch block below
-
-	let result = await client.call('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' });
-
-	result.ECHOTEXT += '#';
-
-	result = await client.call('STFC_CONNECTION', { REQUTEXT: result.ECHOTEXT });
-
-	return result;
-}
-
-(async () => {
-	let result;
-	try {
-		result = await getData();
-		console.log(result.ECHOTEXT); // 'H€llö SAP!#'
-	} catch (ex) {
-		console.log(ex);
-	}
-})();
 ```
 
 ### Connection Pool

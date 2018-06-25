@@ -1,28 +1,28 @@
-//import { Client, RfcConnectionParameters } from 'node-rfc';
-import { Client, RfcConnectionParameters } from '../../lib';
+//import { Client } from 'node-rfc';
+import { Client } from '../../lib';
 
-const abapSystem = require('./abapSystem');
+import abapSystem from './abapSystem';
 
 const client = new Client(abapSystem);
 
-async function getData() {
-	await client.open(); // remove await if want to test the catch block below
+async function getSomeAsyncData() {
+	await client.open();
 
 	let result = await client.call('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' });
 
 	result.ECHOTEXT += '#';
 
-	result = await client.call('STFC_CONNECTION', { REQUTEXT: result.ECHOTEXT });
+	await client.call('STFC_CONNECTION', { REQUTEXT: result.ECHOTEXT });
 
-	return result;
+	return result.ECHOTEXT;
 }
 
-(async () => {
-	let result;
+(async function() {
 	try {
-		result = await getData();
-		console.log(result.ECHOTEXT); // 'H€llö SAP!#'
+		let result = await getSomeAsyncData();
+
+		console.log(result); // should be 'H€llö SAP!#'
 	} catch (ex) {
-		console.log(ex);
+		console.error(ex);
 	}
 })();
