@@ -14,6 +14,7 @@
 
 #include "rfcio.h"
 #include "error.h"
+#include <algorithm>
 
 namespace node_rfc
 {
@@ -33,6 +34,27 @@ SAP_UC *fillString(const Napi::String napistr)
 
     //std::string str = std::string(napistr);
     std::string str = napistr.Utf8Value();
+    sapucSize = str.length() + 1;
+
+    // printf("%s: %u\n", &str[0], sapucSize);
+
+    sapuc = mallocU(sapucSize);
+    memsetU(sapuc, 0, sapucSize);
+    rc = RfcUTF8ToSAPUC((RFC_BYTE *)&str[0], str.length(), sapuc, &sapucSize, &resultLen, &errorInfo);
+
+    if (rc != RFC_OK)
+        Napi::Error::Fatal("fillString", "node-rfc internal error");
+
+    return sapuc;
+}
+
+SAP_UC *fillString(std::string str)
+{
+    RFC_RC rc;
+    RFC_ERROR_INFO errorInfo;
+    SAP_UC *sapuc;
+    unsigned int sapucSize, resultLen = 0;
+
     sapucSize = str.length() + 1;
 
     // printf("%s: %u\n", &str[0], sapucSize);
@@ -262,16 +284,42 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         rc = RfcSetInt(functionHandle, cName, RFC_INT(numFloat), &errorInfo);
         break;
     case RFCTYPE_DATE:
-        // https: //github.com/nodejs/node-addon-api/issues/57#issuecomment-398970543
-        if (!value.IsString())
+        if (value.IsString())
         {
-            char err[256];
-            std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Date object or string expected when filling field %s of type %d", &fieldName[0], typ);
-            return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+            // it is a string
+            cValue = fillString(value.ToString());
         }
-        //cValue = fillString(value.strftime('%Y%m%d'));
-        cValue = fillString(value.ToString());
+        else
+        {
+            // check if Date object ?
+            Napi::Function dateFunc = value.Env().Global().Get("Date").As<Napi::Function>();
+            if (!value.As<Napi::Object>().InstanceOf(dateFunc))
+            {
+                char err[256];
+                std::string fieldName = wrapString(cName).ToString().Utf8Value();
+                sprintf(err, "Date object or string expected when filling field %s of type %d", &fieldName[0], typ);
+                return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+            }
+
+            // input date
+            std::string date_js = value.ToString().Utf8Value();
+
+            // abap_date = year
+            std::string abap_date = date_js.substr(11, 4);
+
+            // abap_date += month
+            std::string month_input = date_js.substr(4, 3);
+            std::string month_js[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"};
+            int index = std::distance(month_js, std::find(month_js, month_js + 12, month_input));
+            if (index < 10)
+                abap_date += '0';
+            abap_date += char(index + '1');
+
+            // abap_date += day
+            abap_date += date_js.substr(8, 2);
+
+            cValue = fillString(abap_date);
+        }
         rc = RfcSetDate(functionHandle, cName, cValue, &errorInfo);
         free(cValue);
         break;

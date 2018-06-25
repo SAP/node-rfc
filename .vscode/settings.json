@@ -18,6 +18,9 @@
         "vector": "cpp",
         "__functional_03": "cpp",
         "iosfwd": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "bitset": "cpp",
+        "chrono": "cpp",
+        "ratio": "cpp"
     }
 }

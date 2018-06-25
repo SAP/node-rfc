@@ -14,7 +14,8 @@
 Asynchronous, non-blocking [SAP NetWeawer RFC Library](https://support.sap.com/en/products/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/):
 
 -   Based on the latest nodejs [N-API](https://github.com/nodejs/node-addon-api) standard
--   Async/await, promise, callback interface
+-   Async/await, promise and callback API
+-   Stateless and stateful connections (using BAPI_TRANSACTION_COMMIT / ROLLBACK for example)
 -   Connection pool
 -   Sequential and parallel calls, using single or multiple node-rfc clients
 -   Automatic conversion between JavaScript and ABAP datatypes
@@ -108,9 +109,10 @@ client.connect(function(err) {
 	const structure = {
 		RFCINT4: 345,
 		RFCFLOAT: 1.23456789,
-		// or RFCFLOAT: require('decimal.js')('1.23456789'),
+		// or RFCFLOAT: require('decimal.js')('1.23456789'), // as Decimal object
 		RFCCHAR4: 'ABCD',
-		RFCDATE: '20170927',
+		RFCDATE: '20180625', // in ABAP date format
+		// or RFCDATE: new Date('2018-06-25'), // as JavaScript Date object
 	};
 
 	// ABAP table

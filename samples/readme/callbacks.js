@@ -43,9 +43,10 @@ client.connect(function(err) {
     const structure = {
         RFCINT4: 345,
         RFCFLOAT: 1.23456789,
-        // or RFCFLOAT: require('decimal.js')('1.23456789'),
+        // or RFCFLOAT: require('decimal.js')('1.23456789'), // as Decimal object
         RFCCHAR4: 'ABCD',
-        RFCDATE: '20170927',
+        RFCDATE: '20180625', // in ABAP date format
+        // or RFCDATE: new Date('2018-06-25'), // as JavaScript Date object
     };
 
     // ABAP table
@@ -57,7 +58,7 @@ client.connect(function(err) {
         }
         console.log('STFC_STRUCTURE call result:', res);
     });
-
+    /*
     //
     // invoke possibly longer running ABAP function module, returning more data
     //
@@ -73,4 +74,5 @@ client.connect(function(err) {
             console.log('ETAB1000 records count:', res.ETAB1000.length);
         }
     );
+    */
 });

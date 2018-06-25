@@ -240,6 +240,56 @@ describe('Datatypes', function() {
         });
     });
 
+    it('DATE input string', function(done) {
+        const testDate = '20180625';
+        let importStruct = {
+            RFCDATE: testDate,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err, res) {
+            should.not.exist(err);
+            res.should.be.an.Object;
+            res.ECHOSTRUCT.RFCDATE.should.equal(testDate);
+            res.RFCTABLE[0].RFCDATE.should.equal(testDate);
+            res.RFCTABLE[1].RFCDATE.should.equal(testDate);
+            done();
+        });
+    });
+
+    it('DATE input Date', function(done) {
+        const testDateIn = new Date('2018-06-25');
+        const testDateOut = '20180625';
+        let importStruct = {
+            RFCDATE: testDateIn,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err, res) {
+            should.not.exist(err);
+            res.should.be.an.Object;
+            res.ECHOSTRUCT.RFCDATE.should.equal(testDateOut);
+            res.RFCTABLE[0].RFCDATE.should.equal(testDateOut);
+            res.RFCTABLE[1].RFCDATE.should.equal(testDateOut);
+            done();
+        });
+    });
+
+    it('DATE type check', function(done) {
+        const testDate = 41;
+        let importStruct = {
+            RFCDATE: testDate,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object;
+            err.should.have.properties({
+                name: 'TypeError',
+                message: 'Date object or string expected when filling field RFCDATE of type 1',
+            });
+            done();
+        });
+    });
+
     //xit('INT type check should detect floats [pending] https://github.com/nodejs/node-addon-api/issues/265', function(done) {
     it('INT type check should detect floats [pending] https://github.com/nodejs/node-addon-api/issues/265', function(done) {
         let importStruct = {
