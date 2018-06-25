@@ -9,7 +9,7 @@
 #
 
 # https://nodejs.org/en/download/releases/
-declare -a LTS_VERSIONS=("6" "8" "10")
+declare -a LTS_VERSIONS=("6.14.3" "8.11.3" "10.5.0")
 
 version=`cat ./VERSION` 
 
