@@ -33,7 +33,7 @@ do
     npm install
     # abi=`node --eval "console.log(require('node-abi').getAbi())"`
     npm run build && \
-    rm -rf build && node-pre-gyp clean configure build && \
+    rm -rf build/Release && node-pre-gyp clean configure build && \
     node-pre-gyp testbinary && node-pre-gyp package && \
     npm run test && node-pre-gyp reveal
 done
