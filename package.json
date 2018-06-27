@@ -1,7 +1,7 @@
 {
 	"name": "node-rfc",
 	"description": "nodejs bindings for SAP NW RFC SDK",
-	"version": "0.2.0-rc3",
+	"version": "0.2.0-rc4",
 	"homepage": "https://github.wdf.sap.corp/D037732/node-rfc",
 	"author": {
 		"name": "Srdjan Boskovic",
@@ -25,7 +25,8 @@
 		"preinstall": "npm install node-pre-gyp node-addon-api",
 		"install": "node-pre-gyp install --fallback-to-build",
 		"test": "mocha",
-		"build": "tsc -p src/ts -p examples/ts"
+		"build": "tsc -p src/ts",
+		"examples": "tsc -p examples/ts"
 	},
 	"binary": {
 		"module_name": "sapnwrfc",

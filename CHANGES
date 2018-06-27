@@ -1,18 +1,24 @@
 Change log
 ==========
 
-0.2.0-rc3
----------
+0.2.0-rc4 (2018-06-30)
+----------------------
 
 * N-API based
 * Callback, promise, async/await API examples
 * Connection pool
-* Typescript and ESnext syntax
+* Typescript and ES-next syntax support
 * C/C++ style guide
 * Error handling harmonisation
 * String handling optimisation
 * More unit tests
 * README links update, from Service Marketplace to Support Portal
+
+Incompatible changes:
+
+* client.connectionInfo() gunction replaced by client.connectionInfo getter
+* client.getVersion() replaced by client.version getter, format changed as well
+* client.isAlive() replaced by client.isAlive getter
 
 0.1.16 (2018-27-04)
 -------------------

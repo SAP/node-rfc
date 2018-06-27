@@ -1,6 +1,6 @@
 # API examples
 
-Run `npm install` and check examples like below.
+Run `npm install` and test examples.
 
 ### async/await (nodejs > 7.6.0 or transpiler required)
 
@@ -151,8 +151,6 @@ client.connect(function(err) {
 	);
 });
 ```
-
-Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method on the client instance.
 
 ### Connection Pool
 

@@ -119,7 +119,6 @@ npm run test
 ## Issues
 
 -   [NAPI Type checks #265](https://github.com/nodejs/node-addon-api/issues/265)
--   [node-pre-gyp installation #367](https://github.com/mapbox/node-pre-gyp/issues/367)
 
 ## Links
 
