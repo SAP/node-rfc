@@ -1,12 +1,10 @@
-:heavy_exclamation_mark: Notice  :heavy_exclamation_mark:
-====================================
+# :heavy_exclamation_mark: Notice :heavy_exclamation_mark:
 
-__The package is ported to [N-API](https://github.com/nodejs/node-addon-api), an ABI stable C interface provided by Node.js.__
+**The package is ported to [N-API](https://github.com/nodejs/node-addon-api), a ABI stable C interface provided by Node.js.**
 
-__Only critical fixes will be provided for Nan based version.__
+**Only critical fixes will be provided for Nan based version.**
 
-__Please continue using the new N-API version, as a prerelease, considering minor [incompatible changes](https://github.com/SAP/node-rfc/releases/tag/0.2.0-rc4).__  
-
+**Please continue using the new N-API version, as a prerelease, considering minor [incompatible changes](https://github.com/SAP/node-rfc/releases/tag/0.2.0-rc4).**
 
 # SAP NW RFC SDK Client for Nodejs
 
@@ -51,7 +49,7 @@ remote enabled ABAP function module from nodejs. The client can be used for one 
 
 Callback API example below shows basic principles. See also:
 
--   [**Examples and API**](examples/README.md)
+-   [**Examples and API**](https://github.com/SAP/node-rfc/blob/napi/examples/README.md)
 
 -   [**node-rfc documentation**](http://sap.github.io/node-rfc), complementing SAP NW RFC Library [programming guide and documentation](https://support.sap.com/en/products/connectors/nwrfcsdk.html)
 
