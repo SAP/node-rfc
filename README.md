@@ -39,10 +39,9 @@ remote enabled ABAP function module from nodejs. The client can be used for one 
 
 Callback API example below shows basic principles. See also:
 
-* [Examples and API](examples/README.md).
+-   [**Examples and API**](examples/README.md)
 
-* [_node-rfc_ documentation](http://sap.github.io/node-rfc), complementing _SAP NW RFC Library_ [programming guide and documentation](https://support.sap.com/en/products/connectors/nwrfcsdk.html).
-
+-   [**node-rfc documentation**](http://sap.github.io/node-rfc), complementing SAP NW RFC Library [programming guide and documentation](https://support.sap.com/en/products/connectors/nwrfcsdk.html)
 
 ```javascript
 'use strict';
@@ -135,4 +134,3 @@ Developer resources:
 -   [N-API API docs](https://nodejs.github.io/node-addon-api/index.html)
 -   [Node.js ES2015 Support](http://node.green/)
 -   [Node.js LTS Releases](https://github.com/nodejs/LTS)
-

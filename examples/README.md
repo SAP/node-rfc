@@ -1,4 +1,6 @@
-# Async/await, promise and callback
+# API examples
+
+Run `npm install` and check examples like below.
 
 ### async/await (nodejs > 7.6.0 or transpiler required)
 
@@ -68,7 +70,7 @@ client
 	});
 ```
 
-### Callback
+### Callbacks
 
 ```javascript
 'use strict';
