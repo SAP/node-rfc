@@ -17,13 +17,13 @@
 const rfcClient = require('../lib').Client;
 const should = require('should');
 
-const connParams = require('./connParams');
+const abapSystem = require('./abapSystem')('MME');
 
 describe('Connection', function() {
     let client;
 
     before(function(done) {
-        client = new rfcClient(connParams);
+        client = new rfcClient(abapSystem);
         client.connect(function(err) {
             if (err) return done(err);
             done();
@@ -99,9 +99,9 @@ describe('Connection', function() {
             'reserved'
         );
         client.connectionInfo.should.have.properties({
-            user: connParams.user.toUpperCase(),
-            sysNumber: connParams.sysnr,
-            client: connParams.client,
+            user: abapSystem.user.toUpperCase(),
+            sysNumber: abapSystem.sysnr,
+            client: abapSystem.client,
         });
         done();
     });
@@ -124,8 +124,13 @@ describe('Connection', function() {
         client.reopen(function(err) {
             should.not.exist(err);
             client.isAlive.should.be.true;
-            client.ping().should.be.true;
-            done();
+            let convId = client.connectionInfo.cpicConvId;
+            client.reopen(function(err) {
+                should.not.exist(err);
+                client.isAlive.should.be.true;
+                convId.should.not.be.equal(client.connectionInfo.cpicConvId);
+                done();
+            });
         });
     });
 

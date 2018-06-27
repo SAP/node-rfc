@@ -52,9 +52,9 @@ export declare class Client {
     close(): object;
     reopen(callback: Function): void;
     ping(): void;
-    readonly connectionInfo: object;
     readonly isAlive: boolean;
     readonly id: number;
     readonly version: object;
+    readonly connectionInfo: object;
 }
 export {};

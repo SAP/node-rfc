@@ -17,13 +17,13 @@
 const rfcClient = require('../lib').Client;
 const should = require('should');
 
-const connParams = require('./connParams');
+const abapSystem = require('./abapSystem')('MME');
 
 describe('Error handling', function() {
     let client;
 
     beforeEach(function(done) {
-        client = new rfcClient(connParams);
+        client = new rfcClient(abapSystem);
         client.connect(function(err) {
             if (err) return done(err);
             done();
@@ -36,7 +36,7 @@ describe('Error handling', function() {
     });
 
     it('Logon failure with wrong credentials', function(done) {
-        let wrongParams = Object.assign({}, connParams);
+        let wrongParams = Object.assign({}, abapSystem);
         wrongParams.user = 'WRONGUSER';
 
         let wrongClient = new rfcClient(wrongParams);
@@ -82,7 +82,7 @@ describe('Error handling', function() {
     });
 
     it('Connection parameter missing', function(done) {
-        let wrongParams = Object.assign({}, connParams);
+        let wrongParams = Object.assign({}, abapSystem);
         delete wrongParams.ashost;
 
         let wrongClient = new rfcClient(wrongParams);

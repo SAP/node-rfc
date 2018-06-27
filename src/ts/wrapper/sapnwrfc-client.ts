@@ -171,10 +171,6 @@ export class Client {
 	    return this.__client.ping();
 	}
 
-	get connectionInfo(): object {
-	    return this.__client.connectionInfo();
-	}
-
 	get isAlive(): boolean {
 	    return this.__client.isAlive();
 	}
@@ -187,7 +183,7 @@ export class Client {
 	    return this.__client.version;
 	}
 
-	//get connectionParameters(): RfcConnectionParameters {
-	//    return this.__connectionParams;
-	//}
+	get connectionInfo(): object {
+	    return this.__client.connectionInfo();
+	}
 }

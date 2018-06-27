@@ -1,9 +1,8 @@
 'use strict';
 
-//const rfcClient = require('node-rfc').Client;
-const Pool = require('../../lib').Pool;
+const Pool = require('node-rfc').Pool;
 
-const abapSystem = require('./abapSystem');
+const abapSystem = require('./abapSystem').DSP;
 
 const pool = new Pool(abapSystem);
 

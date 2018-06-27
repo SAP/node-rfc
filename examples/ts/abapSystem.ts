@@ -1,4 +1,4 @@
-let connParams = {
+export const p7019s16 = {
     user: 'demo',
     passwd: 'Welcome',
     ashost: '10.117.19.101',
@@ -8,7 +8,7 @@ let connParams = {
     client: '100',
 };
 
-connParams = {
+export const MME = {
     user: 'demo',
     passwd: 'welcome',
     ashost: '10.68.110.51',
@@ -17,4 +17,11 @@ connParams = {
     lang: 'EN',
 };
 
-module.exports = connParams;
+export const DSP = {
+    user: 'demo',
+    passwd: 'welcome',
+    ashost: '10.68.104.164',
+    sysnr: '00',
+    client: '620',
+    lang: 'EN',
+};

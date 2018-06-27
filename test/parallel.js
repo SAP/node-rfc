@@ -17,13 +17,13 @@
 const rfcClient = require('../lib').Client;
 const should = require('should');
 
-const connParams = require('./connParams');
+const abapSystem = require('./abapSystem')('MME');
 
 const CONNECTIONS = 50;
 
 describe('Parallel and Sequential', function() {
     this.timeout(15000);
-    let client = new rfcClient(connParams);
+    let client = new rfcClient(abapSystem);
 
     before(function(done) {
         client.connect(function(err) {
@@ -56,7 +56,7 @@ describe('Parallel and Sequential', function() {
         let count = CONNECTIONS;
         let CLIENTS = [];
         for (let i = 0; i < count; i++) {
-            CLIENTS.push(new rfcClient(connParams));
+            CLIENTS.push(new rfcClient(abapSystem));
         }
         for (let client of CLIENTS) {
             client.connect(err => {

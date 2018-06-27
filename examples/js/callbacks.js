@@ -1,12 +1,9 @@
 'use strict';
 
-// const rfcClient = require('node-rfc').Client;
-const rfcClient = require('../../lib').Client;
+const rfcClient = require('node-rfc').Client;
 
-// RFC connection parameters
-const abapSystem = require('./abapSystem');
+const abapSystem = require('./abapSystem').DSP;
 
-// create new client
 const client = new rfcClient(abapSystem);
 
 // echo SAP NW RFC SDK and nodejs/RFC binding version

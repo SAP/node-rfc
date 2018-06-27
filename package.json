@@ -25,7 +25,7 @@
 		"preinstall": "npm install node-pre-gyp node-addon-api",
 		"install": "node-pre-gyp install --fallback-to-build",
 		"test": "mocha",
-		"wrapper": "tsc -p src/ts -p samples/readme"
+		"build": "tsc -p src/ts -p examples/ts"
 	},
 	"binary": {
 		"module_name": "sapnwrfc",

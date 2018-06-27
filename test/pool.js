@@ -16,14 +16,14 @@
 
 const Pool = require('../lib').Pool;
 const should = require('should');
-const connParams = require('./connParams');
+const abapSystem = require('./abapSystem')('MME');
 
 describe('Pool', function() {
     let pool;
     let ID;
 
     before(function(done) {
-        pool = new Pool(connParams);
+        pool = new Pool(abapSystem);
         done();
     });
 
@@ -110,7 +110,7 @@ describe('Pool', function() {
                 ID = client.id;
                 client.isAlive.should.be.true;
 
-                let pool2 = new Pool(connParams);
+                let pool2 = new Pool(abapSystem);
 
                 pool2.acquire().then(c2 => {
                     c2.id.should.equal(ID + 2);
@@ -126,7 +126,7 @@ describe('Pool', function() {
     });
 
     it('internal pool error', function(done) {
-        let xpool = new Pool(connParams, { min: 0, max: 10 });
+        let xpool = new Pool(abapSystem, { min: 0, max: 10 });
         xpool.acquire().catch(err => {
             err.name.should.equal('TypeError');
             err.message.should.equal('Internal pool error, size = 0');

@@ -8,10 +8,10 @@ modules:
 addon: 
 	node-pre-gyp build # --loglevel=silent
 
-wrapper:
-	npm run wrapper
+build:
+	npm run build
 
-all: addon wrapper
+all: addon build
 
 debug:
 	node-pre-gyp rebuild --debug

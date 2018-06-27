@@ -96,7 +96,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
     SAP_UC *cValue;
 
     // FIXME https://github.com/nodejs/node-addon-api/issues/265
-    bool isNumber, isInteger;
+    bool isInteger;
     float numFloat;
 
     switch (typ)
@@ -256,8 +256,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
     case RFCTYPE_INT1:
     case RFCTYPE_INT2:
         // FIXME https://github.com/nodejs/node-addon-api/issues/265
-        isNumber = value.IsNumber();
-        if (isNumber)
+        if (value.IsNumber())
         {
             // Napi::Function isIntegerFunction = value.Env().Global().Get("Number").As<Napi::Object>().Get("IsInteger").As<Napi::Function>();
             // bool isInt = isIntegerFunction.MakeCallback(__genv.Global(), {value}).ToBoolean().Value();
@@ -309,11 +308,18 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
 
             // abap_date += month
             std::string month_input = date_js.substr(4, 3);
-            std::string month_js[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"};
-            int index = std::distance(month_js, std::find(month_js, month_js + 12, month_input));
+            std::string month_js[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+            int index = 1 + (int)std::distance(month_js, std::find(month_js, month_js + 12, month_input));
             if (index < 10)
+            {
                 abap_date += '0';
-            abap_date += char(index + '1');
+            }
+            else
+            {
+                abap_date += '1';
+                index -= 10;
+            }
+            abap_date += char(index + '0');
 
             // abap_date += day
             abap_date += date_js.substr(8, 2);

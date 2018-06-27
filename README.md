@@ -1,76 +1,63 @@
-## :heavy_exclamation_mark: N-API based prerelease :heavy_exclamation_mark:
+Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/products/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/).
+
+[![NPM](https://nodei.co/npm/node-rfc.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-rfc/)
 
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![release](https://img.shields.io/npm/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![downloads](https://img.shields.io/github/downloads/sap/node-rfc/total.svg)](https://www.npmjs.com/package/node-rfc)
 
-## Issues
-
--   [NAPI Type checks #265](https://github.com/nodejs/node-addon-api/issues/265)
--   [node-pre-gyp installation #367](https://github.com/mapbox/node-pre-gyp/issues/367)
-
 ## Features
 
-Asynchronous, non-blocking [SAP NetWeawer RFC Library](https://support.sap.com/en/products/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/):
-
 -   Based on the latest nodejs [N-API](https://github.com/nodejs/node-addon-api) standard
+-   Stateless and stateful connections (multiple function calls in the same ABAP session (same context))
 -   Async/await, promise and callback API
--   Stateless and stateful connections (using BAPI_TRANSACTION_COMMIT / ROLLBACK for example)
--   Connection pool
--   Sequential and parallel calls, using single or multiple node-rfc clients
+-   Sequential and parallel calls, using one or more clients
 -   Automatic conversion between JavaScript and ABAP datatypes
--   Decimal objects support
+-   Decimal and Date objects support
+-   Connection pool
 -   Extensive unit tests
-
-## Installation
-
-From npm:
-
-```shell
-npm install node-rfc@next
-```
-
-Build from the latest source:
-
-```shell
-git clone -b napi https://github.com/SAP/node-rfc.git
-cd node-rfc
-npm install
-node-pre-gyp configure build
-npm run test # adapt test/connParams
-```
 
 ## Prerequisites
 
-SAP NW RFC Library must be locally installed and for download and installation information check the [Download and Documentation](https://support.sap.com/en/products/connectors/nwrfcsdk.html#section_1291717368) section of (SAP NW RFC SDK Support Portal)[https://support.sap.com/en/products/connectors/nwrfcsdk.html].SAP partner or customer is required for download.
+SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account is required) and locally installed. More information on [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html).
 
-SAP NW RFC Library is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.0. Using the latest version is reccomended.
+SAP NW RFC Library is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.0B. Using the latest version is reccomended.
 
 ## Supported platforms
 
-Compiled binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows and Linux platforms.
+Compiled binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 7.1 and Ubuntu 16.04 Linux platforms.
 
-OS X and ARM platforms are currently not supported, as _SAP NW RFC Library_ is not available for those platforms.
+Build from source is required on other platforms, supported both by [SAP](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md).
 
-## Usage
+## Usage and API
 
 **Note:** the module must be [installed](#installation) before use.
 
 In order to call remote enabled ABAP function module, we need to create a client
 with valid logon credentials, connect to SAP ABAP NetWeaver system and then invoke a
-remote enabled ABAP function module from nodejs. The client can be used for one or more subsequent RFC calls.
+remote enabled ABAP function module from nodejs. The client can be used for one or more subsequent RFC calls and for more examples check unit tests.
 
-Callback, promise and async/await programming examples are provided here and for more check unit tests.
+Callback API example below shows basic principles. See also:
 
-### Callback
+* [Examples and API](examples/README.md).
+
+* [_node-rfc_ documentation](http://sap.github.io/node-rfc), complementing _SAP NW RFC Library_ [programming guide and documentation](https://support.sap.com/en/products/connectors/nwrfcsdk.html).
+
 
 ```javascript
 'use strict';
 
 const rfcClient = require('node-rfc').Client;
 
-// RFC connection parameters
-const abapSystem = require('./abapSystem');
+// ABAP system RFC connection parameters
+const abapSystem = {
+	user: 'demo',
+	passwd: 'welcome',
+	ashost: '10.68.104.164',
+	sysnr: '00',
+	client: '620',
+	lang: 'EN',
+};
 
 // create new client
 const client = new rfcClient(abapSystem);
@@ -85,25 +72,7 @@ client.connect(function(err) {
 		return console.error('could not connect to server', err);
 	}
 
-	//
-	// invoke ABAP function module with string parameter
-	//
-	client.invoke('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' }, function(err, res) {
-		if (err) {
-			// check for errors (e.g. wrong parameters)
-			return console.error('Error invoking STFC_CONNECTION:', err);
-		}
-
-		// result should be something like:
-		// { ECHOTEXT: 'Hello SAP!',
-		//   RESPTEXT: 'SAP R/3 Rel. 702   Sysid: E1Q      Date: 20140613   Time: 142530   Logon_Data: 001/DEMO/E',
-		//   REQUTEXT: 'Hello SAP!' }
-		console.log('STFC_CONNECTION call result:', res);
-	});
-
-	//
-	// invoke ABAP function module with structure and table parameters
-	//
+	// invoke ABAP function module, passing structure and table parameters
 
 	// ABAP structure
 	const structure = {
@@ -124,141 +93,39 @@ client.connect(function(err) {
 		}
 		console.log('STFC_STRUCTURE call result:', res);
 	});
-
-	//
-	// invoke possibly longer running ABAP function module, returning more data
-	//
-	let COUNT = 50000;
-	client.invoke(
-		'STFC_PERFORMANCE',
-		{ CHECKTAB: 'X', LGET0332: COUNT.toString(), LGET1000: COUNT.toString() },
-		function(err, res) {
-			if (err) {
-				return err;
-			}
-			console.log('ETAB0332 records count:', res.ETAB0332.length);
-			console.log('ETAB1000 records count:', res.ETAB1000.length);
-		}
-	);
 });
 ```
 
 Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method on the client instance.
 
-### async/await (using nodejs > 7.6.0 or transpiler)
+## Installation
 
-```javascript
-'use strict';
+From npm:
 
-const rfcClient = require('node-rfc').Client;
-
-import abapSystem from './abapSystem';
-
-const client = new Client(abapSystem);
-
-async function getSomeAsyncData() {
-	await client.open();
-
-	let result = await client.call('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' });
-
-	result.ECHOTEXT += '#';
-
-	await client.call('STFC_CONNECTION', { REQUTEXT: result.ECHOTEXT });
-
-	return result.ECHOTEXT;
-}
-
-(async function() {
-	try {
-		let result = await getSomeAsyncData();
-
-		console.log(result); // should be 'H€llö SAP!#'
-	} catch (ex) {
-		console.error(ex);
-	}
-})();
+```shell
+npm install node-rfc
 ```
 
-### Promises
+Build from the latest source:
 
-```javascript
-'use strict';
-
-const rfcClient = require('node-rfc').Client;
-
-const abapSystem = require('./abapSystem');
-
-const client = new rfcClient(abapSystem);
-
-client
-	.open()
-	.then(() => {
-		client
-			.call('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' })
-			.then(res => {
-				// process results, reuse for the next RFC call
-				res.ECHOTEXT += '#';
-				return new Promise(resolve => resolve(res));
-			})
-			.then(res => {
-				client
-					.call('STFC_CONNECTION', { REQUTEXT: res.ECHOTEXT })
-					.then(res => {
-						console.log('STFC_CONNECTION call result:', res.ECHOTEXT);
-					})
-					.catch(err => {
-						console.error('Error invoking STFC_CONNECTION:', err);
-					});
-			})
-			.catch(err => {
-				console.error('Error invoking STFC_CONNECTION:', err);
-			});
-	})
-	.catch(err => {
-		console.error('could not connect to server', err);
-	});
+```shell
+git clone -b https://github.com/SAP/node-rfc.git
+cd node-rfc
+npm install
+node-pre-gyp configure build
+# set connection properties in test/abapSystem
+npm run test
 ```
 
-### Connection Pool
+## Issues
 
-```javascript
-'use strict';
+-   [NAPI Type checks #265](https://github.com/nodejs/node-addon-api/issues/265)
+-   [node-pre-gyp installation #367](https://github.com/mapbox/node-pre-gyp/issues/367)
 
-const rfcClient = require('node-rfc').Pool;
-
-const abapSystem = require('./abapSystem');
-
-const pool = new Pool(abapSystem);
-
-pool.acquire()
-	.then(client => {
-		client
-			.call('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' })
-			.then(res => {
-				console.log('STFC_CONNECTION call result:', res.ECHOTEXT);
-				console.log(pool.status);
-				pool.release(client);
-				console.log(pool.status);
-			})
-			.catch(err => {
-				console.error('Error invoking STFC_CONNECTION:', err);
-			});
-	})
-	.catch(err => {
-		console.error('could not acquire connection', err);
-	});
-```
-
-## API and documentation
-
-For API And full documentation please refer to [_node-rfc_ documentation](http://sap.github.io/node-rfc), complementing _SAP NW RFC Library_ [programming guide and documentation](https://support.sap.com/en/products/connectors/nwrfcsdk.html).
-
-Useful links:
+## Links
 
 -   https://support.sap.com/connectors
-
 -   https://wiki.scn.sap.com/wiki/display/ABAPConn/ABAP+Connectivity+-+RFC
-
 -   [SAP HANA Cloud Connector](https://help.hana.ondemand.com/help/frameset.htm?e6c7616abb5710148cfcf3e75d96d596.html)
 
 Developer resources:
@@ -269,10 +136,3 @@ Developer resources:
 -   [Node.js ES2015 Support](http://node.green/)
 -   [Node.js LTS Releases](https://github.com/nodejs/LTS)
 
-## For Developers
-
--   [Embedder's Guide](https://github.com/v8/v8/wiki/Embedder's%20Guide)
--   [N-API enabled modules](https://github.com/nodejs/abi-stable-node)
--   [N-API API docs](https://nodejs.github.io/node-addon-api/index.html)
--   [v8 API docs](https://v8docs.nodesource.com/)
--   [Node.js ES2015 Support](http://node.green/)

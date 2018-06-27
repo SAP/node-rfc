@@ -17,12 +17,12 @@
 const rfcClient = require('../lib').Client;
 const should = require('should');
 
-const connParams = require('./connParams');
+const abapSystem = require('./abapSystem')('MME');
 
 describe('Options', function() {
     let client;
     beforeEach(function(done) {
-        client = new rfcClient(connParams);
+        client = new rfcClient(abapSystem);
         client.connect(function(err) {
             if (err) return done(err);
             done();

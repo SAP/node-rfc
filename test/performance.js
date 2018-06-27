@@ -17,10 +17,10 @@
 const rfcClient = require('../lib').Client;
 const should = require('should');
 
-const connParams = require('./connParams');
+const abapSystem = require('./abapSystem')('MME');
 
 describe('Performance', function() {
-    let client = new rfcClient(connParams);
+    let client = new rfcClient(abapSystem);
 
     before(function(done) {
         client.connect(function(err) {

@@ -17,14 +17,15 @@
 const rfcClient = require('../lib').Client;
 const should = require('should');
 const Decimal = require('decimal.js');
+const Utils = require('./utils');
 
-const connParams = require('./connParams');
+const abapSystem = require('./abapSystem')('MME');
 
 describe('Datatypes', function() {
     let client;
 
     beforeEach(function(done) {
-        client = new rfcClient(connParams);
+        client = new rfcClient(abapSystem);
         client.connect(function(err) {
             if (err) return done(err);
             done();
@@ -251,25 +252,31 @@ describe('Datatypes', function() {
             res.should.be.an.Object;
             res.ECHOSTRUCT.RFCDATE.should.equal(testDate);
             res.RFCTABLE[0].RFCDATE.should.equal(testDate);
-            res.RFCTABLE[1].RFCDATE.should.equal(testDate);
             done();
         });
     });
 
     it('DATE input Date', function(done) {
-        const testDateIn = new Date('2018-06-25');
-        const testDateOut = '20180625';
-        let importStruct = {
-            RFCDATE: testDateIn,
-        };
-        let importTable = [importStruct];
-        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err, res) {
-            should.not.exist(err);
-            res.should.be.an.Object;
-            res.ECHOSTRUCT.RFCDATE.should.equal(testDateOut);
-            res.RFCTABLE[0].RFCDATE.should.equal(testDateOut);
-            res.RFCTABLE[1].RFCDATE.should.equal(testDateOut);
-            done();
+        const Months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+        let count = 0;
+        Months.forEach(month => {
+            const testDateIn = new Date(`2018-${month}-25`);
+            const testDateOut = Utils.toABAPdate(testDateIn);
+            let importStruct = {
+                RFCDATE: testDateIn,
+            };
+            let importTable = [importStruct];
+            client
+                .call('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable })
+                .then(res => {
+                    res.should.be.an.Object;
+                    res.ECHOSTRUCT.RFCDATE.should.equal(testDateOut);
+                    res.RFCTABLE[0].RFCDATE.should.equal(testDateOut);
+                    if (++count === Months.length) done();
+                })
+                .catch(err => {
+                    console.error(err);
+                });
         });
     });
 
