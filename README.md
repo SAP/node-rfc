@@ -1,211 +1,149 @@
-:exclamation: N-API based prerelease provided for early adoperts. Check [napi](https://github.com/SAP/node-rfc/tree/napi) branch.
+:heavy_exclamation_mark: Notice  :heavy_exclamation_mark:
+====================================
+
+__The package is ported to [N-API](https://github.com/nodejs/node-addon-api), an ABI stable C interface provided by Node.js.__
+
+__Only critical fixes will be provided for Nan based version.__
+
+__Please continue using the new N-API version, as a prerelease, considering minor [incompatible changes](https://github.com/SAP/node-rfc/releases/tag/0.2.0-rc4).__  
+
+
+# SAP NW RFC SDK Client for Nodejs
+
+Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/products/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/).
+
+[![NPM](https://nodei.co/npm/node-rfc.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-rfc/)
 
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![release](https://img.shields.io/npm/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![downloads](https://img.shields.io/github/downloads/sap/node-rfc/total.svg)](https://www.npmjs.com/package/node-rfc)
 
-# The nodejs RFC Connector
+## Features
 
-Asynchronous, non-blocking SAP NetWeawer RFC Library client bindings. Provide a comfortable way of calling ABAP modules from nodejs, via SAP Remote Function Call (RFC) protocol.
+-   Based on the latest nodejs [N-API](https://github.com/nodejs/node-addon-api) standard
+-   Stateless and stateful connections (multiple function calls in the same ABAP session (same context))
+-   Async/await, promise and callback API
+-   Sequential and parallel calls, using one or more clients
+-   Automatic conversion between JavaScript and ABAP datatypes
+-   Decimal and Date objects support
+-   Connection pool
+-   Extensive unit tests
 
-## Platforms & Prerequisites
+## Prerequisites
 
-Compiled binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows and Linux platforms.
+SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account is required) and locally installed. More information on [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html).
 
-OS X and ARM platforms are currently not supported, as _SAP NW RFC Library_ is not available for those platforms.
+SAP NW RFC Library is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.0B. Using the latest version is reccomended.
 
-To start using _node-rfc_ you need to obtain the _SAP NW RFC Library_ from the _SAP Service Marketplace_ [Software Download Center](https://support.sap.com/swdc),
-following [these instructions](http://sap.github.io/node-rfc/install.html#sap-nw-rfc-library-installation).
+## Supported platforms
 
-A prerequisite to download is having a **customer or partner account** on _SAP Service Marketplace_ and if you are SAP employee check SAP OSS note [1037575 - Software download authorizations for SAP employees](http://service.sap.com/sap/support/notes/1037575).
+Compiled binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 7.1 and Ubuntu 16.04 Linux platforms.
 
-_SAP NW RFC Library_ is fully backwards compatible, supporting all NetWeaver systems, from today, down to release R/3 4.0. You can use the newest version released on Service Marketplace and connect to older systems as well.
+Build from source is required on other platforms, supported both by [SAP](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md).
 
-## Version
+## Usage and API
 
-The latest supported nodejs version is in master branch, for older versions check other branches.
-
-## Documentation
-
-For full documentation please refer to [_node-rfc_ documentation](http://sap.github.io/node-rfc), complementing _SAP NW RFC Library_ [programming guide and documentation](http://service.sap.com/rfc-library)
-provided on SAP Service Marketplace.
-
-Useful links:
-
--   https://service.sap.com/connectors
-
--   https://wiki.scn.sap.com/wiki/display/ABAPConn/ABAP+Connectivity+-+RFC
-
--   [SAP HANA Cloud Connector](https://help.hana.ondemand.com/help/frameset.htm?e6c7616abb5710148cfcf3e75d96d596.html)
-
-Developer resources:
-
--   [nan](https://github.com/nodejs/nan) and [related documentation](https://github.com/nodejs/nan#api)
--   libuv [documentation](http://docs.libuv.org/) and [book](http://nikhilm.github.io/uvbook/index.html)
-
-## Install
-
-To install and use:
-
-```shell
-npm install node-rfc
-```
-
-To test and develop, clone the repository, edit your backend system connection parameters, build and run tests locally:
-
-```shell
-git clone https://github.com/SAP/node-rfc.git
-cd node-rfc
-npm install
-npm test
-```
-
-Pre-compiled binaries for currently active nodejs LTS releases are provided in the [lib](https://github.com/SAP/node-rfc/tree/master/lib) folder.
-
-## Getting started
+**Note:** the module must be [installed](#installation) before use.
 
 In order to call remote enabled ABAP function module, we need to create a client
-with valid logon credentials, connect to NetWeaver system and then invoke a
-remote enabled ABAP function module from node. The client can be used for one or
-more subsequent RFC calls.
+with valid logon credentials, connect to SAP ABAP NetWeaver system and then invoke a
+remote enabled ABAP function module from nodejs. The client can be used for one or more subsequent RFC calls and for more examples check unit tests.
+
+Callback API example below shows basic principles. See also:
+
+-   [**Examples and API**](examples/README.md)
+
+-   [**node-rfc documentation**](http://sap.github.io/node-rfc), complementing SAP NW RFC Library [programming guide and documentation](https://support.sap.com/en/products/connectors/nwrfcsdk.html)
 
 ```javascript
 'use strict';
 
-var rfc = require('node-rfc');
+const rfcClient = require('node-rfc').Client;
 
-var abapSystem = {
-	user: 'name',
-	passwd: 'password',
-	ashost: '10.11.12.13',
+// ABAP system RFC connection parameters
+const abapSystem = {
+	user: 'demo',
+	passwd: 'welcome',
+	ashost: '10.68.104.164',
 	sysnr: '00',
-	client: '100',
-	saprouter: '/H/111.22.33.177/S/3299/W/tdkf9d/H/132.139.17.14/H/',
+	client: '620',
+	lang: 'EN',
 };
 
 // create new client
-var client = new rfc.Client(abapSystem);
+const client = new rfcClient(abapSystem);
 
-// echo the client NW RFC lib version
-console.log('RFC client lib version: ', client.getVersion());
+// echo SAP NW RFC SDK and nodejs/RFC binding version
+console.log('Client version: ', client.version);
 
-// and connect
+// open connection
 client.connect(function(err) {
 	if (err) {
 		// check for login/connection errors
 		return console.error('could not connect to server', err);
 	}
 
-	// invoke remote enabled ABAP function module
-	client.invoke('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' }, function(err, res) {
-		if (err) {
-			// check for errors (e.g. wrong parameters)
-			return console.error('Error invoking STFC_CONNECTION:', err);
-		}
+	// invoke ABAP function module, passing structure and table parameters
 
-		// work with result;  should be something like:
-		// { ECHOTEXT: 'Hello SAP!',
-		//   RESPTEXT: 'SAP R/3 Rel. 702   Sysid: E1Q      Date: 20140613   Time: 142530   Logon_Data: 001/DEMO/E',
-		//   REQUTEXT: 'Hello SAP!' }
-		console.log('Result STFC_CONNECTION:', res);
-	});
-
-	// invoke more complex ABAP function module
-	var importStruct = {
-		RFCFLOAT: 1.23456789,
-		RFCCHAR1: 'A',
-		RFCCHAR2: 'BC',
-		RFCCHAR4: 'DEFG',
-
-		RFCINT1: 1,
-		RFCINT2: 2,
+	// ABAP structure
+	const structure = {
 		RFCINT4: 345,
-
-		RFCHEX3: 'fgh',
-
-		RFCTIME: '121120',
-		RFCDATE: '20140101',
-
-		RFCDATA1: '1DATA1',
-		RFCDATA2: 'DATA222',
+		RFCFLOAT: 1.23456789,
+		// or RFCFLOAT: require('decimal.js')('1.23456789'), // as Decimal object
+		RFCCHAR4: 'ABCD',
+		RFCDATE: '20180625', // in ABAP date format
+		// or RFCDATE: new Date('2018-06-25'), // as JavaScript Date object
 	};
 
-	var importTable = [importStruct];
+	// ABAP table
+	let table = [structure];
 
-	client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err, res) {
+	client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: structure, RFCTABLE: table }, function(err, res) {
 		if (err) {
 			return console.error('Error invoking STFC_STRUCTURE:', err);
 		}
-		console.log('Result STFC_STRUCTURE:', res);
+		console.log('STFC_STRUCTURE call result:', res);
 	});
 });
 ```
 
 Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method on the client instance.
 
-[r3connect](https://github.com/hundeloh-consulting/r3connect) wrapper makes the node-rfc consumption even more comfortable,
-offering promise-based API and connections pool capabilities.
+## Installation
 
-For more examples check the unit tests source code. Maintain your NW test system parameters first in the source code, before running those examples.
-
-## Running the Unit Tests
-
-To run the unit tests, first ensure that you have followed the [Build from Source](http://sap.github.io/node-rfc/install.html#building-from-source) documentation,
-in order to install all dependencies and successfully build the node-rfc connector.
-Once you have done that, ensure that [mocha](https://mochajs.org) and [should](https://github.com/shouldjs/should.js) are installed, either as dependencies:
+From npm:
 
 ```shell
+npm install node-rfc@next
+```
+
+Build from the latest source:
+
+```shell
+git clone -b napi https://github.com/SAP/node-rfc.git
+cd node-rfc
 npm install
+node-pre-gyp configure build
+# set connection properties in test/abapSystem
+npm run test
 ```
 
-or globally:
+Nan based version:
 
 ```shell
-npm install -g mocha should
+npm install node-rfc
 ```
-
-Run the tests with:
-
-```shell
-mocha
-```
-
-## REST API
-
-Example how to create REST APIs using node-rfc, node, express and gulp: https://github.com/Adracus/noderfc-restapi.
 
 ## Links
 
-Nodejs Addons
+-   https://support.sap.com/connectors
+-   https://wiki.scn.sap.com/wiki/display/ABAPConn/ABAP+Connectivity+-+RFC
+-   [SAP HANA Cloud Connector](https://help.hana.ondemand.com/help/frameset.htm?e6c7616abb5710148cfcf3e75d96d596.html)
 
-Getting Started with Embedding https://github.com/v8/v8/wiki/Getting%20Started%20with%20Embedding
+Developer resources:
 
-## Maintainer Information
-
-Version is found/has to be changed in package.json.
-There are two origins with the same repository: https://github.com/SAP/node-rfc and https://github.wdf.sap.corp/D037732/node-rfc.
-
-### Continuous Integration
-
-The project is built using Travis (.travis.yml) for GNU/Linux and the build.sh script for Windows.
-Npm releases are managed by Travis.
-
-The repository to publish to is specified in package.json: binary.host
-
-#### GNU/Linux (Travis)
-
-To publish binaries add prefix: [publish binary] to commit.
-
--   Target node versions can be specified in .travis.yml: node_js
--   The npm api key is found in .travis.yml: deploy.api_key
--   The github access token is located in .travis.yml: env.global
--   The build repository is specified in package.json: repository.url
-
-#### Windows (<span>build.sh</span>)
-
-Setup the machine like described here: http://sap.github.io/node-rfc/install.html
-
-Node, npm and either nvm or nodist have to be installed.
-To build/publish execute <span>build.sh</span>.
-If test results shall be ignored use the flag -i.
-Target node versions are specified in top of the file in the array "NODE_VERSIONS".
+-   [Embedder's Guide](https://github.com/v8/v8/wiki/Embedder's%20Guide)
+-   [v8 API docs](https://v8docs.nodesource.com/)
+-   [N-API API docs](https://nodejs.github.io/node-addon-api/index.html)
+-   [Node.js ES2015 Support](http://node.green/)
+-   [Node.js LTS Releases](https://github.com/nodejs/LTS)
