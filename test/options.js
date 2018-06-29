@@ -55,7 +55,7 @@ describe('Options', function() {
                 function(err, res) {
                     should.not.exist(err);
                     // ET_RETURN clean if certain params not requested
-                    res.should.be.an.Object;
+                    res.should.be.an.Object();
                     res.should.have.properties('ET_RETURN');
                     res.ET_RETURN.should.have.length(0);
                     done();
@@ -77,7 +77,7 @@ describe('Options', function() {
                 function(err, res) {
                     // ET_RETURN error if all params requested
                     should.not.exist(err);
-                    res.should.be.an.Object;
+                    res.should.be.an.Object();
                     res.should.have.properties('ET_RETURN');
                     res.ET_RETURN.should.have.length(1);
                     done();

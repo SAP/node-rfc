@@ -58,7 +58,7 @@ describe('[promise] Options', function() {
                 { notRequested: notRequested }
             )
             .then(res => {
-                res.should.be.an.Object;
+                res.should.be.an.Object();
                 res.should.have.properties('ET_RETURN');
                 res.ET_RETURN.should.have.length(0);
             });
@@ -72,7 +72,7 @@ describe('[promise] Options', function() {
             })
             .then(res => {
                 // ET_RETURN error if all params requested
-                res.should.be.an.Object;
+                res.should.be.an.Object();
                 res.should.have.properties('ET_RETURN');
                 res.ET_RETURN.should.have.length(1);
             });

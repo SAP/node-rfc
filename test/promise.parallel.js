@@ -45,7 +45,7 @@ describe('[promise] Parallel and Sequential', function() {
         let asyncRes = undefined;
         client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT }).then(res => {
             should.exist(res);
-            res.should.be.an.Object;
+            res.should.be.an.Object();
             res.should.have.property('ECHOTEXT');
             res.ECHOTEXT.should.startWith(REQUTEXT);
             asyncRes = res;
@@ -64,7 +64,7 @@ describe('[promise] Parallel and Sequential', function() {
             client.open().then(() => {
                 client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id }).then(res => {
                     should.exist(res);
-                    res.should.be.an.Object;
+                    res.should.be.an.Object();
                     res.should.have.property('ECHOTEXT');
                     res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
                     client.close();
@@ -79,7 +79,7 @@ describe('[promise] Parallel and Sequential', function() {
             client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + i }).then(res => {
                 //should.not.exist(err);
                 should.exist(res);
-                res.should.be.an.Object;
+                res.should.be.an.Object();
                 res.should.have.property('ECHOTEXT');
                 res.ECHOTEXT.should.startWith(REQUTEXT + i);
                 if (i === 1) done();
@@ -96,7 +96,7 @@ describe('[promise] Parallel and Sequential', function() {
             return client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth }).then(res => {
                 //should.not.exist(err);
                 should.exist(res);
-                res.should.be.an.Object;
+                res.should.be.an.Object();
                 res.should.have.property('ECHOTEXT');
                 res.ECHOTEXT.should.startWith(REQUTEXT + depth);
                 rec(depth + 1);
@@ -110,7 +110,7 @@ describe('[promise] Parallel and Sequential', function() {
 		async function run() {
 			for (let i = CONNECTIONS; i > 0; i--) {
 				let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + i });
-				res.should.be.an.Object;
+				res.should.be.an.Object();
 				res.should.have.property('ECHOTEXT');
 				res.ECHOTEXT.should.startWith(REQUTEXT + i);
 				if (i === 1) done();
@@ -127,7 +127,7 @@ describe('[promise] Parallel and Sequential', function() {
 				return;
 			}
 			let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth });
-			res.should.be.an.Object;
+			res.should.be.an.Object();
 			res.should.have.property('ECHOTEXT');
 			res.ECHOTEXT.should.startWith(REQUTEXT + depth);
 			run(depth + 1);
@@ -145,7 +145,7 @@ describe('[promise] Parallel and Sequential', function() {
 			(async () => {
 				await client.open();
 				let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id });
-				res.should.be.an.Object;
+				res.should.be.an.Object();
 				res.should.have.property('ECHOTEXT');
 				res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
 				client.close();

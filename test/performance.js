@@ -37,7 +37,7 @@ describe('Performance', function() {
         this.timeout(15000);
         client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' }, function(err, res) {
             should.not.exist(err);
-            res.should.be.an.Object;
+            res.should.be.an.Object();
             res.should.have.properties(
                 'ADDRESS',
                 'ACTIVITYGROUPS',

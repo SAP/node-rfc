@@ -51,7 +51,7 @@ describe('Connection', function() {
     });
 
     it('sapnwrfc client version check', function(done) {
-        client.version.should.be.an.Object;
+        client.version.should.be.an.Object();
         client.version.should.have.properties('major', 'minor', 'patchLevel', 'binding');
         try {
             client.version = { a: 1, b: 2 };
@@ -75,6 +75,7 @@ describe('Connection', function() {
     });
 
     it('connectionInfo() should return connection information', function(done) {
+        client.connectionInfo.should.be.an.Object();
         client.connectionInfo.should.have.properties(
             'host',
             'partnerHost',
@@ -103,6 +104,8 @@ describe('Connection', function() {
             sysNumber: abapSystem.sysnr,
             client: abapSystem.client,
         });
+        client.close();
+        client.connectionInfo.should.be.an.Object().and.be.empty();
         done();
     });
 
@@ -138,7 +141,7 @@ describe('Connection', function() {
         client.invoke('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' }, function(err, res) {
             should.not.exist(err);
             should.exist(res);
-            res.should.be.an.Object;
+            res.should.be.an.Object();
             res.should.have.property('ECHOTEXT');
             res.ECHOTEXT.should.startWith('Hello SAP!');
             done();
@@ -149,7 +152,7 @@ describe('Connection', function() {
         client.invoke('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' }, function(err, res) {
             should.not.exist(err);
             should.exist(res);
-            res.should.be.an.Object;
+            res.should.be.an.Object();
             res.should.have.property('ECHOTEXT');
             res.ECHOTEXT.should.startWith('H€llö SAP!');
             done();
@@ -180,7 +183,7 @@ describe('Connection', function() {
         client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err, res) {
             should.not.exist(err);
             should.exist(res);
-            res.should.be.an.Object;
+            res.should.be.an.Object();
             res.should.have.properties('ECHOSTRUCT', 'RFCTABLE');
 
             res.ECHOSTRUCT.RFCCHAR1.should.equal(importStruct.RFCCHAR1);

@@ -454,39 +454,44 @@ Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
     RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
     RFC_ATTRIBUTES connInfo;
+    RFC_INT isValid;
 
     Client *client = this;
     Napi::Env env = info.Env();
     Napi::Object infoObj = Napi::Object::New(env);
 
-    rc = RfcGetConnectionAttributes(client->connectionHandle, &connInfo, &errorInfo);
-
-    if (rc != RFC_OK)
+    rc = RfcIsConnectionHandleValid(this->connectionHandle, &isValid, &errorInfo);
+    if (rc == RFC_OK && isValid)
     {
-        return wrapError(&errorInfo);
-    }
+        rc = RfcGetConnectionAttributes(client->connectionHandle, &connInfo, &errorInfo);
 
-    (infoObj).Set(Napi::String::New(env, "host"), wrapString(connInfo.host, 100));
-    (infoObj).Set(Napi::String::New(env, "partnerHost"), wrapString(connInfo.partnerHost, 100));
-    (infoObj).Set(Napi::String::New(env, "sysNumber"), wrapString(connInfo.sysNumber, 2));
-    (infoObj).Set(Napi::String::New(env, "sysId"), wrapString(connInfo.sysId, 8));
-    (infoObj).Set(Napi::String::New(env, "client"), wrapString(connInfo.client, 3));
-    (infoObj).Set(Napi::String::New(env, "user"), wrapString(connInfo.user, 8));
-    (infoObj).Set(Napi::String::New(env, "language"), wrapString(connInfo.language, 2));
-    (infoObj).Set(Napi::String::New(env, "trace"), wrapString(connInfo.trace, 1));
-    (infoObj).Set(Napi::String::New(env, "isoLanguage"), wrapString(connInfo.isoLanguage, 2));
-    (infoObj).Set(Napi::String::New(env, "codepage"), wrapString(connInfo.codepage, 4));
-    (infoObj).Set(Napi::String::New(env, "partnerCodepage"), wrapString(connInfo.partnerCodepage, 4));
-    (infoObj).Set(Napi::String::New(env, "rfcRole"), wrapString(connInfo.rfcRole, 1));
-    (infoObj).Set(Napi::String::New(env, "type"), wrapString(connInfo.type, 1));
-    (infoObj).Set(Napi::String::New(env, "partnerType"), wrapString(connInfo.partnerType, 1));
-    (infoObj).Set(Napi::String::New(env, "rel"), wrapString(connInfo.rel, 4));
-    (infoObj).Set(Napi::String::New(env, "partnerRel"), wrapString(connInfo.partnerRel, 4));
-    (infoObj).Set(Napi::String::New(env, "kernelRel"), wrapString(connInfo.kernelRel, 4));
-    (infoObj).Set(Napi::String::New(env, "cpicConvId"), wrapString(connInfo.cpicConvId, 8));
-    (infoObj).Set(Napi::String::New(env, "progName"), wrapString(connInfo.progName, 128));
-    (infoObj).Set(Napi::String::New(env, "partnerBytesPerChar"), wrapString(connInfo.partnerBytesPerChar, 1));
-    (infoObj).Set(Napi::String::New(env, "reserved"), wrapString(connInfo.reserved, 84));
+        if (rc != RFC_OK)
+        {
+            return wrapError(&errorInfo);
+        }
+
+        infoObj.Set(Napi::String::New(env, "host"), wrapString(connInfo.host, 100));
+        infoObj.Set(Napi::String::New(env, "partnerHost"), wrapString(connInfo.partnerHost, 100));
+        infoObj.Set(Napi::String::New(env, "sysNumber"), wrapString(connInfo.sysNumber, 2));
+        infoObj.Set(Napi::String::New(env, "sysId"), wrapString(connInfo.sysId, 8));
+        infoObj.Set(Napi::String::New(env, "client"), wrapString(connInfo.client, 3));
+        infoObj.Set(Napi::String::New(env, "user"), wrapString(connInfo.user, 8));
+        infoObj.Set(Napi::String::New(env, "language"), wrapString(connInfo.language, 2));
+        infoObj.Set(Napi::String::New(env, "trace"), wrapString(connInfo.trace, 1));
+        infoObj.Set(Napi::String::New(env, "isoLanguage"), wrapString(connInfo.isoLanguage, 2));
+        infoObj.Set(Napi::String::New(env, "codepage"), wrapString(connInfo.codepage, 4));
+        infoObj.Set(Napi::String::New(env, "partnerCodepage"), wrapString(connInfo.partnerCodepage, 4));
+        infoObj.Set(Napi::String::New(env, "rfcRole"), wrapString(connInfo.rfcRole, 1));
+        infoObj.Set(Napi::String::New(env, "type"), wrapString(connInfo.type, 1));
+        infoObj.Set(Napi::String::New(env, "partnerType"), wrapString(connInfo.partnerType, 1));
+        infoObj.Set(Napi::String::New(env, "rel"), wrapString(connInfo.rel, 4));
+        infoObj.Set(Napi::String::New(env, "partnerRel"), wrapString(connInfo.partnerRel, 4));
+        infoObj.Set(Napi::String::New(env, "kernelRel"), wrapString(connInfo.kernelRel, 4));
+        infoObj.Set(Napi::String::New(env, "cpicConvId"), wrapString(connInfo.cpicConvId, 8));
+        infoObj.Set(Napi::String::New(env, "progName"), wrapString(connInfo.progName, 128));
+        infoObj.Set(Napi::String::New(env, "partnerBytesPerChar"), wrapString(connInfo.partnerBytesPerChar, 1));
+        infoObj.Set(Napi::String::New(env, "reserved"), wrapString(connInfo.reserved, 84));
+    }
 
     return infoObj;
 }
@@ -530,10 +535,10 @@ Napi::Value Client::VersionGetter(const Napi::CallbackInfo &info)
     RfcGetVersion(&major, &minor, &patchLevel);
 
     Napi::Object version = Napi::Object::New(env);
-    (version).Set(Napi::String::New(env, "major"), major);
-    (version).Set(Napi::String::New(env, "minor"), minor);
-    (version).Set(Napi::String::New(env, "patchLevel"), patchLevel);
-    (version).Set(Napi::String::New(env, "binding"), Napi::String::New(env, SAPNWRFC_BINDING_VERSION));
+    version.Set(Napi::String::New(env, "major"), major);
+    version.Set(Napi::String::New(env, "minor"), minor);
+    version.Set(Napi::String::New(env, "patchLevel"), patchLevel);
+    version.Set(Napi::String::New(env, "binding"), Napi::String::New(env, SAPNWRFC_BINDING_VERSION));
     return version;
 }
 

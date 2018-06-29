@@ -43,7 +43,7 @@ describe('Datatypes', function() {
         let importTable = [importStruct];
         client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
             should.exist(err);
-            err.should.be.an.Object;
+            err.should.be.an.Object();
             err.should.have.properties({
                 message: 'Char expected when filling field RFCCHAR4 of type 0',
             });
@@ -58,7 +58,7 @@ describe('Datatypes', function() {
         let importTable = [importStruct];
         client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
             should.exist(err);
-            err.should.be.an.Object;
+            err.should.be.an.Object();
             err.should.have.properties({
                 code: 22,
                 key: 'RFC_CONVERSION_FAILURE',
@@ -232,7 +232,7 @@ describe('Datatypes', function() {
         let importTable = [importStruct];
         client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
             should.exist(err);
-            err.should.be.an.Object;
+            err.should.be.an.Object();
             err.should.have.properties({
                 name: 'TypeError',
                 message: 'Integer number expected when filling field RFCINT1 of type 10',
@@ -249,7 +249,7 @@ describe('Datatypes', function() {
         let importTable = [importStruct];
         client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err, res) {
             should.not.exist(err);
-            res.should.be.an.Object;
+            res.should.be.an.Object();
             res.ECHOSTRUCT.RFCDATE.should.equal(testDate);
             res.RFCTABLE[0].RFCDATE.should.equal(testDate);
             done();
@@ -269,7 +269,7 @@ describe('Datatypes', function() {
             client
                 .call('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable })
                 .then(res => {
-                    res.should.be.an.Object;
+                    res.should.be.an.Object();
                     res.ECHOSTRUCT.RFCDATE.should.equal(testDateOut);
                     res.RFCTABLE[0].RFCDATE.should.equal(testDateOut);
                     if (++count === Months.length) done();
@@ -288,7 +288,7 @@ describe('Datatypes', function() {
         let importTable = [importStruct];
         client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
             should.exist(err);
-            err.should.be.an.Object;
+            err.should.be.an.Object();
             err.should.have.properties({
                 name: 'TypeError',
                 message: 'Date object or string expected when filling field RFCDATE of type 1',
@@ -307,7 +307,7 @@ describe('Datatypes', function() {
         let importTable = [importStruct];
         client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
             should.exist(err);
-            err.should.be.an.Object;
+            err.should.be.an.Object();
             err.should.have.properties({
                 name: 'TypeError',
                 message: 'Integer number expected when filling field RFCINT4 of type 8, got 3.100000',

@@ -49,7 +49,7 @@ describe('[promise] Error handling', function() {
                 })
                 .catch(err => {
                     should.exist(err);
-                    err.should.be.an.Object;
+                    err.should.be.an.Object();
                     err.should.have.properties({
                         name: 'TypeError',
                         message: 'No callback argument allowed in promise based call()',
@@ -91,7 +91,7 @@ describe('[promise] Error handling', function() {
             })
             .catch(err => {
                 should.exist(err);
-                err.should.be.an.Object;
+                err.should.be.an.Object();
                 err.should.have.properties({
                     code: 20,
                     key: 'RFC_INVALID_PARAMETER',
@@ -110,7 +110,7 @@ describe('[promise] Error handling', function() {
             })
             .catch(err => {
                 should.exist(err);
-                err.should.be.an.Object;
+                err.should.be.an.Object();
                 err.should.have.properties({
                     code: 4,
                     key: 'Function not supported',

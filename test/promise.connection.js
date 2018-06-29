@@ -41,7 +41,7 @@ describe('[promise] Connection', function() {
     it('STFC_CONNECTION should return "Hello SAP!" string', function() {
         return client.call('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' }).then(res => {
             should.exist(res);
-            res.should.be.an.Object;
+            res.should.be.an.Object();
             res.should.have.property('ECHOTEXT');
             res.ECHOTEXT.should.startWith('Hello SAP!');
         });
@@ -50,7 +50,7 @@ describe('[promise] Connection', function() {
     it('STFC_CONNECTION should return Umlauts "H€llö SAP!" string', function() {
         return client.call('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' }).then(res => {
             should.exist(res);
-            res.should.be.an.Object;
+            res.should.be.an.Object();
             res.should.have.property('ECHOTEXT');
             res.ECHOTEXT.should.startWith('H€llö SAP!');
         });
@@ -79,7 +79,7 @@ describe('[promise] Connection', function() {
 
         return client.call('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }).then(res => {
             should.exist(res);
-            res.should.be.an.Object;
+            res.should.be.an.Object();
             res.should.have.properties('ECHOSTRUCT', 'RFCTABLE');
 
             res.ECHOSTRUCT.RFCCHAR1.should.equal(importStruct.RFCCHAR1);

@@ -43,7 +43,7 @@ describe('Parallel and Sequential', function() {
         client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT }, function(err, res) {
             should.not.exist(err);
             should.exist(res);
-            res.should.be.an.Object;
+            res.should.be.an.Object();
             res.should.have.property('ECHOTEXT');
             res.ECHOTEXT.should.startWith(REQUTEXT);
             asyncRes = res;
@@ -64,7 +64,7 @@ describe('Parallel and Sequential', function() {
                 client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT }, function(err, res) {
                     should.not.exist(err);
                     should.exist(res);
-                    res.should.be.an.Object;
+                    res.should.be.an.Object();
                     res.should.have.property('ECHOTEXT');
                     res.ECHOTEXT.should.startWith(REQUTEXT);
                     client.close();
@@ -80,7 +80,7 @@ describe('Parallel and Sequential', function() {
             client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id }, function(err, res) {
                 should.not.exist(err);
                 should.exist(res);
-                res.should.be.an.Object;
+                res.should.be.an.Object();
                 res.should.have.property('ECHOTEXT');
                 res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
                 if (i === 1) done();
@@ -97,7 +97,7 @@ describe('Parallel and Sequential', function() {
             client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth }, function(err, res) {
                 should.not.exist(err);
                 should.exist(res);
-                res.should.be.an.Object;
+                res.should.be.an.Object();
                 res.should.have.property('ECHOTEXT');
                 res.ECHOTEXT.should.startWith(REQUTEXT + depth);
                 rec(depth + 1);

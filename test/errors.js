@@ -55,7 +55,7 @@ describe('Error handling', function() {
     it('Invoke with wrong parameter should return err RFC_INVALID_PARAMETER', function(done) {
         client.invoke('STFC_CONNECTION', { XXX: 'wrong param' }, function(err) {
             should.exist(err);
-            err.should.be.an.Object;
+            err.should.be.an.Object();
             err.should.have.properties({
                 code: 20,
                 key: 'RFC_INVALID_PARAMETER',
@@ -68,7 +68,7 @@ describe('Error handling', function() {
     it('RFC_RAISE_ERROR should return error', function(done) {
         client.invoke('RFC_RAISE_ERROR', { MESSAGETYPE: 'A' }, function(err) {
             should.exist(err);
-            err.should.be.an.Object;
+            err.should.be.an.Object();
             err.should.have.properties({
                 code: 4,
                 key: 'Function not supported',
