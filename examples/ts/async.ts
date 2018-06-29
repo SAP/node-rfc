@@ -2,7 +2,7 @@ import { Client } from 'node-rfc';
 
 import { DSP } from './abapSystem';
 
-const client = new Client(DSP);
+const client: Client = new Client(DSP);
 
 (async function() {
 	try {

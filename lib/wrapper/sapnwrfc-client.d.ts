@@ -1,20 +1,3 @@
-export interface RfcCallOptions {
-    notRequested?: Array<String>;
-    timeout?: number;
-}
-declare enum EnumSncQop {
-    DigSig = "1",
-    DigSigEnc = "2",
-    DigSigEncUserAuth = "3",
-    BackendDefault = "8",
-    Maximum = "9"
-}
-declare enum EnumTrace {
-    Off = "0",
-    Brief = "1",
-    Verbose = "2",
-    Full = "3"
-}
 export interface RfcConnectionParameters {
     saprouter?: string;
     snc_lib?: string;
@@ -42,6 +25,52 @@ export interface RfcConnectionParameters {
     tpname?: string;
     program_id?: string;
 }
+interface RfcConnectionInfo {
+    host: string;
+    partnerHost: string;
+    sysNumber: string;
+    sysId: string;
+    client: string;
+    user: string;
+    language: string;
+    trace: string;
+    isoLanguage: string;
+    codepage: string;
+    partnerCodepage: string;
+    rfcRole: string;
+    type: string;
+    partnerType: string;
+    rel: string;
+    partnerRel: string;
+    kernelRel: string;
+    cpicConvId: string;
+    progName: string;
+    partnerBytesPerChar: string;
+    reserved: string;
+}
+interface RfcClientVersion {
+    major: string;
+    minor: string;
+    patch: string;
+    binding: string;
+}
+export interface RfcCallOptions {
+    notRequested?: Array<String>;
+    timeout?: number;
+}
+declare enum EnumSncQop {
+    DigSig = "1",
+    DigSigEnc = "2",
+    DigSigEncUserAuth = "3",
+    BackendDefault = "8",
+    Maximum = "9"
+}
+declare enum EnumTrace {
+    Off = "0",
+    Brief = "1",
+    Verbose = "2",
+    Full = "3"
+}
 export declare class Client {
     private __client;
     constructor(connectionParams: RfcConnectionParameters);
@@ -54,7 +83,7 @@ export declare class Client {
     ping(): void;
     readonly isAlive: boolean;
     readonly id: number;
-    readonly version: object;
-    readonly connectionInfo: object;
+    readonly version: RfcClientVersion;
+    readonly connectionInfo: RfcConnectionInfo;
 }
 export {};

@@ -4,46 +4,6 @@
 // SAP NW RFC Client Binding Wrapper
 //
 
-interface RfcClientInstance {
-	new (connectionParameters: object): RfcClientInstance;
-	(connectionParameters: object): RfcClientInstance;
-	connectionInfo(): object;
-	connect(callback: Function): any;
-	invoke(rfcName: string, rfcParams: object, callback: Function, callOptions?: object): any;
-	ping(): void;
-	close(): object;
-	reopen(callback: Function): void;
-	isAlive(): boolean;
-	id: number;
-	version: object;
-}
-
-interface RfcClientBinding {
-	Client: RfcClientInstance;
-	getVersion(): object;
-	verbose(): this;
-}
-
-export interface RfcCallOptions {
-	notRequested?: Array<String>;
-	timeout?: number;
-}
-
-enum EnumSncQop {
-	DigSig = '1',
-	DigSigEnc = '2',
-	DigSigEncUserAuth = '3',
-	BackendDefault = '8',
-	Maximum = '9',
-}
-
-enum EnumTrace {
-	Off = '0',
-	Brief = '1',
-	Verbose = '2',
-	Full = '3',
-}
-
 export interface RfcConnectionParameters {
 	// general
 	saprouter?: string;
@@ -93,17 +53,86 @@ export interface RfcConnectionParameters {
 	//gwserv?: string,
 }
 
+interface RfcConnectionInfo {
+	host: string;
+	partnerHost: string;
+	sysNumber: string;
+	sysId: string;
+	client: string;
+	user: string;
+	language: string;
+	trace: string;
+	isoLanguage: string;
+	codepage: string;
+	partnerCodepage: string;
+	rfcRole: string;
+	type: string;
+	partnerType: string;
+	rel: string;
+	partnerRel: string;
+	kernelRel: string;
+	cpicConvId: string;
+	progName: string;
+	partnerBytesPerChar: string;
+	reserved: string;
+}
+
+interface RfcClientVersion {
+	major: string;
+	minor: string;
+	patch: string;
+	binding: string;
+}
+
+interface RfcClientInstance {
+	new (connectionParameters: RfcConnectionParameters): RfcClientInstance;
+	(connectionParameters: RfcConnectionParameters): RfcClientInstance;
+	connectionInfo(): RfcConnectionInfo;
+	connect(callback: Function): any;
+	invoke(rfcName: string, rfcParams: object, callback: Function, callOptions?: object): any;
+	ping(): void;
+	close(): object;
+	reopen(callback: Function): void;
+	isAlive(): boolean;
+	id: number;
+	version: RfcClientVersion;
+}
+
+interface RfcClientBinding {
+	Client: RfcClientInstance;
+	getVersion(): object;
+	verbose(): this;
+}
+
+export interface RfcCallOptions {
+	notRequested?: Array<String>;
+	timeout?: number;
+}
+
+enum EnumSncQop {
+	DigSig = '1',
+	DigSigEnc = '2',
+	DigSigEncUserAuth = '3',
+	BackendDefault = '8',
+	Maximum = '9',
+}
+
+enum EnumTrace {
+	Off = '0',
+	Brief = '1',
+	Verbose = '2',
+	Full = '3',
+}
+
 const binary = require('node-pre-gyp');
 const path = require('path');
 const binding_path = binary.find(path.resolve(path.join(__dirname, '../../package.json')));
 const binding: RfcClientBinding = require(binding_path);
 
 export class Client {
-	//private __connectionParams: RfcConnectionParameters;
 	private __client: RfcClientInstance;
 
 	constructor(connectionParams: RfcConnectionParameters) {
-	    //this.__connectionParams = connectionParams;
 	    this.__client = new binding.Client(connectionParams);
 	}
 
@@ -179,11 +208,11 @@ export class Client {
 	    return this.__client.id;
 	}
 
-	get version(): object {
+	get version(): RfcClientVersion {
 	    return this.__client.version;
 	}
 
-	get connectionInfo(): object {
+	get connectionInfo(): RfcConnectionInfo {
 	    return this.__client.connectionInfo();
 	}
 }
