@@ -19,7 +19,7 @@ const should = require('should');
 const Decimal = require('decimal.js');
 const Utils = require('./utils');
 
-const abapSystem = require('./abapSystem')('MME');
+const abapSystem = require('./abapSystem')();
 
 describe('Datatypes', function() {
     let client;

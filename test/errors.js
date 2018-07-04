@@ -17,7 +17,7 @@
 const rfcClient = require('../lib').Client;
 const should = require('should');
 
-const abapSystem = require('./abapSystem')('MME');
+const abapSystem = require('./abapSystem')();
 
 describe('Error handling', function() {
     let client;

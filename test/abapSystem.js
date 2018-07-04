@@ -28,6 +28,6 @@ let abapSystem = {
     },
 };
 
-module.exports = function(sid) {
+module.exports = function(sid = 'p7019s16') {
     return abapSystem[sid];
 };

@@ -16,7 +16,7 @@
 
 const Pool = require('../lib').Pool;
 const should = require('should');
-const abapSystem = require('./abapSystem')('MME');
+const abapSystem = require('./abapSystem')();
 
 describe('Pool', function() {
     let pool;
