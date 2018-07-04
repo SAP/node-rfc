@@ -109,6 +109,10 @@ export interface RfcCallOptions {
 	timeout?: number;
 }
 
+export interface RfcAbapObject {
+	[key: string]: string | number | Array<string> | Array<number> | Array<RfcAbapObject>;
+}
+
 enum EnumSncQop {
 	DigSig = '1',
 	DigSigEnc = '2',
@@ -152,7 +156,7 @@ export class Client {
 	    });
 	}
 
-	call(rfcName: string, rfcParams: object, callOptions: RfcCallOptions = {}): Promise<any> {
+	call(rfcName: string, rfcParams: RfcAbapObject, callOptions: RfcCallOptions = {}): Promise<RfcAbapObject> {
 	    return new Promise((resolve, reject) => {
 	        if (typeof callOptions === 'function') {
 	            reject(new TypeError('No callback argument allowed in promise based call()'));
@@ -161,7 +165,7 @@ export class Client {
 	            this.__client.invoke(
 	                rfcName,
 	                rfcParams,
-	                (err: any, res: any) => {
+	                (err: any, res: RfcAbapObject) => {
 	                    if (err) {
 	                        reject(err);
 	                    } else {
@@ -180,7 +184,7 @@ export class Client {
 	    this.__client.connect(callback);
 	}
 
-	invoke(rfcName: string, rfcParams: object, callback: Function, callOptions?: object) {
+	invoke(rfcName: string, rfcParams: RfcAbapObject, callback: Function, callOptions?: object) {
 	    try {
 	        this.__client.invoke(rfcName, rfcParams, callback, callOptions);
 	    } catch (ex) {
