@@ -58,9 +58,14 @@ export interface RfcCallOptions {
     notRequested?: Array<String>;
     timeout?: number;
 }
-export interface RfcAbapObject {
-    [key: string]: string | number | Array<string> | Array<number> | Array<RfcAbapObject>;
-}
+export declare type RfcAbapValue = string | number | Object | Array<string> | Array<number> | Array<Object> | {
+    [key: string]: RfcAbapValue;
+} | Array<{
+    [key: string]: RfcAbapValue;
+}>;
+export declare type RfcAbapContainer = {
+    [key: string]: RfcAbapValue;
+};
 declare enum EnumSncQop {
     DigSig = "1",
     DigSigEnc = "2",
@@ -78,9 +83,9 @@ export declare class Client {
     private __client;
     constructor(connectionParams: RfcConnectionParameters);
     open(): Promise<Client>;
-    call(rfcName: string, rfcParams: RfcAbapObject, callOptions?: RfcCallOptions): Promise<RfcAbapObject>;
+    call(rfcName: string, rfcParams: RfcAbapContainer, callOptions?: RfcCallOptions): Promise<RfcAbapContainer>;
     connect(callback: Function): void;
-    invoke(rfcName: string, rfcParams: RfcAbapObject, callback: Function, callOptions?: object): void;
+    invoke(rfcName: string, rfcParams: RfcAbapContainer, callback: Function, callOptions?: object): void;
     close(): object;
     reopen(callback: Function): void;
     ping(): void;

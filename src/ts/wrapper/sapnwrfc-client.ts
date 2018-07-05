@@ -89,7 +89,7 @@ interface RfcClientInstance {
 	(connectionParameters: RfcConnectionParameters): RfcClientInstance;
 	connectionInfo(): RfcConnectionInfo;
 	connect(callback: Function): any;
-	invoke(rfcName: string, rfcParams: object, callback: Function, callOptions?: object): any;
+	invoke(rfcName: string, rfcParams: RfcAbapContainer, callback: Function, callOptions?: object): any;
 	ping(): void;
 	close(): object;
 	reopen(callback: Function): void;
@@ -109,9 +109,17 @@ export interface RfcCallOptions {
 	timeout?: number;
 }
 
-export interface RfcAbapObject {
-	[key: string]: string | number | Array<string> | Array<number> | Array<RfcAbapObject>;
-}
+export type RfcAbapValue =
+	| string
+	| number
+	| Object
+	| Array<string>
+	| Array<number>
+	| Array<Object>
+	| { [key: string]: RfcAbapValue }
+	| Array<{ [key: string]: RfcAbapValue }>;
+
+export type RfcAbapContainer = { [key: string]: RfcAbapValue };
 
 enum EnumSncQop {
 	DigSig = '1',
@@ -156,7 +164,7 @@ export class Client {
 	    });
 	}
 
-	call(rfcName: string, rfcParams: RfcAbapObject, callOptions: RfcCallOptions = {}): Promise<RfcAbapObject> {
+	call(rfcName: string, rfcParams: RfcAbapContainer, callOptions: RfcCallOptions = {}): Promise<RfcAbapContainer> {
 	    return new Promise((resolve, reject) => {
 	        if (typeof callOptions === 'function') {
 	            reject(new TypeError('No callback argument allowed in promise based call()'));
@@ -165,7 +173,7 @@ export class Client {
 	            this.__client.invoke(
 	                rfcName,
 	                rfcParams,
-	                (err: any, res: RfcAbapObject) => {
+	                (err: any, res: RfcAbapContainer) => {
 	                    if (err) {
 	                        reject(err);
 	                    } else {
@@ -184,7 +192,7 @@ export class Client {
 	    this.__client.connect(callback);
 	}
 
-	invoke(rfcName: string, rfcParams: RfcAbapObject, callback: Function, callOptions?: object) {
+	invoke(rfcName: string, rfcParams: RfcAbapContainer, callback: Function, callOptions?: object) {
 	    try {
 	        this.__client.invoke(rfcName, rfcParams, callback, callOptions);
 	    } catch (ex) {

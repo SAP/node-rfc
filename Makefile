@@ -5,21 +5,19 @@ modules:
 	npm install
 	node-pre-gyp configure
 
-addon: 
+addon:
 	node-pre-gyp build # --loglevel=silent
 
-build:
+wrapper:
 	npm run build
 
-all: addon build
+build: addon wrapper
 
 debug:
 	node-pre-gyp rebuild --debug
 
 verbose:
 	node-pre-gyp rebuild --loglevel=verbose
-
-rebuild: modules all
 
 test:
 	npm run test
