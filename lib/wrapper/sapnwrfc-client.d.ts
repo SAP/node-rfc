@@ -1,3 +1,4 @@
+/// <reference types="node" />
 export interface RfcConnectionParameters {
     saprouter?: string;
     snc_lib?: string;
@@ -58,13 +59,15 @@ export interface RfcCallOptions {
     notRequested?: Array<String>;
     timeout?: number;
 }
-export declare type RfcAbapValue = string | number | Object | Array<string> | Array<number> | Array<Object> | {
-    [key: string]: RfcAbapValue;
-} | Array<{
-    [key: string]: RfcAbapValue;
-}>;
-export declare type RfcAbapContainer = {
-    [key: string]: RfcAbapValue;
+export declare type RfcVariable = string | number | Buffer;
+export declare type RfcArray = Array<RfcVariable>;
+export declare type RfcStructure = {
+    [key: string]: RfcVariable | RfcStructure | RfcTable;
+};
+export declare type RfcTable = Array<RfcStructure>;
+export declare type RfcParameterValue = RfcVariable | RfcArray | RfcStructure | RfcTable;
+export declare type RfcObject = {
+    [key: string]: RfcParameterValue;
 };
 declare enum EnumSncQop {
     DigSig = "1",
@@ -83,9 +86,9 @@ export declare class Client {
     private __client;
     constructor(connectionParams: RfcConnectionParameters);
     open(): Promise<Client>;
-    call(rfcName: string, rfcParams: RfcAbapContainer, callOptions?: RfcCallOptions): Promise<RfcAbapContainer>;
+    call(rfcName: string, rfcParams: RfcObject, callOptions?: RfcCallOptions): Promise<RfcObject>;
     connect(callback: Function): void;
-    invoke(rfcName: string, rfcParams: RfcAbapContainer, callback: Function, callOptions?: object): void;
+    invoke(rfcName: string, rfcParams: RfcObject, callback: Function, callOptions?: object): void;
     close(): object;
     reopen(callback: Function): void;
     ping(): void;

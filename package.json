@@ -2,7 +2,7 @@
 	"name": "node-rfc",
 	"description": "nodejs bindings for SAP NW RFC SDK",
 	"version": "0.2.0-rc4",
-	"homepage": "https://github.wdf.sap.corp/D037732/node-rfc",
+	"homepage": "https://github.com/SAP/node-rfc",
 	"author": {
 		"name": "Srdjan Boskovic",
 		"email": "srdjan.boskovic@sap.com"
@@ -30,10 +30,10 @@
 	},
 	"binary": {
 		"module_name": "sapnwrfc",
-		"module_path": "./lib/binding/{node_abi}-{platform}-{arch}",
-		"host": "https://github.wdf.sap.corp/D037732/node-rfc/releases/download/",
+		"module_path": "./lib/binding/{platform}-{arch}",
+		"host": "https://github.com/SAP/node-rfc/releases/download/",
 		"remote_path": "{version}",
-		"package_name": "rfc-{node_abi}-{platform}-{arch}.tar.gz"
+		"package_name": "rfc-{platform}-{arch}.tar.gz"
 	},
 	"license": "Apache-2.0",
 	"keywords": [

@@ -27,14 +27,19 @@ printf "\nPlatform: $osext\n"
 
 for lts in "${LTS_VERSIONS[@]}"
 do
-    nvm install $lts
-    nvm use $lts
-    rm -rf node_modules
-    npm install
-    # abi=`node --eval "console.log(require('node-abi').getAbi())"`
-    npm run build && \
-    rm -rf build/Release && node-pre-gyp clean configure build && \
-    node-pre-gyp testbinary && node-pre-gyp package && \
-    npm run test && node-pre-gyp reveal
+    nvm install $lts && nvm use $lts
+
+    if [ "$lts" == "6.14.3" ]; then
+        # build on the lowest version
+        rm -rf node_modules build/Release
+        npm install
+        # abi=`node --eval "console.log(require('node-abi').getAbi())"`
+        npm run build && \
+        node-pre-gyp clean configure build && \
+        node-pre-gyp testbinary && node-pre-gyp package && \
+        node-pre-gyp reveal
+    fi
+    # test on all
+    npm run test
 done
 
