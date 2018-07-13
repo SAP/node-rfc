@@ -126,7 +126,7 @@ npm run test
 -   https://wiki.scn.sap.com/wiki/display/ABAPConn/ABAP+Connectivity+-+RFC
 -   [SAP HANA Cloud Connector](https://help.hana.ondemand.com/help/frameset.htm?e6c7616abb5710148cfcf3e75d96d596.html)
 
-Developer resources:
+## Developer resources
 
 -   [Embedder's Guide](https://github.com/v8/v8/wiki/Embedder's%20Guide)
 -   [v8 API docs](https://v8docs.nodesource.com/)
