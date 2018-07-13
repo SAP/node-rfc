@@ -95,10 +95,6 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
     RFC_TABLE_HANDLE tableHandle;
     SAP_UC *cValue;
 
-    // FIXME https://github.com/nodejs/node-addon-api/issues/265
-    bool isInteger;
-    float numFloat;
-
     switch (typ)
     {
     case RFCTYPE_STRUCTURE:
@@ -255,32 +251,29 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
     case RFCTYPE_INT:
     case RFCTYPE_INT1:
     case RFCTYPE_INT2:
-        // FIXME https://github.com/nodejs/node-addon-api/issues/265
-        if (value.IsNumber())
-        {
-            // Napi::Function isIntegerFunction = value.Env().Global().Get("Number").As<Napi::Object>().Get("IsInteger").As<Napi::Function>();
-            // bool isInt = isIntegerFunction.MakeCallback(__genv.Global(), {value}).ToBoolean().Value();
-            // printf("%u %f : %u", value.ToNumber(), value.ToNumber(), isInt);
-
-            numFloat = value.ToNumber().FloatValue();
-            isInteger = (int)numFloat == numFloat;
-            // or isInteger = std::trunc(numFloat) == numFloat;
-        }
-        else
+    case RFCTYPE_INT8:
+        if (!value.IsNumber())
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
             sprintf(err, "Integer number expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(__genv, err).Value());
         }
-        if (!isInteger)
+        else
         {
-            char err[256];
-            std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Integer number expected when filling field %s of type %d, got %f", &fieldName[0], typ, numFloat);
-            return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+            // https://github.com/mhdawson/node-sqlite3/pull/3
+            double numDouble = value.ToNumber().DoubleValue();
+            if ((int64_t)numDouble != numDouble) // or std::trunc(numDouble) == numDouble;
+            {
+                char err[256];
+                std::string fieldName = wrapString(cName).ToString().Utf8Value();
+                sprintf(err, "Integer number expected when filling field %s of type %d, got %a", &fieldName[0], typ, numDouble);
+                return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+            }
+            RFC_INT rfcInt = value.As<Napi::Number>().Int64Value();
+            //int64_t rfcInt = value.As<Napi::Number>().Int64Value();
+            rc = RfcSetInt(functionHandle, cName, rfcInt, &errorInfo);
         }
-        rc = RfcSetInt(functionHandle, cName, RFC_INT(numFloat), &errorInfo);
         break;
     case RFCTYPE_DATE:
         if (value.IsString())

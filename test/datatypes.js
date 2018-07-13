@@ -297,12 +297,9 @@ describe('Datatypes', function() {
         });
     });
 
-    //xit('INT type check should detect floats [pending] https://github.com/nodejs/node-addon-api/issues/265', function(done) {
-    it('INT type check should detect floats [pending] https://github.com/nodejs/node-addon-api/issues/265', function(done) {
+    it('INT1 positive infinity', function(done) {
         let importStruct = {
-            RFCINT1: 1,
-            RFCINT2: 2,
-            RFCINT4: 3.1,
+            RFCINT1: Number.POSITIVE_INFINITY,
         };
         let importTable = [importStruct];
         client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
@@ -310,8 +307,130 @@ describe('Datatypes', function() {
             err.should.be.an.Object();
             err.should.have.properties({
                 name: 'TypeError',
-                message: 'Integer number expected when filling field RFCINT4 of type 8, got 3.100000',
+                message: 'Integer number expected when filling field RFCINT1 of type 10, got inf',
             });
+            done();
+        });
+    });
+
+    it('INT1 negative infinity', function(done) {
+        let importStruct = {
+            RFCINT1: Number.POSITIVE_INFINITY,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object();
+            err.should.have.properties({
+                name: 'TypeError',
+                message: 'Integer number expected when filling field RFCINT1 of type 10, got inf',
+            });
+            done();
+        });
+    });
+
+    it('INT1 type check should detect floats', function(done) {
+        let importStruct = {
+            RFCINT1: 1 + Number.EPSILON,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object();
+            err.should.have.properties({
+                name: 'TypeError',
+                message: 'Integer number expected when filling field RFCINT1 of type 10, got 0x1.0000000000001p+0',
+            });
+            done();
+        });
+    });
+
+    it('INT2 type check should detect floats', function(done) {
+        let importStruct = {
+            RFCINT2: 1 + Number.EPSILON,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object();
+            err.should.have.properties({
+                name: 'TypeError',
+                message: 'Integer number expected when filling field RFCINT2 of type 9, got 0x1.0000000000001p+0',
+            });
+            done();
+        });
+    });
+
+    it('INT4 type check should detect floats', function(done) {
+        let importStruct = {
+            RFCINT4: 1 + Number.EPSILON,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object();
+            err.should.have.properties({
+                name: 'TypeError',
+                message: 'Integer number expected when filling field RFCINT4 of type 8, got 0x1.0000000000001p+0',
+            });
+            done();
+        });
+    });
+
+    // ABAP integers range https://help.sap.com/http.svc/rc/abapdocu_752_index_htm/7.52/en-US/index.htm?file=abenddic_builtin_types_intro.htm
+    // RFCINT1: 0 to 255
+    // RFCINT2: -32,768 to 32,767
+    // RFCINT4: -2,147,483,648 to +2,147,483,647
+    // RFCINT8: -9,223,372,036,854,775,808 to +9,223,372,036,854,775,807
+
+    // JavaScript safe integers range https://www.ecma-international.org/ecma-262/8.0/#sec-number.max_safe_integer
+    // MAX: 9,007,199,254,740,991 (2 ** 53 - 1)
+    // MIN: -9,007,199,254,740,991
+
+    it('INT max positive', function(done) {
+        let importStruct = {
+            RFCINT1: 254,
+            RFCINT2: 32766,
+            RFCINT4: 2147483646,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err, res) {
+            should.not.exist(err);
+            res.ECHOSTRUCT.RFCINT1.should.equal(254);
+            res.RFCTABLE[0].RFCINT1.should.equal(254);
+            res.RFCTABLE[1].RFCINT1.should.equal(255);
+
+            res.ECHOSTRUCT.RFCINT2.should.equal(32766);
+            res.RFCTABLE[0].RFCINT2.should.equal(32766);
+            res.RFCTABLE[1].RFCINT2.should.equal(32767);
+
+            res.ECHOSTRUCT.RFCINT4.should.equal(2147483646);
+            res.RFCTABLE[0].RFCINT4.should.equal(2147483646);
+            res.RFCTABLE[1].RFCINT4.should.equal(2147483647);
+            done();
+        });
+    });
+
+    it('INT max negative', function(done) {
+        let importStruct = {
+            RFCINT1: -2,
+            RFCINT2: -32768,
+            RFCINT4: -2147483648,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err, res) {
+            should.not.exist(err);
+            res.ECHOSTRUCT.RFCINT1.should.equal(254);
+            res.RFCTABLE[0].RFCINT1.should.equal(254);
+            res.RFCTABLE[1].RFCINT1.should.equal(255);
+
+            res.ECHOSTRUCT.RFCINT2.should.equal(-32768);
+            res.RFCTABLE[0].RFCINT2.should.equal(-32768);
+            res.RFCTABLE[1].RFCINT2.should.equal(-32767);
+
+            res.ECHOSTRUCT.RFCINT4.should.equal(-2147483648);
+            res.RFCTABLE[0].RFCINT4.should.equal(-2147483648);
+            res.RFCTABLE[1].RFCINT4.should.equal(-2147483647);
             done();
         });
     });

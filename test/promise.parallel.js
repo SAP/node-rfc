@@ -22,6 +22,8 @@ const abapSystem = require('./abapSystem')();
 const CONNECTIONS = 50;
 
 describe('[promise] Parallel and Sequential', function() {
+    this.timeout(15000);
+
     let client = new rfcClient(abapSystem);
     beforeEach(function(done) {
         client = new rfcClient(abapSystem);
