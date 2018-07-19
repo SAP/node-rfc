@@ -71,7 +71,7 @@ SAP_UC *fillString(std::string str)
 
 Napi::Value fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, Napi::String name, Napi::Value value)
 {
-    Napi::EscapableHandleScope scope(__genv);
+    Napi::EscapableHandleScope scope(value.Env());
 
     RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
@@ -88,7 +88,7 @@ Napi::Value fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, R
 
 Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Napi::Value value, RFC_TYPE_DESC_HANDLE functionDescHandle)
 {
-    Napi::EscapableHandleScope scope(__genv);
+    Napi::EscapableHandleScope scope(value.Env());
     RFC_RC rc = RFC_OK;
     RFC_ERROR_INFO errorInfo;
     RFC_STRUCTURE_HANDLE structHandle;
@@ -122,7 +122,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
                 return scope.Escape(wrapError(&errorInfo));
             }
             Napi::Value fillError = fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
-            if (fillError != scope.Env().Null())
+            if (!fillError.IsUndefined())
             {
                 return scope.Escape(fillError);
             }
@@ -168,7 +168,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
                     return scope.Escape(wrapError(&errorInfo));
                 }
                 Napi::Value fillError = fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
-                if (fillError != scope.Env().Null())
+                if (!fillError.IsUndefined())
                 {
                     return scope.Escape(fillError);
                 }
@@ -183,7 +183,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
             sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
-            return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.As<Napi::String>());
         rc = RfcSetChars(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
@@ -217,7 +217,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
             sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
-            return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.ToString());
         rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
@@ -229,7 +229,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
             sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
-            return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.ToString());
         rc = RfcSetNum(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
@@ -242,7 +242,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
             sprintf(err, "Number, number object or string expected when filling field %s of type %d", &fieldName[0], typ);
-            return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.ToString());
         rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
@@ -257,7 +257,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
             sprintf(err, "Integer number expected when filling field %s of type %d", &fieldName[0], typ);
-            return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         else
         {
@@ -268,7 +268,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
                 char err[256];
                 std::string fieldName = wrapString(cName).ToString().Utf8Value();
                 sprintf(err, "Integer number expected when filling field %s of type %d, got %a", &fieldName[0], typ, numDouble);
-                return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
             }
             RFC_INT rfcInt = value.As<Napi::Number>().Int64Value();
             //int64_t rfcInt = value.As<Napi::Number>().Int64Value();
@@ -290,7 +290,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
                 char err[256];
                 std::string fieldName = wrapString(cName).ToString().Utf8Value();
                 sprintf(err, "Date object or string expected when filling field %s of type %d", &fieldName[0], typ);
-                return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
             }
 
             // input date
@@ -328,7 +328,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
             sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
-            return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         //cValue = fillString(value.strftime('%H%M%S'))
         cValue = fillString(value.ToString());
@@ -339,29 +339,29 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         char err[256];
         std::string fieldName = wrapString(cName).ToString().Utf8Value();
         sprintf(err, "Unknown RFC type %u when filling %s", typ, &fieldName[0]);
-        return scope.Escape(Napi::TypeError::New(__genv, err).Value());
+        return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         break;
     }
     if (rc != RFC_OK)
     {
         return scope.Escape(wrapError(&errorInfo));
     }
-    return scope.Env().Null();
-} // namespace node_rfc
+    return scope.Env().Undefined();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // WRAP FUNCTIONS (from RFC)
 ////////////////////////////////////////////////////////////////////////////////
 
-Napi::Value wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, bool rstrip)
+Napi::Value wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, Napi::Env env, bool rstrip)
 {
-    Napi::EscapableHandleScope scope(__genv);
+    Napi::EscapableHandleScope scope(env);
 
     RFC_PARAMETER_DESC paramDesc;
     unsigned int paramCount = 0;
 
     RfcGetParameterCount(functionDescHandle, &paramCount, NULL);
-    Napi::Object resultObj = Napi::Object::New(__genv);
+    Napi::Object resultObj = Napi::Object::New(env);
 
     for (unsigned int i = 0; i < paramCount; i++)
     {

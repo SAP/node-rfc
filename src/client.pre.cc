@@ -127,34 +127,34 @@ class PrepareAsync : public Napi::AsyncWorker
 
     void OnOK()
     {
-        RFC_FUNCTION_HANDLE functionHandle = NULL;
         Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
 
         if (functionDescHandle == NULL || client->errorInfo.code != RFC_OK)
             argv[0] = wrapError(&client->errorInfo);
 
-        if (argv[0].IsUndefined())
+        if (!argv[0].IsUndefined())
         {
-
-            client->LockMutex();
-
-            functionHandle = RfcCreateFunction(functionDescHandle, &client->errorInfo);
-            RFC_RC rc;
-
-            for (unsigned int i = 0; i < notRequested.Value().Length(); i++)
-            {
-                Napi::String name = notRequested.Value().Get(i).ToString();
-                SAP_UC *paramName = fillString(name);
-                rc = RfcSetParameterActive(functionHandle, paramName, 0, &client->errorInfo);
-                free(const_cast<SAP_UC *>(paramName));
-                if (rc != RFC_OK)
-                {
-                    argv[0] = wrapError(&client->errorInfo);
-                    break;
-                }
-            }
+            printf("fail 1\n");
+            Callback().Call({argv[0], argv[1]});
         }
 
+        client->LockMutex();
+
+        RFC_FUNCTION_HANDLE functionHandle = RfcCreateFunction(functionDescHandle, &client->errorInfo);
+        RFC_RC rc;
+
+        for (unsigned int i = 0; i < notRequested.Value().Length(); i++)
+        {
+            Napi::String name = notRequested.Value().Get(i).ToString();
+            SAP_UC *paramName = fillString(name);
+            rc = RfcSetParameterActive(functionHandle, paramName, 0, &client->errorInfo);
+            free(const_cast<SAP_UC *>(paramName));
+            if (rc != RFC_OK)
+            {
+                argv[0] = wrapError(&client->errorInfo);
+                break;
+            }
+        }
         notRequested.Reset();
 
         if (argv[0].IsUndefined())
@@ -185,10 +185,46 @@ class PrepareAsync : public Napi::AsyncWorker
         }
         else
         {
-            client->UnlockMutex();
             Callback().Call({argv[0], argv[1]});
             callback.Reset();
         }
+    }
+};
+
+class InvokeAsync : public Napi::AsyncWorker
+{
+  private:
+    Client *client;
+    RFC_FUNCTION_DESC_HANDLE functionDescHandle;
+    RFC_FUNCTION_HANDLE functionHandle;
+
+  public:
+    InvokeAsync(Napi::Function &callback, Client *client, RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle)
+        : Napi::AsyncWorker(callback), client(client), functionDescHandle(functionDescHandle), functionHandle(functionHandle) {}
+    ~InvokeAsync() {}
+
+    void Execute()
+    {
+        RfcInvoke(client->connectionHandle, functionHandle, &client->errorInfo);
+
+        client->UnlockMutex();
+    }
+
+    void OnOK()
+    {
+        Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
+
+        if (client->errorInfo.code != RFC_OK)
+        {
+            argv[0] = wrapError(&client->errorInfo);
+        }
+        else
+        {
+            client->alive = true;
+            argv[1] = wrapResult(functionDescHandle, functionHandle, Env());
+        }
+        RfcDestroyFunction(functionHandle, NULL);
+        Callback().Call({argv[0], argv[1]});
     }
 };
 
@@ -305,14 +341,70 @@ Napi::Value Client::Connect(const Napi::CallbackInfo &info)
 
     Napi::Function callback = info[0].As<Napi::Function>();
 
-    (new ConnectAsync(callback, this))->Queue();
+    // AsyncWorker ==========================================
+    ConnectAsync *connect = new ConnectAsync(callback, this);
+    connect->Queue();
+    //(new ConnectAsync(callback, this))->Queue();
+    // AsyncWorker ==========================================
+
+    /*
+    // uv ===================================================
+    Client *client = this;
+    ClientBaton *baton = new ClientBaton(client, callback);
+
+    int status = uv_queue_work(uv_default_loop(), &baton->request, Work_Connect, (uv_after_work_cb)Work_AfterConnect);
+    if (status != 0)
+    {
+        char err[256];
+        sprintf(err, "Client::Connect internal error: %d", status);
+        throw Napi::TypeError::New(info.Env(), err);
+    }
+    // uv ===================================================
+    */
 
     return info.Env().Undefined();
 }
 
+/*
+// uv ===================================================
+void Client::Work_Connect(uv_work_t *req)
+{
+    ClientBaton *baton = static_cast<ClientBaton *>(req->data);
+    Client *client = baton->client;
+
+    client->connectionHandle = RfcOpenConnection(client->connectionParams, client->paramSize, &baton->errorInfo);
+}
+
+void Client::Work_AfterConnect(uv_work_t *req, int status)
+{
+    ClientBaton *baton = static_cast<ClientBaton *>(req->data);
+    Client *client = baton->client;
+    Napi::HandleScope scope(info.Env());
+
+    Napi::Function cb = baton->callback.Value();
+    Napi::Value argv[1] = {info.Env()v.Undefined()};
+
+    client->alive = (baton->errorInfo.code == RFC_OK);
+
+    if (!client->alive)
+    {
+        argv[0] = wrapError(&baton->errorInfo);
+    }
+
+    delete baton;
+
+    TRY_CATCH_CALL(info.Env()v.Global(), cb, 1, argv);
+}
+// uv ===================================================
+*/
+
 Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
 {
+    RFC_RC rc;
+    RFC_ERROR_INFO errorInfo;
     Napi::Array notRequested = Napi::Array::New(info.Env());
+    RFC_FUNCTION_DESC_HANDLE functionDescHandle;
+    RFC_FUNCTION_HANDLE functionHandle;
 
     Napi::Function callback;
 
@@ -363,11 +455,120 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
 
     Napi::String rfmName = info[0].As<Napi::String>();
     Napi::Object Parameters = info[1].As<Napi::Object>();
-
     (new PrepareAsync(callback, this, rfmName, notRequested, Parameters))->Queue();
+    return info.Env().Undefined();
+    Napi::Value argv[] = {info.Env().Undefined(), info.Env().Undefined()};
+
+    SAP_UC *funcName = fillString(info[0].As<Napi::String>());
+
+    this->LockMutex();
+    functionDescHandle = RfcGetFunctionDesc(this->connectionHandle, funcName, &errorInfo);
+    free(funcName);
+    if (functionDescHandle == NULL)
+    {
+        argv[0] = wrapError(&errorInfo);
+        TRY_CATCH_CALL(info.Env().Global(), callback, 1, argv);
+        return info.Env().Undefined();
+    }
+
+    functionHandle = RfcCreateFunction(functionDescHandle, &errorInfo);
+
+    if (notRequested.Length() != 0)
+    {
+        for (unsigned int i = 0; i < notRequested.Length(); i++)
+        {
+            Napi::String name = notRequested.Get(i).ToString();
+            SAP_UC *paramName = fillString(name);
+            rc = RfcSetParameterActive(functionHandle, paramName, 0, &errorInfo);
+            free(const_cast<SAP_UC *>(paramName));
+            if (rc != RFC_OK)
+            {
+                argv[0] = wrapError(&errorInfo);
+                TRY_CATCH_CALL(info.Env().Global(), callback, 1, argv);
+                return info.Env().Undefined();
+            }
+        }
+    }
+
+    Napi::Object params = info[1].ToObject();
+    Napi::Array paramNames = params.GetPropertyNames();
+    unsigned int paramSize = paramNames.Length();
+
+    for (unsigned int i = 0; i < paramSize; i++)
+    {
+        Napi::String name = paramNames.Get(i).ToString();
+        Napi::Value value = params.Get(name);
+        argv[0] = fillFunctionParameter(functionDescHandle, functionHandle, name, value);
+        if (!argv[0].IsNull())
+        {
+            TRY_CATCH_CALL(info.Env().Global(), callback, 1, argv);
+            return info.Env().Undefined();
+        }
+    }
+
+    // AsyncWorker ==========================================
+    InvokeAsync *invoke = new InvokeAsync(callback, this, functionDescHandle, functionHandle);
+    invoke->Queue();
+    //(new InvokeAsync(callback, this, functionDescHandle, functionHandle))->Queue();
+    // AsyncWorker ==========================================
+
+    /*
+    // uv ===================================================
+    Client *client = this;
+    InvokeBaton *baton = new InvokeBaton(client, callback, functionHandle, functionDescHandle);
+
+    int status = uv_queue_work(uv_default_loop(), &baton->request, Work_Invoke, (uv_after_work_cb)Work_AfterInvoke);
+    if (status != 0)
+    {
+        char err[256];
+        sprintf(err, "Client::Invoke internal error: %d", status);
+        throw Napi::TypeError::New(info.Env(), err);
+    }
+    // uv ===================================================
+    */
 
     return info.Env().Undefined();
 }
+
+/*
+// uv ===================================================
+void Client::Work_Invoke(uv_work_t *req)
+{
+    InvokeBaton *baton = static_cast<InvokeBaton *>(req->data);
+
+    Client *client = baton->client;
+
+    RfcInvoke(client->connectionHandle, baton->functionHandle, &baton->errorInfo);
+
+    client->UnlockMutex();
+}
+
+void Client::Work_AfterInvoke(uv_work_t *req, int status)
+{
+    InvokeBaton *baton = static_cast<InvokeBaton *>(req->data);
+    Napi::HandleScope scope(info.Env());
+    Napi::Function cb = baton->callback.Value();
+
+    Napi::Value argv[] = {info.Env().Undefined(), info.Env().Undefined()};
+
+    if (baton->errorInfo.code != RFC_OK)
+    {
+        argv[0] = wrapError(&baton->errorInfo);
+    }
+    else
+    {
+        baton->client->alive = true;
+        argv[1] = wrapResult(baton->functionDescHandle, baton->functionHandle);
+    }
+
+    RfcDestroyFunction(baton->functionHandle, NULL);
+
+    delete baton;
+
+    TRY_CATCH_CALL(info.Env()v.Global(), cb, 2, argv);
+}
+// uv ===================================================
+*/
 
 void Client::LockMutex(void)
 {

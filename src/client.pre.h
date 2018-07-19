@@ -62,7 +62,12 @@ private:
   Napi::Value ConnectionInfo(const Napi::CallbackInfo &info);
 
   Napi::Value Connect(const Napi::CallbackInfo &info);
+  //static void Work_Connect(uv_work_t *req);
+  //static void Work_AfterConnect(uv_work_t *req, int status);
+
   Napi::Value Invoke(const Napi::CallbackInfo &info);
+  //static void Work_Invoke(uv_work_t *req);
+  //static void Work_AfterInvoke(uv_work_t *req, int status);
 
   Napi::Value Ping(const Napi::CallbackInfo &info);
   Napi::Value Close(const Napi::CallbackInfo &info);

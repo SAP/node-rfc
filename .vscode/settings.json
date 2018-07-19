@@ -21,6 +21,12 @@
         "system_error": "cpp",
         "bitset": "cpp",
         "chrono": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "__config": "cpp",
+        "__nullptr": "cpp",
+        "cstddef": "cpp",
+        "exception": "cpp",
+        "initializer_list": "cpp",
+        "stdexcept": "cpp"
     }
 }

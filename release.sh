@@ -9,7 +9,7 @@
 #
 
 # https://nodejs.org/en/download/releases/
-declare -a LTS_VERSIONS=("6.14.3" "8.11.3" "10.5.0")
+declare -a LTS_VERSIONS=("6.14.3" "8.11.3" "10.6.0")
 
 version=`cat ./VERSION` 
 
@@ -29,7 +29,7 @@ for lts in "${LTS_VERSIONS[@]}"
 do
     nvm install $lts && nvm use $lts
 
-    if [ "$lts" == "6.14.3" ]; then
+    if [ "$lts" == "${LTS_VERSIONS[0]}" ]; then
         # build on the lowest version
         rm -rf node_modules build/Release
         npm install
