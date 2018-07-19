@@ -2,7 +2,7 @@
 
 Run `npm install` and test examples.
 
-### async/await (nodejs > 7.6.0 or transpiler required)
+### async/await (node release > 7.6.0 or transpiler required)
 
 ```javascript
 'use strict';

@@ -80,57 +80,6 @@ private:
   void LockMutex(void);
   void UnlockMutex(void);
   uv_sem_t invocationMutex;
-  /*
-  // uv ===================================================
-  struct Baton
-  {
-    uv_work_t request;
-    Client *client;
-    Napi::FunctionReference callback;
-    RFC_ERROR_INFO errorInfo;
-
-    Baton(Client *client_, Napi::Function callback_) : client(client_)
-    {
-      client->Ref();
-      request.data = this;
-      if (!callback_.IsUndefined() && callback_.IsFunction())
-      {
-        callback.Reset(callback_, 1);
-      }
-    }
-
-    virtual ~Baton()
-    {
-      client->Unref();
-      callback.Reset();
-    }
-  };
-  // uv ===================================================
-  */
-
-public:
-  /*
-  // uv ===================================================
-  typedef void (*Work_Callback)(Baton *baton);
-
-  struct ClientBaton : Baton
-  {
-    ClientBaton(Client *client, Napi::Function callback) : Baton(client, callback){};
-  };
-
-  struct InvokeBaton : Baton
-  {
-    RFC_FUNCTION_HANDLE functionHandle;
-    RFC_FUNCTION_DESC_HANDLE functionDescHandle;
-
-    InvokeBaton(Client *client, Napi::Function callback, RFC_FUNCTION_HANDLE _functionHandle, RFC_FUNCTION_DESC_HANDLE _functionDescHandle) : Baton(client, callback)
-    {
-      functionHandle = _functionHandle;
-      functionDescHandle = _functionDescHandle;
-    };
-  };
-  // uv ===================================================
-  */
 };
 
 } // namespace node_rfc

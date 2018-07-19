@@ -86,9 +86,9 @@ export declare class Client {
     private __client;
     constructor(connectionParams: RfcConnectionParameters);
     open(): Promise<Client>;
-    call(rfcName: string, rfcParams: RfcObject, callOptions?: RfcCallOptions): Promise<RfcObject>;
+    call(rfmName: string, rfmParams: RfcObject, callOptions?: RfcCallOptions): Promise<RfcObject>;
     connect(callback: Function): void;
-    invoke(rfcName: string, rfcParams: RfcObject, callback: Function, callOptions?: object): void;
+    invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): void;
     close(): object;
     reopen(callback: Function): void;
     ping(): void;

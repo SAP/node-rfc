@@ -89,7 +89,7 @@ interface RfcClientInstance {
 	(connectionParameters: RfcConnectionParameters): RfcClientInstance;
 	connectionInfo(): RfcConnectionInfo;
 	connect(callback: Function): any;
-	invoke(rfcName: string, rfcParams: RfcObject, callback: Function, callOptions?: object): any;
+	invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): any;
 	ping(): void;
 	close(): object;
 	reopen(callback: Function): void;
@@ -159,15 +159,28 @@ export class Client {
 	    });
 	}
 
-	call(rfcName: string, rfcParams: RfcObject, callOptions: RfcCallOptions = {}): Promise<RfcObject> {
+	call(rfmName: string, rfmParams: RfcObject, callOptions: RfcCallOptions = {}): Promise<RfcObject> {
 	    return new Promise((resolve, reject) => {
-	        if (typeof callOptions === 'function') {
-	            reject(new TypeError('No callback argument allowed in promise based call()'));
+	        if (arguments.length < 2) {
+	            reject(new TypeError('Please provide remote function module name and parameters as arguments'));
 	        }
+
+	        if (typeof rfmName !== 'string') {
+	            reject(new TypeError('First argument (remote function module name) must be an string'));
+	        }
+
+	        if (typeof rfmParams !== 'object') {
+	            reject(new TypeError('Second argument (remote function module parameters) must be an object'));
+	        }
+
+	        if (arguments.length === 3 && typeof callOptions !== 'object') {
+	            reject(new TypeError('Call options argument must be an object'));
+	        }
+
 	        try {
 	            this.__client.invoke(
-	                rfcName,
-	                rfcParams,
+	                rfmName,
+	                rfmParams,
 	                (err: any, res: RfcObject) => {
 	                    if (err) {
 	                        reject(err);
@@ -187,11 +200,39 @@ export class Client {
 	    this.__client.connect(callback);
 	}
 
-	invoke(rfcName: string, rfcParams: RfcObject, callback: Function, callOptions?: object) {
+	invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object) {
 	    try {
-	        this.__client.invoke(rfcName, rfcParams, callback, callOptions);
+	        if (typeof callback !== 'function') {
+	            throw new TypeError('Callback function must be supplied');
+	        }
+
+	        if (arguments.length < 3) {
+	            callback(new TypeError('Please provide rfc module name, parameters and callback as arguments'));
+	            return;
+	        }
+
+	        if (typeof rfmName !== 'string') {
+	            callback(new TypeError('First argument (remote function module name) must be an string'));
+	            return;
+	        }
+
+	        if (typeof rfmParams !== 'object') {
+	            callback(new TypeError('Second argument (remote function module parameters) must be an object'));
+	            return;
+	        }
+
+	        if (arguments.length === 4 && typeof callOptions !== 'object') {
+	            callback(new TypeError('Call options argument must be an object'));
+	            return;
+	        }
+
+	        this.__client.invoke(rfmName, rfmParams, callback, callOptions);
 	    } catch (ex) {
-	        callback(ex);
+	        if (typeof callback !== 'function') {
+	            throw ex;
+	        } else {
+	            callback(ex);
+	        }
 	    }
 	}
 

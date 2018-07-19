@@ -14,9 +14,5 @@ node_modules/
 doc/_build/
 release/
 lib/binding/
-test/*.txt
-test/*.log
-samples/dist*
-samples/issues/trace/
 issues/
 examples/dist/

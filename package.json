@@ -1,14 +1,16 @@
 {
 	"name": "node-rfc",
 	"description": "nodejs bindings for SAP NW RFC SDK",
-	"version": "0.2.0-rc6",
+	"version": "0.2.0-rc7",
 	"homepage": "https://github.com/SAP/node-rfc",
 	"author": {
 		"name": "Srdjan Boskovic",
 		"email": "srdjan.boskovic@sap.com"
 	},
 	"engines": {
-		"node": "6.x || 8.x || 10.x"
+		"node": ">=6.x",
+		"npm": "latest",
+		"yarn": ">=1.4.0"
 	},
 	"os": [
 		"!darwin"
@@ -24,7 +26,7 @@
 		"prepublishOnly": "npm ls",
 		"preinstall": "npm install node-pre-gyp node-addon-api",
 		"install": "node-pre-gyp install --fallback-to-build",
-		"test": "mocha",
+		"test": "bash test/test.sh",
 		"build": "tsc -p src/ts",
 		"examples": "tsc -p examples/ts"
 	},
@@ -49,9 +51,12 @@
 		"type": "git",
 		"url": "git+https://github.wdf.sap.corp/D037732/node-rfc.git"
 	},
+	"peerDependencies": {
+		"npm": "latest"
+	},
 	"dependencies": {
 		"node-addon-api": "^1.3.0",
-		"node-pre-gyp": "^0.10.2"
+		"node-pre-gyp": "^0.10.3"
 	},
 	"bundledDependencies": [
 		"node-pre-gyp"

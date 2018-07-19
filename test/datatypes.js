@@ -256,7 +256,7 @@ describe('Datatypes', function() {
         });
     });
 
-    it('DATE input Date', function(done) {
+    xit('DATE input Date', function(done) {
         const Months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
         let count = 0;
         Months.forEach(month => {
@@ -291,7 +291,7 @@ describe('Datatypes', function() {
             err.should.be.an.Object();
             err.should.have.properties({
                 name: 'TypeError',
-                message: 'Date object or string expected when filling field RFCDATE of type 1',
+                message: 'Date string YYYYMMDD expected when filling field RFCDATE of type 1',
             });
             done();
         });

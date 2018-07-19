@@ -276,49 +276,14 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         }
         break;
     case RFCTYPE_DATE:
-        if (value.IsString())
+        if (!value.IsString())
         {
-            // it is a string
-            cValue = fillString(value.ToString());
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Date string YYYYMMDD expected when filling field %s of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
-        else
-        {
-            // check if Date object ?
-            Napi::Function dateFunc = value.Env().Global().Get("Date").As<Napi::Function>();
-            if (!value.As<Napi::Object>().InstanceOf(dateFunc))
-            {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "Date object or string expected when filling field %s of type %d", &fieldName[0], typ);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
-            }
-
-            // input date
-            std::string date_js = value.ToString().Utf8Value();
-
-            // abap_date = year
-            std::string abap_date = date_js.substr(11, 4);
-
-            // abap_date += month
-            std::string month_input = date_js.substr(4, 3);
-            std::string month_js[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-            int index = 1 + (int)std::distance(month_js, std::find(month_js, month_js + 12, month_input));
-            if (index < 10)
-            {
-                abap_date += '0';
-            }
-            else
-            {
-                abap_date += '1';
-                index -= 10;
-            }
-            abap_date += char(index + '0');
-
-            // abap_date += day
-            abap_date += date_js.substr(8, 2);
-
-            cValue = fillString(abap_date);
-        }
+        cValue = fillString(value.ToString());
         rc = RfcSetDate(functionHandle, cName, cValue, &errorInfo);
         free(cValue);
         break;

@@ -4,7 +4,7 @@ import { DSP } from './abapSystem';
 
 const client: Client = new Client(DSP);
 
-(async function() {
+//(async function() {
 	try {
 		await client.open();
 
@@ -18,4 +18,4 @@ const client: Client = new Client(DSP);
 	} catch (ex) {
 		console.error(ex);
 	}
-})();
+//})();

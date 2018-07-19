@@ -39,26 +39,6 @@ describe('[promise] Error handling', function() {
         done();
     });
 
-    it('No callback argument allowed in promise based call()', function(done) {
-        client.open().then(() => {
-            client
-                .call('rfc', {}, () => {})
-                .then(res => {
-                    should.not.exist(res);
-                    return done(res);
-                })
-                .catch(err => {
-                    should.exist(err);
-                    err.should.be.an.Object();
-                    err.should.have.properties({
-                        name: 'TypeError',
-                        message: 'No callback argument allowed in promise based call()',
-                    });
-                    done();
-                });
-        });
-    });
-
     it('Logon failure with wrong credentials', function(done) {
         let wrongParams = Object.assign({}, abapSystem);
         wrongParams.user = 'WRONGUSER';
@@ -159,34 +139,34 @@ describe('[promise] Error handling', function() {
         }
     });
 
-    it('At least three arguments must be provided', function(done) {
+    it('At least two arguments must be provided', function(done) {
         client.call('rfc').catch(err => {
             should.exist(err);
             err.should.have.properties({
                 name: 'TypeError',
-                message: 'Second argument (rfc module parameters) must be an object',
+                message: 'Please provide remote function module name and parameters as arguments',
             });
             done();
         });
     });
 
-    it('First argument (rfc module name) must be an string', function(done) {
+    it('First argument (remote function module name) must be an string', function(done) {
         client.call(23, {}, 2).catch(err => {
             should.exist(err);
             err.should.have.properties({
                 name: 'TypeError',
-                message: 'First argument (rfc module name) must be an string',
+                message: 'First argument (remote function module name) must be an string',
             });
             done();
         });
     });
 
-    it('Second argument (rfc module parameters) must be an object', function(done) {
+    it('Second argument (remote function module parameters) must be an object', function(done) {
         client.call('rfc', 41, 2).catch(err => {
             should.exist(err);
             err.should.have.properties({
                 name: 'TypeError',
-                message: 'Second argument (rfc module parameters) must be an object',
+                message: 'Second argument (remote function module parameters) must be an object',
             });
             done();
         });

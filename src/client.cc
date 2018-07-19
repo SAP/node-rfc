@@ -42,17 +42,18 @@ class ConnectAsync : public Napi::AsyncWorker
 
         if (!client->alive)
         {
-            Callback().Call({wrapError(&client->errorInfo)});
+            Napi::Value argv[1] = {wrapError(&client->errorInfo)};
+            TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
         }
         else
         {
-            Callback().Call({});
+            TRY_CATCH_CALL(Env().Global(), Callback(), 0, {});
         }
     }
 
   private:
     Client *client;
-};
+}; // namespace node_rfc
 
 class ExecuteAsync : public Napi::AsyncWorker
 {
@@ -91,7 +92,7 @@ class ExecuteAsync : public Napi::AsyncWorker
             argv[1] = wrapResult(functionDescHandle, functionHandle, Env());
         }
         RfcDestroyFunction(functionHandle, NULL);
-        Callback().Call({argv[0], argv[1]});
+        TRY_CATCH_CALL(Env().Global(), callback, 2, argv)
         callback.Reset();
     }
 };
@@ -186,7 +187,7 @@ class PrepareAsync : public Napi::AsyncWorker
         else
         {
             client->UnlockMutex();
-            Callback().Call({argv[0], argv[1]});
+            TRY_CATCH_CALL(Env().Global(), callback, 1, argv);
             callback.Reset();
         }
     }
@@ -314,51 +315,20 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
 {
     Napi::Array notRequested = Napi::Array::New(info.Env());
 
-    Napi::Function callback;
+    Napi::Function callback = info[2].As<Napi::Function>();
 
-    if (info.Length() < 3)
+    if (info[3].IsObject())
     {
-        Napi::TypeError::New(info.Env(), "Please provide rfc module name, parameters and callback as arguments").ThrowAsJavaScriptException();
-    }
-
-    if (!info[0].IsString())
-    {
-        Napi::TypeError::New(info.Env(), "First argument (rfc module name) must be an string").ThrowAsJavaScriptException();
-    }
-
-    if (!info[1].IsObject())
-    {
-        Napi::TypeError::New(info.Env(), "Second argument (rfc module parameters) must be an object").ThrowAsJavaScriptException();
-    }
-
-    for (unsigned int i = 2; i < info.Length(); i++)
-    {
-        if (info[i].IsFunction())
+        Napi::Object obj = info[3].ToObject();
+        Napi::Array props = obj.GetPropertyNames();
+        for (unsigned int i = 0; i < props.Length(); i++)
         {
-            callback = info[i].As<Napi::Function>();
-        }
-        else if (info[i].IsObject())
-        {
-            Napi::Object obj = info[i].ToObject();
-            Napi::Array props = obj.GetPropertyNames();
-            for (unsigned int i = 0; i < props.Length(); i++)
+            Napi::String key = props.Get(i).ToString();
+            if (key.Utf8Value().compare(std::string("notRequested")) == (int)0)
             {
-                Napi::String key = props.Get(i).ToString();
-                if (key.Utf8Value().compare(std::string("notRequested")) == (int)0)
-                {
-                    notRequested = obj.Get(key).As<Napi::Array>();
-                }
+                notRequested = obj.Get(key).As<Napi::Array>();
             }
         }
-        else if (!info[i].IsUndefined())
-        {
-            Napi::TypeError::New(info.Env(), "Call options argument, if provided, must be an object").ThrowAsJavaScriptException();
-        }
-    }
-
-    if (!callback.IsFunction())
-    {
-        Napi::TypeError::New(info.Env(), "Callback function must be supplied").ThrowAsJavaScriptException();
     }
 
     Napi::String rfmName = info[0].As<Napi::String>();
@@ -367,7 +337,7 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
     (new PrepareAsync(callback, this, rfmName, notRequested, Parameters))->Queue();
 
     return info.Env().Undefined();
-}
+} // namespace node_rfc
 
 void Client::LockMutex(void)
 {
