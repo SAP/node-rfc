@@ -10,7 +10,8 @@
 
 # https://nodejs.org/en/download/releases/
 
-# build on 6.9.0 for node 6.x and on 6.14.2 for 8 and 10
+# abi required as long node < 6.14.2 support needed
+# https://github.com/nodejs/node-addon-api/issues/310#issuecomment-406659222
 
 declare -a LTS_BUILD=("6.9.0" "6.14.2" "10.0.0")
 declare -a LTS_TEST=("6.14.3" "8.11.3" "10.7.0")
@@ -47,7 +48,7 @@ done
 
 for lts in "${LTS_TEST[@]}"
 do
-    nvm use $lts
+    nvm install $lts && nvm use $lts && npm -g i npm
     npm run test
 done
 

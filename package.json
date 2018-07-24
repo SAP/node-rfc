@@ -8,7 +8,8 @@
 		"email": "srdjan.boskovic@sap.com"
 	},
 	"engines": {
-		"node": "6.x || 8.x || 10.x"
+		"node": "6.x || 8.x || 10.x",
+		"npm": "^6.2.0"
 	},
 	"os": [
 		"!darwin"
@@ -48,10 +49,6 @@
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.wdf.sap.corp/D037732/node-rfc.git"
-	},
-	"peerDependencies": {
-		"npm": "current",
-		"yarn": ">=1.4.0"
 	},
 	"dependencies": {
 		"@types/bluebird": "^3.5.22",
