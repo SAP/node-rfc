@@ -12,7 +12,8 @@
 		"listFiles": true,
 		"removeComments": true,
 		"lib": ["es2015"],
-		"outDir": "../../lib"
+		"outDir": "../../lib",
+		"types": ["bluebird"]
 	},
 	"exclude": ["node_modules", "dist", "build", "doc", "lib", "test", ".vscode"],
 	"atom": {

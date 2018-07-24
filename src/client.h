@@ -30,10 +30,9 @@ class Client : public Napi::ObjectWrap<Client>
 {
 public:
   friend class ConnectAsync;
-  friend class InvokeAsync;
 
   friend class PrepareAsync;
-  friend class ExecuteAsync;
+  friend class InvokeAsync;
 
   static Napi::FunctionReference constructor;
   static Napi::Object Init(Napi::Env env, Napi::Object exports);

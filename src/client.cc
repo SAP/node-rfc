@@ -53,23 +53,17 @@ class ConnectAsync : public Napi::AsyncWorker
 
   private:
     Client *client;
-}; // namespace node_rfc
+};
 
-class ExecuteAsync : public Napi::AsyncWorker
+class InvokeAsync : public Napi::AsyncWorker
 {
-  private:
-    Napi::FunctionReference callback;
-    Client *client;
-    RFC_FUNCTION_HANDLE functionHandle;
-    RFC_FUNCTION_DESC_HANDLE functionDescHandle;
-
   public:
-    ExecuteAsync(Napi::Function &callback, Client *client, RFC_FUNCTION_HANDLE functionHandle, RFC_FUNCTION_DESC_HANDLE functionDescHandle)
+    InvokeAsync(Napi::Function &callback, Client *client, RFC_FUNCTION_HANDLE functionHandle, RFC_FUNCTION_DESC_HANDLE functionDescHandle)
         : Napi::AsyncWorker(callback), callback(Napi::Persistent(callback)),
           client(client), functionHandle(functionHandle), functionDescHandle(functionDescHandle)
     {
     }
-    ~ExecuteAsync() {}
+    ~InvokeAsync() {}
 
     void Execute()
     {
@@ -95,26 +89,22 @@ class ExecuteAsync : public Napi::AsyncWorker
         TRY_CATCH_CALL(Env().Global(), callback, 2, argv)
         callback.Reset();
     }
+
+  private:
+    Napi::FunctionReference callback;
+    Client *client;
+    RFC_FUNCTION_HANDLE functionHandle;
+    RFC_FUNCTION_DESC_HANDLE functionDescHandle;
 };
 
 class PrepareAsync : public Napi::AsyncWorker
 {
-  private:
-    Napi::FunctionReference callback;
-    Client *client;
-    SAP_UC *funcName;
-
-    Napi::Reference<Napi::Array> notRequested;
-    Napi::Reference<Napi::Object> parameters;
-
-    RFC_FUNCTION_DESC_HANDLE functionDescHandle;
-
   public:
     PrepareAsync(Napi::Function &callback, Client *client,
-                 Napi::String rfmName, Napi::Array &notRequestedParameters, Napi::Object &Parameters)
+                 Napi::String rfmName, Napi::Array &notRequestedParameters, Napi::Object &rfmParams)
         : Napi::AsyncWorker(callback),
           callback(Napi::Persistent(callback)), client(client),
-          notRequested(Napi::Persistent(notRequestedParameters)), parameters(Napi::Persistent(Parameters))
+          notRequested(Napi::Persistent(notRequestedParameters)), rfmParams(Napi::Persistent(rfmParams))
     {
         funcName = fillString(rfmName);
     }
@@ -161,7 +151,7 @@ class PrepareAsync : public Napi::AsyncWorker
         if (argv[0].IsUndefined())
         {
 
-            Napi::Object params = parameters.Value();
+            Napi::Object params = rfmParams.Value();
             Napi::Array paramNames = params.GetPropertyNames();
             unsigned int paramSize = paramNames.Length();
 
@@ -177,12 +167,12 @@ class PrepareAsync : public Napi::AsyncWorker
             }
         }
 
-        parameters.Reset();
+        rfmParams.Reset();
 
         if (argv[0].IsUndefined())
         {
             Napi::Function callbackFunction = callback.Value();
-            (new ExecuteAsync(callbackFunction, client, functionHandle, functionDescHandle))->Queue();
+            (new InvokeAsync(callbackFunction, client, functionHandle, functionDescHandle))->Queue();
         }
         else
         {
@@ -191,6 +181,16 @@ class PrepareAsync : public Napi::AsyncWorker
             callback.Reset();
         }
     }
+
+  private:
+    Napi::FunctionReference callback;
+    Client *client;
+    SAP_UC *funcName;
+
+    Napi::Reference<Napi::Array> notRequested;
+    Napi::Reference<Napi::Object> rfmParams;
+
+    RFC_FUNCTION_DESC_HANDLE functionDescHandle;
 };
 
 Napi::FunctionReference Client::constructor;
@@ -332,9 +332,9 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
     }
 
     Napi::String rfmName = info[0].As<Napi::String>();
-    Napi::Object Parameters = info[1].As<Napi::Object>();
+    Napi::Object rfmParams = info[1].As<Napi::Object>();
 
-    (new PrepareAsync(callback, this, rfmName, notRequested, Parameters))->Queue();
+    (new PrepareAsync(callback, this, rfmName, notRequested, rfmParams))->Queue();
 
     return info.Env().Undefined();
 } // namespace node_rfc

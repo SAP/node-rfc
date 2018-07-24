@@ -8,9 +8,7 @@
 		"email": "srdjan.boskovic@sap.com"
 	},
 	"engines": {
-		"node": ">=6.x",
-		"npm": "latest",
-		"yarn": ">=1.4.0"
+		"node": "6.x || 8.x || 10.x"
 	},
 	"os": [
 		"!darwin"
@@ -32,10 +30,10 @@
 	},
 	"binary": {
 		"module_name": "sapnwrfc",
-		"module_path": "./lib/binding/{platform}-{arch}",
+		"module_path": "./lib/binding/{platform}-{arch}-{node_abi}",
 		"host": "https://github.com/SAP/node-rfc/releases/download/",
 		"remote_path": "{version}",
-		"package_name": "rfc-{platform}-{arch}.tar.gz"
+		"package_name": "rfc-{platform}-{arch}-{node_abi}.tar.gz"
 	},
 	"license": "Apache-2.0",
 	"keywords": [
@@ -52,10 +50,13 @@
 		"url": "git+https://github.wdf.sap.corp/D037732/node-rfc.git"
 	},
 	"peerDependencies": {
-		"npm": "latest"
+		"npm": "current",
+		"yarn": ">=1.4.0"
 	},
 	"dependencies": {
-		"node-addon-api": "^1.3.0",
+		"@types/bluebird": "^3.5.22",
+		"bluebird": "^3.5.1",
+		"node-addon-api": "^1.4.0",
 		"node-pre-gyp": "^0.10.3"
 	},
 	"bundledDependencies": [
@@ -77,6 +78,6 @@
 		"lib"
 	],
 	"gypfile": true,
-	"main": "./lib/index",
+	"main": "./lib/index.js",
 	"types": "./lib/index.d.ts"
 }

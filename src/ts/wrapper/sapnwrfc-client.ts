@@ -136,131 +136,133 @@ const path = require('path');
 const binding_path = binary.find(path.resolve(path.join(__dirname, '../../package.json')));
 const binding: RfcClientBinding = require(binding_path);
 
+import * as Promise from 'bluebird';
+
 export class Client {
 	private __client: RfcClientInstance;
 
 	constructor(connectionParams: RfcConnectionParameters) {
-	    this.__client = new binding.Client(connectionParams);
+		this.__client = new binding.Client(connectionParams);
 	}
 
 	open(): Promise<Client> {
-	    return new Promise((resolve, reject) => {
-	        try {
-	            this.__client.connect((err: any) => {
-	                if (err) {
-	                    reject(err);
-	                } else {
-	                    resolve(this);
-	                }
-	            });
-	        } catch (ex) {
-	            reject(ex);
-	        }
-	    });
+		return new Promise((resolve, reject) => {
+			try {
+				this.__client.connect((err: any) => {
+					if (err) {
+						reject(err);
+					} else {
+						resolve(this);
+					}
+				});
+			} catch (ex) {
+				reject(ex);
+			}
+		});
 	}
 
 	call(rfmName: string, rfmParams: RfcObject, callOptions: RfcCallOptions = {}): Promise<RfcObject> {
-	    return new Promise((resolve, reject) => {
-	        if (arguments.length < 2) {
-	            reject(new TypeError('Please provide remote function module name and parameters as arguments'));
-	        }
+		return new Promise((resolve, reject) => {
+			if (arguments.length < 2) {
+				reject(new TypeError('Please provide remote function module name and parameters as arguments'));
+			}
 
-	        if (typeof rfmName !== 'string') {
-	            reject(new TypeError('First argument (remote function module name) must be an string'));
-	        }
+			if (typeof rfmName !== 'string') {
+				reject(new TypeError('First argument (remote function module name) must be an string'));
+			}
 
-	        if (typeof rfmParams !== 'object') {
-	            reject(new TypeError('Second argument (remote function module parameters) must be an object'));
-	        }
+			if (typeof rfmParams !== 'object') {
+				reject(new TypeError('Second argument (remote function module parameters) must be an object'));
+			}
 
-	        if (arguments.length === 3 && typeof callOptions !== 'object') {
-	            reject(new TypeError('Call options argument must be an object'));
-	        }
+			if (arguments.length === 3 && typeof callOptions !== 'object') {
+				reject(new TypeError('Call options argument must be an object'));
+			}
 
-	        try {
-	            this.__client.invoke(
-	                rfmName,
-	                rfmParams,
-	                (err: any, res: RfcObject) => {
-	                    if (err) {
-	                        reject(err);
-	                    } else {
-	                        resolve(res);
-	                    }
-	                },
-	                callOptions
-	            );
-	        } catch (ex) {
-	            reject(ex);
-	        }
-	    });
+			try {
+				this.__client.invoke(
+					rfmName,
+					rfmParams,
+					(err: any, res: RfcObject) => {
+						if (err) {
+							reject(err);
+						} else {
+							resolve(res);
+						}
+					},
+					callOptions
+				);
+			} catch (ex) {
+				reject(ex);
+			}
+		});
 	}
 
 	connect(callback: Function) {
-	    this.__client.connect(callback);
+		this.__client.connect(callback);
 	}
 
 	invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object) {
-	    try {
-	        if (typeof callback !== 'function') {
-	            throw new TypeError('Callback function must be supplied');
-	        }
+		try {
+			if (typeof callback !== 'function') {
+				throw new TypeError('Callback function must be supplied');
+			}
 
-	        if (arguments.length < 3) {
-	            callback(new TypeError('Please provide rfc module name, parameters and callback as arguments'));
-	            return;
-	        }
+			if (arguments.length < 3) {
+				callback(new TypeError('Please provide rfc module name, parameters and callback as arguments'));
+				return;
+			}
 
-	        if (typeof rfmName !== 'string') {
-	            callback(new TypeError('First argument (remote function module name) must be an string'));
-	            return;
-	        }
+			if (typeof rfmName !== 'string') {
+				callback(new TypeError('First argument (remote function module name) must be an string'));
+				return;
+			}
 
-	        if (typeof rfmParams !== 'object') {
-	            callback(new TypeError('Second argument (remote function module parameters) must be an object'));
-	            return;
-	        }
+			if (typeof rfmParams !== 'object') {
+				callback(new TypeError('Second argument (remote function module parameters) must be an object'));
+				return;
+			}
 
-	        if (arguments.length === 4 && typeof callOptions !== 'object') {
-	            callback(new TypeError('Call options argument must be an object'));
-	            return;
-	        }
+			if (arguments.length === 4 && typeof callOptions !== 'object') {
+				callback(new TypeError('Call options argument must be an object'));
+				return;
+			}
 
-	        this.__client.invoke(rfmName, rfmParams, callback, callOptions);
-	    } catch (ex) {
-	        if (typeof callback !== 'function') {
-	            throw ex;
-	        } else {
-	            callback(ex);
-	        }
-	    }
+			this.__client.invoke(rfmName, rfmParams, callback, callOptions);
+		} catch (ex) {
+			if (typeof callback !== 'function') {
+				throw ex;
+			} else {
+				callback(ex);
+			}
+		}
 	}
 
 	close() {
-	    return this.__client.close();
+		return this.__client.close();
 	}
 
 	reopen(callback: Function) {
-	    return this.__client.reopen(callback);
+		return this.__client.reopen(callback);
 	}
 
 	ping() {
-	    return this.__client.ping();
+		return this.__client.ping();
 	}
 
 	get isAlive(): boolean {
-	    return this.__client.isAlive();
+		return this.__client.isAlive();
 	}
 
 	get id(): number {
-	    return this.__client.id;
+		return this.__client.id;
 	}
 
 	get version(): RfcClientVersion {
-	    return this.__client.version;
+		return this.__client.version;
 	}
 
 	get connectionInfo(): RfcConnectionInfo {
-	    return this.__client.connectionInfo();
+		return this.__client.connectionInfo();
 	}
 }

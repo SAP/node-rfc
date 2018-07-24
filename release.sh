@@ -9,7 +9,7 @@
 #
 
 # https://nodejs.org/en/download/releases/
-declare -a LTS_VERSIONS=("6.14.3" "8.11.3" "10.6.0")
+declare -a LTS_VERSIONS=("6.9.0" "8.9.0")
 
 version=`cat ./VERSION` 
 
@@ -27,7 +27,7 @@ printf "\nPlatform: $osext\n"
 
 for lts in "${LTS_VERSIONS[@]}"
 do
-    nvm install $lts && nvm use $lts
+    nvm install $lts && && nvm use $lts && npm -g i npm
 
     if [ "$lts" == "${LTS_VERSIONS[0]}" ]; then
         # build on the lowest version
@@ -42,4 +42,6 @@ do
     # test on all
     npm run test
 done
+
+nvm use ""
 

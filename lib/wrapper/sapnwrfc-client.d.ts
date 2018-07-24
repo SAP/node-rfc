@@ -82,6 +82,7 @@ declare enum EnumTrace {
     Verbose = "2",
     Full = "3"
 }
+import * as Promise from 'bluebird';
 export declare class Client {
     private __client;
     constructor(connectionParams: RfcConnectionParameters);

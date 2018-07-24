@@ -45,14 +45,19 @@ describe('[promise] Parallel and Sequential', function() {
 
     it('Async test', function(done) {
         let asyncRes = undefined;
-        client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT }).then(res => {
-            should.exist(res);
-            res.should.be.an.Object();
-            res.should.have.property('ECHOTEXT');
-            res.ECHOTEXT.should.startWith(REQUTEXT);
-            asyncRes = res;
-            done();
-        });
+        client
+            .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT })
+            .then(res => {
+                should.exist(res);
+                res.should.be.an.Object();
+                res.should.have.property('ECHOTEXT');
+                res.ECHOTEXT.should.startWith(REQUTEXT);
+                asyncRes = res;
+                done();
+            })
+            .catch(err => {
+                return done(err);
+            });
         should.not.exist(asyncRes);
     });
 
@@ -64,29 +69,37 @@ describe('[promise] Parallel and Sequential', function() {
         }
         for (let client of CLIENTS) {
             client.open().then(() => {
-                client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id }).then(res => {
-                    should.exist(res);
-                    res.should.be.an.Object();
-                    res.should.have.property('ECHOTEXT');
-                    res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
-                    client.close();
-                    if (--count === 1) done();
-                });
+                client
+                    .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id })
+                    .then(res => {
+                        should.exist(res);
+                        res.should.be.an.Object();
+                        res.should.have.property('ECHOTEXT');
+                        res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
+                        client.close();
+                        if (--count === 1) done();
+                    })
+                    .catch(err => {
+                        return done(err);
+                    });
             });
         }
     });
 
-    it(`${CONNECTIONS} parallel calls with single connection`, function(done) {
-        for (let i = CONNECTIONS; i > 0; i--) {
-            client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + i }).then(res => {
-                //should.not.exist(err);
-                should.exist(res);
-                res.should.be.an.Object();
-                res.should.have.property('ECHOTEXT');
-                res.ECHOTEXT.should.startWith(REQUTEXT + i);
-                if (i === 1) done();
-            });
+    xit(`${CONNECTIONS} parallel calls with single connection`, function() {
+        let promises = [];
+        for (let counter = 0; counter < CONNECTIONS; counter++) {
+            promises.push(
+                client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + counter }).then(res => {
+                    //should.not.exist(err);
+                    should.exist(res);
+                    res.should.be.an.Object();
+                    res.should.have.property('ECHOTEXT');
+                    res.ECHOTEXT.should.startWith(REQUTEXT + counter);
+                })
+            );
         }
+        return Promise.all(promises);
     });
 
     it(`${CONNECTIONS} recursive calls with single connection`, function(done) {
@@ -95,14 +108,19 @@ describe('[promise] Parallel and Sequential', function() {
                 done();
                 return;
             }
-            return client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth }).then(res => {
-                //should.not.exist(err);
-                should.exist(res);
-                res.should.be.an.Object();
-                res.should.have.property('ECHOTEXT');
-                res.ECHOTEXT.should.startWith(REQUTEXT + depth);
-                rec(depth + 1);
-            });
+            return client
+                .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth })
+                .then(res => {
+                    //should.not.exist(err);
+                    should.exist(res);
+                    res.should.be.an.Object();
+                    res.should.have.property('ECHOTEXT');
+                    res.ECHOTEXT.should.startWith(REQUTEXT + depth);
+                    rec(depth + 1);
+                })
+                .catch(err => {
+                    return done(err);
+                });
         };
         rec(0);
     });
