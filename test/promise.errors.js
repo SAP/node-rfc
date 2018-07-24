@@ -20,23 +20,14 @@ const should = require('should');
 const abapSystem = require('./abapSystem')();
 
 describe('[promise] Error handling', function() {
-    let client;
+    let client = new rfcClient(abapSystem);
 
-    beforeEach(function(done) {
-        client = new rfcClient(abapSystem);
-        client
-            .open()
-            .then(() => {
-                done();
-            })
-            .catch(err => {
-                return done(err);
-            });
+    before(function() {
+        return client.open();
     });
 
-    afterEach(function(done) {
+    after(function() {
         client.close();
-        done();
     });
 
     it('Logon failure with wrong credentials', function(done) {

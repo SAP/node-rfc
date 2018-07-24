@@ -9,7 +9,11 @@
 #
 
 # https://nodejs.org/en/download/releases/
-declare -a LTS_VERSIONS=("6.9.0" "8.9.0")
+
+# build on 6.9.0 for node 6.x and on 6.14.2 for 8 and 10
+
+declare -a LTS_BUILD=("6.9.0" "6.14.2" "10.0.0")
+declare -a LTS_TEST=("6.14.3" "8.11.3" "10.7.0")
 
 version=`cat ./VERSION` 
 
@@ -25,23 +29,25 @@ fi
 
 printf "\nPlatform: $osext\n"
 
-for lts in "${LTS_VERSIONS[@]}"
-do
-    nvm install $lts && && nvm use $lts && npm -g i npm
+rm -rf build/stage
 
-    if [ "$lts" == "${LTS_VERSIONS[0]}" ]; then
-        # build on the lowest version
-        rm -rf node_modules build/Release
-        npm install
-        # abi=`node --eval "console.log(require('node-abi').getAbi())"`
-        npm run build && \
-        node-pre-gyp clean configure build && \
-        node-pre-gyp testbinary && node-pre-gyp package && \
-        node-pre-gyp reveal
-    fi
-    # test on all
+for lts in "${LTS_BUILD[@]}"
+do
+    nvm install $lts && nvm use $lts && npm -g i npm
+
+    rm -rf node_modules build/Release
+    npm install
+    # abi=`node --eval "console.log(require('node-abi').getAbi())"`
+    npm run build && \
+    node-pre-gyp clean configure build && \
+    node-pre-gyp testbinary package reveal
+
     npm run test
 done
 
-nvm use ""
+for lts in "${LTS_TEST[@]}"
+do
+    nvm use $lts
+    npm run test
+done
 

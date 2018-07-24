@@ -1,57 +1,10 @@
 /// <reference types="node" />
 
-//
-// SAP NW RFC Client Binding Wrapper
-//
-
-export interface RfcConnectionParameters {
-	// general
-	saprouter?: string;
-	snc_lib?: string;
-	snc_myname?: string;
-	snc_partnername?: string;
-	snc_qop?: EnumSncQop;
-	trace?: EnumTrace;
-	// not supported
-	// pcs
-	// codepage
-	// noCompression
-
-	// client
-	user?: string;
-	passwd?: string;
-	client: string;
-	lang?: string;
-	mysapsso2?: string;
-	getsso2?: string;
-	x509cert?: string;
-
-	//
-	// destination
-	//
-
-	// specific server
-	dest?: string;
-	ashost?: string;
-	sysnr?: string;
-	gwhost?: string;
-	gwserv?: string;
-
-	// load balancing
-	//dest?: string,
-	group?: string;
-	r3name?: string;
-	sysid?: string;
-	mshost?: string;
-	msserv?: string;
-
-	// gateway
-	//dest?: string,
-	tpname?: string;
-	program_id?: string;
-	//gwhost?: string,
-	//gwserv?: string,
-}
+import * as Promise from 'bluebird';
+const binary = require('node-pre-gyp');
+const path = require('path');
+const binding_path = binary.find(path.resolve(path.join(__dirname, '../../package.json')));
+const binding: RfcClientBinding = require(binding_path);
 
 interface RfcConnectionInfo {
 	host: string;
@@ -104,18 +57,6 @@ interface RfcClientBinding {
 	verbose(): this;
 }
 
-export interface RfcCallOptions {
-	notRequested?: Array<String>;
-	timeout?: number;
-}
-
-export type RfcVariable = string | number | Buffer;
-export type RfcArray = Array<RfcVariable>;
-export type RfcStructure = { [key: string]: RfcVariable | RfcStructure | RfcTable };
-export type RfcTable = Array<RfcStructure>;
-export type RfcParameterValue = RfcVariable | RfcArray | RfcStructure | RfcTable;
-export type RfcObject = { [key: string]: RfcParameterValue };
-
 enum EnumSncQop {
 	DigSig = '1',
 	DigSigEnc = '2',
@@ -131,12 +72,66 @@ enum EnumTrace {
 	Full = '3',
 }
 
-const binary = require('node-pre-gyp');
-const path = require('path');
-const binding_path = binary.find(path.resolve(path.join(__dirname, '../../package.json')));
-const binding: RfcClientBinding = require(binding_path);
+export interface RfcCallOptions {
+	notRequested?: Array<String>;
+	timeout?: number;
+}
 
-import * as Promise from 'bluebird';
+export interface RfcConnectionParameters {
+	// general
+	saprouter?: string;
+	snc_lib?: string;
+	snc_myname?: string;
+	snc_partnername?: string;
+	snc_qop?: EnumSncQop;
+	trace?: EnumTrace;
+	// not supported
+	// pcs
+	// codepage
+	// noCompression
+
+	// client
+	user?: string;
+	passwd?: string;
+	client: string;
+	lang?: string;
+	mysapsso2?: string;
+	getsso2?: string;
+	x509cert?: string;
+
+	//
+	// destination
+	//
+
+	// specific server
+	dest?: string;
+	ashost?: string;
+	sysnr?: string;
+	gwhost?: string;
+	gwserv?: string;
+
+	// load balancing
+	//dest?: string,
+	group?: string;
+	r3name?: string;
+	sysid?: string;
+	mshost?: string;
+	msserv?: string;
+
+	// gateway
+	//dest?: string,
+	tpname?: string;
+	program_id?: string;
+	//gwhost?: string,
+	//gwserv?: string,
+}
+
+export type RfcVariable = string | number | Buffer;
+export type RfcArray = Array<RfcVariable>;
+export type RfcStructure = { [key: string]: RfcVariable | RfcStructure | RfcTable };
+export type RfcTable = Array<RfcStructure>;
+export type RfcParameterValue = RfcVariable | RfcArray | RfcStructure | RfcTable;
+export type RfcObject = { [key: string]: RfcParameterValue };
 
 export class Client {
 	private __client: RfcClientInstance;

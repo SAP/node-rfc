@@ -33,8 +33,9 @@ describe('[promise] Options', function() {
             });
     });
 
-    afterEach(function() {
+    afterEach(function(done) {
         client.close();
+        done();
     });
 
     it('Skip parameters, no error if some params skipped', function() {

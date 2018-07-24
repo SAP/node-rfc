@@ -20,19 +20,14 @@ const should = require('should');
 const abapSystem = require('./abapSystem')();
 
 describe('Error handling', function() {
-    let client;
-
-    beforeEach(function(done) {
-        client = new rfcClient(abapSystem);
-        client.connect(function(err) {
-            if (err) return done(err);
-            done();
-        });
+    let client = new rfcClient(abapSystem);
+    
+    before(function() {
+        return client.open();
     });
 
-    afterEach(function(done) {
+    after(function() {
         client.close();
-        done();
     });
 
     it('Logon failure with wrong credentials', function(done) {

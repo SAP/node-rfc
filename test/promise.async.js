@@ -24,22 +24,15 @@ const CONNECTIONS = 50;
 describe('[async/await] parallel and sequential, node > 7.6.0', function() {
 	this.timeout(15000);
 
-	let client = new rfcClient(abapSystem);
-	beforeEach(function(done) {
-		client = new rfcClient(abapSystem);
-		client
-			.open()
-			.then(() => {
-				done();
-			})
-			.catch(err => {
-				return done(err);
-			});
-	});
+    let client = new rfcClient(abapSystem);
+    
+    before(function() {
+        return client.open();
+    });
 
-	afterEach(function() {
-		client.close();
-	});
+    after(function() {
+        client.close();
+    });
 
 	const REQUTEXT = 'Hellö SÄP!';
 

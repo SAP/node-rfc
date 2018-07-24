@@ -1,5 +1,4 @@
 import * as Promise from 'bluebird';
-
 import { Client, RfcConnectionParameters } from './sapnwrfc-client';
 
 export interface RfcPoolOptions {

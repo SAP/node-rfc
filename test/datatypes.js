@@ -22,17 +22,13 @@ const Utils = require('./utils');
 const abapSystem = require('./abapSystem')();
 
 describe('Datatypes', function() {
-    let client;
-
-    beforeEach(function(done) {
-        client = new rfcClient(abapSystem);
-        client.connect(function(err) {
-            if (err) return done(err);
-            done();
-        });
+    let client = new rfcClient(abapSystem);
+    
+    before(function() {
+        return client.open();
     });
 
-    afterEach(function() {
+    after(function() {
         client.close();
     });
 

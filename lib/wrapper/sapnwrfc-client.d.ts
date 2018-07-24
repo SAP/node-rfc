@@ -1,31 +1,5 @@
 /// <reference types="node" />
-export interface RfcConnectionParameters {
-    saprouter?: string;
-    snc_lib?: string;
-    snc_myname?: string;
-    snc_partnername?: string;
-    snc_qop?: EnumSncQop;
-    trace?: EnumTrace;
-    user?: string;
-    passwd?: string;
-    client: string;
-    lang?: string;
-    mysapsso2?: string;
-    getsso2?: string;
-    x509cert?: string;
-    dest?: string;
-    ashost?: string;
-    sysnr?: string;
-    gwhost?: string;
-    gwserv?: string;
-    group?: string;
-    r3name?: string;
-    sysid?: string;
-    mshost?: string;
-    msserv?: string;
-    tpname?: string;
-    program_id?: string;
-}
+import * as Promise from 'bluebird';
 interface RfcConnectionInfo {
     host: string;
     partnerHost: string;
@@ -55,20 +29,6 @@ interface RfcClientVersion {
     patch: string;
     binding: string;
 }
-export interface RfcCallOptions {
-    notRequested?: Array<String>;
-    timeout?: number;
-}
-export declare type RfcVariable = string | number | Buffer;
-export declare type RfcArray = Array<RfcVariable>;
-export declare type RfcStructure = {
-    [key: string]: RfcVariable | RfcStructure | RfcTable;
-};
-export declare type RfcTable = Array<RfcStructure>;
-export declare type RfcParameterValue = RfcVariable | RfcArray | RfcStructure | RfcTable;
-export declare type RfcObject = {
-    [key: string]: RfcParameterValue;
-};
 declare enum EnumSncQop {
     DigSig = "1",
     DigSigEnc = "2",
@@ -82,7 +42,47 @@ declare enum EnumTrace {
     Verbose = "2",
     Full = "3"
 }
-import * as Promise from 'bluebird';
+export interface RfcCallOptions {
+    notRequested?: Array<String>;
+    timeout?: number;
+}
+export interface RfcConnectionParameters {
+    saprouter?: string;
+    snc_lib?: string;
+    snc_myname?: string;
+    snc_partnername?: string;
+    snc_qop?: EnumSncQop;
+    trace?: EnumTrace;
+    user?: string;
+    passwd?: string;
+    client: string;
+    lang?: string;
+    mysapsso2?: string;
+    getsso2?: string;
+    x509cert?: string;
+    dest?: string;
+    ashost?: string;
+    sysnr?: string;
+    gwhost?: string;
+    gwserv?: string;
+    group?: string;
+    r3name?: string;
+    sysid?: string;
+    mshost?: string;
+    msserv?: string;
+    tpname?: string;
+    program_id?: string;
+}
+export declare type RfcVariable = string | number | Buffer;
+export declare type RfcArray = Array<RfcVariable>;
+export declare type RfcStructure = {
+    [key: string]: RfcVariable | RfcStructure | RfcTable;
+};
+export declare type RfcTable = Array<RfcStructure>;
+export declare type RfcParameterValue = RfcVariable | RfcArray | RfcStructure | RfcTable;
+export declare type RfcObject = {
+    [key: string]: RfcParameterValue;
+};
 export declare class Client {
     private __client;
     constructor(connectionParams: RfcConnectionParameters);

@@ -337,7 +337,7 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
     (new PrepareAsync(callback, this, rfmName, notRequested, rfmParams))->Queue();
 
     return info.Env().Undefined();
-} // namespace node_rfc
+}
 
 void Client::LockMutex(void)
 {

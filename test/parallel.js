@@ -24,12 +24,9 @@ const CONNECTIONS = 50;
 describe('Parallel and Sequential', function() {
     this.timeout(15000);
     let client = new rfcClient(abapSystem);
-
-    before(function(done) {
-        client.connect(function(err) {
-            if (err) return done(err);
-            done();
-        });
+    
+    before(function() {
+        return client.open();
     });
 
     after(function() {

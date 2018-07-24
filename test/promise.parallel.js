@@ -86,7 +86,7 @@ describe('[promise] Parallel and Sequential', function() {
         }
     });
 
-    xit(`${CONNECTIONS} parallel calls with single connection`, function() {
+    it(`${CONNECTIONS} parallel calls with single connection`, function() {
         let promises = [];
         for (let counter = 0; counter < CONNECTIONS; counter++) {
             promises.push(
@@ -104,14 +104,13 @@ describe('[promise] Parallel and Sequential', function() {
 
     it(`${CONNECTIONS} recursive calls with single connection`, function(done) {
         let rec = function(depth) {
-            if (depth == CONNECTIONS) {
+            if (depth === CONNECTIONS) {
                 done();
                 return;
             }
-            return client
+            client
                 .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth })
                 .then(res => {
-                    //should.not.exist(err);
                     should.exist(res);
                     res.should.be.an.Object();
                     res.should.have.property('ECHOTEXT');
@@ -119,9 +118,9 @@ describe('[promise] Parallel and Sequential', function() {
                     rec(depth + 1);
                 })
                 .catch(err => {
-                    return done(err);
+                    return done(new Error(JSON.stringify(err)));
                 });
         };
-        rec(0);
+        rec(1);
     });
 });

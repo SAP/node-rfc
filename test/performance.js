@@ -21,12 +21,9 @@ const abapSystem = require('./abapSystem')();
 
 describe('Performance', function() {
     let client = new rfcClient(abapSystem);
-
-    before(function(done) {
-        client.connect(function(err) {
-            if (err) return done(err);
-            done();
-        });
+    
+    before(function() {
+        return client.open();
     });
 
     after(function() {

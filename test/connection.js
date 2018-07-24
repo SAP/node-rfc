@@ -20,14 +20,10 @@ const should = require('should');
 const abapSystem = require('./abapSystem')();
 
 describe('Connection', function() {
-    let client;
-
-    before(function(done) {
-        client = new rfcClient(abapSystem);
-        client.connect(function(err) {
-            if (err) return done(err);
-            done();
-        });
+    let client = new rfcClient(abapSystem);
+    
+    before(function() {
+        return client.open();
     });
 
     after(function() {
