@@ -67,8 +67,8 @@ describe('[promise] Parallel and Sequential', function() {
         for (let i = 0; i < count; i++) {
             CLIENTS.push(new rfcClient(abapSystem));
         }
-        for (let client of CLIENTS) {
-            client.open().then(() => {
+        for (let c of CLIENTS) {
+            c.open().then(client => {
                 client
                     .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id })
                     .then(res => {

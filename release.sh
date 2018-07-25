@@ -13,8 +13,12 @@
 # abi required as long node < 6.14.2 support needed
 # https://github.com/nodejs/node-addon-api/issues/310#issuecomment-406659222
 
-declare -a LTS_BUILD=("6.9.0" "6.14.2" "10.0.0")
-declare -a LTS_TEST=("6.14.3" "8.11.3" "10.7.0")
+# Prerequisites:
+# nvm install $lts
+# npm -g install npm
+
+declare -a LTS_BUILD=("6.14.1" "8.11.3" "10.7.0")
+declare -a LTS_TEST=("6.9.0" "6.14.3" "8.9.0" "8.11.3" "10.0.0" "10.7.0")
 
 version=`cat ./VERSION` 
 
@@ -22,33 +26,38 @@ if [ "$(expr substr $(uname -s) 1 4)" == "MSYS" ]; then
 	osext="win32"
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
 	osext="linux"
+    rm -rf build/stage
 else
     platform="$(expr substr $(uname -s) 1 10)"
 	printf "\nPlatform not supported: $platform\n"
 	exit 1
 fi
 
-printf "\nPlatform: $osext\n"
+BUILD_LOG="test/build-$osext.log"
 
-rm -rf build/stage
+rm $BUILD_LOG
 
+: '
+rm -rf lib/binding/$osext-*
 for lts in "${LTS_BUILD[@]}"
 do
-    nvm install $lts && nvm use $lts && npm -g i npm
-
-    rm -rf node_modules build/Release
-    npm install
-    # abi=`node --eval "console.log(require('node-abi').getAbi())"`
+    nvm use $lts
+    # npm i --only=dev
+    npm install @babel/core @types/node decimal.js \
+		node-gyp node-pre-gyp node-addon-api \
+        typescript mocha should aws-sdk && \
     npm run build && \
-    node-pre-gyp clean configure build && \
-    node-pre-gyp testbinary package reveal
-
-    npm run test
+    node-pre-gyp clean configure build package testpackage reveal
 done
+'
 
 for lts in "${LTS_TEST[@]}"
 do
-    nvm install $lts && nvm use $lts && npm -g i npm
-    npm run test
+    nvm use $lts
+    npm run test && \
+    echo node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)') napi:$(node -e 'console.log(process.versions.napi)') >> $BUILD_LOG
 done
+
+# cleanup
+rm -rf build/node_modules build/release
 
