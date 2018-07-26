@@ -14,20 +14,20 @@
 
 'use strict';
 
-const rfcClient = require('../lib').Client;
 const should = require('should');
 
+const rfcClient = require('./noderfc').Client;
 const abapSystem = require('./abapSystem')();
 
 describe('Connection', function() {
     let client = new rfcClient(abapSystem);
-    
-    before(function() {
-        return client.open();
+
+    beforeEach(function() {
+        if (!client.isAlive) return client.open();
     });
 
-    after(function() {
-        client.close();
+    afterEach(function() {
+        if (client.isAlive) return client.close();
     });
 
     it('sapnwrfc client id check', function(done) {
@@ -100,22 +100,45 @@ describe('Connection', function() {
             sysNumber: abapSystem.sysnr,
             client: abapSystem.client,
         });
-        client.close();
-        client.connectionInfo.should.be.an.Object().and.be.empty();
-        done();
+        client.close(err => {
+            if (err) return done(err);
+            client.connectionInfo.should.be.an.Object().and.be.empty();
+            done();
+        });
     });
 
     it('isAlive and ping() should return true when connected', function(done) {
         client.isAlive.should.be.true;
-        client.ping().should.be.true;
-        done();
+        client
+            .ping()
+            .then(res => {
+                res.should.be.true;
+                done();
+            })
+            .catch(err => {
+                done(err);
+            });
     });
 
     it('isAlive and ping() should return false after close()', function(done) {
-        client.close();
-        client.isAlive.should.be.false;
-        client.ping().should.be.false;
-        done();
+        client.close(() => {
+            client.isAlive.should.be.false;
+            client
+                .ping()
+                .then(res => {
+                    done(res);
+                })
+                .catch(err => {
+                    err.should.be.an.Object();
+                    err.should.have.properties({
+                        name: 'RfcLibError',
+                        code: 13,
+                        key: 'RFC_INVALID_HANDLE',
+                        message: 'An invalid handle was passed to the API call',
+                    });
+                    done();
+                });
+        });
     });
 
     it('reopen() should reopen the connection', function(done) {

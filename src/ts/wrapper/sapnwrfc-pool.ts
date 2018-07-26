@@ -43,14 +43,15 @@ export class Pool {
 	}
 
 	release(client: Client) {
-		client.close();
-		this.__clients.ready.set(client.id, client.open());
+		client.close(() => {
+			this.__clients.ready.set(client.id, client.open());
+		});
 	}
 
 	releaseAll() {
 		this.__clients.ready.forEach(cp => {
 			cp.then(client => {
-				client.close();
+				client.close(() => {});
 			});
 		});
 		this.__clients.ready = new Map();

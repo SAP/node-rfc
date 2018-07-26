@@ -14,7 +14,7 @@
 
 'use strict';
 
-const Pool = require('../lib').Pool;
+const Pool = require('./noderfc').Pool;
 const should = require('should');
 const abapSystem = require('./abapSystem')();
 

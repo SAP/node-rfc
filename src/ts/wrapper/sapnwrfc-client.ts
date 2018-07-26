@@ -43,9 +43,9 @@ interface RfcClientInstance {
 	connectionInfo(): RfcConnectionInfo;
 	connect(callback: Function): any;
 	invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): any;
-	ping(): void;
-	close(): object;
-	reopen(callback: Function): void;
+	ping(callback: Function | undefined): void | Promise<void>;
+	close(callback: Function | undefined): void | Promise<void>;
+	reopen(callback: Function | undefined): void | Promise<void>;
 	isAlive(): boolean;
 	id: number;
 	version: RfcClientVersion;
@@ -233,16 +233,52 @@ export class Client {
 		}
 	}
 
-	close() {
-		return this.__client.close();
+	close(callback: Function | undefined) {
+		if (typeof callback === 'function') {
+			return this.__client.close(callback);
+		} else {
+			return new Promise((resolve, reject) => {
+				this.__client.close((err: any) => {
+					if (err) {
+						reject(err);
+					} else {
+						resolve();
+					}
+				});
+			});
+		}
 	}
 
-	reopen(callback: Function) {
-		return this.__client.reopen(callback);
+	reopen(callback: Function | undefined) {
+		if (typeof callback === 'function') {
+			return this.__client.reopen(callback);
+		} else {
+			return new Promise((resolve, reject) => {
+				this.__client.reopen((err: any) => {
+					if (err) {
+						reject(err);
+					} else {
+						resolve();
+					}
+				});
+			});
+		}
 	}
 
-	ping() {
-		return this.__client.ping();
+	ping(callback: Function | undefined) {
+		if (typeof callback === 'function') {
+			return this.__client.ping(callback);
+		} else {
+			return new Promise((resolve, reject) => {
+				this.__client.ping((err: any) => {
+					if (err) {
+						reject(err);
+					} else {
+						resolve(true);
+					}
+				});
+			});
+		}
 	}
 
 	get isAlive(): boolean {

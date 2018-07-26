@@ -14,9 +14,9 @@
 
 'use strict';
 
-const rfcClient = require('../lib').Client;
+const rfcClient = require('./noderfc').Client;
 const should = require('should');
-
+const Promise = require('bluebird');
 const abapSystem = require('./abapSystem')();
 
 const CONNECTIONS = 50;
@@ -25,20 +25,13 @@ describe('[promise] Parallel and Sequential', function() {
     this.timeout(15000);
 
     let client = new rfcClient(abapSystem);
-    beforeEach(function(done) {
-        client = new rfcClient(abapSystem);
-        client
-            .open()
-            .then(() => {
-                done();
-            })
-            .catch(err => {
-                return done(err);
-            });
+
+    beforeEach(function() {
+        if (!client.isAlive) return client.open();
     });
 
     afterEach(function() {
-        client.close();
+        if (client.isAlive) return client.close();
     });
 
     const REQUTEXT = 'Hellö SÄP!';

@@ -90,9 +90,9 @@ export declare class Client {
     call(rfmName: string, rfmParams: RfcObject, callOptions?: RfcCallOptions): Promise<RfcObject>;
     connect(callback: Function): void;
     invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): void;
-    close(): object;
-    reopen(callback: Function): void;
-    ping(): void;
+    close(callback: Function | undefined): void | Promise<void> | Promise<{}>;
+    reopen(callback: Function | undefined): void | Promise<void> | Promise<{}>;
+    ping(callback: Function | undefined): void | Promise<void> | Promise<{}>;
     readonly isAlive: boolean;
     readonly id: number;
     readonly version: RfcClientVersion;

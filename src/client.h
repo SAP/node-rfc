@@ -30,7 +30,9 @@ class Client : public Napi::ObjectWrap<Client>
 {
 public:
   friend class ConnectAsync;
-
+  friend class CloseAsync;
+  friend class ReopenAsync;
+  friend class PingAsync;
   friend class PrepareAsync;
   friend class InvokeAsync;
 

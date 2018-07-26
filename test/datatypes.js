@@ -14,7 +14,8 @@
 
 'use strict';
 
-const rfcClient = require('../lib').Client;
+const Promise = require('bluebird');
+const rfcClient = require('./noderfc').Client;
 const should = require('should');
 const Decimal = require('decimal.js');
 const Utils = require('./utils');
@@ -23,13 +24,13 @@ const abapSystem = require('./abapSystem')();
 
 describe('Datatypes', function() {
     let client = new rfcClient(abapSystem);
-    
-    before(function() {
-        return client.open();
+
+    beforeEach(function() {
+        if (!client.isAlive) return client.open();
     });
 
-    after(function() {
-        client.close();
+    afterEach(function() {
+        if (client.isAlive) return client.close();
     });
 
     it('CHAR type check', function(done) {

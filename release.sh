@@ -37,23 +37,21 @@ BUILD_LOG="test/build-$osext.log"
 
 rm $BUILD_LOG
 
-: '
+#: '
 rm -rf lib/binding/$osext-*
 for lts in "${LTS_BUILD[@]}"
 do
     nvm use $lts
     # npm i --only=dev
-    npm install @babel/core @types/node decimal.js \
-		node-gyp node-pre-gyp node-addon-api \
-        typescript mocha should aws-sdk && \
-    npm run build && \
-    node-pre-gyp clean configure build package testpackage reveal
+    npm install @babel/core @types/node decimal.js node-gyp node-pre-gyp node-addon-api typescript mocha should aws-sdk
+    npm run build && node-pre-gyp clean configure build package testpackage reveal
 done
-'
+#'
 
 for lts in "${LTS_TEST[@]}"
 do
     nvm use $lts
+    npm install @babel/core @types/node decimal.js node-gyp node-pre-gyp node-addon-api typescript mocha should aws-sdk 
     npm run test && \
     echo node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)') napi:$(node -e 'console.log(process.versions.napi)') >> $BUILD_LOG
 done

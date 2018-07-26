@@ -14,9 +14,9 @@
 
 'use strict';
 
-const rfcClient = require('../lib').Client;
+const rfcClient = require('./noderfc').Client;
 const should = require('should');
-
+const Promise = require('bluebird');
 const abapSystem = require('./abapSystem')();
 
 const CONNECTIONS = 50;
@@ -24,26 +24,31 @@ const CONNECTIONS = 50;
 describe('[async/await] parallel and sequential, node > 7.6.0', function() {
 	this.timeout(15000);
 
-    let client = new rfcClient(abapSystem);
-    
-    before(function() {
-        return client.open();
-    });
+	let client = new rfcClient(abapSystem);
 
-    after(function() {
-        client.close();
-    });
+	beforeEach(function() {
+		if (!client.isAlive) return client.open();
+	});
+
+	afterEach(function() {
+		if (client.isAlive) return client.close();
+	});
 
 	const REQUTEXT = 'Hellö SÄP!';
 
 	it(`async/await ${CONNECTIONS} calls with single connection`, function(done) {
 		async function run() {
 			for (let i = CONNECTIONS; i > 0; i--) {
-				let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + i });
-				res.should.be.an.Object();
-				res.should.have.property('ECHOTEXT');
-				res.ECHOTEXT.should.startWith(REQUTEXT + i);
-				if (i === 1) done();
+				try {
+					let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + i });
+
+					res.should.be.an.Object();
+					res.should.have.property('ECHOTEXT');
+					res.ECHOTEXT.should.startWith(REQUTEXT + i);
+					if (i === 1) done();
+				} catch (ex) {
+					done(ex);
+				}
 			}
 		}
 
@@ -56,11 +61,15 @@ describe('[async/await] parallel and sequential, node > 7.6.0', function() {
 				done();
 				return;
 			}
-			let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth });
-			res.should.be.an.Object();
-			res.should.have.property('ECHOTEXT');
-			res.ECHOTEXT.should.startWith(REQUTEXT + depth);
-			run(depth + 1);
+			try {
+				let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth });
+				res.should.be.an.Object();
+				res.should.have.property('ECHOTEXT');
+				res.ECHOTEXT.should.startWith(REQUTEXT + depth);
+				run(depth + 1);
+			} catch (ex) {
+				done(ex);
+			}
 		}
 		run(0);
 	});
@@ -73,13 +82,17 @@ describe('[async/await] parallel and sequential, node > 7.6.0', function() {
 		}
 		for (let client of CLIENTS) {
 			(async () => {
-				await client.open();
-				let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id });
-				res.should.be.an.Object();
-				res.should.have.property('ECHOTEXT');
-				res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
-				client.close();
-				if (--count === 1) done();
+				try {
+					await client.open();
+					let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id });
+					res.should.be.an.Object();
+					res.should.have.property('ECHOTEXT');
+					res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
+					client.close();
+					if (--count === 1) done();
+				} catch (ex) {
+					done(ex);
+				}
 			})();
 		}
 	});

@@ -55,6 +55,110 @@ class ConnectAsync : public Napi::AsyncWorker
     Client *client;
 };
 
+class CloseAsync : public Napi::AsyncWorker
+{
+  public:
+    CloseAsync(Napi::Function &callback, Client *client)
+        : Napi::AsyncWorker(callback), client(client) {}
+    ~CloseAsync() {}
+
+    void Execute()
+    {
+        client->alive = false;
+
+        //rc = RfcIsConnectionHandleValid(client->connectionHandle, &isValid, &errorInfo);
+        //if (rc == RFC_OK && isValid)
+        //{
+        rc = RfcCloseConnection(client->connectionHandle, &errorInfo);
+        //}
+    }
+
+    void OnOK()
+    {
+        //if (rc != RFC_OK)
+        //{
+        //    Napi::Value argv[1] = {wrapError(&errorInfo)};
+        //    TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
+        //}
+        //else
+        //{
+        TRY_CATCH_CALL(Env().Global(), Callback(), 0, {});
+        //}
+    }
+
+  private:
+    Client *client;
+    RFC_RC rc;
+    RFC_INT isValid;
+    RFC_ERROR_INFO errorInfo;
+};
+
+class ReopenAsync : public Napi::AsyncWorker
+{
+  public:
+    ReopenAsync(Napi::Function &callback, Client *client)
+        : Napi::AsyncWorker(callback), client(client) {}
+    ~ReopenAsync() {}
+
+    void Execute()
+    {
+        client->alive = false;
+
+        RfcCloseConnection(client->connectionHandle, &client->errorInfo);
+
+        client->connectionHandle = RfcOpenConnection(client->connectionParams, client->paramSize, &client->errorInfo);
+    }
+
+    void OnOK()
+    {
+        client->alive = client->errorInfo.code == RFC_OK;
+        if (client->alive)
+        {
+            TRY_CATCH_CALL(Env().Global(), Callback(), 0, {});
+        }
+        else
+        {
+            Napi::Value argv[1] = {wrapError(&client->errorInfo)};
+            TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
+        }
+    }
+
+  private:
+    Client *client;
+};
+
+class PingAsync : public Napi::AsyncWorker
+{
+  public:
+    PingAsync(Napi::Function &callback, Client *client)
+        : Napi::AsyncWorker(callback), client(client) {}
+    ~PingAsync() {}
+
+    void Execute()
+    {
+        RfcPing(client->connectionHandle, &client->errorInfo);
+    }
+
+    void OnOK()
+    {
+        if (client->errorInfo.code != RFC_OK)
+        {
+            Napi::Value argv[1] = {wrapError(&client->errorInfo)};
+            TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
+        }
+        else
+        {
+            Napi::Value argv[2] = {Env().Undefined(), Napi::Boolean::New(Env(), TRUE)};
+            TRY_CATCH_CALL(Env().Global(), Callback(), 2, argv);
+        }
+    }
+
+  private:
+    Client *client;
+    RFC_RC rc;
+    RFC_INT isValid;
+};
+
 class InvokeAsync : public Napi::AsyncWorker
 {
   public:
@@ -150,7 +254,6 @@ class PrepareAsync : public Napi::AsyncWorker
 
         if (argv[0].IsUndefined())
         {
-
             Napi::Object params = rfmParams.Value();
             Napi::Array paramNames = params.GetPropertyNames();
             unsigned int paramSize = paramNames.Length();
@@ -351,20 +454,52 @@ void Client::UnlockMutex(void)
 
 Napi::Value Client::Close(const Napi::CallbackInfo &info)
 {
-    RFC_INT isValid;
-    RFC_ERROR_INFO errorInfo;
-
-    this->alive = false;
-
-    RFC_RC rc = RfcIsConnectionHandleValid(this->connectionHandle, &isValid, &errorInfo);
-    if (rc == RFC_OK && isValid)
+    if (info[0].IsUndefined())
     {
-        rc = RfcCloseConnection(this->connectionHandle, &errorInfo);
-        if (rc != RFC_OK)
-        {
-            return wrapError(&errorInfo);
-        }
+        Napi::TypeError::New(info.Env(), "First argument must be callback function").ThrowAsJavaScriptException();
     }
+    if (!info[0].IsFunction())
+    {
+        Napi::TypeError::New(info.Env(), "Callback function argument missing").ThrowAsJavaScriptException();
+    }
+    Napi::Function callback = info[0].As<Napi::Function>();
+
+    (new CloseAsync(callback, this))->Queue();
+
+    return info.Env().Undefined();
+}
+
+Napi::Value Client::Ping(const Napi::CallbackInfo &info)
+{
+
+    if (info[0].IsUndefined())
+    {
+        Napi::TypeError::New(info.Env(), "First argument must be callback function").ThrowAsJavaScriptException();
+    }
+    if (!info[0].IsFunction())
+    {
+        Napi::TypeError::New(info.Env(), "Callback function argument missing").ThrowAsJavaScriptException();
+    }
+    Napi::Function callback = info[0].As<Napi::Function>();
+
+    (new PingAsync(callback, this))->Queue();
+
+    return info.Env().Undefined();
+}
+
+Napi::Value Client::Reopen(const Napi::CallbackInfo &info)
+{
+    if (info[0].IsUndefined())
+    {
+        Napi::TypeError::New(info.Env(), "First argument must be callback function").ThrowAsJavaScriptException();
+    }
+    if (!info[0].IsFunction())
+    {
+        Napi::TypeError::New(info.Env(), "Callback function argument missing").ThrowAsJavaScriptException();
+    }
+    Napi::Function callback = info[0].As<Napi::Function>();
+
+    (new ReopenAsync(callback, this))->Queue();
 
     return info.Env().Undefined();
 }
@@ -414,27 +549,6 @@ Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
     }
 
     return infoObj;
-}
-
-Napi::Value Client::Ping(const Napi::CallbackInfo &info)
-{
-    RFC_RC rc;
-    RFC_ERROR_INFO errorInfo;
-    rc = RfcPing(this->connectionHandle, &errorInfo);
-    if (rc != RFC_OK)
-    {
-        return Napi::Boolean::New(info.Env(), FALSE);
-    }
-    else
-    {
-        return Napi::Boolean::New(info.Env(), TRUE);
-    }
-}
-
-Napi::Value Client::Reopen(const Napi::CallbackInfo &info)
-{
-    this->Close(info);
-    return this->Connect(info);
 }
 
 Napi::Value Client::IsAlive(const Napi::CallbackInfo &info)

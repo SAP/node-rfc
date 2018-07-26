@@ -14,7 +14,7 @@
 
 'use strict';
 
-const rfcClient = require('../lib').Client;
+const rfcClient = require('./noderfc').Client;
 const should = require('should');
 
 const abapSystem = require('./abapSystem')();
@@ -24,19 +24,19 @@ const CONNECTIONS = 50;
 describe('Parallel and Sequential', function() {
     this.timeout(15000);
     let client = new rfcClient(abapSystem);
-    
-    before(function() {
-        return client.open();
+
+    beforeEach(function() {
+        if (!client.isAlive) return client.open();
     });
 
-    after(function() {
-        client.close();
+    afterEach(function() {
+        if (client.isAlive) return client.close();
     });
 
     const REQUTEXT = 'Hellö SÄP!';
 
     it('Async test', function(done) {
-        let asyncRes = undefined;
+        let asyncRes;
         client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT }, function(err, res) {
             should.not.exist(err);
             should.exist(res);

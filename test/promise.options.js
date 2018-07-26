@@ -14,28 +14,20 @@
 
 'use strict';
 
-const rfcClient = require('../lib').Client;
+const rfcClient = require('./noderfc').Client;
 const should = require('should');
 
 const abapSystem = require('./abapSystem')();
 
 describe('[promise] Options', function() {
-    let client;
-    beforeEach(function(done) {
-        client = new rfcClient(abapSystem);
-        client
-            .open()
-            .then(() => {
-                done();
-            })
-            .catch(err => {
-                return done(err);
-            });
+    let client = new rfcClient(abapSystem);
+
+    beforeEach(function() {
+        if (!client.isAlive) return client.open();
     });
 
-    afterEach(function(done) {
-        client.close();
-        done();
+    afterEach(function() {
+        if (client.isAlive) return client.close();
     });
 
     it('Skip parameters, no error if some params skipped', function() {
