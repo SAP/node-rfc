@@ -26,13 +26,19 @@ describe('Concurrency', function() {
     let client = new rfcClient(abapSystem);
 
     beforeEach(function() {
-        if (!client.isAlive) return client.open();
+        //if (!client.isAlive) return client.open();
+        return client.open();
     });
 
     afterEach(function() {
-        if (client.isAlive) return client.close();
+        //if (client.isAlive) return client.close();
+        return client.close();
     });
 
+    after(function() {
+        return client.close();
+    });
+    
     const REQUTEXT = 'Hellö SÄP!';
 
     it('non-blocking invoke()', function(done) {

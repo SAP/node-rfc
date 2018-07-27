@@ -23,11 +23,17 @@ describe('Connection', function() {
     let client = new rfcClient(abapSystem);
 
     beforeEach(function() {
-        if (!client.isAlive) return client.open();
+        //if (!client.isAlive) return client.open();
+        return client.open();
     });
 
     afterEach(function() {
-        if (client.isAlive) return client.close();
+        //if (client.isAlive) return client.close();
+        return client.close();
+    });
+
+    after(function() {
+        return client.close();
     });
 
     it('VERSION == binding version == package.json version', function(done) {

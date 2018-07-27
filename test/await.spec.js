@@ -26,13 +26,19 @@ describe('[async/await] parallel and sequential, node > 7.6.0', function() {
 
 	let client = new rfcClient(abapSystem);
 
-	beforeEach(function() {
-		if (!client.isAlive) return client.open();
-	});
+    beforeEach(function() {
+        //if (!client.isAlive) return client.open();
+        return client.open();
+    });
 
-	afterEach(function() {
-		if (client.isAlive) return client.close();
-	});
+    afterEach(function() {
+        //if (client.isAlive) return client.close();
+        return client.close();
+    });
+
+    after(function() {
+        return client.close();
+    });
 
 	const REQUTEXT = 'Hellö SÄP!';
 

@@ -23,15 +23,21 @@ describe('Options promise', function() {
     let client = new rfcClient(abapSystem);
 
     beforeEach(function() {
-        if (!client.isAlive) return client.open();
+        //if (!client.isAlive) return client.open();
+        return client.open();
     });
 
     afterEach(function() {
-        if (client.isAlive) return client.close();
+        //if (client.isAlive) return client.close();
+        return client.close();
+    });
+
+    after(function() {
+        return client.close();
     });
 
     it('options: pass when some parameters skipped', function() {
-        this.timeout(5000);
+        this.timeout(10000);
         let notRequested = [
             'ET_COMPONENTS',
             'ET_HDR_HIERARCHY',
