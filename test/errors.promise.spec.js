@@ -19,7 +19,7 @@ const should = require('should');
 
 const abapSystem = require('./abapSystem')();
 
-describe('[promise] Error handling', function() {
+describe('Errors promise', function() {
     let client = new rfcClient(abapSystem);
 
     beforeEach(function() {
@@ -30,7 +30,7 @@ describe('[promise] Error handling', function() {
         if (client.isAlive) return client.close();
     });
 
-    it('Logon failure with wrong credentials', function(done) {
+    it('error: call() promise rejects invalid credentials', function(done) {
         let wrongParams = Object.assign({}, abapSystem);
         wrongParams.user = 'WRONGUSER';
 
@@ -52,7 +52,7 @@ describe('[promise] Error handling', function() {
             });
     });
 
-    it('Invoke with wrong parameter should return err RFC_INVALID_PARAMETER', function(done) {
+    it('error: call() promise rejects non-existing parameter', function(done) {
         client
             .call('STFC_CONNECTION', { XXX: 'wrong param' })
             .then(res => {
@@ -71,7 +71,7 @@ describe('[promise] Error handling', function() {
             });
     });
 
-    it('RFC_RAISE_ERROR should return error', function(done) {
+    it('error: promise call() RFC_RAISE_ERROR', function(done) {
         client
             .call('RFC_RAISE_ERROR', { MESSAGETYPE: 'A' })
             .then(res => {
@@ -93,7 +93,7 @@ describe('[promise] Error handling', function() {
             });
     });
 
-    it('Connection parameter missing', function(done) {
+    it('error: open() promise requires minimum of connection parameters', function(done) {
         let wrongParams = Object.assign({}, abapSystem);
         delete wrongParams.ashost;
 
@@ -115,20 +115,7 @@ describe('[promise] Error handling', function() {
             });
     });
 
-    it('No connection parameters provided at all', function(done) {
-        try {
-            new rfcClient();
-        } catch (err) {
-            should.exist(err);
-            err.should.have.properties({
-                message: 'Please provide connection parameters as argument',
-            });
-        } finally {
-            done();
-        }
-    });
-
-    it('At least two arguments must be provided', function(done) {
+    it('error: promise call() requires at least two arguments', function(done) {
         client.call('rfc').catch(err => {
             should.exist(err);
             err.should.have.properties({
@@ -139,7 +126,7 @@ describe('[promise] Error handling', function() {
         });
     });
 
-    it('First argument (remote function module name) must be an string', function(done) {
+    it('error: promise call() rejects non-string rfm name', function(done) {
         client.call(23, {}, 2).catch(err => {
             should.exist(err);
             err.should.have.properties({
@@ -150,7 +137,7 @@ describe('[promise] Error handling', function() {
         });
     });
 
-    it('Second argument (remote function module parameters) must be an object', function(done) {
+    it('error: promise call() rejects non-object second argument (remote function module parameters)', function(done) {
         client.call('rfc', 41, 2).catch(err => {
             should.exist(err);
             err.should.have.properties({

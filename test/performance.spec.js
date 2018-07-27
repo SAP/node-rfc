@@ -30,7 +30,7 @@ describe('Performance', function() {
         if (client.isAlive) return client.close();
     });
 
-    it('Invoke BAPI_USER_GET_DETAIL', function(done) {
+    it('performance: invoke() BAPI_USER_GET_DETAIL', function(done) {
         this.timeout(15000);
         client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' }, function(err, res) {
             should.not.exist(err);
@@ -50,7 +50,7 @@ describe('Performance', function() {
         });
     });
 
-    it('Invoke STFC_PERFORMANCE', function(done) {
+    it('performance: invoke() STFC_PERFORMANCE', function(done) {
         let COUNT = 10000;
         client.invoke(
             'STFC_PERFORMANCE',
@@ -66,7 +66,7 @@ describe('Performance', function() {
     });
 
     /*
-    it('Invoke SWNC_READ_SNAPSHOT', function(done) {
+    it('performance: invoke() SWNC_READ_SNAPSHOT', function(done) {
         function toABAPdate(date) {
             let mm = date.getMonth() + 1;
             let dd = date.getDate();

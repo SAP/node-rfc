@@ -66,31 +66,16 @@ class CloseAsync : public Napi::AsyncWorker
     {
         client->alive = false;
 
-        //rc = RfcIsConnectionHandleValid(client->connectionHandle, &isValid, &errorInfo);
-        //if (rc == RFC_OK && isValid)
-        //{
-        rc = RfcCloseConnection(client->connectionHandle, &errorInfo);
-        //}
+        RfcCloseConnection(client->connectionHandle, &client->errorInfo);
     }
 
     void OnOK()
     {
-        //if (rc != RFC_OK)
-        //{
-        //    Napi::Value argv[1] = {wrapError(&errorInfo)};
-        //    TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
-        //}
-        //else
-        //{
         TRY_CATCH_CALL(Env().Global(), Callback(), 0, {});
-        //}
     }
 
   private:
     Client *client;
-    RFC_RC rc;
-    RFC_INT isValid;
-    RFC_ERROR_INFO errorInfo;
 };
 
 class ReopenAsync : public Napi::AsyncWorker
@@ -141,22 +126,12 @@ class PingAsync : public Napi::AsyncWorker
 
     void OnOK()
     {
-        if (client->errorInfo.code != RFC_OK)
-        {
-            Napi::Value argv[1] = {wrapError(&client->errorInfo)};
-            TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
-        }
-        else
-        {
-            Napi::Value argv[2] = {Env().Undefined(), Napi::Boolean::New(Env(), TRUE)};
-            TRY_CATCH_CALL(Env().Global(), Callback(), 2, argv);
-        }
+        Napi::Value argv[2] = {Env().Undefined(), Napi::Boolean::New(Env(), client->errorInfo.code == RFC_OK)};
+        TRY_CATCH_CALL(Env().Global(), Callback(), 2, argv);
     }
 
   private:
     Client *client;
-    RFC_RC rc;
-    RFC_INT isValid;
 };
 
 class InvokeAsync : public Napi::AsyncWorker

@@ -31,9 +31,8 @@ describe('Pool', function() {
         pool.releaseAll();
     });
 
-    it('acquire id', function(done) {
-        pool
-            .acquire()
+    it('pool: acquire id', function(done) {
+        pool.acquire()
             .then(client => {
                 client.id.should.be.number;
                 ID = client.id;
@@ -50,9 +49,8 @@ describe('Pool', function() {
             });
     });
 
-    it('acquire id=1', function(done) {
-        pool
-            .acquire()
+    it('pool: acquire id=1', function(done) {
+        pool.acquire()
             .then(client => {
                 client.id.should.be.number;
                 client.id.should.equal(ID + 2);
@@ -69,9 +67,8 @@ describe('Pool', function() {
             });
     });
 
-    it('acquire id=3', function(done) {
-        pool
-            .acquire()
+    it('pool: acquire id=3', function(done) {
+        pool.acquire()
             .then(client => {
                 client.id.should.be.number;
                 client.id.should.equal(ID + 2);
@@ -86,7 +83,7 @@ describe('Pool', function() {
             });
     });
 
-    it('acquire 10', function(done) {
+    it('pool: acquire 10', function(done) {
         let id = new Set();
 
         for (let i = ID + 1; i < ID + 11; i++) {
@@ -101,9 +98,8 @@ describe('Pool', function() {
         }
     });
 
-    it('unique client id across pools', function(done) {
-        pool
-            .acquire()
+    it('pool: unique client id across pools', function(done) {
+        pool.acquire()
             .then(client => {
                 client.id.should.be.number;
                 client.id.should.equal(ID + 1);
@@ -125,7 +121,7 @@ describe('Pool', function() {
             });
     });
 
-    it('internal pool error', function(done) {
+    it('error: pool internal error', function(done) {
         let xpool = new Pool(abapSystem, { min: 0, max: 10 });
         xpool.acquire().catch(err => {
             err.name.should.equal('TypeError');

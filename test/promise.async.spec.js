@@ -36,7 +36,7 @@ describe('[async/await] parallel and sequential, node > 7.6.0', function() {
 
 	const REQUTEXT = 'Hellö SÄP!';
 
-	it(`async/await ${CONNECTIONS} calls with single connection`, function(done) {
+	it(`await: ${CONNECTIONS} sequential calls with single connection`, function(done) {
 		async function run() {
 			for (let i = CONNECTIONS; i > 0; i--) {
 				try {
@@ -55,7 +55,7 @@ describe('[async/await] parallel and sequential, node > 7.6.0', function() {
 		run();
 	});
 
-	it(`async/await ${CONNECTIONS} recursive calls with single connection`, function(done) {
+	it(`await: ${CONNECTIONS} recursive calls with single connection`, function(done) {
 		async function run(depth) {
 			if (depth == CONNECTIONS) {
 				done();
@@ -74,7 +74,7 @@ describe('[async/await] parallel and sequential, node > 7.6.0', function() {
 		run(0);
 	});
 
-	it(`async/await ${CONNECTIONS} parallel connections`, function(done) {
+	it(`await: ${CONNECTIONS} parallel connections`, function(done) {
 		let count = CONNECTIONS;
 		let CLIENTS = [];
 		for (let i = 0; i < count; i++) {

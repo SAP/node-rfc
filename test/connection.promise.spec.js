@@ -19,7 +19,7 @@ const should = require('should');
 
 const abapSystem = require('./abapSystem')();
 
-describe('[promise] Connection', function() {
+describe('Connection promise', function() {
     let client = new rfcClient(abapSystem);
 
     beforeEach(function() {
@@ -30,7 +30,7 @@ describe('[promise] Connection', function() {
         if (client.isAlive) return client.close();
     });
 
-    it('STFC_CONNECTION should return "Hello SAP!" string', function() {
+    it('call() STFC_CONNECTION should return string', function() {
         return client.call('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' }).then(res => {
             should.exist(res);
             res.should.be.an.Object();
@@ -39,7 +39,7 @@ describe('[promise] Connection', function() {
         });
     });
 
-    it('STFC_CONNECTION should return Umlauts "H€llö SAP!" string', function() {
+    it('call() STFC_CONNECTION should return umlauts', function() {
         return client.call('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' }).then(res => {
             should.exist(res);
             res.should.be.an.Object();
@@ -48,7 +48,7 @@ describe('[promise] Connection', function() {
         });
     });
 
-    it('STFC_STRUCTURE should return structure and table', function() {
+    it('call() STFC_STRUCTURE should return structure and table', function() {
         let importStruct = {
             RFCFLOAT: 1.23456789,
             RFCCHAR1: 'A',

@@ -19,7 +19,7 @@ const should = require('should');
 
 const abapSystem = require('./abapSystem')();
 
-describe('Error handling', function() {
+describe('Errors', function() {
     let client = new rfcClient(abapSystem);
 
     beforeEach(function() {
@@ -30,52 +30,20 @@ describe('Error handling', function() {
         if (client.isAlive) return client.close();
     });
 
-    it('Logon failure with wrong credentials', function(done) {
-        let wrongParams = Object.assign({}, abapSystem);
-        wrongParams.user = 'WRONGUSER';
-
-        let wrongClient = new rfcClient(wrongParams);
-        wrongClient.connect(function(err) {
+    it('error: new client requires connection parameters', function(done) {
+        try {
+            new rfcClient();
+        } catch (err) {
             should.exist(err);
             err.should.have.properties({
-                message: 'Name or password is incorrect (repeat logon)',
-                code: 2,
-                key: 'RFC_LOGON_FAILURE',
+                name: 'TypeError',
+                message: 'Connection parameters must be an object',
             });
             done();
-        });
+        }
     });
 
-    it('Invoke with wrong parameter should return err RFC_INVALID_PARAMETER', function(done) {
-        client.invoke('STFC_CONNECTION', { XXX: 'wrong param' }, function(err) {
-            should.exist(err);
-            err.should.be.an.Object();
-            err.should.have.properties({
-                code: 20,
-                key: 'RFC_INVALID_PARAMETER',
-                message: "field 'XXX' not found",
-            });
-            done();
-        });
-    });
-
-    it('RFC_RAISE_ERROR should return error', function(done) {
-        client.invoke('RFC_RAISE_ERROR', { MESSAGETYPE: 'A' }, function(err) {
-            should.exist(err);
-            err.should.be.an.Object();
-            err.should.have.properties({
-                code: 4,
-                key: 'Function not supported',
-                abapMsgClass: 'SR',
-                abapMsgType: 'A',
-                abapMsgNumber: '006',
-                message: 'Function not supported',
-            });
-            done();
-        });
-    });
-
-    it('Connection parameter missing', function(done) {
+    it('error: connect() requires minimum of connection parameters', function(done) {
         let wrongParams = Object.assign({}, abapSystem);
         delete wrongParams.ashost;
 
@@ -91,20 +59,23 @@ describe('Error handling', function() {
         });
     });
 
-    it('[new] No connection parameters provided at all', function(done) {
-        try {
-            new rfcClient();
-        } catch (err) {
+    it('error: conect() rejects invalid credentials', function(done) {
+        let wrongParams = Object.assign({}, abapSystem);
+        wrongParams.user = 'WRONGUSER';
+
+        let wrongClient = new rfcClient(wrongParams);
+        wrongClient.connect(function(err) {
             should.exist(err);
             err.should.have.properties({
-                name: 'TypeError',
-                message: 'Connection parameters must be an object',
+                message: 'Name or password is incorrect (repeat logon)',
+                code: 2,
+                key: 'RFC_LOGON_FAILURE',
             });
             done();
-        }
+        });
     });
 
-    it('[connect] First arg must be a callback function', function(done) {
+    it('error: connect() requires a callback function', function(done) {
         try {
             client.connect();
         } catch (err) {
@@ -117,7 +88,7 @@ describe('Error handling', function() {
         }
     });
 
-    it('[invoke] At least three args must be provided', function(done) {
+    it('error: invoke() requires at least three arguments', function(done) {
         try {
             client.invoke('rfc', {});
         } catch (err) {
@@ -130,7 +101,20 @@ describe('Error handling', function() {
         }
     });
 
-    it('[invoke] First arg (rfc module name) must be an string', function(done) {
+    it('error: invoke() rejects non-existing parameter', function(done) {
+        client.invoke('STFC_CONNECTION', { XXX: 'wrong param' }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object();
+            err.should.have.properties({
+                code: 20,
+                key: 'RFC_INVALID_PARAMETER',
+                message: "field 'XXX' not found",
+            });
+            done();
+        });
+    });
+
+    it('error: invoke() rejects non-string rfm name', function(done) {
         try {
             client.invoke(23, {}, 2);
         } catch (err) {
@@ -142,5 +126,21 @@ describe('Error handling', function() {
         } finally {
             done();
         }
+    });
+
+    it('error: invoke() RFC_RAISE_ERROR', function(done) {
+        client.invoke('RFC_RAISE_ERROR', { MESSAGETYPE: 'A' }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object();
+            err.should.have.properties({
+                code: 4,
+                key: 'Function not supported',
+                abapMsgClass: 'SR',
+                abapMsgType: 'A',
+                abapMsgNumber: '006',
+                message: 'Function not supported',
+            });
+            done();
+        });
     });
 });

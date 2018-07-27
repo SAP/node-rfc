@@ -30,7 +30,7 @@ describe('Options', function() {
         if (client.isAlive) return client.close();
     });
 
-    it('Skip parameters, no error if some params skipped', function(done) {
+    it('options: pass when some parameters skipped', function(done) {
         this.timeout(10000);
         let notRequested = [
             'ET_COMPONENTS',
@@ -62,7 +62,7 @@ describe('Options', function() {
         });
     });
 
-    it('Skip parameters, error if all requested', function(done) {
+    it('options: error when all requested', function(done) {
         client.connect(function(err) {
             should.not.exist(err);
             client.invoke(

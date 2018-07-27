@@ -30,7 +30,17 @@ describe('Connection', function() {
         if (client.isAlive) return client.close();
     });
 
-    it('sapnwrfc client id check', function(done) {
+    it('VERSION == binding version == package.json version', function(done) {
+        let VERSION = require('fs')
+            .readFileSync('VERSION')
+            .toString()
+            .trim();
+        require('../package.json').version.should.be.equal(VERSION);
+        client.version.binding.should.equal(VERSION);
+        done();
+    });
+
+    it('exception: Client id getter set', function(done) {
         client.id.should.be.number;
         client.id.should.be.greaterThan(0);
         let n = client.id;
@@ -46,7 +56,7 @@ describe('Connection', function() {
         }
     });
 
-    it('sapnwrfc client version check', function(done) {
+    it('exception: Client version getter set', function(done) {
         client.version.should.be.an.Object();
         client.version.should.have.properties('major', 'minor', 'patchLevel', 'binding');
         try {
@@ -58,16 +68,6 @@ describe('Connection', function() {
             });
             done();
         }
-    });
-
-    it('VERSION should match binding version and package.json version', function(done) {
-        let VERSION = require('fs')
-            .readFileSync('VERSION')
-            .toString()
-            .trim();
-        require('../package.json').version.should.be.equal(VERSION);
-        client.version.binding.should.equal(VERSION);
-        done();
     });
 
     it('connectionInfo() should return connection information', function(done) {
@@ -107,7 +107,7 @@ describe('Connection', function() {
         });
     });
 
-    it('isAlive and ping() should return true when connected', function(done) {
+    it('isAlive and ping() should be true when connected', function(done) {
         client.isAlive.should.be.true;
         client
             .ping()
@@ -120,29 +120,23 @@ describe('Connection', function() {
             });
     });
 
-    it('isAlive and ping() should return false after close()', function(done) {
+    it('isAlive ands ping() should be false when disconnected', function(done) {
         client.close(() => {
             client.isAlive.should.be.false;
             client
                 .ping()
                 .then(res => {
-                    done(res);
+                    res.should.be.false;
+                    done();
                 })
                 .catch(err => {
-                    err.should.be.an.Object();
-                    err.should.have.properties({
-                        name: 'RfcLibError',
-                        code: 13,
-                        key: 'RFC_INVALID_HANDLE',
-                        message: 'An invalid handle was passed to the API call',
-                    });
-                    done();
+                    done(err);
                 });
         });
     });
 
     it('reopen() should reopen the connection', function(done) {
-        client.isAlive.should.be.false;
+        client.isAlive.should.be.true;
         client.reopen(function(err) {
             should.not.exist(err);
             client.isAlive.should.be.true;
@@ -156,7 +150,7 @@ describe('Connection', function() {
         });
     });
 
-    it('STFC_CONNECTION should return "Hello SAP!" string', function(done) {
+    it('invoke() STFC_CONNECTION should return string', function(done) {
         client.invoke('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' }, function(err, res) {
             should.not.exist(err);
             should.exist(res);
@@ -167,7 +161,7 @@ describe('Connection', function() {
         });
     });
 
-    it('STFC_CONNECTION should return Umlauts "H€llö SAP!" string', function(done) {
+    it('invoke() STFC_CONNECTION should return umlauts', function(done) {
         client.invoke('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' }, function(err, res) {
             should.not.exist(err);
             should.exist(res);
@@ -178,7 +172,7 @@ describe('Connection', function() {
         });
     });
 
-    it('STFC_STRUCTURE should return structure and table', function(done) {
+    it('invoke() STFC_STRUCTURE should return structure and table', function(done) {
         let importStruct = {
             RFCFLOAT: 1.23456789,
             RFCCHAR1: 'A',

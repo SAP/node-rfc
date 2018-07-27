@@ -21,7 +21,7 @@ const abapSystem = require('./abapSystem')();
 
 const CONNECTIONS = 50;
 
-describe('Parallel and Sequential', function() {
+describe('Concurrency', function() {
     this.timeout(15000);
     let client = new rfcClient(abapSystem);
 
@@ -35,7 +35,7 @@ describe('Parallel and Sequential', function() {
 
     const REQUTEXT = 'Hellö SÄP!';
 
-    it('Async test', function(done) {
+    it('non-blocking invoke()', function(done) {
         let asyncRes;
         client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT }, function(err, res) {
             should.not.exist(err);
@@ -49,7 +49,7 @@ describe('Parallel and Sequential', function() {
         should.not.exist(asyncRes);
     });
 
-    it(`${CONNECTIONS} parallel connections`, function(done) {
+    it(`concurrency: ${CONNECTIONS} connections invoke()`, function(done) {
         let count = CONNECTIONS;
         let CLIENTS = [];
         for (let i = 0; i < count; i++) {
@@ -71,7 +71,7 @@ describe('Parallel and Sequential', function() {
         }
     });
 
-    it(`${CONNECTIONS} parallel calls with single connection`, function(done) {
+    it(`concurrency: 1 connection, ${CONNECTIONS} invoke() calls`, function(done) {
         let count = CONNECTIONS;
         for (let i = count; i > 0; i--) {
             client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id }, function(err, res) {
@@ -85,20 +85,20 @@ describe('Parallel and Sequential', function() {
         }
     });
 
-    it(`${CONNECTIONS} recursive calls with single connection`, function(done) {
+    it(`concurrency: 1 connection ${CONNECTIONS} recursive invoke() calls`, function(done) {
         let rec = function(depth) {
-            if (depth == CONNECTIONS) {
+            if (depth < CONNECTIONS) {
+                client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth }, function(err, res) {
+                    should.not.exist(err);
+                    should.exist(res);
+                    res.should.be.an.Object();
+                    res.should.have.property('ECHOTEXT');
+                    res.ECHOTEXT.should.startWith(REQUTEXT + depth);
+                    rec(depth + 1);
+                });
+            } else {
                 done();
-                return;
             }
-            client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth }, function(err, res) {
-                should.not.exist(err);
-                should.exist(res);
-                res.should.be.an.Object();
-                res.should.have.property('ECHOTEXT');
-                res.ECHOTEXT.should.startWith(REQUTEXT + depth);
-                rec(depth + 1);
-            });
         };
         rec(0);
     });

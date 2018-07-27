@@ -19,7 +19,7 @@ const should = require('should');
 
 const abapSystem = require('./abapSystem')();
 
-describe('[promise] Options', function() {
+describe('Options promise', function() {
     let client = new rfcClient(abapSystem);
 
     beforeEach(function() {
@@ -30,7 +30,7 @@ describe('[promise] Options', function() {
         if (client.isAlive) return client.close();
     });
 
-    it('Skip parameters, no error if some params skipped', function() {
+    it('options: pass when some parameters skipped', function() {
         this.timeout(5000);
         let notRequested = [
             'ET_COMPONENTS',
@@ -57,7 +57,7 @@ describe('[promise] Options', function() {
             });
     });
 
-    it('Skip parameters, error if all requested', function() {
+    it('options: error when all requested', function() {
         return client
             .call('EAM_TASKLIST_GET_DETAIL', {
                 IV_PLNTY: 'A',

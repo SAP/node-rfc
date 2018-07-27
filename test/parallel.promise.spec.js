@@ -21,7 +21,7 @@ const abapSystem = require('./abapSystem')();
 
 const CONNECTIONS = 50;
 
-describe('[promise] Parallel and Sequential', function() {
+describe('Concurrency promises', function() {
     this.timeout(15000);
 
     let client = new rfcClient(abapSystem);
@@ -36,7 +36,7 @@ describe('[promise] Parallel and Sequential', function() {
 
     const REQUTEXT = 'Hellö SÄP!';
 
-    it('Async test', function(done) {
+    it('non-blocking call()', function(done) {
         let asyncRes = undefined;
         client
             .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT })
@@ -54,7 +54,7 @@ describe('[promise] Parallel and Sequential', function() {
         should.not.exist(asyncRes);
     });
 
-    it(`${CONNECTIONS} parallel connections`, function(done) {
+    it(`concurrency: ${CONNECTIONS} connections call()`, function(done) {
         let count = CONNECTIONS;
         let CLIENTS = [];
         for (let i = 0; i < count; i++) {
@@ -79,7 +79,7 @@ describe('[promise] Parallel and Sequential', function() {
         }
     });
 
-    it(`${CONNECTIONS} parallel calls with single connection`, function() {
+    it(`concurrency: 1 connection, ${CONNECTIONS} call() calls`, function() {
         let promises = [];
         for (let counter = 0; counter < CONNECTIONS; counter++) {
             promises.push(
@@ -95,25 +95,25 @@ describe('[promise] Parallel and Sequential', function() {
         return Promise.all(promises);
     });
 
-    it(`${CONNECTIONS} recursive calls with single connection`, function(done) {
-        let rec = function(depth) {
-            if (depth === CONNECTIONS) {
+    it(`concurrency: 1 connection, ${CONNECTIONS} recursive call() calls`, function(done) {
+        function rec(depth) {
+            if (depth < CONNECTIONS) {
+                client
+                    .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth })
+                    .then(res => {
+                        should.exist(res);
+                        res.should.be.an.Object();
+                        res.should.have.property('ECHOTEXT');
+                        res.ECHOTEXT.should.startWith(REQUTEXT + depth);
+                        rec(depth + 1);
+                    })
+                    .catch(err => {
+                        done(new Error(JSON.stringify(err)));
+                    });
+            } else {
                 done();
-                return;
             }
-            client
-                .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth })
-                .then(res => {
-                    should.exist(res);
-                    res.should.be.an.Object();
-                    res.should.have.property('ECHOTEXT');
-                    res.ECHOTEXT.should.startWith(REQUTEXT + depth);
-                    rec(depth + 1);
-                })
-                .catch(err => {
-                    return done(new Error(JSON.stringify(err)));
-                });
-        };
+        }
         rec(1);
     });
 });

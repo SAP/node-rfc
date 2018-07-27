@@ -14,7 +14,6 @@
 
 'use strict';
 
-const Promise = require('bluebird');
 const rfcClient = require('./noderfc').Client;
 const should = require('should');
 const Decimal = require('decimal.js');
@@ -33,39 +32,7 @@ describe('Datatypes', function() {
         if (client.isAlive) return client.close();
     });
 
-    it('CHAR type check', function(done) {
-        let importStruct = {
-            RFCCHAR4: 65,
-        };
-        let importTable = [importStruct];
-        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
-            should.exist(err);
-            err.should.be.an.Object();
-            err.should.have.properties({
-                message: 'Char expected when filling field RFCCHAR4 of type 0',
-            });
-            done();
-        });
-    });
-
-    it('BCD and FLOAT not a number string', function(done) {
-        let importStruct = {
-            RFCFLOAT: 'A',
-        };
-        let importTable = [importStruct];
-        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
-            should.exist(err);
-            err.should.be.an.Object();
-            err.should.have.properties({
-                code: 22,
-                key: 'RFC_CONVERSION_FAILURE',
-                message: 'Cannot convert string value A at position 0 for the field RFCFLOAT to type RFCTYPE_FLOAT',
-            });
-            done();
-        });
-    });
-
-    it('BCD and FLOAT input numbers', function(done) {
+    it('BCD and FLOAT accept numbers', function(done) {
         let isInput = {
             // Float
             ZFLTP: 0.123456789,
@@ -96,7 +63,7 @@ describe('Datatypes', function() {
         });
     });
 
-    it('BCD and FLOAT input strings', function(done) {
+    it('BCD and FLOAT accept strings', function(done) {
         let isInput = {
             // Float
             ZFLTP: '0.123456789',
@@ -125,7 +92,7 @@ describe('Datatypes', function() {
         });
     });
 
-    it('BCD and FLOAT input Decimals', function(done) {
+    it('BCD and FLOAT accept Decimals, return strings', function(done) {
         let isInput = {
             ZFLTP: Decimal('0.123456789'),
 
@@ -148,7 +115,7 @@ describe('Datatypes', function() {
         });
     });
 
-    it('RAW/BYTE as binary string', function(done) {
+    it('RAW/BYTE accepts binary string', function(done) {
         let isInput = {
             ZRAW: '\x41\x42\x43\x44\x45\x46\x47\x48\x49\x50\x51\x52\x53\x54\x55\x56\x57',
         };
@@ -161,7 +128,7 @@ describe('Datatypes', function() {
         });
     });
 
-    it('RAW/BYTE as string', function(done) {
+    it('RAW/BYTE accepts string', function(done) {
         let isInput = {
             ZRAW: 'abcdefghijklmnopq',
         };
@@ -174,7 +141,7 @@ describe('Datatypes', function() {
         });
     });
 
-    it('RAW/BYTE as Buffer', function(done) {
+    it('RAW/BYTE accepts Buffer', function(done) {
         let isInput = {
             ZRAW: Buffer.alloc(17, '01234567890123456'),
         };
@@ -185,7 +152,7 @@ describe('Datatypes', function() {
         });
     });
 
-    it('XSTRING as binary string', function(done) {
+    it('XSTRING accepts binary string', function(done) {
         let isInput = {
             ZRAWSTRING: '\x41\x42\x43\x44\x45\x46\x47\x48\x49\x50\x51\x52\x53\x54\x55\x56\x57',
         };
@@ -198,7 +165,7 @@ describe('Datatypes', function() {
         });
     });
 
-    it('XSTRING as string', function(done) {
+    it('XSTRING accepts string', function(done) {
         let isInput = {
             ZRAWSTRING: 'abcdefghijklmnopq',
         };
@@ -211,7 +178,7 @@ describe('Datatypes', function() {
         });
     });
 
-    it('XSTRING as Buffer', function(done) {
+    it('XSTRING accepts Buffer', function(done) {
         let isInput = {
             ZRAWSTRING: Buffer.alloc(17, '01234567890123456'),
         };
@@ -222,23 +189,7 @@ describe('Datatypes', function() {
         });
     });
 
-    it('INT type check should detect strings', function(done) {
-        let importStruct = {
-            RFCINT1: '1',
-        };
-        let importTable = [importStruct];
-        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
-            should.exist(err);
-            err.should.be.an.Object();
-            err.should.have.properties({
-                name: 'TypeError',
-                message: 'Integer number expected when filling field RFCINT1 of type 10',
-            });
-            done();
-        });
-    });
-
-    it('DATE input string', function(done) {
+    it('DATE accepts string', function(done) {
         const testDate = '20180625';
         let importStruct = {
             RFCDATE: testDate,
@@ -253,10 +204,10 @@ describe('Datatypes', function() {
         });
     });
 
-    xit('DATE input Date', function(done) {
+    xit('DATE accepts Date', function(done) {
         const Months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
         let count = 0;
-        Months.forEach(month => {
+        for (let month of Months) {
             const testDateIn = new Date(`2018-${month}-25`);
             const testDateOut = Utils.toABAPdate(testDateIn);
             let importStruct = {
@@ -272,12 +223,60 @@ describe('Datatypes', function() {
                     if (++count === Months.length) done();
                 })
                 .catch(err => {
-                    console.error(err);
+                    done(err);
                 });
+        }
+    });
+
+    it('error: INT rejects string', function(done) {
+        let importStruct = {
+            RFCINT1: '1',
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object();
+            err.should.have.properties({
+                name: 'TypeError',
+                message: 'Integer number expected when filling field RFCINT1 of type 10',
+            });
+            done();
         });
     });
 
-    it('DATE type check', function(done) {
+    it('error: CHAR rejects string', function(done) {
+        let importStruct = {
+            RFCCHAR4: 65,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object();
+            err.should.have.properties({
+                message: 'Char expected when filling field RFCCHAR4 of type 0',
+            });
+            done();
+        });
+    });
+
+    it('error: BCD and FLOAT reject not a number string', function(done) {
+        let importStruct = {
+            RFCFLOAT: 'A',
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object();
+            err.should.have.properties({
+                code: 22,
+                key: 'RFC_CONVERSION_FAILURE',
+                message: 'Cannot convert string value A at position 0 for the field RFCFLOAT to type RFCTYPE_FLOAT',
+            });
+            done();
+        });
+    });
+
+    it('error: DATE rejects number', function(done) {
         const testDate = 41;
         let importStruct = {
             RFCDATE: testDate,
@@ -294,41 +293,10 @@ describe('Datatypes', function() {
         });
     });
 
-    it('INT1 positive infinity', function(done) {
-        let importStruct = {
-            RFCINT1: Number.POSITIVE_INFINITY,
-        };
-        let importTable = [importStruct];
-        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
-            should.exist(err);
-            err.should.be.an.Object();
-            err.should.have.properties({
-                name: 'TypeError',
-                message: 'Integer number expected when filling field RFCINT1 of type 10, got inf',
-            });
-            done();
-        });
-    });
-
-    it('INT1 negative infinity', function(done) {
-        let importStruct = {
-            RFCINT1: Number.POSITIVE_INFINITY,
-        };
-        let importTable = [importStruct];
-        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
-            should.exist(err);
-            err.should.be.an.Object();
-            err.should.have.properties({
-                name: 'TypeError',
-                message: 'Integer number expected when filling field RFCINT1 of type 10, got inf',
-            });
-            done();
-        });
-    });
-
-    it('INT1 type check should detect floats', function(done) {
+    it('error: INT1 rejects float with fractional part', function(done) {
         let importStruct = {
             RFCINT1: 1 + Number.EPSILON,
+            RFCINT2: 1.0,
         };
         let importTable = [importStruct];
         client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
@@ -342,9 +310,10 @@ describe('Datatypes', function() {
         });
     });
 
-    it('INT2 type check should detect floats', function(done) {
+    it('error: INT2 rejects float', function(done) {
         let importStruct = {
             RFCINT2: 1 + Number.EPSILON,
+            RFCINT1: 1.0,
         };
         let importTable = [importStruct];
         client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
@@ -358,7 +327,7 @@ describe('Datatypes', function() {
         });
     });
 
-    it('INT4 type check should detect floats', function(done) {
+    it('error: INT4 rejects float', function(done) {
         let importStruct = {
             RFCINT4: 1 + Number.EPSILON,
         };
@@ -369,6 +338,38 @@ describe('Datatypes', function() {
             err.should.have.properties({
                 name: 'TypeError',
                 message: 'Integer number expected when filling field RFCINT4 of type 8, got 0x1.0000000000001p+0',
+            });
+            done();
+        });
+    });
+
+    it('error: INT1 positive infinity', function(done) {
+        let importStruct = {
+            RFCINT1: Number.POSITIVE_INFINITY,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object();
+            err.should.have.properties({
+                name: 'TypeError',
+                message: 'Integer number expected when filling field RFCINT1 of type 10, got inf',
+            });
+            done();
+        });
+    });
+
+    it('error: INT1 negative infinity', function(done) {
+        let importStruct = {
+            RFCINT1: Number.POSITIVE_INFINITY,
+        };
+        let importTable = [importStruct];
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object();
+            err.should.have.properties({
+                name: 'TypeError',
+                message: 'Integer number expected when filling field RFCINT1 of type 10, got inf',
             });
             done();
         });
