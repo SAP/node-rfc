@@ -51,7 +51,7 @@
 		"url": "git+https://github.wdf.sap.corp/D037732/node-rfc.git"
 	},
 	"dependencies": {
-		"@types/bluebird": "^3.5.22",
+		"@types/bluebird": "^3.5.23",
 		"bluebird": "^3.5.1",
 		"node-addon-api": "^1.4.0",
 		"node-pre-gyp": "^0.10.3"
@@ -62,14 +62,13 @@
 	"devDependencies": {
 		"@babel/core": "^7.0.0-beta.54",
 		"@types/node": "^10.5.3",
-		"aws-sdk": "^2.280.1",
+		"compare-versions": "^3.3.0",
 		"decimal.js": "^10.0.1",
-		"eslint": "^4.19.1",
+		"eslint": "^5.2.0",
 		"eslint-plugin-mocha": "^5.1.0",
 		"mocha": "^5.2.0",
-		"node-gyp": "^3.7.0",
 		"prettier-eslint": "^8.8.2",
-		"should": "^13.2.1",
+		"should": "^13.2.2",
 		"typescript": "^2.9.2"
 	},
 	"files": [

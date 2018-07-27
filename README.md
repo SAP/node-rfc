@@ -8,7 +8,7 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 ## Features
 
--   Based on the latest nodejs [N-API](https://github.com/nodejs/node-addon-api) standard
+-   Based on [N-API](https://github.com/nodejs/node-addon-api) standard
 -   Stateless and stateful connections (multiple function calls in the same ABAP session (same context))
 -   Async/await, promise and callback API
 -   Sequential and parallel calls, using one or more clients

@@ -4,8 +4,8 @@ Change log
 0.2.0-rc7 (2018-07-21)
 ----------------------
 
-* N-API based
-* Callback, promise, async/await API examples
+* N-API non-blocking 
+* Callback, promise, async/await API
 * Connection pool
 * Typescript and ES-next syntax support
 * C/C++ style guide

@@ -15,9 +15,9 @@
 
 # Prerequisites:
 # nvm install $lts
-# npm -g install npm
+# npm -g install npm yarn
 
-declare -a LTS_BUILD=("6.9.0" "8.9.0" "10.0.0")
+declare -a LTS_BUILD=("6.14.1" "8.11.3" "10.7.0")
 declare -a LTS_TEST=("6.9.0" "6.14.3" "8.9.0" "8.11.3" "10.0.0" "10.7.0")
 
 version=`cat ./VERSION` 
@@ -26,32 +26,64 @@ if [ "$(expr substr $(uname -s) 1 4)" == "MSYS" ]; then
 	osext="win32"
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
 	osext="linux"
-    rm -rf build/stage/$version/rfc-$osext-*
 else
     platform="$(expr substr $(uname -s) 1 10)"
 	printf "\nPlatform not supported: $platform\n"
 	exit 1
 fi
 
-BUILD_LOG="test/build-$osext.log"
+DEP="node-pre-gyp node-addon-api bluebird @types/bluebird"
+# required for testing
+DEPDEVTEST="@babel/core @types/node compare-versions decimal.js mocha should typescript"
+# required for development and testing
+DEPDEV="@babel/core @types/node compare-versions decimal.js eslint eslint-plugin-mocha mocha prettier-eslint should typescript"  
 
-rm $BUILD_LOG
+#
+# Build
+#
+if [ "$1" != "test" ]; then
 
-rm -rf lib/binding/$osext-*
-for lts in "${LTS_BUILD[@]}"
-do
+    rm -rf lib/binding/$osext-*
+    BUILD_LOG="test/build-$osext.log"
+    rm $BUILD_LOG
+    for lts in "${LTS_BUILD[@]}"
+    do
+        printf "\n>>> build $lts >>>\n"
+        nvm use $lts
+        rm -rf node_modules
+        yarn remove $DEP $DEPDEVTEST && yarn add $DEP && yarn add --dev $DEPDEVTEST && node-pre-gyp configure rebuild
+    done
+
+    yarn run build
+
+    #
+    # Package
+    #
+    rm -rf build/stage/$version/rfc-$osext-*
+    for lts in "${LTS_BUILD[@]}"
+    do
+        printf "\>>> package $lts >>>\n"
+        nvm use $lts
+        node-pre-gyp package testpackage reveal
+    done
+
+fi
+
+#
+# Test
+#
+
+lts="8.11.3"
+#for lts in "${LTS_TEST[@]}"
+#do
+    printf "\n>>> test $lts >>>\n"
     nvm use $lts
-    yarn install --dev
-    npm run build && node-pre-gyp configure build package 
-done
-
-for lts in "${LTS_TEST[@]}"
-do
-    nvm use $lts
-    npm run test && node-pre-gyp testpackage reveal && \
-    echo node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)') napi:$(node -e 'console.log(process.versions.napi)') >> $BUILD_LOG
-done
+    rm -rf node_modules 
+    yarn remove $DEP $DEPDEVTEST && yarn add $DEP && yarn add --dev $DEPDEVTEST && \
+    yarn run test &$ printf "node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)') napi:$(node -e 'console.log(process.versions.napi)')" >> $BUILD_LOG
+#done
 
 # cleanup
-rm -rf build/node_modules build/release
+rm -rf node_modules build/node_modules build/release
 
+yarn remove $DEP $DEPDEVTEST && yarn add $DEP && yarn add --dev $DEPDEV
