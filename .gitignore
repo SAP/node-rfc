@@ -16,3 +16,4 @@ release/
 lib/binding/
 issues/
 examples/dist/
+ci/

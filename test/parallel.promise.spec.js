@@ -27,12 +27,10 @@ describe('Concurrency promises', function() {
     let client = new rfcClient(abapSystem);
 
     beforeEach(function() {
-        //if (!client.isAlive) return client.open();
         return client.open();
     });
 
     afterEach(function() {
-        //if (client.isAlive) return client.close();
         return client.close();
     });
 
