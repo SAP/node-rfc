@@ -16,12 +16,10 @@
 
 const should = require('should');
 
-const rfcClient = require('../noderfc').Client;
-const abapSystem = require('../abapSystem')();
+const rfcClient = require('./noderfc').Client;
+const abapSystem = require('./abapSystem')();
 
 const CONNECTIONS = 50;
-
-
 describe('Concurrency callbacks', function() {
     this.timeout(15000);
 
@@ -32,7 +30,7 @@ describe('Concurrency callbacks', function() {
     });
 
     beforeEach(function() {
-	return client.open();
+        return client.open();
     });
 
     afterEach(function() {
@@ -42,23 +40,28 @@ describe('Concurrency callbacks', function() {
     after(function() {
         return client.close();
     });
+
     const REQUTEXT = 'Hellö SÄP!';
 
-    it('non-blocking invoke()', function(done) {
+    xit('invoke() should not block', function(done) {
         let asyncRes;
         client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT }, function(err, res) {
-            should.not.exist(err);
-            should.exist(res);
-            res.should.be.an.Object();
-            res.should.have.property('ECHOTEXT');
-            res.ECHOTEXT.should.startWith(REQUTEXT);
-            asyncRes = res;
-            done();
+            if (err) {
+                done(err);
+                return;
+            } else {
+                should.exist(res);
+                res.should.be.an.Object();
+                res.should.have.property('ECHOTEXT');
+                res.ECHOTEXT.should.startWith(REQUTEXT);
+                asyncRes = res;
+            }
         });
         should.not.exist(asyncRes);
+        done();
     });
 
-    it(`concurrency: ${CONNECTIONS} connections invoke()`, function(done) {
+    it(`concurrency: ${CONNECTIONS} connections parallel invoke()`, function(done) {
         let count = CONNECTIONS;
         let CLIENTS = [];
         for (let i = 0; i < count; i++) {
@@ -66,15 +69,19 @@ describe('Concurrency callbacks', function() {
         }
         for (let client of CLIENTS) {
             client.connect(err => {
-                should.not.exist(err);
+                if (err) return done(err);
                 client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT }, function(err, res) {
-                    should.not.exist(err);
-                    should.exist(res);
-                    res.should.be.an.Object();
-                    res.should.have.property('ECHOTEXT');
-                    res.ECHOTEXT.should.startWith(REQUTEXT);
-                    client.close();
-                    if (--count === 1) done();
+                    if (err) {
+                        done(err);
+                        return;
+                    } else {
+                        should.exist(res);
+                        res.should.be.an.Object();
+                        res.should.have.property('ECHOTEXT');
+                        res.ECHOTEXT.should.startWith(REQUTEXT);
+                        client.close();
+                        if (--count === 1) done();
+                    }
                 });
             });
         }
@@ -83,9 +90,9 @@ describe('Concurrency callbacks', function() {
     it(`concurrency: 1 connection, ${CONNECTIONS} invoke() calls`, function(done) {
         let count = CONNECTIONS;
         for (let i = count; i > 0; i--) {
-            //client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id }, function(err, res) {
-            client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: abapSystem.user + client.id }, function(err, res) {
-                should.not.exist(err);
+            client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id }, function(err, res) {
+                //client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: abapSystem.user + client.id }, function(err, res) {
+                if (err) return done(err);
                 should.exist(res);
                 res.should.be.an.Object();
                 res.should.have.property('ECHOTEXT');
@@ -99,12 +106,16 @@ describe('Concurrency callbacks', function() {
         let rec = function(depth) {
             if (depth < CONNECTIONS) {
                 client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth }, function(err, res) {
-                    should.not.exist(err);
-                    should.exist(res);
-                    res.should.be.an.Object();
-                    res.should.have.property('ECHOTEXT');
-                    res.ECHOTEXT.should.startWith(REQUTEXT + depth);
-                    rec(depth + 1);
+                    if (err) {
+                        done(err);
+                        return;
+                    } else {
+                        should.exist(res);
+                        res.should.be.an.Object();
+                        res.should.have.property('ECHOTEXT');
+                        res.ECHOTEXT.should.startWith(REQUTEXT + depth);
+                        rec(depth + 1);
+                    }
                 });
             } else {
                 done();

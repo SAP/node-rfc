@@ -25,7 +25,7 @@ describe('Connection', function() {
     before(function() {
         return client.close();
     });
-    
+
     beforeEach(function() {
         return client.open();
     });
