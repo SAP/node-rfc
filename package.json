@@ -67,6 +67,7 @@
 		"eslint": "^5.2.0",
 		"eslint-plugin-mocha": "^5.1.0",
 		"mocha": "^5.2.0",
+		"node-gyp": "^3.7.0",
 		"prettier-eslint": "^8.8.2",
 		"should": "^13.2.2",
 		"typescript": "^2.9.2"

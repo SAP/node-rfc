@@ -24,6 +24,10 @@ const abapSystem = require('./abapSystem')();
 describe('Datatypes', function() {
     let client = new rfcClient(abapSystem);
 
+    before(function() {
+        return client.close();
+    });
+
     beforeEach(function() {
         return client.open();
     });
