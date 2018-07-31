@@ -26,44 +26,37 @@ describe('Concurrency await (node > 7.6.0)', function() {
 
 	let client = new rfcClient(abapSystem);
 
-	before(function() {
-		if (client) return client.close();
+	beforeEach(function(done) {
+		client.reopen(() => {
+			done();
+		});
 	});
-
-	beforeEach(function() {
-		return client.open();
+	
+	afterEach(function(done) {
+		client.close(() => {
+			done();
+		});
 	});
-
-	afterEach(function() {
-		return client.close();
-	});
-
-	after(function() {
-		return client.close();
-	});
-
 	const REQUTEXT = 'Hellö SÄP!';
 
-	it(`await: ${CONNECTIONS} sequential calls with single connection`, function(done) {
-		async function run() {
-			for (let i = CONNECTIONS; i > 0; i--) {
+	it(`await: ${CONNECTIONS} sequential calls using single connection`, function(done) {
+		(async () => {
+			for (let i = 0; i < CONNECTIONS; i++) {
 				try {
 					let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + i });
 
 					res.should.be.an.Object();
 					res.should.have.property('ECHOTEXT');
 					res.ECHOTEXT.should.startWith(REQUTEXT + i);
-					if (i === 1) return done();
 				} catch (ex) {
 					return done(ex);
 				}
 			}
-		}
-
-		run();
+			done();
+		})();
 	});
 
-	it(`await: ${CONNECTIONS} recursive calls with single connection`, function(done) {
+	it(`await: ${CONNECTIONS} recursive calls using single connection`, function(done) {
 		async function run(depth) {
 			if (depth == CONNECTIONS) {
 				return done();
@@ -82,13 +75,12 @@ describe('Concurrency await (node > 7.6.0)', function() {
 	});
 
 	it(`await: ${CONNECTIONS} parallel connections`, function(done) {
-		let count = CONNECTIONS;
 		let CLIENTS = [];
-		for (let i = 0; i < count; i++) {
+		for (let i = 0; i < CONNECTIONS; i++) {
 			CLIENTS.push(new rfcClient(abapSystem));
 		}
-		for (let client of CLIENTS) {
-			(async () => {
+		(async () => {
+			for (let client of CLIENTS) {
 				try {
 					await client.open();
 					let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id });
@@ -96,11 +88,11 @@ describe('Concurrency await (node > 7.6.0)', function() {
 					res.should.have.property('ECHOTEXT');
 					res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
 					client.close();
-					if (--count === 1) return done();
 				} catch (ex) {
 					return done(ex);
 				}
-			})();
-		}
+			}
+			done();
+		})();
 	});
 });

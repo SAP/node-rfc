@@ -60,5 +60,11 @@ fi
 for lts in "${LTS_TEST[@]}"
 do
     nvm use $lts
-    npm run test && printf "test: node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)') napi:$(node -e 'console.log(process.versions.napi)')\n" >> $BUILD_LOG
+    npm run test
+    if [ $? == 0 ]; then
+        test="pass :"
+    else
+        test="fail $?:"
+    fi
+    printf $test  >> $BUILD_LOG && printf " node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)') napi:$(node -e 'console.log(process.versions.napi)')\n" >> $BUILD_LOG
 done

@@ -25,71 +25,64 @@ describe('Concurrency callbacks', function() {
 
     let client = new rfcClient(abapSystem);
 
-    before(function() {
-        if (client) return client.close();
+    beforeEach(function(done) {
+        client.reopen(() => {
+            done();
+        });
     });
-
-    beforeEach(function() {
-        return client.open();
+    
+    afterEach(function(done) {
+        client.close(() => {
+            done();
+        });
     });
-
-    afterEach(function() {
-        return client.close();
-    });
-
-    after(function() {
-        return client.close();
-    });
-
     const REQUTEXT = 'Hellö SÄP!';
 
-    xit('invoke() should not block', function(done) {
+    it('invoke() should not block', function(done) {
         let asyncRes;
         client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT }, function(err, res) {
             if (err) {
-                done(err);
-                return;
+                return done(err);
             } else {
                 should.exist(res);
                 res.should.be.an.Object();
                 res.should.have.property('ECHOTEXT');
                 res.ECHOTEXT.should.startWith(REQUTEXT);
                 asyncRes = res;
+                done();
             }
         });
         should.not.exist(asyncRes);
-        done();
     });
 
-    it(`concurrency: ${CONNECTIONS} connections parallel invoke()`, function(done) {
-        let count = CONNECTIONS;
+    it(`concurrency: ${CONNECTIONS} parallel connections invoke()`, function(done) {
+        let callbackCount = 0;
         let CLIENTS = [];
-        for (let i = 0; i < count; i++) {
+        for (let i = 0; i < CONNECTIONS; i++) {
             CLIENTS.push(new rfcClient(abapSystem));
         }
-        for (let client of CLIENTS) {
-            client.connect(err => {
+        for (let c of CLIENTS) {
+            c.connect(err => {
                 if (err) return done(err);
-                client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT }, function(err, res) {
+                c.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT }, function(err, res) {
                     if (err) {
-                        done(err);
-                        return;
+                        return done(err);
                     } else {
                         should.exist(res);
                         res.should.be.an.Object();
                         res.should.have.property('ECHOTEXT');
                         res.ECHOTEXT.should.startWith(REQUTEXT);
-                        client.close();
-                        if (--count === 1) done();
+                        c.close();
+                        if (++callbackCount === CONNECTIONS) done();
                     }
                 });
             });
         }
     });
 
-    it(`concurrency: 1 connection, ${CONNECTIONS} invoke() calls`, function(done) {
-        let count = CONNECTIONS;
-        for (let i = count; i > 0; i--) {
+    it(`concurrency: ${CONNECTIONS} sequential invoke() calls using single connection`, function(done) {
+        let callbackCount = 0;
+        for (let count = 0; count < CONNECTIONS; count++) {
             client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id }, function(err, res) {
                 //client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: abapSystem.user + client.id }, function(err, res) {
                 if (err) return done(err);
@@ -97,7 +90,7 @@ describe('Concurrency callbacks', function() {
                 res.should.be.an.Object();
                 res.should.have.property('ECHOTEXT');
                 res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
-                if (i === 1) done();
+                if (++callbackCount === CONNECTIONS) done();
             });
         }
     });
@@ -107,8 +100,7 @@ describe('Concurrency callbacks', function() {
             if (depth < CONNECTIONS) {
                 client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth }, function(err, res) {
                     if (err) {
-                        done(err);
-                        return;
+                        return done(err);
                     } else {
                         should.exist(res);
                         res.should.be.an.Object();

@@ -18,7 +18,7 @@ const rfcClient = require('./noderfc').Client;
 const abapSystem = require('./abapSystem')();
 
 const should = require('should');
-//const Promise = require('bluebird');
+const Promise = require('bluebird');
 
 const CONNECTIONS = 50;
 
@@ -27,24 +27,20 @@ describe('Concurrency promises', function() {
 
     let client = new rfcClient(abapSystem);
 
-    before(function() {
-        if (client) return client.close();
+    beforeEach(function(done) {
+        client.reopen(() => {
+            done();
+        });
     });
-
-    beforeEach(function() {
-        return client.open();
-    });
-
-    afterEach(function() {
-        return client.close();
-    });
-
-    after(function() {
-        return client.close();
+    
+    afterEach(function(done) {
+        client.close(() => {
+            done();
+        });
     });
     const REQUTEXT = 'Hellö SÄP!';
 
-    xit('call() should not block', function(done) {
+    it('call() should not block', function(done) {
         let asyncRes;
         let REQUTEXT = 'Hello SAP!';
         client
@@ -54,44 +50,41 @@ describe('Concurrency promises', function() {
                 res.should.have.property('ECHOTEXT');
                 res.ECHOTEXT.should.startWith(REQUTEXT);
                 asyncRes = res;
+                done();
             })
             .catch(err => {
                 return done(err);
             });
         should.not.exist(asyncRes);
-        done();
     });
 
-    it(`concurrency: ${CONNECTIONS} connections call()`, function(done) {
-        let count = CONNECTIONS;
-        let CLIENTS = [];
-        for (let i = 0; i < count; i++) {
-            CLIENTS.push(
-                new rfcClient(abapSystem)
-                    .open()
-                    .then(client =>
-                        client
-                            .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id })
-                            .then(res => {
-                                should.exist(res);
-                                res.should.be.an.Object();
-                                res.should.have.property('ECHOTEXT');
-                                res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
-                                client.close();
-                                if (--count === 1) return done();
-                            })
-                            .catch(err => {
-                                return done(err);
-                            })
-                    )
-                    .catch(err => {
-                        return done(err);
-                    })
-            );
+    it(`concurrency: ${CONNECTIONS} parallel connections call()`, function(done) {
+        let TEXT = '';
+        let callbackCount = 0;
+        for (let i = 0; i < CONNECTIONS; i++) {
+            new rfcClient(abapSystem)
+                .open()
+                .then(c => {
+                    c.call('STFC_CONNECTION', { REQUTEXT: TEXT + c.id })
+                        .then(res => {
+                            should.exist(res);
+                            res.should.be.an.Object();
+                            res.should.have.property('ECHOTEXT');
+                            res.ECHOTEXT.should.startWith(TEXT + c.id);
+                            c.close();
+                            if (++callbackCount === CONNECTIONS) done();
+                        })
+                        .catch(err => {
+                            done(err);
+                        });
+                })
+                .catch(err => {
+                    done(err);
+                });
         }
     });
 
-    it(`concurrency: 1 connection, ${CONNECTIONS} call() calls`, function(done) {
+    it(`concurrency: ${CONNECTIONS} sequential call() calls, using single connection`, function(done) {
         let promises = [];
         for (let counter = 0; counter < CONNECTIONS; counter++) {
             promises.push(
@@ -104,16 +97,20 @@ describe('Concurrency promises', function() {
                         res.ECHOTEXT.should.startWith(REQUTEXT + counter);
                     })
                     .catch(err => {
-                        return done(err);
+                        return err;
                     })
             );
         }
-        Promise.all(promises).then(() => {
-            done();
-        });
+        Promise.all(promises)
+            .then(() => {
+                done();
+            })
+            .catch(err => {
+                done(err);
+            });
     });
 
-    it(`concurrency: 1 connection, ${CONNECTIONS} recursive call() calls`, function(done) {
+    it(`concurrency: ${CONNECTIONS} recursive call() calls using single connection`, function(done) {
         function rec(depth) {
             if (depth < CONNECTIONS) {
                 client

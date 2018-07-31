@@ -22,20 +22,16 @@ const abapSystem = require('./abapSystem')();
 describe('Connection', function() {
     let client = new rfcClient(abapSystem);
 
-    before(function() {
-        return client.close();
+    beforeEach(function(done) {
+        client.reopen(() => {
+            done();
+        });
     });
-
-    beforeEach(function() {
-        return client.open();
-    });
-
-    afterEach(function() {
-        return client.close();
-    });
-
-    after(function() {
-        return client.close();
+    
+    afterEach(function(done) {
+        client.close(() => {
+            done();
+        });
     });
 
     it('VERSION == binding version == package.json version', function(done) {

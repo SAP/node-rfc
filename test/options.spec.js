@@ -22,20 +22,16 @@ const abapSystem = require('./abapSystem')();
 describe('Options', function() {
     let client = new rfcClient(abapSystem);
 
-    before(function() {
-        return client.close();
+    beforeEach(function(done) {
+        client.reopen(() => {
+            done();
+        });
     });
 
-    beforeEach(function() {
-        return client.open();
-    });
-
-    afterEach(function() {
-        return client.close();
-    });
-
-    after(function() {
-        return client.close();
+    afterEach(function(done) {
+        client.close(() => {
+            done();
+        });
     });
 
     it('options: pass when some parameters skipped', function(done) {
