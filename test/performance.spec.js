@@ -37,7 +37,7 @@ describe('Performance', function() {
     it('performance: invoke() BAPI_USER_GET_DETAIL', function(done) {
         this.timeout(15000);
         client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' }, function(err, res) {
-            should.not.exist(err);
+            if (err) return done(err);
             res.should.be.an.Object();
             res.should.have.properties(
                 'ADDRESS',
@@ -61,7 +61,7 @@ describe('Performance', function() {
             { CHECKTAB: 'X', LGET0332: COUNT.toString(), LGET1000: COUNT.toString() },
 
             function(err, res) {
-                should.not.exist(err);
+		if (err) return done(err);
                 res.ETAB0332.length.should.equal(COUNT);
                 res.ETAB1000.length.should.equal(COUNT);
                 done();

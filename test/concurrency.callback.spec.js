@@ -72,8 +72,9 @@ describe('Concurrency callbacks', function() {
                         res.should.be.an.Object();
                         res.should.have.property('ECHOTEXT');
                         res.ECHOTEXT.should.startWith(REQUTEXT);
-                        c.close();
-                        if (++callbackCount === CONNECTIONS) done();
+                        c.close(() => {
+                            if (++callbackCount === CONNECTIONS) done();
+			});
                     }
                 });
             });
@@ -84,7 +85,6 @@ describe('Concurrency callbacks', function() {
         let callbackCount = 0;
         for (let count = 0; count < CONNECTIONS; count++) {
             client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id }, function(err, res) {
-                //client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: abapSystem.user + client.id }, function(err, res) {
                 if (err) return done(err);
                 should.exist(res);
                 res.should.be.an.Object();
@@ -95,24 +95,24 @@ describe('Concurrency callbacks', function() {
         }
     });
 
-    it(`concurrency: 1 connection ${CONNECTIONS} recursive invoke() calls`, function(done) {
-        let rec = function(depth) {
-            if (depth < CONNECTIONS) {
-                client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth }, function(err, res) {
-                    if (err) {
-                        return done(err);
-                    } else {
-                        should.exist(res);
-                        res.should.be.an.Object();
-                        res.should.have.property('ECHOTEXT');
-                        res.ECHOTEXT.should.startWith(REQUTEXT + depth);
-                        rec(depth + 1);
-                    }
-                });
-            } else {
-                done();
-            }
-        };
-        rec(0);
+    it(`concurrency: ${CONNECTIONS} recursive invoke() calls using single connection`, function(done) {
+	let callbackCount = 0;
+	function call(count) {
+            client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id }, function(err, res) {
+		    if (err) {
+			return done(err);
+		    } else {
+			res.should.be.an.Object();
+			res.should.have.property('ECHOTEXT');
+			res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
+			if (++callbackCount == CONNECTIONS) {
+				done(); 
+			} else {
+				call(callbackCount);
+			}
+		    }
+	    });
+	}
+	call(callbackCount);
     });
 });

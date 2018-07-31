@@ -59,20 +59,20 @@ describe('Concurrency promises', function() {
     });
 
     it(`concurrency: ${CONNECTIONS} parallel connections call()`, function(done) {
-        let TEXT = '';
         let callbackCount = 0;
         for (let i = 0; i < CONNECTIONS; i++) {
             new rfcClient(abapSystem)
                 .open()
                 .then(c => {
-                    c.call('STFC_CONNECTION', { REQUTEXT: TEXT + c.id })
+                    c.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + c.id })
                         .then(res => {
                             should.exist(res);
                             res.should.be.an.Object();
                             res.should.have.property('ECHOTEXT');
-                            res.ECHOTEXT.should.startWith(TEXT + c.id);
-                            c.close();
-                            if (++callbackCount === CONNECTIONS) done();
+                            res.ECHOTEXT.should.startWith(REQUTEXT + c.id);
+                            c.close(() => {
+                            	if (++callbackCount === CONNECTIONS) done();
+			    });
                         })
                         .catch(err => {
                             done(err);
@@ -111,24 +111,25 @@ describe('Concurrency promises', function() {
     });
 
     it(`concurrency: ${CONNECTIONS} recursive call() calls using single connection`, function(done) {
-        function rec(depth) {
-            if (depth < CONNECTIONS) {
+        let callbackCount = 0;
+        function call(count) {
                 client
-                    .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth })
+                    .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + count })
                     .then(res => {
                         should.exist(res);
                         res.should.be.an.Object();
                         res.should.have.property('ECHOTEXT');
-                        res.ECHOTEXT.should.startWith(REQUTEXT + depth);
-                        rec(depth + 1);
+                        res.ECHOTEXT.should.startWith(REQUTEXT + count);
+			if (++callbackCount == CONNECTIONS) {
+				return done(); 
+			} else {
+				call(callbackCount);
+			}
                     })
                     .catch(err => {
                         return done(err);
                     });
-            } else {
-                return done();
-            }
-        }
-        rec(1);
+	}
+        call(callbackCount);
     });
 });

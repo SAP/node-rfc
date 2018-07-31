@@ -56,43 +56,47 @@ describe('Concurrency await (node > 7.6.0)', function() {
 		})();
 	});
 
-	it(`await: ${CONNECTIONS} recursive calls using single connection`, function(done) {
-		async function run(depth) {
-			if (depth == CONNECTIONS) {
-				return done();
-			}
-			try {
-				let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + depth });
-				res.should.be.an.Object();
-				res.should.have.property('ECHOTEXT');
-				res.ECHOTEXT.should.startWith(REQUTEXT + depth);
-				run(depth + 1);
-			} catch (ex) {
-				return done(ex);
-			}
-		}
-		run(0);
-	});
 
 	it(`await: ${CONNECTIONS} parallel connections`, function(done) {
-		let CLIENTS = [];
-		for (let i = 0; i < CONNECTIONS; i++) {
-			CLIENTS.push(new rfcClient(abapSystem));
-		}
 		(async () => {
-			for (let client of CLIENTS) {
+			let CLIENTS = [];
+			for (let i = 0; i < CONNECTIONS; i++) {
+				let c = await (new rfcClient(abapSystem)).open();
+				CLIENTS.push(c);
+			}
+			for (let c of CLIENTS) {
 				try {
-					await client.open();
-					let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id });
+					let res = await c.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + c.id });
 					res.should.be.an.Object();
 					res.should.have.property('ECHOTEXT');
-					res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
-					client.close();
+					res.ECHOTEXT.should.startWith(REQUTEXT + c.id);
+					await c.close();
 				} catch (ex) {
 					return done(ex);
 				}
 			}
 			done();
 		})();
+	});
+
+
+	it(`await: ${CONNECTIONS} recursive calls using single connection`, function(done) {
+		let callbackCount = 0;
+		async function call(count) {
+			try {
+				let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + count });
+				res.should.be.an.Object();
+				res.should.have.property('ECHOTEXT');
+				res.ECHOTEXT.should.startWith(REQUTEXT + count);
+				if (++callbackCount == CONNECTIONS) {
+					done();
+				} else {
+					call(callbackCount);
+				}
+			} catch (ex) {
+				done(ex);
+			}
+		}
+		call(callbackCount);
 	});
 });
