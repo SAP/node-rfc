@@ -18,7 +18,7 @@
 # npm -g install npm yarn
 
 declare -a LTS_BUILD=("6.14.1" "8.11.3" "10.7.0")
-declare -a LTS_TEST=("6.9.0" "6.14.3" "8.9.0" "8.11.3" "10.0.0" "10.7.0")
+declare -a LTS_TEST=("8.9.0" "8.11.3" "6.9.0" "6.14.3" "10.0.0" "10.7.0")
 
 version=`cat ./VERSION` 
 
@@ -59,7 +59,7 @@ fi
 #
 for lts in "${LTS_TEST[@]}"
 do
-    nvm use $lts
+    nvm use $lts && sleep 2
     npm run test
     if [ $? == 0 ]; then
         test="pass :"

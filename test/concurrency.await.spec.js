@@ -24,19 +24,26 @@ const CONNECTIONS = 50;
 describe('Concurrency await (node > 7.6.0)', function() {
 	this.timeout(15000);
 
-	let client = new rfcClient(abapSystem);
+	let client;
 
 	beforeEach(function(done) {
-		client.reopen(() => {
-			done();
-		});
+		new rfcClient(abapSystem)
+			.open()
+			.then(c => {
+				client = c;
+				done();
+			})
+			.catch(err => {
+				done(err);
+			});
 	});
-	
+
 	afterEach(function(done) {
 		client.close(() => {
 			done();
 		});
 	});
+
 	const REQUTEXT = 'Hellö SÄP!';
 
 	it(`await: ${CONNECTIONS} sequential calls using single connection`, function(done) {
@@ -44,7 +51,6 @@ describe('Concurrency await (node > 7.6.0)', function() {
 			for (let i = 0; i < CONNECTIONS; i++) {
 				try {
 					let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + i });
-
 					res.should.be.an.Object();
 					res.should.have.property('ECHOTEXT');
 					res.ECHOTEXT.should.startWith(REQUTEXT + i);
@@ -56,12 +62,11 @@ describe('Concurrency await (node > 7.6.0)', function() {
 		})();
 	});
 
-
 	it(`await: ${CONNECTIONS} parallel connections`, function(done) {
 		(async () => {
 			let CLIENTS = [];
 			for (let i = 0; i < CONNECTIONS; i++) {
-				let c = await (new rfcClient(abapSystem)).open();
+				let c = await new rfcClient(abapSystem).open();
 				CLIENTS.push(c);
 			}
 			for (let c of CLIENTS) {
@@ -78,7 +83,6 @@ describe('Concurrency await (node > 7.6.0)', function() {
 			done();
 		})();
 	});
-
 
 	it(`await: ${CONNECTIONS} recursive calls using single connection`, function(done) {
 		let callbackCount = 0;

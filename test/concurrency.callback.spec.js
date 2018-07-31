@@ -23,19 +23,26 @@ const CONNECTIONS = 50;
 describe('Concurrency callbacks', function() {
     this.timeout(15000);
 
-    let client = new rfcClient(abapSystem);
+    let client;
 
     beforeEach(function(done) {
-        client.reopen(() => {
-            done();
-        });
+        new rfcClient(abapSystem)
+            .open()
+            .then(c => {
+                client = c;
+                done();
+            })
+            .catch(err => {
+                done(err);
+            });
     });
-    
+
     afterEach(function(done) {
         client.close(() => {
             done();
         });
     });
+
     const REQUTEXT = 'Hellö SÄP!';
 
     it('invoke() should not block', function(done) {
@@ -74,7 +81,7 @@ describe('Concurrency callbacks', function() {
                         res.ECHOTEXT.should.startWith(REQUTEXT);
                         c.close(() => {
                             if (++callbackCount === CONNECTIONS) done();
-			});
+                        });
                     }
                 });
             });
@@ -96,23 +103,23 @@ describe('Concurrency callbacks', function() {
     });
 
     it(`concurrency: ${CONNECTIONS} recursive invoke() calls using single connection`, function(done) {
-	let callbackCount = 0;
-	function call(count) {
-            client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id }, function(err, res) {
-		    if (err) {
-			return done(err);
-		    } else {
-			res.should.be.an.Object();
-			res.should.have.property('ECHOTEXT');
-			res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
-			if (++callbackCount == CONNECTIONS) {
-				done(); 
-			} else {
-				call(callbackCount);
-			}
-		    }
-	    });
-	}
-	call(callbackCount);
+        let callbackCount = 0;
+        function call(count) {
+            client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + count }, function(err, res) {
+                if (err) {
+                    return done(err);
+                } else {
+                    res.should.be.an.Object();
+                    res.should.have.property('ECHOTEXT');
+                    res.ECHOTEXT.should.startWith(REQUTEXT + count);
+                    if (++callbackCount == CONNECTIONS) {
+                        done();
+                    } else {
+                        call(callbackCount);
+                    }
+                }
+            });
+        }
+        call(callbackCount);
     });
 });

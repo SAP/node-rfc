@@ -25,19 +25,26 @@ const CONNECTIONS = 50;
 describe('Concurrency promises', function() {
     this.timeout(15000);
 
-    let client = new rfcClient(abapSystem);
+    let client;
 
     beforeEach(function(done) {
-        client.reopen(() => {
-            done();
-        });
+        new rfcClient(abapSystem)
+            .open()
+            .then(c => {
+                client = c;
+                done();
+            })
+            .catch(err => {
+                done(err);
+            });
     });
-    
+
     afterEach(function(done) {
         client.close(() => {
             done();
         });
     });
+
     const REQUTEXT = 'Hellö SÄP!';
 
     it('call() should not block', function(done) {
@@ -71,8 +78,8 @@ describe('Concurrency promises', function() {
                             res.should.have.property('ECHOTEXT');
                             res.ECHOTEXT.should.startWith(REQUTEXT + c.id);
                             c.close(() => {
-                            	if (++callbackCount === CONNECTIONS) done();
-			    });
+                                if (++callbackCount === CONNECTIONS) done();
+                            });
                         })
                         .catch(err => {
                             done(err);
@@ -113,23 +120,23 @@ describe('Concurrency promises', function() {
     it(`concurrency: ${CONNECTIONS} recursive call() calls using single connection`, function(done) {
         let callbackCount = 0;
         function call(count) {
-                client
-                    .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + count })
-                    .then(res => {
-                        should.exist(res);
-                        res.should.be.an.Object();
-                        res.should.have.property('ECHOTEXT');
-                        res.ECHOTEXT.should.startWith(REQUTEXT + count);
-			if (++callbackCount == CONNECTIONS) {
-				return done(); 
-			} else {
-				call(callbackCount);
-			}
-                    })
-                    .catch(err => {
-                        return done(err);
-                    });
-	}
+            client
+                .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + count })
+                .then(res => {
+                    should.exist(res);
+                    res.should.be.an.Object();
+                    res.should.have.property('ECHOTEXT');
+                    res.ECHOTEXT.should.startWith(REQUTEXT + count);
+                    if (++callbackCount == CONNECTIONS) {
+                        return done();
+                    } else {
+                        call(callbackCount);
+                    }
+                })
+                .catch(err => {
+                    return done(err);
+                });
+        }
         call(callbackCount);
     });
 });

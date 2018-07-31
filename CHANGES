@@ -1,10 +1,10 @@
 Change log
 ==========
 
-0.2.0-rc7 (2018-07-21)
+0.2.0-rc7 (2018-07-31)
 ----------------------
 
-* N-API non-blocking 
+* N-API, asynchronous and non-blocking 
 * Callback, promise, async/await API
 * Connection pool
 * Typescript and ES-next syntax support
