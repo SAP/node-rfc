@@ -25,18 +25,12 @@ const CONNECTIONS = 50;
 describe('Concurrency promises', function() {
     this.timeout(15000);
 
-    let client;
+    let client = new rfcClient(abapSystem);
 
     beforeEach(function(done) {
-        new rfcClient(abapSystem)
-            .open()
-            .then(c => {
-                client = c;
-                done();
-            })
-            .catch(err => {
-                done(err);
-            });
+        client.reopen(err => {
+            done(err);
+        });
     });
 
     afterEach(function(done) {
@@ -44,10 +38,9 @@ describe('Concurrency promises', function() {
             done();
         });
     });
-
     const REQUTEXT = 'Hellö SÄP!';
 
-    it('call() should not block', function(done) {
+    it('concurrency: call() should not block', function(done) {
         let asyncRes;
         let REQUTEXT = 'Hello SAP!';
         client
@@ -65,12 +58,12 @@ describe('Concurrency promises', function() {
         should.not.exist(asyncRes);
     });
 
-    it(`concurrency: ${CONNECTIONS} parallel connections call()`, function(done) {
+    it(`concurrency: ${CONNECTIONS} parallel connections call() promises`, function(done) {
         let callbackCount = 0;
         for (let i = 0; i < CONNECTIONS; i++) {
-            new rfcClient(abapSystem)
-                .open()
-                .then(c => {
+            let c = new rfcClient(abapSystem);
+            c.open()
+                .then(() => {
                     c.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + c.id })
                         .then(res => {
                             should.exist(res);
@@ -82,16 +75,16 @@ describe('Concurrency promises', function() {
                             });
                         })
                         .catch(err => {
-                            done(err);
+                            return done(err);
                         });
                 })
                 .catch(err => {
-                    done(err);
+                    return done(err);
                 });
         }
     });
 
-    it(`concurrency: ${CONNECTIONS} sequential call() calls, using single connection`, function(done) {
+    it(`concurrency: ${CONNECTIONS} parallel call() promises, using single connection`, function(done) {
         let promises = [];
         for (let counter = 0; counter < CONNECTIONS; counter++) {
             promises.push(
@@ -117,7 +110,7 @@ describe('Concurrency promises', function() {
             });
     });
 
-    it(`concurrency: ${CONNECTIONS} recursive call() calls using single connection`, function(done) {
+    it(`concurrency: ${CONNECTIONS} recursive call() promises, using single connection`, function(done) {
         let callbackCount = 0;
         function call(count) {
             client
@@ -128,7 +121,7 @@ describe('Concurrency promises', function() {
                     res.should.have.property('ECHOTEXT');
                     res.ECHOTEXT.should.startWith(REQUTEXT + count);
                     if (++callbackCount == CONNECTIONS) {
-                        return done();
+                        done();
                     } else {
                         call(callbackCount);
                     }

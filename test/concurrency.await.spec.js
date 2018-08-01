@@ -24,19 +24,13 @@ const CONNECTIONS = 50;
 describe('Concurrency await (node > 7.6.0)', function() {
 	this.timeout(15000);
 
-	let client;
+	let client = new rfcClient(abapSystem);
 
-	beforeEach(function(done) {
-		new rfcClient(abapSystem)
-			.open()
-			.then(c => {
-				client = c;
-				done();
-			})
-			.catch(err => {
-				done(err);
-			});
-	});
+    beforeEach(function(done) {
+        client.reopen(err => {
+            done(err);
+        });
+    });
 
 	afterEach(function(done) {
 		client.close(() => {

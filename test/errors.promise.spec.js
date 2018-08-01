@@ -23,17 +23,16 @@ describe('Errors promise', function() {
     let client = new rfcClient(abapSystem);
 
     beforeEach(function(done) {
-        client.reopen(() => {
-            done();
+        client.reopen(err => {
+            done(err);
         });
     });
-    
+
     afterEach(function(done) {
         client.close(() => {
             done();
         });
     });
-
     it('error: call() promise rejects invalid credentials', function(done) {
         let wrongParams = Object.assign({}, abapSystem);
         wrongParams.user = 'WRONGUSER';

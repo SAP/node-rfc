@@ -25,11 +25,11 @@ describe('Datatypes', function() {
     let client = new rfcClient(abapSystem);
 
     beforeEach(function(done) {
-        client.reopen(() => {
-            done();
+        client.reopen(err => {
+            done(err);
         });
     });
-    
+
     afterEach(function(done) {
         client.close(() => {
             done();

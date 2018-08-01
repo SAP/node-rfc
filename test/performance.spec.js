@@ -23,8 +23,8 @@ describe('Performance', function() {
     let client = new rfcClient(abapSystem);
 
     beforeEach(function(done) {
-        client.reopen(() => {
-            done();
+        client.reopen(err => {
+            done(err);
         });
     });
 
@@ -34,7 +34,7 @@ describe('Performance', function() {
         });
     });
 
-    it('performance: invoke() BAPI_USER_GET_DETAIL', function(done) {
+    xit('performance: invoke() BAPI_USER_GET_DETAIL', function(done) {
         this.timeout(15000);
         client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' }, function(err, res) {
             if (err) return done(err);
@@ -54,14 +54,14 @@ describe('Performance', function() {
         });
     });
 
-    it('performance: invoke() STFC_PERFORMANCE', function(done) {
+    xit('performance: invoke() STFC_PERFORMANCE', function(done) {
         let COUNT = 10000;
         client.invoke(
             'STFC_PERFORMANCE',
             { CHECKTAB: 'X', LGET0332: COUNT.toString(), LGET1000: COUNT.toString() },
 
             function(err, res) {
-		if (err) return done(err);
+                if (err) return done(err);
                 res.ETAB0332.length.should.equal(COUNT);
                 res.ETAB1000.length.should.equal(COUNT);
                 done();

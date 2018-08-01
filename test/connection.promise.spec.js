@@ -23,16 +23,17 @@ describe('Connection promise', function() {
     let client = new rfcClient(abapSystem);
 
     beforeEach(function(done) {
-        client.reopen(() => {
-            done();
+        client.reopen(err => {
+            done(err);
         });
     });
-    
+
     afterEach(function(done) {
         client.close(() => {
             done();
         });
     });
+
     it('call() STFC_CONNECTION should return string', function() {
         return client.call('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' }).then(res => {
             should.exist(res);

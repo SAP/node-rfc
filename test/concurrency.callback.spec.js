@@ -23,18 +23,12 @@ const CONNECTIONS = 50;
 describe('Concurrency callbacks', function() {
     this.timeout(15000);
 
-    let client;
+    let client = new rfcClient(abapSystem);
 
     beforeEach(function(done) {
-        new rfcClient(abapSystem)
-            .open()
-            .then(c => {
-                client = c;
-                done();
-            })
-            .catch(err => {
-                done(err);
-            });
+        client.reopen(err => {
+            done(err);
+        });
     });
 
     afterEach(function(done) {
@@ -45,7 +39,7 @@ describe('Concurrency callbacks', function() {
 
     const REQUTEXT = 'Hellö SÄP!';
 
-    it('invoke() should not block', function(done) {
+    it('concurrency: invoke() should not block', function(done) {
         let asyncRes;
         client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT }, function(err, res) {
             if (err) {
@@ -62,13 +56,10 @@ describe('Concurrency callbacks', function() {
         should.not.exist(asyncRes);
     });
 
-    it(`concurrency: ${CONNECTIONS} parallel connections invoke()`, function(done) {
+    it(`concurrency: ${CONNECTIONS} connections invoke() in parallel`, function(done) {
         let callbackCount = 0;
-        let CLIENTS = [];
         for (let i = 0; i < CONNECTIONS; i++) {
-            CLIENTS.push(new rfcClient(abapSystem));
-        }
-        for (let c of CLIENTS) {
+            let c = new rfcClient(abapSystem);
             c.connect(err => {
                 if (err) return done(err);
                 c.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT }, function(err, res) {
@@ -88,7 +79,7 @@ describe('Concurrency callbacks', function() {
         }
     });
 
-    it(`concurrency: ${CONNECTIONS} sequential invoke() calls using single connection`, function(done) {
+    it(`concurrency: ${CONNECTIONS} concurrent invoke() calls using single connection`, function(done) {
         let callbackCount = 0;
         for (let count = 0; count < CONNECTIONS; count++) {
             client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id }, function(err, res) {
