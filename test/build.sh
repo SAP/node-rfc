@@ -59,7 +59,8 @@ fi
 #
 for lts in "${LTS_TEST[@]}"
 do
-    nvm use $lts && sleep 2
+    nvm use $lts
+    printf "\n============= testing: $lts =============\n"
     npm run test
     if [ $? == 0 ]; then
         test="pass :"

@@ -16,8 +16,8 @@
 
 const should = require('should');
 
-const rfcClient = require('../test/noderfc').Client;
-const abapSystem = require('../test/abapSystem')();
+const rfcClient = require('../noderfc').Client;
+const abapSystem = require('../abapSystem')();
 
 const CONNECTIONS = require('./config').connections;
 
@@ -33,6 +33,13 @@ describe('Concurrency callbacks', function() {
     });
 
     afterEach(function(done) {
+        client.close(() => {
+            done();
+        });
+    });
+
+
+    after(function(done) {
         client.close(() => {
             done();
         });

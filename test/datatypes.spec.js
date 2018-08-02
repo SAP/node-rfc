@@ -15,11 +15,11 @@
 'use strict';
 
 const rfcClient = require('./noderfc').Client;
+const abapSystem = require('./abapSystem')();
+
 const should = require('should');
 const Decimal = require('decimal.js');
 const Utils = require('./utils');
-
-const abapSystem = require('./abapSystem')();
 
 describe('Datatypes', function() {
     let client = new rfcClient(abapSystem);

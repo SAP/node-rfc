@@ -14,8 +14,8 @@
 
 'use strict';
 
-const rfcClient = require('../test/noderfc').Client;
-const abapSystem = require('../test/abapSystem')();
+const rfcClient = require('../noderfc').Client;
+const abapSystem = require('../abapSystem')();
 
 const should = require('should');
 const Promise = require('bluebird');
@@ -24,6 +24,7 @@ const CONNECTIONS = require('./config').connections;
 
 describe('Concurrency promises', function() {
     this.timeout(15000);
+
     let client = new rfcClient(abapSystem);
 
     beforeEach(function() {
@@ -33,7 +34,7 @@ describe('Concurrency promises', function() {
     afterEach(function() {
         return client.close();
     });
-
+    
     it('concurrency: call() should not block', function(done) {
         let asyncRes;
         client
@@ -78,7 +79,7 @@ describe('Concurrency promises', function() {
         }
     });
 
-    it(`concurrency: ${CONNECTIONS} concurrent call() promises, using single connection`, function(done) {
+    xit(`concurrency: ${CONNECTIONS} concurrent call() promises, using single connection`, function(done) {
         let callbackCount = 0;
         for (let i = 0; i < CONNECTIONS; i++) {
             client

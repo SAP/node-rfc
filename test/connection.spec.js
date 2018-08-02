@@ -14,10 +14,10 @@
 
 'use strict';
 
-const should = require('should');
-
 const rfcClient = require('./noderfc').Client;
 const abapSystem = require('./abapSystem')();
+
+const should = require('should');
 
 describe('Connection', function() {
     let client = new rfcClient(abapSystem);

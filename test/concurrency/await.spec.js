@@ -14,8 +14,8 @@
 
 'use strict';
 
-const rfcClient = require('../test/noderfc').Client;
-const abapSystem = require('../test/abapSystem')();
+const rfcClient = require('../noderfc').Client;
+const abapSystem = require('../abapSystem')();
 
 const should = require('should');
 

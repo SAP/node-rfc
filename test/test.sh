@@ -5,7 +5,12 @@
 await=$(node -e "console.log(require('compare-versions')(process.version, '7.6.0'))")
 
 if [ $await == "1" ]; then
-    mocha -t 5000 --async-only && mocha testc -t 5000 --async-only
+    mocha --timeout 5000 --async-only "test/concurrency/callback.spec.js" && \
+    mocha --timeout 5000 --async-only "test/concurrency/promise.spec.js" && \
+    mocha --timeout 5000 --async-only "test/concurrency/await.spec.js" && \
+    mocha --timeout 5000 --async-only
 else
-    mocha -t 5000 --async-only && mocha testc -t 5000 --async-only --exclude "test/concurrency.await.spec.js" 
+    mocha --timeout 5000 --async-only "test/concurrency/callback.spec.js" && \
+    mocha --timeout 5000 --async-only "test/concurrency/promise.spec.js" && \
+    mocha --timeout 5000 --async-only
 fi

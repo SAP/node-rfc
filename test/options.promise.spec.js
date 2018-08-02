@@ -15,9 +15,9 @@
 'use strict';
 
 const rfcClient = require('./noderfc').Client;
-const should = require('should');
-
 const abapSystem = require('./abapSystem')();
+
+const should = require('should');
 
 describe('Options promise', function() {
     let client = new rfcClient(abapSystem);
