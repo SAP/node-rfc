@@ -14,12 +14,12 @@
 
 'use strict';
 
-const rfcClient = require('./noderfc').Client;
-const abapSystem = require('./abapSystem')();
+const rfcClient = require('../test/noderfc').Client;
+const abapSystem = require('../test/abapSystem')();
 
 const should = require('should');
 
-const CONNECTIONS = 25;
+const CONNECTIONS = require('./config').connections;
 
 describe('Concurrency await (node > 7.6.0)', function() {
 	this.timeout(15000);

@@ -14,13 +14,13 @@
 
 'use strict';
 
-const rfcClient = require('./noderfc').Client;
-const abapSystem = require('./abapSystem')();
+const rfcClient = require('../test/noderfc').Client;
+const abapSystem = require('../test/abapSystem')();
 
 const should = require('should');
 const Promise = require('bluebird');
 
-const CONNECTIONS = 25;
+const CONNECTIONS = require('./config').connections;
 
 describe('Concurrency promises', function() {
     this.timeout(15000);

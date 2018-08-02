@@ -16,10 +16,11 @@
 
 const should = require('should');
 
-const rfcClient = require('./noderfc').Client;
-const abapSystem = require('./abapSystem')();
+const rfcClient = require('../test/noderfc').Client;
+const abapSystem = require('../test/abapSystem')();
 
-const CONNECTIONS = 25;
+const CONNECTIONS = require('./config').connections;
+
 describe('Concurrency callbacks', function() {
     this.timeout(15000);
 
