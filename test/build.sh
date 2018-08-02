@@ -17,8 +17,8 @@
 # nvm install $lts
 # npm -g install npm yarn
 
-declare -a LTS_BUILD=("6.14.1" "8.11.3" "10.7.0")
-declare -a LTS_TEST=("6.9.0" "6.14.3" "8.9.0" "8.11.3" "10.0.0" "10.7.0")
+declare -a LTS_BUILD=("6.14.1" "8.11.3" "10.8.0")
+declare -a LTS_TEST=("6.9.0" "6.14.3" "8.9.0" "8.11.3" "10.0.0" "10.8.0")
 
 version=`cat ./VERSION` 
 

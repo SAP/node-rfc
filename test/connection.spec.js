@@ -113,29 +113,21 @@ describe('Connection', function() {
 
     it('isAlive and ping() should be true when connected', function(done) {
         client.isAlive.should.be.true;
-        client
-            .ping()
-            .then(res => {
-                res.should.be.true;
-                done();
-            })
-            .catch(err => {
-                done(err);
-            });
+        client.ping((err, res) => {
+            if (err) return done(err);
+            res.should.be.true;
+            done();
+        });
     });
 
     it('isAlive ands ping() should be false when disconnected', function(done) {
         client.close(() => {
             client.isAlive.should.be.false;
-            client
-                .ping()
-                .then(res => {
-                    res.should.be.false;
-                    done();
-                })
-                .catch(err => {
-                    done(err);
-                });
+            client.ping((err, res) => {
+                if (err) return done(err);
+                res.should.be.false;
+                done();
+            });
         });
     });
 

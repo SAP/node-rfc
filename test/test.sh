@@ -5,7 +5,7 @@
 await=$(node -e "console.log(require('compare-versions')(process.version, '7.6.0'))")
 
 if [ $await == "1" ]; then
-    mocha 
+    mocha -t 5000 --async-only
 else
-    mocha --exclude "test/concurrency.await.spec.js" 
+    mocha -t 5000 --async-only --exclude "test/concurrency.await.spec.js" 
 fi

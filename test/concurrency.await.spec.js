@@ -19,18 +19,18 @@ const abapSystem = require('./abapSystem')();
 
 const should = require('should');
 
-const CONNECTIONS = 50;
+const CONNECTIONS = 25;
 
 describe('Concurrency await (node > 7.6.0)', function() {
 	this.timeout(15000);
 
 	let client = new rfcClient(abapSystem);
 
-    beforeEach(function(done) {
-        client.reopen(err => {
-            done(err);
-        });
-    });
+	beforeEach(function(done) {
+		client.reopen(err => {
+			done(err);
+		});
+	});
 
 	afterEach(function(done) {
 		client.close(() => {
@@ -44,10 +44,11 @@ describe('Concurrency await (node > 7.6.0)', function() {
 		(async () => {
 			for (let i = 0; i < CONNECTIONS; i++) {
 				try {
-					let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + i });
+					let res = await client.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' });
 					res.should.be.an.Object();
-					res.should.have.property('ECHOTEXT');
-					res.ECHOTEXT.should.startWith(REQUTEXT + i);
+					res.should.have.properties('RETURN');
+					res.RETURN.should.be.an.Array();
+					res.RETURN.length.should.equal(0);
 				} catch (ex) {
 					return done(ex);
 				}
@@ -65,10 +66,11 @@ describe('Concurrency await (node > 7.6.0)', function() {
 			}
 			for (let c of CLIENTS) {
 				try {
-					let res = await c.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + c.id });
+					let res = await client.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' });
 					res.should.be.an.Object();
-					res.should.have.property('ECHOTEXT');
-					res.ECHOTEXT.should.startWith(REQUTEXT + c.id);
+					res.should.have.properties('RETURN');
+					res.RETURN.should.be.an.Array();
+					res.RETURN.length.should.equal(0);
 					await c.close();
 				} catch (ex) {
 					return done(ex);
@@ -80,12 +82,13 @@ describe('Concurrency await (node > 7.6.0)', function() {
 
 	it(`await: ${CONNECTIONS} recursive calls using single connection`, function(done) {
 		let callbackCount = 0;
-		async function call(count) {
+		async function call() {
 			try {
-				let res = await client.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + count });
+				let res = await client.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' });
 				res.should.be.an.Object();
-				res.should.have.property('ECHOTEXT');
-				res.ECHOTEXT.should.startWith(REQUTEXT + count);
+				res.should.have.properties('RETURN');
+				res.RETURN.should.be.an.Array();
+				res.RETURN.length.should.equal(0);
 				if (++callbackCount == CONNECTIONS) {
 					done();
 				} else {
@@ -95,6 +98,6 @@ describe('Concurrency await (node > 7.6.0)', function() {
 				done(ex);
 			}
 		}
-		call(callbackCount);
+		call();
 	});
 });

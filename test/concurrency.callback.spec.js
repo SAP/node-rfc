@@ -19,7 +19,7 @@ const should = require('should');
 const rfcClient = require('./noderfc').Client;
 const abapSystem = require('./abapSystem')();
 
-const CONNECTIONS = 50;
+const CONNECTIONS = 25;
 describe('Concurrency callbacks', function() {
     this.timeout(15000);
 
@@ -37,21 +37,16 @@ describe('Concurrency callbacks', function() {
         });
     });
 
-    const REQUTEXT = 'Hellö SÄP!';
-
     it('concurrency: invoke() should not block', function(done) {
         let asyncRes;
-        client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT }, function(err, res) {
-            if (err) {
-                return done(err);
-            } else {
-                should.exist(res);
-                res.should.be.an.Object();
-                res.should.have.property('ECHOTEXT');
-                res.ECHOTEXT.should.startWith(REQUTEXT);
-                asyncRes = res;
-                done();
-            }
+        client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' }, function(err, res) {
+            if (err) return done(err);
+            res.should.be.an.Object();
+            res.should.have.properties('RETURN');
+            res.RETURN.should.be.an.Array();
+            res.RETURN.length.should.equal(0);
+            asyncRes = res;
+            done();
         });
         should.not.exist(asyncRes);
     });
@@ -62,18 +57,15 @@ describe('Concurrency callbacks', function() {
             let c = new rfcClient(abapSystem);
             c.connect(err => {
                 if (err) return done(err);
-                c.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT }, function(err, res) {
-                    if (err) {
-                        return done(err);
-                    } else {
-                        should.exist(res);
-                        res.should.be.an.Object();
-                        res.should.have.property('ECHOTEXT');
-                        res.ECHOTEXT.should.startWith(REQUTEXT);
-                        c.close(() => {
-                            if (++callbackCount === CONNECTIONS) done();
-                        });
-                    }
+                client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' }, function(err, res) {
+                    if (err) return done(err);
+                    res.should.be.an.Object();
+                    res.should.have.properties('RETURN');
+                    res.RETURN.should.be.an.Array();
+                    res.RETURN.length.should.equal(0);
+                    c.close(() => {
+                        if (++callbackCount === CONNECTIONS) done();
+                    });
                 });
             });
         }
@@ -82,12 +74,21 @@ describe('Concurrency callbacks', function() {
     it(`concurrency: ${CONNECTIONS} concurrent invoke() calls using single connection`, function(done) {
         let callbackCount = 0;
         for (let count = 0; count < CONNECTIONS; count++) {
-            client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + client.id }, function(err, res) {
+            client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'XDEMO' + client.id }, function(err, res) {
                 if (err) return done(err);
-                should.exist(res);
                 res.should.be.an.Object();
-                res.should.have.property('ECHOTEXT');
-                res.ECHOTEXT.should.startWith(REQUTEXT + client.id);
+                res.should.have.properties('RETURN');
+                res.RETURN.should.be.an.Array();
+                res.RETURN.length.should.equal(1);
+                res.RETURN[0].should.have.properties({
+                    TYPE: 'E',
+                    ID: '01',
+                    NUMBER: '124',
+                    MESSAGE: `User XDEMO${client.id} does not exist`,
+                    MESSAGE_V1: `XDEMO${client.id}`,
+                    ROW: 0,
+                    FIELD: 'BNAME',
+                });
                 if (++callbackCount === CONNECTIONS) done();
             });
         }
@@ -96,18 +97,25 @@ describe('Concurrency callbacks', function() {
     it(`concurrency: ${CONNECTIONS} recursive invoke() calls using single connection`, function(done) {
         let callbackCount = 0;
         function call(count) {
-            client.invoke('STFC_CONNECTION', { REQUTEXT: REQUTEXT + count }, function(err, res) {
-                if (err) {
-                    return done(err);
+            client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'XDEMO' + count }, function(err, res) {
+                if (err) return done(err);
+                res.should.be.an.Object();
+                res.should.have.properties('RETURN');
+                res.RETURN.should.be.an.Array();
+                res.RETURN.length.should.equal(1);
+                res.RETURN[0].should.have.properties({
+                    TYPE: 'E',
+                    ID: '01',
+                    NUMBER: '124',
+                    MESSAGE: `User XDEMO${count} does not exist`,
+                    MESSAGE_V1: `XDEMO${count}`,
+                    ROW: 0,
+                    FIELD: 'BNAME',
+                });
+                if (++callbackCount == CONNECTIONS) {
+                    done();
                 } else {
-                    res.should.be.an.Object();
-                    res.should.have.property('ECHOTEXT');
-                    res.ECHOTEXT.should.startWith(REQUTEXT + count);
-                    if (++callbackCount == CONNECTIONS) {
-                        done();
-                    } else {
-                        call(callbackCount);
-                    }
+                    call(callbackCount);
                 }
             });
         }

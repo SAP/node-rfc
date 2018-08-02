@@ -34,7 +34,7 @@ describe('Performance', function() {
         });
     });
 
-    xit('performance: invoke() BAPI_USER_GET_DETAIL', function(done) {
+    it('performance: invoke() BAPI_USER_GET_DETAIL', function(done) {
         this.timeout(15000);
         client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' }, function(err, res) {
             if (err) return done(err);
@@ -54,7 +54,7 @@ describe('Performance', function() {
         });
     });
 
-    xit('performance: invoke() STFC_PERFORMANCE', function(done) {
+    it('performance: invoke() STFC_PERFORMANCE', function(done) {
         let COUNT = 10000;
         client.invoke(
             'STFC_PERFORMANCE',

@@ -22,17 +22,14 @@ const abapSystem = require('./abapSystem')();
 describe('Errors promise', function() {
     let client = new rfcClient(abapSystem);
 
-    beforeEach(function(done) {
-        client.reopen(err => {
-            done(err);
-        });
+    beforeEach(function() {
+        return client.reopen();
     });
 
-    afterEach(function(done) {
-        client.close(() => {
-            done();
-        });
+    afterEach(function() {
+        return client.close();
     });
+
     it('error: call() promise rejects invalid credentials', function(done) {
         let wrongParams = Object.assign({}, abapSystem);
         wrongParams.user = 'WRONGUSER';

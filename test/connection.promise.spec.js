@@ -22,16 +22,12 @@ const abapSystem = require('./abapSystem')();
 describe('Connection promise', function() {
     let client = new rfcClient(abapSystem);
 
-    beforeEach(function(done) {
-        client.reopen(err => {
-            done(err);
-        });
+    beforeEach(function() {
+        return client.reopen();
     });
 
-    afterEach(function(done) {
-        client.close(() => {
-            done();
-        });
+    afterEach(function() {
+        return client.close();
     });
 
     it('call() STFC_CONNECTION should return string', function() {
@@ -94,6 +90,22 @@ describe('Connection promise', function() {
             res.RFCTABLE[1].RFCINT1.should.equal(importStruct.RFCINT1 + 1);
             res.RFCTABLE[1].RFCINT2.should.equal(importStruct.RFCINT2 + 1);
             res.RFCTABLE[1].RFCINT4.should.equal(importStruct.RFCINT4 + 1);
+        });
+    });
+
+    it('isAlive and ping() should be true when connected', function() {
+        client.isAlive.should.be.true;
+        return client.ping().then(res => {
+            res.should.be.true;
+        });
+    });
+
+    it('isAlive ands ping() should be false when disconnected', function() {
+        return client.close().then(() => {
+            client.isAlive.should.be.false;
+            return client.ping().then(res => {
+                res.should.be.false;
+            });
         });
     });
 });

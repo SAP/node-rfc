@@ -65,13 +65,31 @@ class CloseAsync : public Napi::AsyncWorker
     void Execute()
     {
         client->alive = false;
-
-        RfcCloseConnection(client->connectionHandle, &client->errorInfo);
+        RFC_INT isValid;
+        RfcIsConnectionHandleValid(client->connectionHandle, &isValid, &client->errorInfo);
+        if (client->errorInfo.code == RFC_OK)
+        {
+            // valid handle, close
+            RfcCloseConnection(client->connectionHandle, &client->errorInfo);
+        }
+        else
+        {
+            // invalid handle, assume closed
+            client->errorInfo.code = RFC_OK;
+        }
     }
 
     void OnOK()
     {
-        TRY_CATCH_CALL(Env().Global(), Callback(), 0, {});
+        if (client->errorInfo.code != RFC_OK)
+        {
+            Napi::Value argv[1] = {wrapError(&client->errorInfo)};
+            TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
+        }
+        else
+        {
+            TRY_CATCH_CALL(Env().Global(), Callback(), 0, {});
+        }
     }
 
   private:

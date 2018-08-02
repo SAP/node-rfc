@@ -20,35 +20,29 @@ const abapSystem = require('./abapSystem')();
 const should = require('should');
 const Promise = require('bluebird');
 
-const CONNECTIONS = 50;
+const CONNECTIONS = 25;
 
 describe('Concurrency promises', function() {
     this.timeout(15000);
-
     let client = new rfcClient(abapSystem);
 
-    beforeEach(function(done) {
-        client.reopen(err => {
-            done(err);
-        });
+    beforeEach(function() {
+        return client.reopen();
     });
 
-    afterEach(function(done) {
-        client.close(() => {
-            done();
-        });
+    afterEach(function() {
+        return client.close();
     });
-    const REQUTEXT = 'Hellö SÄP!';
 
     it('concurrency: call() should not block', function(done) {
         let asyncRes;
-        let REQUTEXT = 'Hello SAP!';
         client
-            .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT })
+            .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
             .then(res => {
                 res.should.be.an.Object();
-                res.should.have.property('ECHOTEXT');
-                res.ECHOTEXT.should.startWith(REQUTEXT);
+                res.should.have.properties('RETURN');
+                res.RETURN.should.be.an.Array();
+                res.RETURN.length.should.equal(0);
                 asyncRes = res;
                 done();
             })
@@ -58,18 +52,18 @@ describe('Concurrency promises', function() {
         should.not.exist(asyncRes);
     });
 
-    it(`concurrency: ${CONNECTIONS} parallel connections call() promises`, function(done) {
+    it(`concurrency: ${CONNECTIONS} parallel call() promises`, function(done) {
         let callbackCount = 0;
         for (let i = 0; i < CONNECTIONS; i++) {
-            let c = new rfcClient(abapSystem);
-            c.open()
-                .then(() => {
-                    c.call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + c.id })
+            new rfcClient(abapSystem)
+                .open()
+                .then(c => {
+                    c.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
                         .then(res => {
-                            should.exist(res);
                             res.should.be.an.Object();
-                            res.should.have.property('ECHOTEXT');
-                            res.ECHOTEXT.should.startWith(REQUTEXT + c.id);
+                            res.should.have.properties('RETURN');
+                            res.RETURN.should.be.an.Array();
+                            res.RETURN.length.should.equal(0);
                             c.close(() => {
                                 if (++callbackCount === CONNECTIONS) done();
                             });
@@ -84,42 +78,54 @@ describe('Concurrency promises', function() {
         }
     });
 
-    it(`concurrency: ${CONNECTIONS} parallel call() promises, using single connection`, function(done) {
+    it(`concurrency: ${CONNECTIONS} concurrent call() promises, using single connection`, function(done) {
+        let callbackCount = 0;
+        for (let i = 0; i < CONNECTIONS; i++) {
+            client
+                .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
+                .then(res => {
+                    res.should.be.an.Object();
+                    res.should.have.properties('RETURN');
+                    res.RETURN.should.be.an.Array();
+                    res.RETURN.length.should.equal(0);
+                    if (++callbackCount == CONNECTIONS) done();
+                })
+                .catch(err => {
+                    return done(err);
+                });
+        }
+    });
+
+    it(`concurrency: ${CONNECTIONS} concurrent call() promises, using single connection and Promise.all()`, function() {
         let promises = [];
         for (let counter = 0; counter < CONNECTIONS; counter++) {
             promises.push(
                 client
-                    .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + counter })
+                    .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
                     .then(res => {
-                        should.exist(res);
                         res.should.be.an.Object();
-                        res.should.have.property('ECHOTEXT');
-                        res.ECHOTEXT.should.startWith(REQUTEXT + counter);
+                        res.should.have.properties('RETURN');
+                        res.RETURN.should.be.an.Array();
+                        res.RETURN.length.should.equal(0);
                     })
                     .catch(err => {
                         return err;
                     })
             );
         }
-        Promise.all(promises)
-            .then(() => {
-                done();
-            })
-            .catch(err => {
-                done(err);
-            });
+        return Promise.all(promises);
     });
 
     it(`concurrency: ${CONNECTIONS} recursive call() promises, using single connection`, function(done) {
         let callbackCount = 0;
-        function call(count) {
+        function call() {
             client
-                .call('STFC_CONNECTION', { REQUTEXT: REQUTEXT + count })
+                .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
                 .then(res => {
-                    should.exist(res);
                     res.should.be.an.Object();
-                    res.should.have.property('ECHOTEXT');
-                    res.ECHOTEXT.should.startWith(REQUTEXT + count);
+                    res.should.have.properties('RETURN');
+                    res.RETURN.should.be.an.Array();
+                    res.RETURN.length.should.equal(0);
                     if (++callbackCount == CONNECTIONS) {
                         done();
                     } else {
@@ -130,6 +136,6 @@ describe('Concurrency promises', function() {
                     return done(err);
                 });
         }
-        call(callbackCount);
+        call();
     });
 });
