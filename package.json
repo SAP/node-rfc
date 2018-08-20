@@ -1,7 +1,7 @@
 {
 	"name": "node-rfc",
 	"description": "nodejs bindings for SAP NW RFC SDK",
-	"version": "0.2.0-rc7",
+	"version": "1.0.0-rc",
 	"homepage": "https://github.com/SAP/node-rfc",
 	"author": {
 		"name": "Srdjan Boskovic",
@@ -54,7 +54,8 @@
 		"@types/bluebird": "^3.5.23",
 		"bluebird": "^3.5.1",
 		"node-addon-api": "^1.4.0",
-		"node-pre-gyp": "^0.10.3"
+		"node-pre-gyp": "^0.10.3",
+		"npm": "^6.4.0"
 	},
 	"bundledDependencies": [
 		"node-pre-gyp"

@@ -440,19 +440,20 @@ Napi::Value wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         {
             break;
         }
-        //RFC_FIELD_DESC fieldDesc;
         unsigned int rowCount;
         rc = RfcGetRowCount(tableHandle, &rowCount, &errorInfo);
+
         Napi::Array table = Napi::Array::New(__genv);
 
-        for (unsigned int i = 0; i < rowCount; i++)
+        while (rowCount-- > 0)
         {
-            RfcMoveTo(tableHandle, i, NULL);
-            structHandle = RfcGetCurrentRow(tableHandle, NULL);
-            Napi::Value row = wrapStructure(typeDesc, structHandle, rstrip);
-            (table).Set(i, row);
+            RfcMoveTo(tableHandle, rowCount, NULL);
+            //structHandle = RfcGetCurrentRow(tableHandle, NULL);
+            //Napi::Value row = wrapStructure(typeDesc, structHandle, rstrip);
+            Napi::Value row = wrapStructure(typeDesc, tableHandle, rstrip);
+            RfcDeleteCurrentRow(tableHandle, &errorInfo);
+            (table).Set(rowCount, row);
         }
-
         resultValue = table;
         break;
     }

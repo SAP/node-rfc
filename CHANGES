@@ -1,8 +1,8 @@
 Change log
 ==========
 
-0.2.0-rc7 (2018-07-31)
-----------------------
+1.0.0-rc (2018-08-20)
+---------------------
 
 * N-API, asynchronous and non-blocking 
 * Callback, promise, async/await API
@@ -11,6 +11,7 @@ Change log
 * C/C++ style guide
 * Error handling harmonisation
 * String handling optimisation
+* Tables processing memory consumption optimisation
 * More unit tests
 * README links update, from Service Marketplace to Support Portal
 
