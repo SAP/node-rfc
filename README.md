@@ -99,16 +99,14 @@ Finally, the connection is closed automatically when the instance is deleted by 
 
 ## Installation
 
-Using npm:
+```shell
+yarn add node-rfc
+```
+
+or if you prefer npm:
 
 ```shell
 npm install node-rfc
-```
-
-or yarn:
-
-```shell
-yarn add node-rfc
 ```
 
 Build from the latest source:
