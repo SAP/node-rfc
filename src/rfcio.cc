@@ -353,6 +353,7 @@ Napi::Value wrapString(SAP_UC *uc, int length, bool rstrip)
     {
         return Napi::String::New(__genv, "");
     }
+    // try with 3 bytes per unicode character
     unsigned int utf8Size = length * 3;
     char *utf8 = (char *)malloc(utf8Size + 1);
     utf8[0] = '\0';
@@ -361,8 +362,18 @@ Napi::Value wrapString(SAP_UC *uc, int length, bool rstrip)
 
     if (rc != RFC_OK)
     {
+        // not enough, try with 6
         free((char *)utf8);
-        Napi::Error::Fatal("wrapString", "node-rfc internal error");
+        utf8Size = length * 6;
+        utf8 = (char *)malloc(utf8Size + 1);
+        utf8[0] = '\0';
+        resultLen = 0;
+        rc = RfcSAPUCToUTF8(uc, length, (RFC_BYTE *)utf8, &utf8Size, &resultLen, &errorInfo);
+        if (rc != RFC_OK)
+        {
+            // something went definitely wrong here
+            Napi::Error::Fatal("wrapString", "node-rfc internal error");
+        }
     }
 
     if (rstrip && strlen(utf8))

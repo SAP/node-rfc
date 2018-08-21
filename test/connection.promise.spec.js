@@ -19,6 +19,8 @@ const abapSystem = require('./abapSystem')();
 
 const should = require('should');
 
+const UNICODETEST = require('./connection.spec');
+
 describe('Connection promise', function() {
     let client = new rfcClient(abapSystem);
 
@@ -30,21 +32,12 @@ describe('Connection promise', function() {
         return client.close();
     });
 
-    it('call() STFC_CONNECTION should return string', function() {
-        return client.call('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' }).then(res => {
+    it('call() STFC_CONNECTION should return unicode string', function() {
+        return client.call('STFC_CONNECTION', { REQUTEXT: UNICODETEST }).then(res => {
             should.exist(res);
             res.should.be.an.Object();
             res.should.have.property('ECHOTEXT');
-            res.ECHOTEXT.should.startWith('Hello SAP!');
-        });
-    });
-
-    it('call() STFC_CONNECTION should return umlauts', function() {
-        return client.call('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' }).then(res => {
-            should.exist(res);
-            res.should.be.an.Object();
-            res.should.have.property('ECHOTEXT');
-            res.ECHOTEXT.should.startWith('H€llö SAP!');
+            res.ECHOTEXT.should.startWith(UNICODETEST);
         });
     });
 

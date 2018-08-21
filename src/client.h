@@ -15,7 +15,7 @@
 #ifndef NODE_SAPNWRFC_CLIENT_H_
 #define NODE_SAPNWRFC_CLIENT_H_
 
-#define SAPNWRFC_BINDING_VERSION "1.0.0-rc1"
+#define SAPNWRFC_BINDING_VERSION "1.0.0-rc2"
 
 #include <uv.h>
 #include <napi.h>

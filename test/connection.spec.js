@@ -19,6 +19,9 @@ const abapSystem = require('./abapSystem')();
 
 const should = require('should');
 
+// https://github.com/SAP/node-rfc/issues/57
+const UNICODETEST = 'ทดสอบสร้างลูกค้าจากภายนอกครั้งที่ 3'.repeat(7);
+
 describe('Connection', function() {
     let client = new rfcClient(abapSystem);
 
@@ -146,24 +149,13 @@ describe('Connection', function() {
         });
     });
 
-    it('invoke() STFC_CONNECTION should return string', function(done) {
-        client.invoke('STFC_CONNECTION', { REQUTEXT: 'Hello SAP!' }, function(err, res) {
+    it('invoke() STFC_CONNECTION should return unicode string', function(done) {
+        client.invoke('STFC_CONNECTION', { REQUTEXT: UNICODETEST }, function(err, res) {
             should.not.exist(err);
             should.exist(res);
             res.should.be.an.Object();
             res.should.have.property('ECHOTEXT');
-            res.ECHOTEXT.should.startWith('Hello SAP!');
-            done();
-        });
-    });
-
-    it('invoke() STFC_CONNECTION should return umlauts', function(done) {
-        client.invoke('STFC_CONNECTION', { REQUTEXT: 'H€llö SAP!' }, function(err, res) {
-            should.not.exist(err);
-            should.exist(res);
-            res.should.be.an.Object();
-            res.should.have.property('ECHOTEXT');
-            res.ECHOTEXT.should.startWith('H€llö SAP!');
+            res.ECHOTEXT.should.startWith(UNICODETEST);
             done();
         });
     });
@@ -215,3 +207,5 @@ describe('Connection', function() {
         });
     });
 });
+
+module.exports = UNICODETEST;

@@ -12,6 +12,7 @@ Change log
 * Error handling harmonisation
 * String handling optimisation
 * Tables processing memory consumption optimisation
+* Unicode encoding fallback fix
 * More unit tests
 * README links update, from Service Marketplace to Support Portal
 
