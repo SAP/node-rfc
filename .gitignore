@@ -10,7 +10,7 @@
 .deps
 obj.target
 build/
-node_modules/
+node_modules*/
 doc/_build/
 release/
 lib/binding/

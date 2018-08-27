@@ -179,7 +179,14 @@ describe('Connection', function() {
             RFCDATA1: '1DATA1',
             RFCDATA2: 'DATA222',
         };
-        let importTable = [importStruct];
+        let INPUTROWS = 10;
+        let importTable = [];
+        for (let i = 0; i < INPUTROWS; i++) {
+            let row = {};
+            Object.assign(row, importStruct);
+            row.RFCINT1 = i;
+            importTable.push(row);
+        }
 
         client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err, res) {
             should.not.exist(err);
@@ -187,22 +194,37 @@ describe('Connection', function() {
             res.should.be.an.Object();
             res.should.have.properties('ECHOSTRUCT', 'RFCTABLE');
 
-            res.ECHOSTRUCT.RFCCHAR1.should.equal(importStruct.RFCCHAR1);
-            res.ECHOSTRUCT.RFCCHAR2.should.equal(importStruct.RFCCHAR2);
-            res.ECHOSTRUCT.RFCCHAR4.should.equal(importStruct.RFCCHAR4);
-            res.ECHOSTRUCT.RFCFLOAT.should.equal(importStruct.RFCFLOAT);
-            res.ECHOSTRUCT.RFCINT1.should.equal(importStruct.RFCINT1);
-            res.ECHOSTRUCT.RFCINT2.should.equal(importStruct.RFCINT2);
-            res.ECHOSTRUCT.RFCINT4.should.equal(importStruct.RFCINT4);
-            res.ECHOSTRUCT.RFCDATA1.should.startWith(importStruct.RFCDATA1);
-            res.ECHOSTRUCT.RFCDATA2.should.startWith(importStruct.RFCDATA2);
-            res.ECHOSTRUCT.RFCHEX3.toString().should.equal(importStruct.RFCHEX3.toString());
+            // ECHOSTRUCT match IMPORTSTRUCT
+            for (let k in importStruct) {
+                if (k === 'RFCHEX3') {
+                    res.ECHOSTRUCT[k].toString().should.equal(importStruct[k].toString());
+                } else {
+                    res.ECHOSTRUCT[k].should.equal(importStruct[k]);
+                }
+            }
 
-            res.RFCTABLE.should.have.length(2);
-            res.RFCTABLE[1].RFCFLOAT.should.equal(importStruct.RFCFLOAT + 1);
-            res.RFCTABLE[1].RFCINT1.should.equal(importStruct.RFCINT1 + 1);
-            res.RFCTABLE[1].RFCINT2.should.equal(importStruct.RFCINT2 + 1);
-            res.RFCTABLE[1].RFCINT4.should.equal(importStruct.RFCINT4 + 1);
+            // added row is incremented IMPORTSTRUCT
+            res.RFCTABLE.should.have.length(INPUTROWS + 1);
+
+            // output table match import table
+            for (let i = 0; i < INPUTROWS; i++) {
+                let rowIn = importTable[i];
+                let rowOut = res.RFCTABLE[i];
+                for (let k in rowIn) {
+                    if (k === 'RFCHEX3') {
+                        rowIn[k].toString().should.equal(rowOut[k].toString());
+                    } else {
+                        rowIn[k].should.equal(rowOut[k]);
+                    }
+                }
+            }
+
+            // added row match incremented IMPORTSTRUCT
+            res.RFCTABLE[INPUTROWS].RFCFLOAT.should.equal(importStruct.RFCFLOAT + 1);
+            res.RFCTABLE[INPUTROWS].RFCINT1.should.equal(importStruct.RFCINT1 + 1);
+            res.RFCTABLE[INPUTROWS].RFCINT2.should.equal(importStruct.RFCINT2 + 1);
+            res.RFCTABLE[INPUTROWS].RFCINT4.should.equal(importStruct.RFCINT4 + 1);
+
             done();
         });
     });

@@ -34,7 +34,7 @@ describe('Concurrency promises', function() {
     afterEach(function() {
         return client.close();
     });
-    
+
     it('concurrency: call() should not block', function(done) {
         let asyncRes;
         client

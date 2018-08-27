@@ -28,5 +28,6 @@
         "exception": "cpp",
         "initializer_list": "cpp",
         "stdexcept": "cpp"
-    }
+    },
+    "git.ignoreLimitWarning": true
 }

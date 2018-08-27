@@ -256,6 +256,7 @@ class PrepareAsync : public Napi::AsyncWorker
                 Napi::String name = paramNames.Get(i).ToString();
                 Napi::Value value = params.Get(name);
                 argv[0] = fillFunctionParameter(functionDescHandle, functionHandle, name, value);
+
                 if (!argv[0].IsUndefined())
                 {
                     break;

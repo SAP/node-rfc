@@ -86,51 +86,70 @@ Napi::Value fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, R
     return scope.Escape(fillVariable(paramDesc.type, functionHandle, paramDesc.name, value, paramDesc.typeDescHandle));
 }
 
+Napi::Value fillStructure(RFC_STRUCTURE_HANDLE structHandle, RFC_TYPE_DESC_HANDLE functionDescHandle, SAP_UC *cName, Napi::Value value)
+{
+    RFC_RC rc;
+    RFC_ERROR_INFO errorInfo;
+
+    Napi::EscapableHandleScope scope(value.Env());
+
+    Napi::Object structObj = value.ToObject(); // ->ToObject();
+    Napi::Array structNames = structObj.GetPropertyNames();
+    unsigned int structSize = structNames.Length();
+
+    RFC_FIELD_DESC fieldDesc;
+
+    Napi::Value retVal = value.Env().Undefined();
+
+    for (unsigned int i = 0; i < structSize; i++)
+    {
+        Napi::String name = structNames.Get(i).ToString();
+        Napi::Value value = structObj.Get(name);
+
+        SAP_UC *cValue = fillString(name);
+        rc = RfcGetFieldDescByName(functionDescHandle, cValue, &fieldDesc, &errorInfo);
+        free(cValue);
+        if (rc != RFC_OK)
+        {
+            retVal = wrapError(&errorInfo);
+            break;
+        }
+        retVal = fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
+        if (!retVal.IsUndefined())
+        {
+            break;
+        }
+    }
+    return retVal;
+}
+
 Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Napi::Value value, RFC_TYPE_DESC_HANDLE functionDescHandle)
 {
     Napi::EscapableHandleScope scope(value.Env());
     RFC_RC rc = RFC_OK;
     RFC_ERROR_INFO errorInfo;
-    RFC_STRUCTURE_HANDLE structHandle;
-    RFC_TABLE_HANDLE tableHandle;
     SAP_UC *cValue;
 
     switch (typ)
     {
     case RFCTYPE_STRUCTURE:
     {
+        RFC_STRUCTURE_HANDLE structHandle;
         rc = RfcGetStructure(functionHandle, cName, &structHandle, &errorInfo);
         if (rc != RFC_OK)
         {
-            break;
+            return scope.Escape(wrapError(&errorInfo));
         }
-        Napi::Object structObj = value.ToObject(); // ->ToObject();
-        Napi::Array structNames = structObj.GetPropertyNames();
-        unsigned int structSize = structNames.Length();
-
-        RFC_FIELD_DESC fieldDesc;
-        for (unsigned int i = 0; i < structSize; i++)
+        Napi::Value rv = fillStructure(structHandle, functionDescHandle, cName, value);
+        if (!rv.IsUndefined())
         {
-            Napi::String name = structNames.Get(i).ToString();
-            Napi::Value value = structObj.Get(name);
-
-            cValue = fillString(name); // cValue = cName
-            rc = RfcGetFieldDescByName(functionDescHandle, cValue, &fieldDesc, &errorInfo);
-            free(cValue);
-            if (rc != RFC_OK)
-            {
-                return scope.Escape(wrapError(&errorInfo));
-            }
-            Napi::Value fillError = fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
-            if (!fillError.IsUndefined())
-            {
-                return scope.Escape(fillError);
-            }
+            return scope.Escape(rv);
         }
         break;
     }
     case RFCTYPE_TABLE:
     {
+        RFC_TABLE_HANDLE tableHandle;
         rc = RfcGetTable(functionHandle, cName, &tableHandle, &errorInfo);
 
         if (rc != RFC_OK)
@@ -142,38 +161,12 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
 
         for (unsigned int i = 0; i < rowCount; i++)
         {
-            structHandle = RfcAppendNewRow(tableHandle, &errorInfo);
-            if (structHandle == NULL)
+            RFC_STRUCTURE_HANDLE structHandle = RfcAppendNewRow(tableHandle, &errorInfo);
+            Napi::Value rv = fillStructure(structHandle, functionDescHandle, cName, array.Get(i).As<Napi::Object>());
+            if (!rv.IsUndefined())
             {
-                rc = RFC_INVALID_HANDLE;
-                break;
+                return scope.Escape(rv);
             }
-
-            // FIXME: DRY from RFCTYPE_STRUCTURE!
-            Napi::Object structObj = array.Get(i).As<Napi::Object>();
-            Napi::Array structNames = structObj.GetPropertyNames();
-            unsigned int structSize = structNames.Length();
-
-            RFC_FIELD_DESC fieldDesc;
-            for (unsigned int i = 0; i < structSize; i++)
-            {
-                Napi::String name = structNames.Get(i).ToString();
-                Napi::Value value = structObj.Get(name);
-
-                cValue = fillString(name); // cValue = cName
-                rc = RfcGetFieldDescByName(functionDescHandle, cValue, &fieldDesc, &errorInfo);
-                free(cValue);
-                if (rc != RFC_OK)
-                {
-                    return scope.Escape(wrapError(&errorInfo));
-                }
-                Napi::Value fillError = fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
-                if (!fillError.IsUndefined())
-                {
-                    return scope.Escape(fillError);
-                }
-            }
-            // FIXME: END DRY
         }
         break;
     }
@@ -459,8 +452,6 @@ Napi::Value wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         while (rowCount-- > 0)
         {
             RfcMoveTo(tableHandle, rowCount, NULL);
-            //structHandle = RfcGetCurrentRow(tableHandle, NULL);
-            //Napi::Value row = wrapStructure(typeDesc, structHandle, rstrip);
             Napi::Value row = wrapStructure(typeDesc, tableHandle, rstrip);
             RfcDeleteCurrentRow(tableHandle, &errorInfo);
             (table).Set(rowCount, row);

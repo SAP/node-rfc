@@ -147,4 +147,46 @@ describe('Errors', function() {
             done();
         });
     });
+
+    it('error: non-existing field in input structure', function(done) {
+        let importStruct = {
+            XRFCCHAR1: 'A',
+            RFCCHAR2: 'BC',
+            RFCCHAR4: 'DEFG',
+        };
+
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object();
+            err.should.have.properties({
+                name: 'RfcLibError',
+                code: 20,
+                key: 'RFC_INVALID_PARAMETER',
+                message: "field 'XRFCCHAR1' not found",
+            });
+            done();
+        });
+    });
+
+    it('error: non-existing field in input table', function(done) {
+        let importTable = [
+            {
+                XRFCCHAR1: 'A',
+                RFCCHAR2: 'BC',
+                RFCCHAR4: 'DEFG',
+            },
+        ];
+
+        client.invoke('STFC_STRUCTURE', { RFCTABLE: importTable }, function(err) {
+            should.exist(err);
+            err.should.be.an.Object();
+            err.should.have.properties({
+                name: 'RfcLibError',
+                code: 20,
+                key: 'RFC_INVALID_PARAMETER',
+                message: "field 'XRFCCHAR1' not found",
+            });
+            done();
+        });
+    });
 });
