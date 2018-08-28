@@ -1,0 +1,85 @@
+Change log
+==========
+
+1.0.0-rc3 (2018-08-29)
+---------------------
+
+* N-API, asynchronous and non-blocking 
+* Callback, promise, async/await API
+* Connection pool
+* Typescript and ES-next syntax support
+* C/C++ style guide
+* Error handling harmonisation
+* String handling optimisation
+* Tables processing harmonisation and memory consumption fix
+* Unicode encoding fallback fix
+* More unit tests
+* README links update, from Service Marketplace to Support Portal
+
+Incompatible changes:
+
+* client.connectionInfo() gunction replaced by client.connectionInfo getter
+* client.getVersion() replaced by client.version getter, format changed as well
+* client.isAlive() replaced by client.isAlive getter
+
+0.1.16 (2018-27-04)
+-------------------
+- Decimal and Float input conversions #52 fix
+- Decimal libraries support, like decimal.js
+
+0.1.15 (2018-20-04)
+-------------------
+
+- Import parameters type check added
+- Deprecated Nan::MakeCallback() replaced with Nan:Call()
+- getVersion() returns an object instead of array, unit test added as well
+- Skip not needed parameters (not "supplied" / "requested" on ABAP side)
+
+
+0.1.14 (2018-04-03)
+-------------------
+- Memory leak fix [CRITICAL]
+- Source code cleanup
+- vscode settings for editing on Mac
+
+
+0.1.13 (2017-12-05)
+-------------------
+- Catching constuctor errors
+- Fix issue 35, libstdc++ location fix
+- Tabs and formatting
+
+0.1.12 (2017-11-29)
+-------------------
+- 4, 6 and 8 lts binaries
+- byte arrays handling
+
+0.1.11 (2017-01-13)
+-------------------
+- Deployment test, no changes
+
+0.1.7 (2016-12-23)
+------------------
+- CI support
+
+0.1.6 (2016-11-22)
+------------------
+- NAN for easier nodejs release independent development
+- Fix issue 19, nodejs 6 support
+- Fix issue 11, locking on Windows, by replacing the mutex with semaphore
+- Fix issue 17, avoid binding.gyp manual editing on Windows
+
+0.1.5 (2015-09-02)
+------------------
+- nodejs 0.12 api
+- error handling
+
+0.1.4 (2014-08-07)
+------------------
+- documentation fix
+- Linux binary tested on Ubuntu 14.04
+
+
+0.1.3 (2014-8-6)
+----------------
+- first release

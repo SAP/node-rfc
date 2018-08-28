@@ -79,7 +79,7 @@ describe('Concurrency promises', function() {
         }
     });
 
-    xit(`concurrency: ${CONNECTIONS} concurrent call() promises, using single connection`, function(done) {
+    it(`concurrency: ${CONNECTIONS} concurrent call() promises, using single connection`, function(done) {
         let callbackCount = 0;
         for (let i = 0; i < CONNECTIONS; i++) {
             client
