@@ -4,8 +4,21 @@ import * as Promise from 'bluebird';
 const binary = require('node-pre-gyp');
 const path = require('path');
 const binding_path = binary.find(path.resolve(path.join(__dirname, '../../package.json')));
-const binding: RfcClientBinding = require(binding_path);
+console.log('::', binding_path);
 
+let binding: RfcClientBinding;
+try {
+	binding = require(binding_path);
+} catch (ex) {
+	let errorMessage = `\nnode-rfc module not found: ${binding_path}\nor\nSAP NW RFC shared library not found.`;
+	if (process.platform === 'win32') {
+		errorMessage += ' Check if on %PATH%';
+	} else {
+		errorMessage += ' Check "ldconfig -p | grep sap"';
+	}
+	errorMessage += ' and check SAP NW RFC SDK installation guides.\n';
+	throw new Error(errorMessage);
+}
 interface RfcConnectionInfo {
 	host: string;
 	partnerHost: string;

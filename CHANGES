@@ -1,7 +1,7 @@
 Change log
 ==========
 
-1.0.0-rc3 (2018-08-29)
+1.0.0-rc4 (2018-08-29)
 ---------------------
 
 * N-API, asynchronous and non-blocking 
@@ -10,6 +10,7 @@ Change log
 * Typescript and ES-next syntax support
 * C/C++ style guide
 * Error handling harmonisation
+* Descriptive error when SAP NW RFC SDK shared lib not found
 * String handling optimisation
 * Tables processing harmonisation and memory consumption fix
 * Unicode encoding fallback fix
