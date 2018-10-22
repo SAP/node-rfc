@@ -15,6 +15,7 @@ Change log
 * Tables processing harmonisation and memory consumption fix
 * Unicode encoding fallback fix
 * More unit tests
+* Single empty fieldname tables
 * README links update, from Service Marketplace to Support Portal
 
 Incompatible changes:

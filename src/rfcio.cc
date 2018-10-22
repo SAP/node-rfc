@@ -162,7 +162,14 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         for (unsigned int i = 0; i < rowCount; i++)
         {
             RFC_STRUCTURE_HANDLE structHandle = RfcAppendNewRow(tableHandle, &errorInfo);
-            Napi::Value rv = fillStructure(structHandle, functionDescHandle, cName, array.Get(i).As<Napi::Object>());
+            Napi::Value line = array.Get(i);
+            if (!line.IsObject())
+            {
+                Napi::Object lineObj = Napi::Object::New(value.Env());
+                lineObj.Set(Napi::String::New(value.Env(), ""), line);
+                line = lineObj;
+            }
+            Napi::Value rv = fillStructure(structHandle, functionDescHandle, cName, line);
             if (!rv.IsUndefined())
             {
                 return scope.Escape(rv);
@@ -409,6 +416,15 @@ Napi::Value wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE st
             Napi::Error::New(__genv, wrapError(&errorInfo).ToString()).ThrowAsJavaScriptException();
         }
         (resultObj).Set(wrapString(fieldDesc.name), wrapVariable(fieldDesc.type, structHandle, fieldDesc.name, fieldDesc.nucLength, fieldDesc.typeDescHandle, rstrip));
+    }
+
+    if (fieldCount == 1)
+    {
+        Napi::String fieldName = resultObj.GetPropertyNames().Get((uint32_t)0).As<Napi::String>();
+        if (fieldName.Utf8Value().size() == 0)
+        {
+            return scope.Escape(resultObj.Get(fieldName));
+        }
     }
 
     return scope.Escape(resultObj);
