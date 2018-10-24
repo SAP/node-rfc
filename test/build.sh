@@ -22,18 +22,21 @@ declare -a LTS_TEST=("6.9.0" "6.14.3" "8.9.0" "8.11.4" "10.0.0" "10.9.0")
 
 version=`cat ./VERSION` 
 
-if [ "$(expr substr $(uname -s) 1 4)" == "MSYS" ]; then
+platform=`uname`
+
+if [ "$platform" == "MSYS" ]; then
 	osext="win32"
-elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+elif [ "$platform" == "Linux" ]; then
 	osext="linux"
+elif [ "$platform" == "Darwin" ]; then
+	osext="darwin"
 else
-    platform="$(expr substr $(uname -s) 1 10)"
 	printf "\nPlatform not supported: $platform\n"
-	exit 1
 fi
 
 BUILD_LOG="test/pass-$osext.log"
 rm $BUILD_LOG
+touch $BUILD_LOG
 
 #
 # Build
@@ -47,6 +50,9 @@ if [ "$1" != "test" ]; then
     do
         printf "\n============= building: $lts =============\n"
         nvm use $lts
+        if [ $? -ne 0 ]; then
+            nvm install $lts
+        fi
         node-pre-gyp configure build package && printf "build: node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)')\n" >> $BUILD_LOG
     done
 
@@ -60,6 +66,9 @@ fi
 for lts in "${LTS_TEST[@]}"
 do
     nvm use $lts
+    if [ $? -ne 0 ]; then
+        nvm install $lts
+    fi
     printf "\n============= testing: $lts =============\n"
     npm run test
     if [ $? == 0 ]; then
@@ -68,4 +77,5 @@ do
         test="fail $?:"
     fi
     printf $test  >> $BUILD_LOG && printf " node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)') napi:$(node -e 'console.log(process.versions.napi)')\n" >> $BUILD_LOG
+    cat $BUILD_LOG
 done

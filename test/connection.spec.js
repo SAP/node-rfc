@@ -171,7 +171,7 @@ describe('Connection', function() {
             RFCINT2: 2,
             RFCINT4: 345,
 
-            RFCHEX3: '\x01\x02\x03', //fgh',
+            RFCHEX3: Buffer.from('\x01\x02\x03', 'ascii'),
 
             RFCTIME: '121120',
             RFCDATE: '20140101',

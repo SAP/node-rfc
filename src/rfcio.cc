@@ -163,7 +163,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         {
             RFC_STRUCTURE_HANDLE structHandle = RfcAppendNewRow(tableHandle, &errorInfo);
             Napi::Value line = array.Get(i);
-            if (!line.IsObject())
+            if (line.IsBuffer() || line.IsString() || line.IsNumber())
             {
                 Napi::Object lineObj = Napi::Object::New(value.Env());
                 lineObj.Set(Napi::String::New(value.Env(), ""), line);
@@ -191,22 +191,66 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         break;
     case RFCTYPE_BYTE:
     {
-        std::string str = value.ToString().Utf8Value();
-        char *asciiValue = &str[0];
-        unsigned int size = str.length();
+
+        char *asciiValue;
+        unsigned int size;
+
+        if (value.IsBuffer())
+        {
+            Napi::Uint8Array buf = value.As<Uint8Array>();
+            asciiValue = (char *)&buf[0];
+            size = buf.ByteLength();
+        }
+        // else if (value.IsString())
+        // {
+        //     Napi::String buf = value.ToString();
+        //     // asciiValue = ...
+        // }
+        else
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Buffer expected when filling field '%s' of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
+
         SAP_RAW *byteValue = (SAP_RAW *)malloc(size);
+        //memcpy(byteValue, asciiValue, size);
         memcpy(byteValue, reinterpret_cast<SAP_RAW *>(asciiValue), size);
         rc = RfcSetBytes(functionHandle, cName, byteValue, size, &errorInfo);
         free(byteValue);
+
         break;
     }
     case RFCTYPE_XSTRING:
     {
-        std::string str = value.ToString().Utf8Value();
-        char *asciiValue = &str[0];
-        unsigned int size = str.length();
+        Napi::Uint8Array buf;
+        char *asciiValue;
+        unsigned int size;
+
+        if (value.IsBuffer())
+        {
+            buf = value.As<Uint8Array>();
+            asciiValue = (char *)&buf[0];
+            size = buf.ByteLength();
+        }
+        // else if (value.IsString())
+        // {
+        //     buf = value.ToString().As<Napi::Uint8Array>();
+        //     asciiValue = (char *)&buf[0];
+        //     size = buf.ByteLength();
+        // }
+        else
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Buffer expected when filling field '%s' of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
         SAP_RAW *byteValue = (SAP_RAW *)malloc(size);
+        //memcpy(byteValue, asciiValue, size);
         memcpy(byteValue, reinterpret_cast<SAP_RAW *>(asciiValue), size);
+        //rc = RfcSetBytes(functionHandle, cName, byteValue, size, &errorInfo);
         rc = RfcSetXString(functionHandle, cName, byteValue, size, &errorInfo);
         free(byteValue);
         break;
@@ -312,7 +356,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         return scope.Escape(wrapError(&errorInfo));
     }
     return scope.Env().Undefined();
-}
+} // namespace node_rfc
 
 ////////////////////////////////////////////////////////////////////////////////
 // WRAP FUNCTIONS (from RFC)
@@ -523,11 +567,12 @@ Napi::Value wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
             free(byteValue);
             break;
         }
-        resultValue = Napi::Buffer<char>::New(__genv, reinterpret_cast<char *>(byteValue), cLen); // as a buffer
+        resultValue = Napi::Buffer<char>::New(__genv, reinterpret_cast<char *>(byteValue), cLen); // .As<Napi::Uint8Array>(); // as a buffer
         //resultValue = Napi::String::New(env, reinterpret_cast<const char *>(byteValue)); // or as a string
         // do not free byteValue - it will be freed when the buffer is garbage collected
         break;
     }
+
     case RFCTYPE_XSTRING:
     {
         SAP_RAW *byteValue;

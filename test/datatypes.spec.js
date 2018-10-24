@@ -19,6 +19,8 @@ const abapSystem = require('./abapSystem')();
 
 const should = require('should');
 const Decimal = require('decimal.js');
+const randomBytes = require('random-bytes');
+
 const Utils = require('./utils');
 
 describe('Datatypes', function() {
@@ -121,7 +123,7 @@ describe('Datatypes', function() {
 
     it('RAW/BYTE accepts binary string', function(done) {
         let isInput = {
-            ZRAW: '\x41\x42\x43\x44\x45\x46\x47\x48\x49\x50\x51\x52\x53\x54\x55\x56\x57',
+            ZRAW: Buffer.from('\x41\x42\x43\x44\x45\x46\x47\x48\x49\x50\x51\x52\x53\x54\x55\x56\x57', 'ascii'),
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
@@ -134,7 +136,7 @@ describe('Datatypes', function() {
 
     it('RAW/BYTE accepts string', function(done) {
         let isInput = {
-            ZRAW: 'abcdefghijklmnopq',
+            ZRAW: Buffer.from('abcdefghijklmnopq', 'ascii'),
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
@@ -158,7 +160,7 @@ describe('Datatypes', function() {
 
     it('XSTRING accepts binary string', function(done) {
         let isInput = {
-            ZRAWSTRING: '\x41\x42\x43\x44\x45\x46\x47\x48\x49\x50\x51\x52\x53\x54\x55\x56\x57',
+            ZRAWSTRING: Buffer.from('\xd8\x42\x43\x44\x45\x46\x47\x48\x49\x50\x51\x52\x53\x54\x55\x56\x57', 'ascii'),
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
@@ -171,7 +173,7 @@ describe('Datatypes', function() {
 
     it('XSTRING accepts string', function(done) {
         let isInput = {
-            ZRAWSTRING: 'abcdefghijklmnopq',
+            ZRAWSTRING: Buffer.from('abcdefghijklmnopq', 'ascii'),
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
@@ -184,11 +186,61 @@ describe('Datatypes', function() {
 
     it('XSTRING accepts Buffer', function(done) {
         let isInput = {
-            ZRAWSTRING: Buffer.alloc(17, '01234567890123456'),
+            ZRAWSTRING: Buffer.from('01234567890123456', 'ascii'),
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
             isInput.ZRAWSTRING.equals(res.ES_OUTPUT.ZRAWSTRING).should.equal(true);
+            done();
+        });
+    });
+
+    it('BYTE and XSTRING tables', function(done) {
+        let IT_SXMSMGUIDT = [];
+        let IT_SDOKCNTBINS = [];
+
+        const COUNT = 50;
+
+        for (let i = 0; i < COUNT; i++) {
+            // // array -> unnamed structure
+            IT_SXMSMGUIDT.push(new Buffer.from(randomBytes.sync(16)));
+            IT_SXMSMGUIDT.push(new Uint8Array(randomBytes.sync(16)));
+            // todo: IT_SXMSMGUIDT.push('\xd8\xd8');
+
+            // // structure -> unnaamed structure
+            IT_SXMSMGUIDT.push({ '': new Buffer.from(randomBytes.sync(16)) });
+            IT_SXMSMGUIDT.push({ '': new Uint8Array(randomBytes.sync(16)) });
+
+            // // named structure
+            IT_SDOKCNTBINS.push({ LINE: new Buffer.from(randomBytes.sync(1022)) });
+            IT_SDOKCNTBINS.push({ LINE: new Uint8Array(randomBytes.sync(1022)) });
+        }
+
+        let inp = {
+            IT_SXMSMGUIDT: IT_SXMSMGUIDT,
+            IT_SDOKCNTBINS: IT_SDOKCNTBINS,
+        };
+        client.invoke('/COE/RBP_FE_DATATYPES', inp, function(err, result) {
+            should.not.exist(err);
+
+            IT_SXMSMGUIDT.length.should.equal(result.ET_SXMSMGUIDT.length);
+            IT_SDOKCNTBINS.length.should.equal(result.ET_SDOKCNTBINS.length);
+
+            for (let i = 0; i < IT_SXMSMGUIDT.length; i++) {
+                let lineIn = IT_SXMSMGUIDT[i];
+                if ('' in lineIn) lineIn = lineIn[''];
+                let lineOut = result.ET_SXMSMGUIDT[i];
+                let test = Utils.compareBuffers(lineIn, lineOut);
+                test.should.equal(true);
+            }
+
+            for (let i = 0; i < IT_SDOKCNTBINS.length; i++) {
+                let lineIn = IT_SDOKCNTBINS[i].LINE;
+                let lineOut = result.ET_SDOKCNTBINS[i].LINE;
+
+                let test = Utils.compareBuffers(lineIn, lineOut);
+                test.should.equal(true);
+            }
             done();
         });
     });
