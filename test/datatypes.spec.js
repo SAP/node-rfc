@@ -147,7 +147,7 @@ describe('Datatypes', function() {
 
     it('RAW/BYTE accepts Buffer', function(done) {
         let isInput = {
-            ZRAW: Buffer.alloc(17, '01234567890123456'),
+            ZRAW: Utils.XBYTES_TEST
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
@@ -159,7 +159,7 @@ describe('Datatypes', function() {
 
     it('XSTRING accepts binary string', function(done) {
         let isInput = {
-            ZRAWSTRING: Buffer.from('\xd8\x42\x43\x44\x45\x46\x47\x48\x49\x50\x51\x52\x53\x54\x55\x56\x57', 'hex'),
+            ZRAWSTRING: Utils.XBYTES_TEST
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
@@ -171,7 +171,7 @@ describe('Datatypes', function() {
 
     it('XSTRING accepts string', function(done) {
         let isInput = {
-            ZRAWSTRING: Buffer.from('abcdefghijklmnopq', 'hex'),
+            ZRAWSTRING: Utils.XBYTES_TEST
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
@@ -184,7 +184,7 @@ describe('Datatypes', function() {
 
     it('XSTRING accepts Buffer', function(done) {
         let isInput = {
-            ZRAWSTRING: Buffer.from('01234567890123456', 'hex'),
+            ZRAWSTRING: Utils.XBYTES_TEST
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);

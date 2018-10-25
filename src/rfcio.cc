@@ -200,7 +200,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
         }
 
         Napi::Uint8Array buf = value.As<Uint8Array>();
-        u_int8_t *asciiValue = (u_int8_t *)&buf[0];
+        char *asciiValue = (char *)&buf[0];
         unsigned int size = buf.ByteLength();
         SAP_RAW *byteValue = (SAP_RAW *)malloc(size);
 
@@ -224,7 +224,7 @@ Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         Napi::Uint8Array buf = value.As<Uint8Array>();
-        u_int8_t *asciiValue = (u_int8_t *)&buf[0];
+        char *asciiValue = (char *)&buf[0];
         unsigned int size = buf.ByteLength();
         SAP_RAW *byteValue = (SAP_RAW *)malloc(size);
 
