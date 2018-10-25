@@ -33,6 +33,41 @@
 
             "conditions": [
 
+                ['OS=="mac"', {
+                    "cflags_cc!": [
+                        "-Wall"
+                    ],
+                    "defines": [
+                        "SAPwithUNICODE",
+                        "SAPwithTHREADS",
+                        "SAPonDARW",
+                        "_LARGEFILE_SOURCE",
+                        "_FILE_OFFSET_BITS=64",
+                        "__NO_MATH_INLINES"
+                    ],
+                    "ldflags": [
+                        "-Wl",
+                        "-rpath,'$$ORIGIN'"
+                    ],
+                    "link_settings": {
+                        "libraries": ["-L<(sapnwrfcsdk_path_linux)/lib", "-lsapnwrfc", "-lsapucum"]
+                    },
+                    "include_dirs": [
+                        "<(sapnwrfcsdk_path_linux)/include/"
+                    ],
+                    'xcode_settings': {
+                        'MACOSX_DEPLOYMENT_TARGET': '10.8',
+                        'CLANG_CXX_LIBRARY': 'libc++',
+                        'CLANG_CXX_LANGUAGE_STANDARD': 'c++11',
+                        'OTHER_CPLUSPLUSFLAGS': [
+                            '-std=c++11'
+                        ],
+                        'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
+                        'GCC_ENABLE_CPP_EXCEPTIONS': 'YES'
+                    }
+                }
+                ],
+
                 ['OS=="linux"', {
                     "cflags_cc!": [
                         "-Wall"

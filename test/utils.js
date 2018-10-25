@@ -6,13 +6,33 @@ module.exports = {
         return [date.getFullYear(), mm > 9 ? mm : '0' + mm, dd > 9 ? dd : '0' + dd].join('');
     },
 
-    compareBuffers(a1, a2) {
-        if (a1.constructor.name == 'String') a1 = Buffer.from(a1, 'ascii');
-        if (a2.constructor.name == 'String') a2 = Buffer.from(a2, 'ascii');
+    compareBuffers(c1, c2) {
+        //console.log(c1);
+        //console.log(c2);
+        a1 = c1.constructor.name == 'Buffer' ? c1 : Buffer.from(c1, 'hex');
+        a2 = c2.constructor.name == 'Buffer' ? c2 : Buffer.from(c2, 'hex');
+        let compareResult = {
+            content: true,
+            length: a1.length == a2.length ? true : { a1: a1.length, a2: a2.length },
+        };
 
-        for (let i = 0; i < a1.length; i++) {
-            if (a1[i] != a2[i]) return { pos: i, a1: a1[i], a2: a2[i] };
+        if (!a1.equals(a2)) {
+            for (let i = 0; i < a1.length; i++) {
+                if (a1[i] != a2[i]) {
+                    compareResult.content = false;
+                    compareResult.diff = {
+                        pos: i,
+                        a1: a1[i],
+                        a2: a2[i],
+                        a1: a1,
+                        a2: a2,
+                    };
+                    break;
+                }
+            }
         }
-        return true;
+        return compareResult;
     },
+    // https://nodejs.org/api/buffer.html#buffer_buffers_and_character_encodings
+    XBYTES_TEST: Buffer.from('01414243444549500051fdfeff', 'hex'),
 };

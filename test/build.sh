@@ -53,6 +53,10 @@ if [ "$1" != "test" ]; then
         if [ $? -ne 0 ]; then
             nvm install $lts
         fi
+        npm -g i npm
+        rm -Rf node_modules
+        npm i
+
         node-pre-gyp configure build package && printf "build: node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)')\n" >> $BUILD_LOG
     done
 

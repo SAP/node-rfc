@@ -13,9 +13,10 @@ Change log
 * Descriptive error when SAP NW RFC SDK shared lib not found
 * String handling optimisation
 * Tables processing harmonisation and memory consumption fix
-* Unicode encoding fallback fix
+* BYTE and XSTRING unicode encoding removed
 * More unit tests
-* Single empty fieldname tables
+* Empty fieldname removed from structures and tables (arrays)
+* Darwin support (in process)
 * README links update, from Service Marketplace to Support Portal
 
 Incompatible changes:

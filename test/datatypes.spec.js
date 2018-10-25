@@ -123,26 +123,24 @@ describe('Datatypes', function() {
 
     it('RAW/BYTE accepts binary string', function(done) {
         let isInput = {
-            ZRAW: Buffer.from('\x41\x42\x43\x44\x45\x46\x47\x48\x49\x50\x51\x52\x53\x54\x55\x56\x57', 'ascii'),
+            ZRAW: Utils.XBYTES_TEST,
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
-            Buffer.alloc(isInput.ZRAW.length, isInput.ZRAW)
-                .equals(res.ES_OUTPUT.ZRAW)
-                .should.equal(true);
+            let test = Utils.compareBuffers(isInput.ZRAW, res.ES_OUTPUT.ZRAW);
+            test.content.should.equal(true);
             done();
         });
     });
 
     it('RAW/BYTE accepts string', function(done) {
         let isInput = {
-            ZRAW: Buffer.from('abcdefghijklmnopq', 'ascii'),
+            ZRAW: Utils.XBYTES_TEST,
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
-            Buffer.alloc(isInput.ZRAW.length, isInput.ZRAW)
-                .equals(res.ES_OUTPUT.ZRAW)
-                .should.equal(true);
+            let test = Utils.compareBuffers(isInput.ZRAW, res.ES_OUTPUT.ZRAW);
+            test.content.should.equal(true);
             done();
         });
     });
@@ -153,27 +151,27 @@ describe('Datatypes', function() {
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
-            isInput.ZRAW.equals(res.ES_OUTPUT.ZRAW).should.equal(true);
+            let test = Utils.compareBuffers(isInput.ZRAW, res.ES_OUTPUT.ZRAW);
+            test.content.should.equal(true);
             done();
         });
     });
 
     it('XSTRING accepts binary string', function(done) {
         let isInput = {
-            ZRAWSTRING: Buffer.from('\xd8\x42\x43\x44\x45\x46\x47\x48\x49\x50\x51\x52\x53\x54\x55\x56\x57', 'ascii'),
+            ZRAWSTRING: Buffer.from('\xd8\x42\x43\x44\x45\x46\x47\x48\x49\x50\x51\x52\x53\x54\x55\x56\x57', 'hex'),
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
-            Buffer.alloc(isInput.ZRAWSTRING.length, isInput.ZRAWSTRING)
-                .equals(res.ES_OUTPUT.ZRAWSTRING)
-                .should.equal(true);
+            let test = Utils.compareBuffers(isInput.ZRAWSTRING, res.ES_OUTPUT.ZRAWSTRING);
+            test.content.should.equal(true);
             done();
         });
     });
 
     it('XSTRING accepts string', function(done) {
         let isInput = {
-            ZRAWSTRING: Buffer.from('abcdefghijklmnopq', 'ascii'),
+            ZRAWSTRING: Buffer.from('abcdefghijklmnopq', 'hex'),
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
@@ -186,7 +184,7 @@ describe('Datatypes', function() {
 
     it('XSTRING accepts Buffer', function(done) {
         let isInput = {
-            ZRAWSTRING: Buffer.from('01234567890123456', 'ascii'),
+            ZRAWSTRING: Buffer.from('01234567890123456', 'hex'),
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
@@ -202,16 +200,18 @@ describe('Datatypes', function() {
         const COUNT = 50;
 
         for (let i = 0; i < COUNT; i++) {
-            // // array -> unnamed structure
+            // array -> unnamed structure
+            IT_SXMSMGUIDT.push(Utils.XBYTES_TEST);
             IT_SXMSMGUIDT.push(new Buffer.from(randomBytes.sync(16)));
             IT_SXMSMGUIDT.push(new Uint8Array(randomBytes.sync(16)));
-            // todo: IT_SXMSMGUIDT.push('\xd8\xd8');
 
-            // // structure -> unnaamed structure
+            // structure -> unnaamed structure
+            IT_SXMSMGUIDT.push({ '': Utils.XBYTES_TEST });
             IT_SXMSMGUIDT.push({ '': new Buffer.from(randomBytes.sync(16)) });
             IT_SXMSMGUIDT.push({ '': new Uint8Array(randomBytes.sync(16)) });
 
-            // // named structure
+            // named structure
+            IT_SDOKCNTBINS.push({ LINE: Utils.XBYTES_TEST });
             IT_SDOKCNTBINS.push({ LINE: new Buffer.from(randomBytes.sync(1022)) });
             IT_SDOKCNTBINS.push({ LINE: new Uint8Array(randomBytes.sync(1022)) });
         }
@@ -231,7 +231,7 @@ describe('Datatypes', function() {
                 if ('' in lineIn) lineIn = lineIn[''];
                 let lineOut = result.ET_SXMSMGUIDT[i];
                 let test = Utils.compareBuffers(lineIn, lineOut);
-                test.should.equal(true);
+                test.content.should.equal(true);
             }
 
             for (let i = 0; i < IT_SDOKCNTBINS.length; i++) {
@@ -239,7 +239,7 @@ describe('Datatypes', function() {
                 let lineOut = result.ET_SDOKCNTBINS[i].LINE;
 
                 let test = Utils.compareBuffers(lineIn, lineOut);
-                test.should.equal(true);
+                test.content.should.equal(true);
             }
             done();
         });
