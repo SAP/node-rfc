@@ -602,7 +602,8 @@ Napi::Value wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
             free(sapuc);
             break;
         }
-        resultValue = wrapString(sapuc, resultLen);
+        resultValue = wrapString(sapuc, resultLen).ToNumber();
+
         free(sapuc);
         break;
     }

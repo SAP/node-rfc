@@ -56,7 +56,7 @@
                         "<(sapnwrfcsdk_path_linux)/include/"
                     ],
                     'xcode_settings': {
-                        'MACOSX_DEPLOYMENT_TARGET': '10.8',
+                        'MACOSX_DEPLOYMENT_TARGET': '10.9',
                         'CLANG_CXX_LIBRARY': 'libc++',
                         'CLANG_CXX_LANGUAGE_STANDARD': 'c++11',
                         'OTHER_CPLUSPLUSFLAGS': [
@@ -64,7 +64,9 @@
                         ],
                         'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
                         'GCC_ENABLE_CPP_EXCEPTIONS': 'YES'
-                    }
+                    },
+                    # https://github.com/nodejs/node-gyp/issues/1574
+                    "CXXFLAGS": {'-mmacosx-version-min': '10.9' }
                 }
                 ],
 

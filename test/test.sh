@@ -5,12 +5,28 @@
 await=$(node -e "console.log(require('compare-versions')(process.version, '7.6.0'))")
 
 if [ $await == "1" ]; then
-    mocha --timeout 5000 --async-only "test/concurrency/callback.spec.js" && \
-    mocha --timeout 5000 --async-only "test/concurrency/promise.spec.js" && \
-    mocha --timeout 5000 --async-only "test/concurrency/await.spec.js" && \
-    mocha --timeout 5000 --async-only
+    mocha --timeout 5000 "test/concurrency/callback.spec" && \
+    mocha --timeout 5000 "test/concurrency/promise.spec" && \
+    mocha --timeout 5000 "test/concurrency/await.spec" && \
+    mocha --timeout 5000 "test/connection.spec" && \
+    mocha --timeout 5000 "test/connection.promise.spec" && \
+    mocha --timeout 5000 "test/datatypes.spec" && \
+    mocha --timeout 5000 "test/errors.spec" && \
+    mocha --timeout 5000 "test/errors.promise.spec" && \
+    mocha --timeout 5000 "test/options.spec" && \
+    mocha --timeout 5000 "test/options.promise.spec" && \
+    mocha --timeout 5000 "test/pool.spec" && \
+    mocha --timeout 5000 "test/performance.spec"
 else
-    mocha --timeout 5000 --async-only "test/concurrency/callback.spec.js" && \
-    mocha --timeout 5000 --async-only "test/concurrency/promise.spec.js" && \
-    mocha --timeout 5000 --async-only
+    mocha --timeout 5000 "test/concurrency/callback.spec.js" && \
+    mocha --timeout 5000 "test/concurrency/promise.spec.js" && \
+    mocha --timeout 5000 "test/connection.spec" && \
+    mocha --timeout 5000 "test/connection.promise.spec" && \
+    mocha --timeout 5000 "test/datatypes.spec" && \
+    mocha --timeout 5000 "test/errors.spec" && \
+    mocha --timeout 5000 "test/errors.promise.spec" && \
+    mocha --timeout 5000 "test/options.spec" && \
+    mocha --timeout 5000 "test/options.promise.spec" && \
+    mocha --timeout 5000 "test/pool.spec" && \
+    mocha --timeout 5000 "test/performance.spec"
 fi

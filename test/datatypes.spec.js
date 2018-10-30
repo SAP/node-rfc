@@ -57,13 +57,8 @@ describe('Datatypes', function() {
                 let inVal = isInput[k];
                 let outVal = res.ES_OUTPUT[k];
                 let outTyp = typeof outVal;
-                if (k === 'ZFLTP') {
-                    outTyp.should.equal('number');
-                    outVal.should.equal(inVal);
-                } else {
-                    outTyp.should.equal('string');
-                    outVal.should.equal(inVal.toString());
-                }
+                outTyp.should.equal('number');
+                outVal.should.equal(inVal);
             }
             done();
         });
@@ -86,13 +81,8 @@ describe('Datatypes', function() {
                 let inVal = isInput[k];
                 let outVal = res.ES_OUTPUT[k];
                 let outTyp = typeof outVal;
-                if (k === 'ZFLTP') {
-                    outTyp.should.equal('number');
-                    inVal.should.equal(outVal.toString());
-                } else {
-                    outTyp.should.equal('string');
-                    outVal.should.equal(inVal);
-                }
+                outTyp.should.equal('number');
+                inVal.should.equal(outVal.toString());
             }
             done();
         });
@@ -147,7 +137,7 @@ describe('Datatypes', function() {
 
     it('RAW/BYTE accepts Buffer', function(done) {
         let isInput = {
-            ZRAW: Utils.XBYTES_TEST
+            ZRAW: Utils.XBYTES_TEST,
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
@@ -159,7 +149,7 @@ describe('Datatypes', function() {
 
     it('XSTRING accepts binary string', function(done) {
         let isInput = {
-            ZRAWSTRING: Utils.XBYTES_TEST
+            ZRAWSTRING: Utils.XBYTES_TEST,
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
@@ -171,7 +161,7 @@ describe('Datatypes', function() {
 
     it('XSTRING accepts string', function(done) {
         let isInput = {
-            ZRAWSTRING: Utils.XBYTES_TEST
+            ZRAWSTRING: Utils.XBYTES_TEST,
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);
@@ -184,7 +174,7 @@ describe('Datatypes', function() {
 
     it('XSTRING accepts Buffer', function(done) {
         let isInput = {
-            ZRAWSTRING: Utils.XBYTES_TEST
+            ZRAWSTRING: Utils.XBYTES_TEST,
         };
         client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
             should.not.exist(err);

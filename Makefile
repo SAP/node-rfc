@@ -11,6 +11,19 @@ addon:
 wrapper:
 	npm run build
 
+install-clean:
+	rm -rf node_modules && cp test/package.json package.json
+
+install-prod:
+	yarn add @types/bluebird bluebird node-addon-api node-pre-gyp
+
+install-dev:
+	yarn add --dev @babel/core @types/node acorn compare-versions \
+		decimal.js eslint eslint-plugin-mocha mocha node-gyp \
+		prettier-eslint random-bytes should typescript
+
+install: install-clean install-prod install-dev
+
 build: addon wrapper
 
 debug:
