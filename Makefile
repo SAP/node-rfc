@@ -18,7 +18,7 @@ install-prod:
 	yarn add @types/bluebird bluebird node-addon-api node-pre-gyp
 
 install-dev:
-	yarn add --dev @babel/core @types/node acorn compare-versions \
+	yarn add --dev @babel/core @types/node acorn aws-sdk compare-versions \
 		decimal.js eslint eslint-plugin-mocha mocha node-gyp \
 		prettier-eslint random-bytes should typescript
 

@@ -40,6 +40,10 @@ BUILD_LOG="test/pass-$osext.log"
 rm $BUILD_LOG
 touch $BUILD_LOG
 
+NPMRELEASE="release/$version"
+mkdir -p $NPMRELEASE
+rm -rf $NPMRELEASE/*$osext*
+
 #
 # Build
 #
@@ -55,14 +59,25 @@ if [ "$1" != "test" ]; then
         if [ $? -ne 0 ]; then
             nvm install $lts
         fi
+        
         make install
 
-        node-pre-gyp configure build package && printf "build: node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)')\n" >> $BUILD_LOG
+        node-pre-gyp clean configure build package && printf "build: node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)')\n" >> $BUILD_LOG
+
+        for filename in build/stage/$version/*.tar.gz; do
+            mv $filename $NPMRELEASE/. 
+        done
     done
 
     npm run build
 
 fi
+
+#
+# Release
+#
+
+
 
 #
 # Test
