@@ -19,14 +19,14 @@
 # nvm install $lts
 # npm -g install npm yarn
 
-declare -a LTS_BUILD=("8.9.0" "10.0.0" "11.0.0")
-declare -a LTS_TEST=("8.9.0" "8.11.4" "10.0.0" "10.13.0" "11.0.0")
+declare -a LTS_BUILD=("6.9.0" "8.9.0" "10.0.0" "11.0.0")
+declare -a LTS_TEST=("6.9.0" "6.14.4" "8.9.0" "8.11.4" "10.0.0" "10.13.0" "11.0.0")
 
 version=`cat ./VERSION` 
 
 platform=`uname`
 
-if [ "$platform" == "MSYS" ]; then
+if [ "$platform" == "MSYS_NT-6.1-WOW" ]; then
 	osext="win32"
 elif [ "$platform" == "Linux" ]; then
 	osext="linux"
