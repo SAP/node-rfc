@@ -50,7 +50,7 @@
                         "-rpath,'$$ORIGIN'"
                     ],
                     "link_settings": {
-                        "libraries": ["-L<(sapnwrfcsdk_path_linux)/lib", "-lsapnwrfc", "-lsapucum"]
+                        "libraries": ["-L<(sapnwrfcsdk_path_linux)/lib", "-lsapnwrfc", "-lsapucum", "-rpath","<(sapnwrfcsdk_path_linux)/lib" ]
                     },
                     "include_dirs": [
                         "<(sapnwrfcsdk_path_linux)/include/"
@@ -84,7 +84,8 @@
                         "__NO_MATH_INLINES"
                     ],
                     "ldflags": [
-                        "-Wl,-rpath,'$$ORIGIN'"
+                        "-Wl,",
+                        "-rpath,'$$ORIGIN'"
                     ],
                     "link_settings": {
                         "libraries": ["-L<(sapnwrfcsdk_path_linux)/lib", "-lsapnwrfc", "-lsapucum"]

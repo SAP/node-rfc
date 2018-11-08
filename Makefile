@@ -1,9 +1,14 @@
 #http://www.gnu.org/prep/standards/html_node/Standard-Targets.html#Standard-Targets
 
-modules:
-	rm -rf node_modules
-	npm install
-	node-pre-gyp configure
+define DEPS_DEV
+@babel/core @types/node acorn aws-sdk compare-versions \
+decimal.js eslint eslint-plugin-mocha mocha node-gyp \
+prettier-eslint random-bytes should typescript
+endef
+
+define DEPS_PROD
+@types/bluebird bluebird node-addon-api node-pre-gyp
+endef
 
 addon:
 	node-pre-gyp build # --loglevel=silent
@@ -11,18 +16,18 @@ addon:
 wrapper:
 	npm run build
 
-install-clean:
-	rm -rf node_modules && cp test/package.json package.json
+uninstall:
+	npm uninstall --save $(DEPS_DEV) $(DEPS_PROD)
 
 install-prod:
-	yarn add @types/bluebird bluebird node-addon-api node-pre-gyp
+	npm install --save $(DEPS_PROD)
 
 install-dev:
-	yarn add --dev @babel/core @types/node acorn aws-sdk compare-versions \
-		decimal.js eslint eslint-plugin-mocha mocha node-gyp \
-		prettier-eslint random-bytes should typescript
+	npm install --save-dev $(DEPS_DEV)
 
-install: install-clean install-prod install-dev
+install: install-dev install-prod
+
+reinstall:	uninstall install
 
 build: addon wrapper
 

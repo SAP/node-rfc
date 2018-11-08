@@ -20,6 +20,8 @@ namespace node_rfc
 {
 
 extern Napi::Env __genv;
+extern bool __bcdNumber;
+extern Napi::Function __bcdFunction;
 
 ////////////////////////////////////////////////////////////////////////////////
 // FILL FUNCTIONS (to RFC)
@@ -602,7 +604,23 @@ Napi::Value wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC
             free(sapuc);
             break;
         }
-        resultValue = wrapString(sapuc, resultLen).ToNumber();
+        if (__bcdFunction)
+        {
+            const napi_value argv[1] = {Napi::Number::New(__genv, 123)}; // wrapString(sapuc, resultLen)};
+            const napi_value *pargv = argv;
+            const size_t argc = 1;
+            std::vector<napi_value> args;
+            args.assign(pargv, pargv + argc);
+            //resultValue = wrapString(sapuc, resultLen);
+            resultValue = __bcdFunction.Call(args);
+            //resultValue = __bcdFunction.Call(argc, pargv);
+        }
+        else if (__bcdNumber)
+        {
+            resultValue = wrapString(sapuc, resultLen).ToNumber();
+        }
+        else
+            resultValue = wrapString(sapuc, resultLen);
 
         free(sapuc);
         break;

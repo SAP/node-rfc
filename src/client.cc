@@ -21,6 +21,8 @@ namespace node_rfc
 {
 
 Napi::Env __genv = NULL;
+bool __bcdNumber;
+Napi::Function __bcdFunction;
 
 unsigned int Client::__refCounter = 0;
 
@@ -297,6 +299,8 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
     init();
 
     node_rfc::__genv = info.Env();
+    node_rfc::__bcdNumber = false;
+    //node_rfc::__bcdFunction = ?
 
     if (!info.IsConstructCall())
     {
@@ -411,19 +415,50 @@ Napi::Value Client::Connect(const Napi::CallbackInfo &info)
 Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
 {
     Napi::Array notRequested = Napi::Array::New(info.Env());
+    Napi::Value bcd;
 
     Napi::Function callback = info[2].As<Napi::Function>();
 
     if (info[3].IsObject())
     {
-        Napi::Object obj = info[3].ToObject();
-        Napi::Array props = obj.GetPropertyNames();
+        Napi::Object options = info[3].ToObject();
+        Napi::Array props = options.GetPropertyNames();
         for (unsigned int i = 0; i < props.Length(); i++)
         {
             Napi::String key = props.Get(i).ToString();
             if (key.Utf8Value().compare(std::string("notRequested")) == (int)0)
             {
-                notRequested = obj.Get(key).As<Napi::Array>();
+                notRequested = options.Get(key).As<Napi::Array>();
+            }
+            else if (key.Utf8Value().compare(std::string("bcd")) == (int)0)
+            {
+                bcd = options.Get(key).As<Napi::Value>();
+                if (bcd.IsFunction())
+                {
+                    node_rfc::__bcdFunction = bcd.As<Napi::Function>();
+                    //printf("bcd function: %s\n", &bcd.ToString().Utf8Value()[0]);
+                }
+                else if (bcd.IsString())
+                {
+                    std::string bcdString = bcd.ToString().Utf8Value();
+                    if (bcdString.compare(std::string("number")) == (int)0)
+                    {
+                        node_rfc::__bcdNumber = true;
+                    }
+                    else
+                    {
+                        char err[256];
+                        sprintf(err, "Unknown bcd option, only 'number' or function allowed: %s", &bcdString[0]);
+                        Napi::TypeError::New(__genv, err).ThrowAsJavaScriptException();
+                    }
+                }
+            }
+            else
+            {
+                char err[256];
+                std::string optionName = key.Utf8Value();
+                sprintf(err, "Unknown option: %s", &optionName[0]);
+                Napi::TypeError::New(__genv, err).ThrowAsJavaScriptException();
             }
         }
     }
