@@ -20,10 +20,8 @@
 # npm -g install npm yarn
 
 # https://github.com/nodejs/node-addon-api/issues/387
-#declare -a LTS_BUILD=("6.9.0" "8.9.0" "10.0.0" "11.0.0")
-#declare -a LTS_TEST=("6.9.0" "6.14.4" "8.9.0" "8.12.0" "10.0.0" "10.13.0" "11.0.0")
-declare -a LTS_BUILD=("6.14.4" "8.11.2" "10.0.0" "11.0.0")
-declare -a LTS_TEST=("6.14.4" "8.9.0" "8.12.0" "10.0.0" "10.13.0" "11.0.0")
+declare -a LTS_BUILD=("6.9.0" "8.9.0" "10.0.0" "11.0.0")
+declare -a LTS_TEST=("6.9.0" "6.15.1" "8.9.0" "8.14.0" "10.0.0" "10.14.1" "11.0.0", "11.3.0")
 
 version=`cat ./VERSION` 
 

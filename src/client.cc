@@ -13,16 +13,10 @@
 // language governing permissions and limitations under the License.
 
 #include "client.h"
-#include "rfcio.h"
-#include "error.h"
 #include "macros.h"
 
 namespace node_rfc
 {
-
-Napi::Env __genv = NULL;
-bool __bcdNumber;
-Napi::Function __bcdFunction;
 
 unsigned int Client::__refCounter = 0;
 
@@ -44,7 +38,7 @@ class ConnectAsync : public Napi::AsyncWorker
 
         if (!client->alive)
         {
-            Napi::Value argv[1] = {wrapError(&client->errorInfo)};
+            Napi::Value argv[1] = {client->wrapError(&client->errorInfo)};
             TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
         }
         else
@@ -85,7 +79,7 @@ class CloseAsync : public Napi::AsyncWorker
     {
         if (client->errorInfo.code != RFC_OK)
         {
-            Napi::Value argv[1] = {wrapError(&client->errorInfo)};
+            Napi::Value argv[1] = {client->wrapError(&client->errorInfo)};
             TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
         }
         else
@@ -123,7 +117,7 @@ class ReopenAsync : public Napi::AsyncWorker
         }
         else
         {
-            Napi::Value argv[1] = {wrapError(&client->errorInfo)};
+            Napi::Value argv[1] = {client->wrapError(&client->errorInfo)};
             TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
         }
     }
@@ -177,12 +171,12 @@ class InvokeAsync : public Napi::AsyncWorker
 
         if (client->errorInfo.code != RFC_OK)
         {
-            argv[0] = wrapError(&client->errorInfo);
+            argv[0] = client->wrapError(&client->errorInfo);
         }
         else
         {
             client->alive = true;
-            argv[1] = wrapResult(functionDescHandle, functionHandle, Env());
+            argv[1] = client->wrapResult(functionDescHandle, functionHandle);
         }
         RfcDestroyFunction(functionHandle, NULL);
         TRY_CATCH_CALL(Env().Global(), callback, 2, argv)
@@ -205,7 +199,7 @@ class PrepareAsync : public Napi::AsyncWorker
           callback(Napi::Persistent(callback)), client(client),
           notRequested(Napi::Persistent(notRequestedParameters)), rfmParams(Napi::Persistent(rfmParams))
     {
-        funcName = fillString(rfmName);
+        funcName = client->fillString(rfmName);
     }
     ~PrepareAsync() {}
 
@@ -221,7 +215,7 @@ class PrepareAsync : public Napi::AsyncWorker
         Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
 
         if (functionDescHandle == NULL || client->errorInfo.code != RFC_OK)
-            argv[0] = wrapError(&client->errorInfo);
+            argv[0] = client->wrapError(&client->errorInfo);
 
         if (argv[0].IsUndefined())
         {
@@ -234,12 +228,12 @@ class PrepareAsync : public Napi::AsyncWorker
             for (unsigned int i = 0; i < notRequested.Value().Length(); i++)
             {
                 Napi::String name = notRequested.Value().Get(i).ToString();
-                SAP_UC *paramName = fillString(name);
+                SAP_UC *paramName = client->fillString(name);
                 rc = RfcSetParameterActive(functionHandle, paramName, 0, &client->errorInfo);
                 free(const_cast<SAP_UC *>(paramName));
                 if (rc != RFC_OK)
                 {
-                    argv[0] = wrapError(&client->errorInfo);
+                    argv[0] = client->wrapError(&client->errorInfo);
                     break;
                 }
             }
@@ -257,7 +251,7 @@ class PrepareAsync : public Napi::AsyncWorker
             {
                 Napi::String name = paramNames.Get(i).ToString();
                 Napi::Value value = params.Get(name);
-                argv[0] = fillFunctionParameter(functionDescHandle, functionHandle, name, value);
+                argv[0] = client->fillFunctionParameter(functionDescHandle, functionHandle, name, value);
 
                 if (!argv[0].IsUndefined())
                 {
@@ -296,11 +290,7 @@ Napi::FunctionReference Client::constructor;
 
 Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
 {
-    init();
-
-    node_rfc::__genv = info.Env();
-    node_rfc::__bcdNumber = false;
-    //node_rfc::__bcdFunction = ?
+    init(info.Env());
 
     if (!info.IsConstructCall())
     {
@@ -317,11 +307,57 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
         Napi::TypeError::New(info.Env(), "Connection parameters must be an object").ThrowAsJavaScriptException();
     }
 
-    if (info.Length() > 1)
+    if (info.Length() > 2)
     {
-        if (!info[1].IsBoolean())
+        Napi::TypeError::New(info.Env(), "Too many parameters, only connection parameters object and options object expected").ThrowAsJavaScriptException();
+    }
+
+    if (info.Length() == 2)
+    {
+        if (!info[1].IsUndefined() && !info[1].IsObject())
         {
-            Napi::TypeError::New(info.Env(), "The 'rstrip' parameter must be true or false").ThrowAsJavaScriptException();
+            Napi::TypeError::New(info.Env(), "Options must be an object").ThrowAsJavaScriptException();
+        }
+
+        Napi::Object options = info[1].ToObject();
+        Napi::Array props = options.GetPropertyNames();
+        for (unsigned int i = 0; i < props.Length(); i++)
+        {
+            Napi::String key = props.Get(i).ToString();
+            if (key.Utf8Value().compare(std::string("rstrip")) == (int)0)
+            {
+                __rstrip = options.Get(key).As<Napi::Boolean>();
+            }
+            else if (key.Utf8Value().compare(std::string("bcd")) == (int)0)
+            {
+                Napi::Value bcdOption = options.Get(key).As<Napi::Value>();
+                if (bcdOption.IsFunction())
+                {
+                    __bcd = NODERFC_BCD_FUNCTION;
+                    __bcdFunction = Napi::Persistent(bcdOption.As<Napi::Function>());
+                }
+                else if (bcdOption.IsString())
+                {
+                    std::string bcdString = bcdOption.ToString().Utf8Value();
+                    if (bcdString.compare(std::string("number")) == (int)0)
+                    {
+                        __bcd = NODERFC_BCD_NUMBER;
+                    }
+                    else
+                    {
+                        char err[256];
+                        sprintf(err, "Unknown bcd option, only 'number' or function allowed: %s", &bcdString[0]);
+                        Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                    }
+                }
+            }
+            else
+            {
+                char err[256];
+                std::string optionName = key.Utf8Value();
+                sprintf(err, "Unknown option: %s", &optionName[0]);
+                Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+            }
         }
     }
 
@@ -368,6 +404,11 @@ Client::~Client(void)
     }
     free(connectionParams);
     uv_sem_destroy(&this->invocationMutex);
+
+    if (__bcd == NODERFC_BCD_FUNCTION)
+    {
+        __bcdFunction.Reset();
+    }
 }
 
 Napi::Object Client::Init(Napi::Env env, Napi::Object exports)
@@ -377,6 +418,7 @@ Napi::Object Client::Init(Napi::Env env, Napi::Object exports)
     Napi::Function t = DefineClass(env,
                                    "Client", {
                                                  InstanceAccessor("version", &Client::VersionGetter, nullptr),
+                                                 InstanceAccessor("options", &Client::OptionsGetter, nullptr),
                                                  InstanceAccessor("id", &Client::IdGetter, nullptr),
                                                  InstanceMethod("connectionInfo", &Client::ConnectionInfo),
                                                  InstanceMethod("connect", &Client::Connect),
@@ -430,35 +472,12 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
             {
                 notRequested = options.Get(key).As<Napi::Array>();
             }
-            else if (key.Utf8Value().compare(std::string("bcd")) == (int)0)
-            {
-                bcd = options.Get(key).As<Napi::Value>();
-                if (bcd.IsFunction())
-                {
-                    node_rfc::__bcdFunction = bcd.As<Napi::Function>();
-                    //printf("bcd function: %s\n", &bcd.ToString().Utf8Value()[0]);
-                }
-                else if (bcd.IsString())
-                {
-                    std::string bcdString = bcd.ToString().Utf8Value();
-                    if (bcdString.compare(std::string("number")) == (int)0)
-                    {
-                        node_rfc::__bcdNumber = true;
-                    }
-                    else
-                    {
-                        char err[256];
-                        sprintf(err, "Unknown bcd option, only 'number' or function allowed: %s", &bcdString[0]);
-                        Napi::TypeError::New(__genv, err).ThrowAsJavaScriptException();
-                    }
-                }
-            }
             else
             {
                 char err[256];
                 std::string optionName = key.Utf8Value();
                 sprintf(err, "Unknown option: %s", &optionName[0]);
-                Napi::TypeError::New(__genv, err).ThrowAsJavaScriptException();
+                Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
             }
         }
     }
@@ -593,16 +612,39 @@ Napi::Value Client::IdGetter(const Napi::CallbackInfo &info)
 Napi::Value Client::VersionGetter(const Napi::CallbackInfo &info)
 {
     unsigned major, minor, patchLevel;
-    Napi::Env env = info.Env();
 
     RfcGetVersion(&major, &minor, &patchLevel);
 
-    Napi::Object version = Napi::Object::New(env);
-    version.Set(Napi::String::New(env, "major"), major);
-    version.Set(Napi::String::New(env, "minor"), minor);
-    version.Set(Napi::String::New(env, "patchLevel"), patchLevel);
-    version.Set(Napi::String::New(env, "binding"), Napi::String::New(env, SAPNWRFC_BINDING_VERSION));
+    Napi::Object version = Napi::Object::New(__env);
+    version.Set(Napi::String::New(__env, "major"), major);
+    version.Set(Napi::String::New(__env, "minor"), minor);
+    version.Set(Napi::String::New(__env, "patchLevel"), patchLevel);
+    version.Set(Napi::String::New(__env, "binding"), Napi::String::New(__env, SAPNWRFC_BINDING_VERSION));
     return version;
+}
+
+Napi::Value Client::OptionsGetter(const Napi::CallbackInfo &info)
+{
+    Napi::Object options = Napi::Object::New(__env);
+    options.Set(Napi::String::New(__env, "rstrip"), Napi::Boolean::New(__env, __rstrip));
+    if (__bcd == NODERFC_BCD_STRING)
+    {
+        options.Set(Napi::String::New(__env, "bcd"), Napi::String::New(__env, "string"));
+    }
+    else if (__bcd == NODERFC_BCD_NUMBER)
+    {
+        options.Set(Napi::String::New(__env, "bcd"), Napi::String::New(__env, "number"));
+    }
+    else if (__bcd == NODERFC_BCD_FUNCTION)
+    {
+        options.Set(Napi::String::New(__env, "bcd"), Napi::String::New(__env, "function"));
+    }
+    else
+    {
+        options.Set(Napi::String::New(__env, "bcd"), Napi::String::New(__env, "?"));
+    }
+
+    return options;
 }
 
 } // namespace node_rfc

@@ -29,6 +29,10 @@ interface RfcClientVersion {
     patch: string;
     binding: string;
 }
+interface RfcClientOptions {
+    rstrip: boolean;
+    bcd: string | Function;
+}
 declare enum EnumSncQop {
     DigSig = "1",
     DigSigEnc = "2",
@@ -85,7 +89,7 @@ export declare type RfcObject = {
 };
 export declare class Client {
     private __client;
-    constructor(connectionParams: RfcConnectionParameters);
+    constructor(connectionParams: RfcConnectionParameters, options?: RfcClientOptions);
     open(): Promise<Client>;
     call(rfmName: string, rfmParams: RfcObject, callOptions?: RfcCallOptions): Promise<RfcObject>;
     connect(callback: Function): void;
@@ -96,6 +100,7 @@ export declare class Client {
     readonly isAlive: boolean;
     readonly id: number;
     readonly version: RfcClientVersion;
+    readonly options: RfcClientOptions;
     readonly connectionInfo: RfcConnectionInfo;
 }
 export {};

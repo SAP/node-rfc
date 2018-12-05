@@ -47,25 +47,13 @@ describe('Connection', function() {
         done();
     });
 
-    it('exception: Client id getter set', function(done) {
+    it('exception: Client getters', function(done) {
         client.id.should.be.number;
         client.id.should.be.greaterThan(0);
-        let n = client.id;
-        try {
-            client.id = n + 1;
-        } catch (ex) {
-            ex.should.have.properties({
-                name: 'TypeError',
-                message: 'Cannot set property id of #<Client> which has only a getter',
-            });
-            client.id.should.equal(n);
-            done();
-        }
-    });
-
-    it('exception: Client version getter set', function(done) {
         client.version.should.be.an.Object();
         client.version.should.have.properties('major', 'minor', 'patchLevel', 'binding');
+        client.options.should.be.an.Object();
+        client.options.should.have.properties('rstrip', 'bcd');
         try {
             client.version = { a: 1, b: 2 };
         } catch (ex) {
@@ -129,7 +117,9 @@ describe('Connection', function() {
             client.ping((err, res) => {
                 if (err) return done(err);
                 res.should.be.false;
-                done();
+                client.close(err => {
+                    return done(err);
+                });
             });
         });
     });

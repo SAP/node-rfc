@@ -59,8 +59,13 @@ interface RfcClientVersion {
 	binding: string;
 }
 
+interface RfcClientOptions {
+	rstrip: boolean;
+	bcd: string | Function;
+}
+
 interface RfcClientInstance {
-	new (connectionParameters: RfcConnectionParameters): RfcClientInstance;
+	new (connectionParameters: RfcConnectionParameters, options?: RfcClientOptions): RfcClientInstance;
 	(connectionParameters: RfcConnectionParameters): RfcClientInstance;
 	connectionInfo(): RfcConnectionInfo;
 	connect(callback: Function): any;
@@ -71,11 +76,13 @@ interface RfcClientInstance {
 	isAlive(): boolean;
 	id: number;
 	version: RfcClientVersion;
+	options: RfcClientOptions;
 }
 
 interface RfcClientBinding {
 	Client: RfcClientInstance;
 	getVersion(): object;
+	getOptions(): object;
 	verbose(): this;
 }
 
@@ -158,8 +165,8 @@ export type RfcObject = { [key: string]: RfcParameterValue };
 export class Client {
 	private __client: RfcClientInstance;
 
-	constructor(connectionParams: RfcConnectionParameters) {
-		this.__client = new binding.Client(connectionParams);
+	constructor(connectionParams: RfcConnectionParameters, options?: RfcClientOptions) {
+		this.__client = options ? new binding.Client(connectionParams, options) : new binding.Client(connectionParams);
 	}
 
 	open(): Promise<Client> {
@@ -313,6 +320,10 @@ export class Client {
 
 	get version(): RfcClientVersion {
 		return this.__client.version;
+	}
+
+	get options(): RfcClientOptions {
+		return this.__client.options;
 	}
 
 	get connectionInfo(): RfcConnectionInfo {

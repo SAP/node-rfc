@@ -15,7 +15,7 @@
                 "src/node_sapnwrfc.cc",
                 "src/client.cc",
                 "src/rfcio.cc",
-                "src/error.cc"
+                "src/error.cc",
             ],
 
             "cflags!": ["-fno-exceptions"],
@@ -50,7 +50,7 @@
                         "-rpath,'$$ORIGIN'"
                     ],
                     "link_settings": {
-                        "libraries": ["-L<(sapnwrfcsdk_path_linux)/lib", "-lsapnwrfc", "-lsapucum", "-rpath","<(sapnwrfcsdk_path_linux)/lib" ]
+                        "libraries": ["-L<(sapnwrfcsdk_path_linux)/lib", "-lsapnwrfc", "-lsapucum", "-rpath", "<(sapnwrfcsdk_path_linux)/lib"]
                     },
                     "include_dirs": [
                         "<(sapnwrfcsdk_path_linux)/include/"
@@ -66,7 +66,7 @@
                         'GCC_ENABLE_CPP_EXCEPTIONS': 'YES'
                     },
                     # https://github.com/nodejs/node-gyp/issues/1574
-                    "CXXFLAGS": {'-mmacosx-version-min': '10.9' }
+                    "CXXFLAGS": {'-mmacosx-version-min': '10.9'}
                 }
                 ],
 

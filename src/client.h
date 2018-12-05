@@ -15,7 +15,11 @@
 #ifndef NODE_SAPNWRFC_CLIENT_H_
 #define NODE_SAPNWRFC_CLIENT_H_
 
-#define SAPNWRFC_BINDING_VERSION "1.0.0-rc5"
+#define SAPNWRFC_BINDING_VERSION "1.0.0-rc6"
+
+#define NODERFC_BCD_STRING 0
+#define NODERFC_BCD_NUMBER 1
+#define NODERFC_BCD_FUNCTION 2
 
 #include <uv.h>
 #include <napi.h>
@@ -39,12 +43,16 @@ public:
   static Napi::FunctionReference constructor;
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
 
-  void init()
+  void init(Napi::Env env)
   {
+    __env = env;
+
     paramSize = 0;
     connectionParams = NULL;
     connectionHandle = NULL;
     alive = false;
+    __rstrip = true;
+    __bcd = NODERFC_BCD_STRING;
 
     rc = (RFC_RC)0;
     errorInfo.code = rc;
@@ -57,8 +65,11 @@ private:
   static unsigned int __refCounter;
   unsigned int __refId;
 
+  // Client API
+
   Napi::Value IdGetter(const Napi::CallbackInfo &info);
   Napi::Value VersionGetter(const Napi::CallbackInfo &info);
+  Napi::Value OptionsGetter(const Napi::CallbackInfo &info);
 
   Napi::Value ConnectionInfo(const Napi::CallbackInfo &info);
 
@@ -70,10 +81,34 @@ private:
   Napi::Value Reopen(const Napi::CallbackInfo &info);
   Napi::Value IsAlive(const Napi::CallbackInfo &info);
 
+  // SAP NW RFC SDK
+
+  SAP_UC *fillString(const Napi::String napistr);
+  SAP_UC *fillString(std::string str);
+  Napi::Value fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, Napi::String name, Napi::Value value);
+  Napi::Value fillStructure(RFC_STRUCTURE_HANDLE structHandle, RFC_TYPE_DESC_HANDLE functionDescHandle, SAP_UC *cName, Napi::Value value);
+  Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Napi::Value value, RFC_TYPE_DESC_HANDLE functionDescHandle);
+
+  Napi::Value wrapString(SAP_UC *uc, int length = -1);
+  Napi::Value wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle);
+  Napi::Value wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, unsigned int cLen, RFC_TYPE_DESC_HANDLE typeDesc);
+  Napi::Value wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle);
+
+  // RFC ERRORS
+
+  Napi::Value RfcLibError(RFC_ERROR_INFO *errorInfo);
+  Napi::Value AbapError(RFC_ERROR_INFO *errorInfo);
+  Napi::Value wrapError(RFC_ERROR_INFO *errorInfo);
+
+  Napi::Env __env = NULL;
+
   unsigned int paramSize;
   RFC_CONNECTION_PARAMETER *connectionParams;
   RFC_CONNECTION_HANDLE connectionHandle;
   bool alive;
+  bool __rstrip;
+  int __bcd = 0; // 0: string, 1: number, 2: function
+  Napi::FunctionReference __bcdFunction;
 
   RFC_RC rc;
   RFC_ERROR_INFO errorInfo;
