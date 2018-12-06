@@ -49,6 +49,11 @@ rm -rf $NPMRELEASE/*$osext*
 # Build
 #
 
+nvm use 11.3.0
+npm run install:dev
+npm run install:prod
+npm run wrapper
+npm run examples
 if [ "$1" != "test" ]; then
 
     rm -rf lib/binding/$osext-*
@@ -61,16 +66,13 @@ if [ "$1" != "test" ]; then
             nvm install $lts
         fi
         
-        make reinstall
-
-        node-pre-gyp clean configure build package && printf "build: node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)')\n" >> $BUILD_LOG
+        # https://github.com/nodejs/node-gyp/issues/1564
+        env CXXFLAGS="-mmacosx-version-min=10.9" node-pre-gyp clean configure build package && printf "build: node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)')\n" >> $BUILD_LOG
 
         for filename in build/stage/$version/*.tar.gz; do
             mv $filename $NPMRELEASE/. 
         done
     done
-
-    npm run build
 
 fi
 

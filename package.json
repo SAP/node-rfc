@@ -23,8 +23,10 @@
 		"preinstall": "npm install node-pre-gyp node-addon-api",
 		"install": "node-pre-gyp install --fallback-to-build",
 		"test": "bash test/test.sh",
-		"build": "tsc -p src/ts",
-		"examples": "tsc -p examples/ts"
+		"wrapper": "tsc -p src/ts",
+		"examples": "tsc -p examples/ts",
+		"install:dev": "npm i --save-dev @babel/core @types/node acorn aws-sdk compare-versions decimal.js eslint eslint-plugin-mocha mocha node-gyp prettier-eslint random-bytes should typescript",
+		"install:prod": "npm i --save @types/bluebird bluebird node-addon-api node-pre-gyp"
 	},
 	"binary": {
 		"module_name": "sapnwrfc",
@@ -56,17 +58,11 @@
 	"gypfile": true,
 	"main": "./lib/index.js",
 	"types": "./lib/index.d.ts",
-	"dependencies": {
-		"@types/bluebird": "^3.5.24",
-		"bluebird": "^3.5.3",
-		"node-addon-api": "^1.6.2",
-		"node-pre-gyp": "^0.12.0"
-	},
 	"devDependencies": {
 		"@babel/core": "^7.2.0",
 		"@types/node": "^10.12.12",
 		"acorn": "^6.0.4",
-		"aws-sdk": "^2.370.0",
+		"aws-sdk": "^2.371.0",
 		"compare-versions": "^3.4.0",
 		"decimal.js": "^10.0.1",
 		"eslint": "^5.9.0",
@@ -77,5 +73,11 @@
 		"random-bytes": "^1.0.0",
 		"should": "^13.2.3",
 		"typescript": "^3.2.1"
+	},
+	"dependencies": {
+		"@types/bluebird": "^3.5.24",
+		"bluebird": "^3.5.3",
+		"node-addon-api": "^1.6.2",
+		"node-pre-gyp": "^0.12.0"
 	}
 }
