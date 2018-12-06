@@ -84,8 +84,7 @@
                         "__NO_MATH_INLINES"
                     ],
                     "ldflags": [
-                        "-Wl,",
-                        "-rpath,'$$ORIGIN'"
+                        "-Wl,-rpath,'$$ORIGIN'"
                     ],
                     "link_settings": {
                         "libraries": ["-L<(sapnwrfcsdk_path_linux)/lib", "-lsapnwrfc", "-lsapucum"]
