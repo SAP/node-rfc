@@ -46,14 +46,13 @@ mkdir -p $NPMRELEASE
 rm -rf $NPMRELEASE/*$osext*
 
 #
-# Build
+# Client
 #
 
 nvm use 11.3.0
 npm run install:dev
 npm run install:prod
-npm run wrapper
-npm run examples
+
 if [ "$1" != "test" ]; then
 
     rm -rf lib/binding/$osext-*
@@ -77,14 +76,17 @@ if [ "$1" != "test" ]; then
 fi
 
 #
-# Release
+# Wrapper
 #
 
+npm run wrapper
+npm run examples
 
 
 #
 # Test
 #
+
 for lts in "${LTS_TEST[@]}"
 do
     nvm use $lts
