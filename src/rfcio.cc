@@ -193,10 +193,8 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         //memcpy(byteValue, asciiValue, size);
         rc = RfcSetBytes(functionHandle, cName, byteValue, size, &errorInfo);
         free(byteValue);
-
         //std::string fieldName = wrapString(cName).ToString().Utf8Value();
         //printf("\nbin %d %s size: %u", rc, &fieldName[0], size);
-
         break;
     }
     case RFCTYPE_XSTRING:
@@ -217,7 +215,6 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
 
         //std::string fieldName = wrapString(cName).ToString().Utf8Value();
         //printf("\nxin %d %s size: %u", rc, &fieldName[0], size);
-
         //memcpy(byteValue, asciiValue, size);
         rc = RfcSetXString(functionHandle, cName, byteValue, size, &errorInfo);
         free(byteValue);
@@ -288,11 +285,16 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         }
         break;
     case RFCTYPE_DATE:
+        if (!__dateToABAP.IsEmpty())
+        {
+            // YYYYMMDD format expected
+            value = __dateToABAP.Call({value});
+        }
         if (!value.IsString())
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Date string YYYYMMDD expected when filling field %s of type %d", &fieldName[0], typ);
+            sprintf(err, "ABAP date format YYYYMMDD expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.ToString());
@@ -300,14 +302,18 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         free(cValue);
         break;
     case RFCTYPE_TIME:
+        if (!__timeToABAP.IsEmpty())
+        {
+            // HHMMSS format expected
+            value = __timeToABAP.Call({value});
+        }
         if (!value.IsString())
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
+            sprintf(err, "ABAP time format HHMMSS expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
-        //cValue = fillString(value.strftime('%H%M%S'))
         cValue = fillString(value.ToString());
         rc = RfcSetTime(functionHandle, cName, cValue, &errorInfo);
         free(cValue);
@@ -324,7 +330,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         return scope.Escape(wrapError(&errorInfo));
     }
     return scope.Env().Undefined();
-}
+} // namespace node_rfc
 
 ////////////////////////////////////////////////////////////////////////////////
 // WRAP FUNCTIONS (from RFC)
@@ -649,6 +655,10 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             break;
         }
         resultValue = wrapString(dateValue, 8);
+        if (!__dateFromABAP.IsEmpty())
+        {
+            resultValue = __dateFromABAP.Call({resultValue});
+        }
         break;
     }
     case RFCTYPE_TIME:
@@ -660,6 +670,10 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             break;
         }
         resultValue = wrapString(timeValue, 6);
+        if (!__timeFromABAP.IsEmpty())
+        {
+            resultValue = __timeFromABAP.Call({resultValue});
+        }
         break;
     }
     default:

@@ -136,7 +136,7 @@ describe('Datatypes', function() {
             ZQUAN_SIGN: 'object',
         };
         let xclient = new rfcClient(abapSystem, { bcd: Decimal });
-        xclient.options.bcd.should.equal('function');
+        xclient.options.bcd.should.equal(Decimal);
         xclient.connect(() => {
             xclient.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
                 should.not.exist(err);
@@ -293,28 +293,39 @@ describe('Datatypes', function() {
         });
     });
 
-    xit('DATE accepts Date', function(done) {
+    it('DATE accepts Date', function(done) {
         const Months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
-        let count = 0;
-        for (let month of Months) {
-            const testDateIn = new Date(`2018-${month}-25`);
-            const testDateOut = Utils.toABAPdate(testDateIn);
+        let xclient = new rfcClient(abapSystem, {
+            date: { toABAP: Utils.toABAPdate, fromABAP: Utils.fromABAPdate },
+        });
+        xclient.options.date.should.be.an.Object;
+        xclient.connect(() => {
+            const abapDate = '20180725';
+            const jsDate = Utils.fromABAPdate(abapDate);
             let importStruct = {
-                RFCDATE: testDateIn,
+                RFCDATE: jsDate,
             };
-            let importTable = [importStruct];
-            client
-                .call('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable })
-                .then(res => {
-                    res.should.be.an.Object();
-                    res.ECHOSTRUCT.RFCDATE.should.equal(testDateOut);
-                    res.RFCTABLE[0].RFCDATE.should.equal(testDateOut);
-                    if (++count === Months.length) done();
-                })
-                .catch(err => {
+            let importTable = [];
+            let count = 1;
+            for (let month of Months) {
+                importTable.push({ RFCDATE: Utils.fromABAPdate(`2018${month}${12 + count++}`) });
+            }
+            importTable.push({ RFCDATE: Utils.fromABAPdate('20180101') });
+            importTable.push({ RFCDATE: Utils.fromABAPdate('20181230') });
+
+            xclient.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, (err, res) => {
+                if (err) {
                     done(err);
-                });
-        }
+                }
+                res.should.be.an.Object();
+                res.ECHOSTRUCT.RFCDATE.toString().should.equal(jsDate.toString());
+
+                for (let i = 0; i < res.RFCTABLE.length - 1; i++) {
+                    res.RFCTABLE[i].RFCDATE.toString().should.equal(importTable[i].RFCDATE.toString());
+                }
+                done();
+            });
+        });
     });
 
     it('error: INT rejects string', function(done) {
@@ -376,7 +387,7 @@ describe('Datatypes', function() {
             err.should.be.an.Object();
             err.should.have.properties({
                 name: 'TypeError',
-                message: 'Date string YYYYMMDD expected when filling field RFCDATE of type 1',
+                message: 'ABAP date format YYYYMMDD expected when filling field RFCDATE of type 1',
             });
             done();
         });

@@ -19,9 +19,15 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 ## Prerequisites
 
-SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account is required) and locally installed. More information on [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html).
+SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account is required) and locally installed. More information on [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html) and [node-rfc documentation](http://sap.github.io/node-rfc/install.html#sap-nw-rfc-library-installation).
 
 SAP NW RFC Library is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.0B. Using the latest version is reccomended.
+
+The macOS firewall stealth mode must be disabled ([Can't ping a machine - why?](https://discussions.apple.com/thread/2554739)):
+
+```shell
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
+```
 
 ## Supported platforms
 

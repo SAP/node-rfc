@@ -62,17 +62,17 @@
 		"@babel/core": "^7.2.0",
 		"@types/node": "^10.12.12",
 		"acorn": "^6.0.4",
-		"aws-sdk": "^2.371.0",
+		"aws-sdk": "^2.373.0",
 		"compare-versions": "^3.4.0",
 		"decimal.js": "^10.0.1",
-		"eslint": "^5.9.0",
+		"eslint": "^5.10.0",
 		"eslint-plugin-mocha": "^5.2.0",
 		"mocha": "^5.2.0",
 		"node-gyp": "^3.8.0",
 		"prettier-eslint": "^8.8.2",
 		"random-bytes": "^1.0.0",
 		"should": "^13.2.3",
-		"typescript": "^3.2.1"
+		"typescript": "^3.2.2"
 	},
 	"dependencies": {
 		"@types/bluebird": "^3.5.24",

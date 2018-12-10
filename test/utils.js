@@ -1,9 +1,15 @@
 module.exports = {
     toABAPdate: function(date) {
+        // Date to ABAP YYYYMMDD
         if (!(date instanceof Date)) return new TypeError(`Date object required: ${date}`);
         let mm = date.getMonth() + 1;
-        let dd = date.getDate();
+        let dd = date.getUTCDate();
         return [date.getFullYear(), mm > 9 ? mm : '0' + mm, dd > 9 ? dd : '0' + dd].join('');
+    },
+
+    fromABAPdate: function(dats) {
+        // ABAP YYYYMMDD to Date()
+        return new Date(0 | dats.substring(0, 4), (0 | dats.substring(4, 6)) - 1, (0 | dats.substring(6, 8)) + 1);
     },
 
     compareBuffers(c1, c2) {

@@ -109,6 +109,12 @@ private:
   bool __rstrip;
   int __bcd = 0; // 0: string, 1: number, 2: function
   Napi::FunctionReference __bcdFunction;
+  // date
+  Napi::FunctionReference __dateToABAP;
+  Napi::FunctionReference __dateFromABAP;
+  // time
+  Napi::FunctionReference __timeToABAP;
+  Napi::FunctionReference __timeFromABAP;
 
   RFC_RC rc;
   RFC_ERROR_INFO errorInfo;

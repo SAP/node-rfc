@@ -32,6 +32,8 @@ interface RfcClientVersion {
 interface RfcClientOptions {
     rstrip: boolean;
     bcd: string | Function;
+    date: Function;
+    time: Function;
 }
 declare enum EnumSncQop {
     DigSig = "1",

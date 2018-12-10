@@ -62,6 +62,8 @@ interface RfcClientVersion {
 interface RfcClientOptions {
 	rstrip: boolean;
 	bcd: string | Function;
+	date: Function;
+	time: Function;
 }
 
 interface RfcClientInstance {

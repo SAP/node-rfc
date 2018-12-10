@@ -290,6 +290,8 @@ Napi::FunctionReference Client::constructor;
 
 Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
 {
+    char err[256];
+
     init(info.Env());
 
     if (!info.IsConstructCall())
@@ -324,36 +326,90 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
         for (unsigned int i = 0; i < props.Length(); i++)
         {
             Napi::String key = props.Get(i).ToString();
+            Napi::Value opt = options.Get(key).As<Napi::Value>();
             if (key.Utf8Value().compare(std::string("rstrip")) == (int)0)
             {
                 __rstrip = options.Get(key).As<Napi::Boolean>();
             }
             else if (key.Utf8Value().compare(std::string("bcd")) == (int)0)
             {
-                Napi::Value bcdOption = options.Get(key).As<Napi::Value>();
-                if (bcdOption.IsFunction())
+                if (opt.IsFunction())
                 {
                     __bcd = NODERFC_BCD_FUNCTION;
-                    __bcdFunction = Napi::Persistent(bcdOption.As<Napi::Function>());
+                    __bcdFunction = Napi::Persistent(opt.As<Napi::Function>());
                 }
-                else if (bcdOption.IsString())
+                else if (opt.IsString())
                 {
-                    std::string bcdString = bcdOption.ToString().Utf8Value();
+                    std::string bcdString = opt.ToString().Utf8Value();
                     if (bcdString.compare(std::string("number")) == (int)0)
                     {
                         __bcd = NODERFC_BCD_NUMBER;
                     }
                     else
                     {
-                        char err[256];
                         sprintf(err, "Unknown bcd option, only 'number' or function allowed: %s", &bcdString[0]);
                         Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
                     }
                 }
             }
+            else if (key.Utf8Value().compare(std::string("date")) == (int)0)
+            {
+                if (!opt.IsObject())
+                {
+                    opt = info.Env().Null();
+                }
+                else
+                {
+                    Napi::String fn = Napi::String::New(info.Env(), "toABAP");
+                    Napi::Value toABAP = opt.As<Napi::Object>().Get(fn);
+                    fn = Napi::String::New(info.Env(), "fromABAP");
+                    Napi::Value fromABAP = opt.As<Napi::Object>().Get(fn);
+                    if (!toABAP.IsFunction() || !fromABAP.IsFunction())
+                    {
+                        opt = info.Env().Null();
+                    }
+                    else
+                    {
+                        __dateToABAP = Napi::Persistent(toABAP.As<Napi::Function>());
+                        __dateFromABAP = Napi::Persistent(fromABAP.As<Napi::Function>());
+                    }
+                }
+                if (opt.IsNull())
+                {
+                    sprintf(err, "Date option is not an object with toABAP and fromABAP functions");
+                    Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                }
+            }
+            else if (key.Utf8Value().compare(std::string("time")) == (int)0)
+            {
+                if (!opt.IsObject())
+                {
+                    opt = info.Env().Null();
+                }
+                else
+                {
+                    Napi::String fn = Napi::String::New(info.Env(), "toABAP");
+                    Napi::Value toABAP = opt.As<Napi::Object>().Get(fn);
+                    fn = Napi::String::New(info.Env(), "fromABAP");
+                    Napi::Value fromABAP = opt.As<Napi::Object>().Get(fn);
+                    if (!toABAP.IsFunction() || !fromABAP.IsFunction())
+                    {
+                        opt = info.Env().Null();
+                    }
+                    else
+                    {
+                        __timeToABAP = Napi::Persistent(toABAP.As<Napi::Function>());
+                        __timeFromABAP = Napi::Persistent(fromABAP.As<Napi::Function>());
+                    }
+                }
+                if (opt.IsNull())
+                {
+                    sprintf(err, "Date option is not an object with toABAP and fromABAP functions");
+                    Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                }
+            }
             else
             {
-                char err[256];
                 std::string optionName = key.Utf8Value();
                 sprintf(err, "Unknown option: %s", &optionName[0]);
                 Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
@@ -405,10 +461,11 @@ Client::~Client(void)
     free(connectionParams);
     uv_sem_destroy(&this->invocationMutex);
 
-    if (__bcd == NODERFC_BCD_FUNCTION)
-    {
-        __bcdFunction.Reset();
-    }
+    __bcdFunction.Reset();
+    __dateToABAP.Reset();
+    __dateFromABAP.Reset();
+    __timeToABAP.Reset();
+    __timeFromABAP.Reset();
 }
 
 Napi::Object Client::Init(Napi::Env env, Napi::Object exports)
@@ -637,11 +694,39 @@ Napi::Value Client::OptionsGetter(const Napi::CallbackInfo &info)
     }
     else if (__bcd == NODERFC_BCD_FUNCTION)
     {
-        options.Set(Napi::String::New(__env, "bcd"), Napi::String::New(__env, "function"));
+        options.Set(Napi::String::New(__env, "bcd"), __bcdFunction.Value());
     }
     else
     {
         options.Set(Napi::String::New(__env, "bcd"), Napi::String::New(__env, "?"));
+    }
+
+    Napi::Object date = Napi::Object::New(__env);
+    if (!__dateToABAP.IsEmpty())
+    {
+        date.Set(Napi::String::New(__env, "toABAP"), __dateToABAP.Value());
+    }
+    if (!__dateFromABAP.IsEmpty())
+    {
+        date.Set(Napi::String::New(__env, "fromABAP"), __dateFromABAP.Value());
+    }
+    if (date.GetPropertyNames().Length() > 0)
+    {
+        options.Set(Napi::String::New(__env, "date"), date);
+    }
+
+    Napi::Object time = Napi::Object::New(__env);
+    if (!__timeToABAP.IsEmpty())
+    {
+        time.Set(Napi::String::New(__env, "toABAP"), __timeToABAP.Value());
+    }
+    if (!__timeFromABAP.IsEmpty())
+    {
+        time.Set(Napi::String::New(__env, "fromABAP"), __timeFromABAP.Value());
+    }
+    if (time.GetPropertyNames().Length() > 0)
+    {
+        options.Set(Napi::String::New(__env, "time"), time);
     }
 
     return options;
