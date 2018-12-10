@@ -1,6 +1,33 @@
 Change log
 ==========
 
+1.0.0-rc7 (2018-12-06)
+---------------------
+
+* N-API, asynchronous and non-blocking 
+* Callback, promise, async/await API
+* Connection pool
+* Typescript and ES-next syntax support
+* C/C++ style guide
+* Error handling harmonisation
+* Descriptive error when SAP NW RFC SDK shared lib not found
+* String handling optimisation
+* Tables processing harmonisation and memory consumption fix
+* BYTE and XSTRING unicode encoding removed
+* BCD and FLOAT accept strings, numbers or Decimal.js objects, configurable by options parameter
+* client.options getter returns rstrip and bcd formatting options (string, number or function)
+* More unit tests
+* Empty fieldname removed from structures and tables (arrays)
+* Darwin support (in process)
+* README links update, from Service Marketplace to Support Portal
+
+Incompatible changes:
+
+* client.connectionInfo() gunction replaced by client.connectionInfo getter
+* client.getVersion() replaced by client.version getter, format changed as well
+* client.isAlive() replaced by client.isAlive getter
+* XSTRING and BYTE types work with Buffers only
+
 1.0.0-rc6 (2018-12-06)
 ---------------------
 

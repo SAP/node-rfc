@@ -98,9 +98,9 @@ export declare class Client {
     reopen(callback: Function | undefined): void | Promise<void> | Promise<{}>;
     ping(callback: Function | undefined): void | Promise<void> | Promise<{}>;
     readonly isAlive: boolean;
+    readonly connectionInfo: RfcConnectionInfo;
     readonly id: number;
     readonly version: RfcClientVersion;
     readonly options: RfcClientOptions;
-    readonly connectionInfo: RfcConnectionInfo;
 }
 export {};
