@@ -4,7 +4,7 @@
 
 **Only critical fixes will be provided for Nan based version.**
 
-**Please continue using the new N-API version, as a prerelease, considering minor [incompatible changes](https://github.com/SAP/node-rfc/releases/tag/0.2.0-rc4).**
+**Please continue using the new N-API version, as a prerelease, considering minor [incompatible changes](https://github.com/SAP/node-rfc/releases/tag/1.0.0-rc7).**
 
 # SAP NW RFC SDK Client for Nodejs
 
@@ -118,6 +118,8 @@ npm install node-rfc@next
 Build from the latest source:
 
 ```shell
+# The SAPNWRFC_HOME env variable must point to root folder of
+# SAP NW RFC SDK libraries on your system, like /usr/local/sap/nwrfcsdk
 git clone -b napi https://github.com/SAP/node-rfc.git
 cd node-rfc
 npm install

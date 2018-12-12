@@ -4,82 +4,44 @@
 Installation
 ============
 
-:mod:`node-rfc` is a wrapper for the *SAP NetWeaver RFC Library* and you need to obtain and install it first.
+If `SAP NetWeaver RFC SDK <https://support.sap.com/en/product/connectors/nwrfcsdk.html>`_ and `NodeJS <http://nodejs.org/>`_ 
+are already installed on your system, you can install the :mod:`node-rfc` package from npm, or build from source.
 
-If `NodeJS <http://nodejs.org/>`_ is not already installed on your system, you need to download and install it as well.
-
+You may use the current or any of `LTS node releases  <https://github.com/nodejs/Release>`_ and considering the SAP NW RFC SDK
+is fully backwards compatible, using the latest SAP NW RFC SDK release is reccomended.
 
 .. _install-c-connector:
 
-SAP NW RFC Library Installation
-===============================
+SAP NW RFC SDK Installation
+===========================
 
-The entry page for *SAP NetWeaver RFC library* is SAP Service Marketplace (SMP), http://service.sap.com/rfc-library,
-with detailed instructions how to
-`download <http://service.sap.com/sap/support/notes/1025361>`_,
-`use <https://websmp103.sap-ag.de/~sapidb/011000358700000869672007.pdf>`_ and
-`compile <https://websmp103.sap-ag.de/sap/support/notes/1056696>`_.
+Information on where to download the SAP NW RFC SDK you may find ` here https://support.sap.com/en/product/connectors/nwrfcsdk.html>`_ .
 
-Basically, you should search for ``SAP NW RFC SDK 7.20``, in ``Software Downloads`` of SAP Software Download Center
-on `SMP Support Portal <http://service.sap.com/support>`_, download SAP NW RFC Library adequate for your platform
-and unpack using ``SAPCAR`` archive utility.
-
-.. figure:: _static/SMP-SAPNWRFCSDK.png
-  :align: center
-
-``SAPCAR`` can be donwloaded from the SMP as well and you should search for ``SAPCAR 7.20``
-
-.. figure:: _static/SMP-SAPCAR.png
-  :align: center
-
-.. _install-combination:
-
-Which SAP NW RFC Library version is relevant for your platform? Here are platform/Python combinations tested so far:
-
-========== ============================== =========================
-Platform     NetWeaver RFC Library (SMP)       Filename (SMP)
-========== ============================== =========================
-Windows    *Windows on x64 64bit*         ``NWRFC_20-20004568.SAR``
-Linux      *Linux on x86_64 64bit*        ``NWRFC_20-20004565.SAR``
-========== ============================== =========================
-
-.. note::
-   * *SAP NW RFC Library* is fully backwards compatible and it is reccomended using
-     the newest version also for older backend system releases
-
-   * SMP search terms and filenames given here will not be regularly updated,
-     you should always search  for current version or filename in ``Software Downloads``.
-
-   * The server functionality is currently not working under Windows 32bit
-
-.. _SAP Note 1025361: http://service.sap.com/sap/support/notes/1025361
-.. _download location: http://www.service.sap.com/~form/handler?_APP=00200682500000001943&_EVENT=DISPHIER&HEADER=N&FUNCTIONBAR=N&EVENT=TREE&TMPL=01200314690200010197&V=MAINT
-
-
-The NodeJS connector relies on *SAP NW RFC Library* and must be able to find library
-files at runtime. Therefore, you might either install the *SAP NW RFC Library*
+The NodeJS RFC connector relies on *SAP NW RFC SDK* and must be able to find the library
+files at runtime. Therefore, you might either install the *SAP NW RFC SDK*
 in the standard library paths of your system or install it in any location and tell the
 NodeJS connector where to look.
 
-Here are configuration examples for Windows and Linux operating systems.
-
+Here are configuration examples for Windows, Linux and macOS operating systems.
 
 Windows
 -------
 
-1. Create an directory, e.g. ``c:\nwrfcsdk``.
-2. Unpack the SAR archive to it, e.g. ``c:\nwrfcsdk\lib`` shall exist.
-3. Include the ``lib`` directory to the library search path on Windows, i.e.
+1. Create the SAP NW RFC SDK root directory, e.g. ``c:\nwrfcsdk``
+2. Set SAPNWRFC_HOME environment variable to that location: ``SAPNWRFC_HOME=c:\nwrfcsdk``
+3. Unpack the SAP NW RFC SDK archive to it, e.g. ``c:\nwrfcsdk\lib`` shall exist.
+4. Include the ``lib`` directory to the library search path on Windows, i.e.
    :ref:`extend<install-problems-envvar-win>` the ``PATH`` environment variable.
 
-Add ``c:\nwrfcsdk\lib`` to PATH
+Add ``c:\nwrfcsdk\lib`` to PATH.
 
 Linux
 -----
 
-1. Create the directory, e.g. ``/usr/local/sap/nwrfcsdk``.
-2. Unpack the SAR archive to it, e.g. ``/usr/local/sap/nwrfcsdk/lib`` shall exist.
-3. Include the ``lib`` directory in the library search path:
+1. Create the SAP NW RFC SDK root directory, e.g. ``/usr/local/sap/nwrfcsdk``.
+2. Set SAPNWRFC_HOME environment variable to that location: ``SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk``
+3. Unpack the SAP NW RFC SDK archive to it, e.g. ``/usr/local/sap/nwrfcsdk/lib`` shall exist.
+4. Include the ``lib`` directory in the library search path:
 
    * As ``root``, create a file ``/etc/ld.so.conf.d/nwrfcsdk.conf`` and
      enter the following values:
@@ -89,8 +51,68 @@ Linux
         # include nwrfcsdk
         /usr/local/sap/nwrfcsdk/lib
 
-   * As ``root``, run the command ``ldconfig``.
+   * As ``root``, run the command ``ldconfig``. To check if libraries are installed:
 
+     .. code-block:: sh
+
+        $ ldconfig -p | grep sap # should show something like:
+          libsapucum.so (libc6,x86-64) => /usr/local/sap/nwrfcsdk/lib/libsapucum.so
+          libsapnwrfc.so (libc6,x86-64) => /usr/local/sap/nwrfcsdk/lib/libsapnwrfc.so
+          libicuuc.so.50 (libc6,x86-64) => /usr/local/sap/nwrfcsdk/lib/libicuuc.so.50
+          libicui18n.so.50 (libc6,x86-64) => /usr/local/sap/nwrfcsdk/lib/libicui18n.so.50
+          libicudecnumber.so (libc6,x86-64) => /usr/local/sap/nwrfcsdk/lib/libicudecnumber.so
+          libicudata.so.50 (libc6,x86-64) => /usr/local/sap/nwrfcsdk/lib/libicudata.so.50
+          libgssapi_krb5.so.2 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2
+          libgssapi.so.3 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libgssapi.so.3
+        $    
+
+macOS
+-----
+
+1. Create the SAP NW RFC SDK root directory ``/usr/local/sap/nwrfcsdk`` (this location is fixed, more info below)
+2. Set SAPNWRFC_HOME environment variable to that location: ``SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk``
+3. Unpack the SAP NW RFC SDK archive to it, e.g. ``/usr/local/sap/nwrfcsdk/lib`` shall exist. 
+4. Set the remote paths in SAP NW RFC SDK by running following bash script:
+
+     .. code-block:: sh
+
+        #!/bin/bash
+
+        RPATH="$SAPNWRFC_HOME/lib"
+        cd $RPATH
+
+        #
+        # add LC_RPATH
+        #
+        for filename in *.dylib; do
+            install_name_tool -add_rpath $RPATH $filename 
+        done
+
+        #
+        # fix LC_LOAD_DYLIB
+        #
+
+        # in libisui18n
+        install_name_tool -change libicuuc.50.dylib @rpath/libicuuc.50.dylib libicui18n.50.dylib
+        install_name_tool -change libicudata.50.dylib @rpath/libicudata.50.dylib libicui18n.50.dylib
+        # in libicuuc
+        install_name_tool -change libicudata.50.dylib @rpath/libicudata.50.dylib libicuuc.50.dylib
+
+This location is fixed because the ``/usr/local/sap/nwrfcsdk/lib`` rpath is the default rpath embedded into node-rfc package, published on npm.
+
+After moving SAP NW RFC SDK to another location in your system, the rpaths must be adjusted in SAP NW RFC SDK and in sapnwrfc.node libraries.
+
+For SAP NW RFC SDK, just point the SAPNWRFC_HOME env variable to new SAP NW RFC SDK root directory and re-run the above script. 
+
+For node-rfc:
+
+     .. code-block:: sh
+
+        $ npm install node-rfc@next
+        $ cd node_modules/node-rfc/lib/binding/darwin-x64-node-v64
+        $ install_name_tool -rpath /usr/local/sap/nwrfcsdk/lib /usr/new-path/lib sapnwrfc.node
+
+The v64 suffix is the node abi version for the node release 10 and the suffix for your node release you may find here: https://nodejs.org/en/download/releases.
 
 .. _install-node-connector:
 
@@ -123,8 +145,27 @@ Call remote enabled function modules in NW backend system (maintain your test sy
 
 .. code-block:: sh
 
-  node demo\demo
-  node demo\demo1, 2 ...
+  $ node demo\demo # demo1 ...
+
+In case of issues, check if the SAP NW RFC SDK is properly installed:
+
+.. code-block:: sh
+
+  $ cd $SAPNWRFC_HOME/bin
+  $ sudo chmod a+x rfcexec
+  $ ./rfcexec # should show something like:
+    Error: Not all mandatory parameters specified
+      Please start the program in the following way:
+      rfcexec -t -a <program ID> -g <gateway host> -x <gateway service>
+        -f <file with list of allowed commands> -s <allowed Sys ID>
+    The options "-t" (trace), "-f" and "-s" are optional.
+
+The output when SAP NW RFC SDK cannot be found:
+
+.. code-block:: sh
+
+  $ ./rfcexec
+  $ ./rfcexec: error while loading shared libraries: libsapnwrfc.so: cannot open shared object file: No such file or directory
 
 
 Problems
@@ -145,15 +186,15 @@ you can communicate this proxy to your shell via::
 or permanently set environment variables.
 
 
-SAP NW RFC Library Installation
--------------------------------
+SAP NW RFC SDK
+--------------
 
 1.  ``ImportError: DLL load failed: The specified module could not be found.``
 
     (Windows)
-    This error indicates that the Python connector was not able to find the
-    C connector on your system. Please check, if the ``lib`` directory of the
-    C connector is in your ``PATH`` environment variable.
+    This error indicates that the node-rfc connector was not able to find the
+    SAP NW RFC SDK libraries on your system. Please check, if the ``$SAPNWRFC_HOME\lib`` directory 
+    is in your ``PATH`` environment variable.
 
 2. ``ImportError: DLL load failed: %1 is not a valid Win32 application.``
 
