@@ -16,4 +16,6 @@ doc/_build
 .buildinfo
 _sources
 lib/binding
-
+issues
+release
+examples
