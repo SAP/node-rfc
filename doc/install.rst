@@ -236,18 +236,22 @@ Toolchain used for building on Windows is VS2013 Professional Update 2, with nat
 
 .. code-block:: sh
 
-  node-gyp clean
-  node-gyp configure --msvs_version=2013
-  node-gyp build
+  node-pre-gyp clean
+  node-pre-gyp configure --msvs_version=2013
+  node-pre-gyp build
 
-Linux
------
-
-To compile on Linux, run
+Linux and macOS
+---------------
 
 .. code-block:: sh
 
-  node-gyp configure build
+  node-pre-gyp clean configure build
+
+In case of `'utility' file not found <https://github.com/nodejs/node-gyp/issues/1564>`_ isssues with certain node releases on macOS, try:
+
+.. code-block:: sh
+
+  env CXXFLAGS="-mmacosx-version-min=10.9" node-pre-gyp clean configure build 
 
 For unit tests run
 
