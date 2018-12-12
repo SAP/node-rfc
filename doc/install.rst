@@ -15,7 +15,7 @@ is fully backwards compatible, using the latest SAP NW RFC SDK release is reccom
 SAP NW RFC SDK Installation
 ===========================
 
-Information on where to download the SAP NW RFC SDK you may find ` here https://support.sap.com/en/product/connectors/nwrfcsdk.html>`_ .
+Information on where to download the SAP NW RFC SDK you may find `here <https://support.sap.com/en/product/connectors/nwrfcsdk.html>`_ .
 
 The NodeJS RFC connector relies on *SAP NW RFC SDK* and must be able to find the library
 files at runtime. Therefore, you might either install the *SAP NW RFC SDK*
@@ -98,11 +98,11 @@ macOS
         # in libicuuc
         install_name_tool -change libicudata.50.dylib @rpath/libicudata.50.dylib libicuuc.50.dylib
 
-This location is fixed because the ``/usr/local/sap/nwrfcsdk/lib`` rpath is the default rpath embedded into node-rfc package, published on npm.
+This location is fixed to the default ``/usr/local/sap/nwrfcsdk/lib`` rpath, embedded into node-rfc package published on npm.
 
-After moving SAP NW RFC SDK to another location in your system, the rpaths must be adjusted in SAP NW RFC SDK and in sapnwrfc.node libraries.
+After moving SAP NW RFC SDK to another location on your system, the rpaths must be adjusted in SAP NW RFC SDK and in sapnwrfc.node libraries.
 
-For SAP NW RFC SDK, just point the SAPNWRFC_HOME env variable to new SAP NW RFC SDK root directory and re-run the above script. 
+For SAP NW RFC SDK, set the SAPNWRFC_HOME env variable to new SAP NW RFC SDK root directory and re-run the above script. 
 
 For node-rfc:
 
