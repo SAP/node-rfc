@@ -47,7 +47,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.wdf.sap.corp/D037732/node-rfc.git"
+		"url": "git+https://github.com/SAP/node-rfc.git"
 	},
 	"bundledDependencies": [
 		"node-pre-gyp"

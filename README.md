@@ -18,11 +18,25 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 -   Connection pool
 -   Extensive unit tests
 
+## Supported platforms
+
+* [active nodejs LTS releases](https://github.com/nodejs/LTS) 
+
+* The _node-rfc_ connector can be [built from source](http://sap.github.io/node-rfc/install.html#building-from-source) on all [platforms supported by SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1) 
+
+* Pre-built binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 8.1, Ubuntu 16.04 and macOS 10.14.
+
 ## Prerequisites
 
-SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account is required) and locally installed. More information on [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html) and [node-rfc documentation](http://sap.github.io/node-rfc/install.html#sap-nw-rfc-library-installation).
+SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account required) and locally installed ([installation instructions](http://sap.github.io/node-rfc/install.html#sap-nw-rfc-library-installation)). More information on [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html).
 
-SAP NW RFC Library is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.0B. Using the latest version is reccomended.
+SAP NW RFC Library is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.6C. Using the latest version is reccomended.
+
+### Windows
+
+On Windows platforms the Microsoft Visual C++ 2005 Service Pack 1 Redistributable Package (KB973544), or [newer](https://www.microsoft.com/en-us/download/details.aspx?id=48145), must be installed, per [SAP Note 1375494 - SAP system does not start after applying SAP kernel patch](https://launchpad.support.sap.com/#/notes/1375494).
+
+### macOS
 
 The macOS firewall stealth mode must be disabled ([Can't ping a machine - why?](https://discussions.apple.com/thread/2554739)):
 
@@ -30,13 +44,30 @@ The macOS firewall stealth mode must be disabled ([Can't ping a machine - why?](
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
 ```
 
-## Supported platforms
+## Installation
 
-Compiled binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 7.1 and Ubuntu 16.04 Linux platforms.
+After the SAP NW RFC SDK is installed on your system, you can install the _node-rfc_ package from npm:
 
-Build from source is required on other platforms, supported both by [SAP](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md).
+```shell
+yarn add node-rfc
+```
 
-## Usage and API
+```shell
+npm install node-rfc
+```
+
+Alternatively, or if the _node-rfc_ package not provided for your platform, [buld the package from the latest source]((http://sap.github.io/node-rfc/install.html#building-from-source)) and install:
+
+```shell
+git clone -b https://github.com/SAP/node-rfc.git
+cd node-rfc
+npm install
+node-pre-gyp configure build
+# set connection properties in test/abapSystem
+npm run test
+```
+
+## Getting started
 
 **Note:** the module must be [installed](#installation) before use.
 
@@ -104,43 +135,19 @@ client.connect(function(err) {
 
 Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method on the client instance.
 
-## Installation
+## Known Issues
 
-```shell
-yarn add node-rfc
-```
+* Python 2 will not be maintained past 2020 and the current build system node-gyp does not support Python 3: https://github.com/nodejs/node-addon-api/issues/445
 
-or if you prefer npm:
+* [NAPI Type checks #265](https://github.com/nodejs/node-addon-api/issues/265)
 
-```shell
-npm install node-rfc
-```
+## How to obtain support
 
-Build from the latest source:
+If you encounter an issue or have a feature request, you can create a [ticket](https://github.com/SAP/node-rfc/issues).
 
-```shell
-git clone -b https://github.com/SAP/node-rfc.git
-cd node-rfc
-npm install
-node-pre-gyp configure build
-# set connection properties in test/abapSystem
-npm run test
-```
+Check out the SCN Forum (search for "node-rfc") and stackoverflow (use the tag "node-rfc"), to discuss code-related problems and questions.
 
-## Issues
+## License
 
--   [NAPI Type checks #265](https://github.com/nodejs/node-addon-api/issues/265)
+Copyright (c) 2013 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the [LICENSE](LICENSE) file.
 
-## Links
-
--   https://support.sap.com/connectors
--   https://wiki.scn.sap.com/wiki/display/ABAPConn/ABAP+Connectivity+-+RFC
--   [SAP HANA Cloud Connector](https://help.hana.ondemand.com/help/frameset.htm?e6c7616abb5710148cfcf3e75d96d596.html)
-
-## Developer resources
-
--   [Embedder's Guide](https://github.com/v8/v8/wiki/Embedder's%20Guide)
--   [v8 API docs](https://v8docs.nodesource.com/)
--   [N-API API docs](https://nodejs.github.io/node-addon-api/index.html)
--   [Node.js ES2015 Support](http://node.green/)
--   [Node.js LTS Releases](https://github.com/nodejs/LTS)
