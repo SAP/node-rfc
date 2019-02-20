@@ -4,7 +4,7 @@
 
 **Only critical fixes will be provided for Nan based version.**
 
-**Please continue using the new N-API version, as a prerelease, considering minor [incompatible changes](https://github.com/SAP/node-rfc/releases/tag/1.0.0-rc7).**
+**Please continue using the [N-API version](https://github.com/SAP/node-rfc/tree/napi), as a prerelease, considering minor [incompatible changes](https://github.com/SAP/node-rfc/releases/tag/1.0.0-rc7).**
 
 # SAP NW RFC SDK Client for Nodejs
 
