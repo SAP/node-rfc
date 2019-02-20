@@ -27,8 +27,8 @@ Here are configuration examples for Windows, Linux and macOS operating systems.
 Windows
 -------
 
-1. Create the SAP NW RFC SDK root directory, e.g. ``c:\nwrfcsdk``
-2. Set SAPNWRFC_HOME environment variable to that location: ``SAPNWRFC_HOME=c:\nwrfcsdk``
+1. Create the SAP NW RFC SDK home directory, e.g. ``c:\nwrfcsdk``
+2. Set SAPNWRFC_HOME environment variable: ``SAPNWRFC_HOME=c:\nwrfcsdk``
 3. Unpack the SAP NW RFC SDK archive to it, e.g. ``c:\nwrfcsdk\lib`` shall exist.
 4. Include the ``lib`` directory to the library search path on Windows, i.e.
    :ref:`extend<install-problems-envvar-win>` the ``PATH`` environment variable.
@@ -38,8 +38,8 @@ Add ``c:\nwrfcsdk\lib`` to PATH.
 Linux
 -----
 
-1. Create the SAP NW RFC SDK root directory, e.g. ``/usr/local/sap/nwrfcsdk``.
-2. Set SAPNWRFC_HOME environment variable to that location: ``SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk``
+1. Create the SAP NW RFC SDK home directory, e.g. ``/usr/local/sap/nwrfcsdk``.
+2. Set the SAPNWRFC_HOME environment variable: ``SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk``
 3. Unpack the SAP NW RFC SDK archive to it, e.g. ``/usr/local/sap/nwrfcsdk/lib`` shall exist.
 4. Include the ``lib`` directory in the library search path:
 
@@ -77,8 +77,8 @@ must be disabled:
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
 ```
 
-1. Create the SAP NW RFC SDK root directory ``/usr/local/sap/nwrfcsdk`` (this location is fixed, more info below)
-2. Set SAPNWRFC_HOME environment variable to that location: ``SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk``
+1. Create the SAP NW RFC SDK home directory ``/usr/local/sap/nwrfcsdk`` (this location is fixed, more info below)
+2. Set SAPNWRFC_HOME environment variable: ``SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk``
 3. Unpack the SAP NW RFC SDK archive to it, e.g. ``/usr/local/sap/nwrfcsdk/lib`` shall exist. 
 4. Set the remote paths in SAP NW RFC SDK by running following bash script:
 
