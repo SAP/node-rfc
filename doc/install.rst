@@ -7,8 +7,8 @@ Installation
 If `SAP NetWeaver RFC SDK <https://support.sap.com/en/product/connectors/nwrfcsdk.html>`_ and `NodeJS <http://nodejs.org/>`_ 
 are already installed on your system, you can install the :mod:`node-rfc` package from npm, or build from source.
 
-You may use the current or any of `LTS node releases  <https://github.com/nodejs/Release>`_ and considering the SAP NW RFC SDK
-is fully backwards compatible, using the latest SAP NW RFC SDK release is reccomended.
+You may use the current or any of `LTS node releases  <https://github.com/nodejs/Release>`_ and the latest SAP NW RFC SDK
+release (fully backwards compatible).
 
 .. _install-c-connector:
 
@@ -68,6 +68,14 @@ Linux
 
 macOS
 -----
+
+The macOS firewall stealth mode is by default active, blocking the ICMP protocol based network access to Macbook. Applications like
+Ping do not work by default (`Can't ping a machine - why? <https://discussions.apple.com/thread/2554739>`_) and the stealth mode
+must be disabled:
+
+```shell
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
+```
 
 1. Create the SAP NW RFC SDK root directory ``/usr/local/sap/nwrfcsdk`` (this location is fixed, more info below)
 2. Set SAPNWRFC_HOME environment variable to that location: ``SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk``
