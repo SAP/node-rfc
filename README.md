@@ -38,11 +38,14 @@ On Windows platforms the Microsoft Visual C++ 2005 Service Pack 1 Redistributabl
 
 ### macOS
 
-The macOS firewall stealth mode must be disabled ([Can't ping a machine - why?](https://discussions.apple.com/thread/2554739)):
+* The macOS firewall stealth mode must be disabled ([Can't ping a machine - why?](https://discussions.apple.com/thread/2554739)):
 
 ```shell
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 ```
+
+* Remote paths must be set in SAP NWRFC SDK for macOS: [node-rfc/#58](https://github.com/SAP/node-rfc/issues/58#issuecomment-446544151)
+
 
 ## Installation
 
@@ -137,9 +140,9 @@ Finally, the connection is closed automatically when the instance is deleted by 
 
 ## Known Issues
 
-* Python 2 will not be maintained past 2020 and the current build system node-gyp does not support Python 3: https://github.com/nodejs/node-addon-api/issues/445
+* Python 2 will not be maintained past 2020 and the current build system node-gyp does not support Python 3: [nodejs/node-addon-api/#445](https://github.com/nodejs/node-addon-api/issues/445)
 
-* [NAPI Type checks #265](https://github.com/nodejs/node-addon-api/issues/265)
+* NAPI Type checks [nodejs/node-addon-api/#265](https://github.com/nodejs/node-addon-api/issues/265)
 
 ## How to obtain support
 
