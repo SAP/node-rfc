@@ -154,30 +154,6 @@ describe('Datatypes', function() {
         });
     });
 
-    it('RAW/BYTE accepts binary string', function(done) {
-        let isInput = {
-            ZRAW: Utils.XBYTES_TEST,
-        };
-        client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
-            should.not.exist(err);
-            let test = Utils.compareBuffers(isInput.ZRAW, res.ES_OUTPUT.ZRAW);
-            test.content.should.equal(true);
-            done();
-        });
-    });
-
-    it('RAW/BYTE accepts string', function(done) {
-        let isInput = {
-            ZRAW: Utils.XBYTES_TEST,
-        };
-        client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
-            should.not.exist(err);
-            let test = Utils.compareBuffers(isInput.ZRAW, res.ES_OUTPUT.ZRAW);
-            test.content.should.equal(true);
-            done();
-        });
-    });
-
     it('RAW/BYTE accepts Buffer', function(done) {
         let isInput = {
             ZRAW: Utils.XBYTES_TEST,
@@ -186,31 +162,6 @@ describe('Datatypes', function() {
             should.not.exist(err);
             let test = Utils.compareBuffers(isInput.ZRAW, res.ES_OUTPUT.ZRAW);
             test.content.should.equal(true);
-            done();
-        });
-    });
-
-    it('XSTRING accepts binary string', function(done) {
-        let isInput = {
-            ZRAWSTRING: Utils.XBYTES_TEST,
-        };
-        client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
-            should.not.exist(err);
-            let test = Utils.compareBuffers(isInput.ZRAWSTRING, res.ES_OUTPUT.ZRAWSTRING);
-            test.content.should.equal(true);
-            done();
-        });
-    });
-
-    it('XSTRING accepts string', function(done) {
-        let isInput = {
-            ZRAWSTRING: Utils.XBYTES_TEST,
-        };
-        client.invoke('/COE/RBP_FE_DATATYPES', { IS_INPUT: isInput }, function(err, res) {
-            should.not.exist(err);
-            Buffer.alloc(isInput.ZRAWSTRING.length, isInput.ZRAWSTRING)
-                .equals(res.ES_OUTPUT.ZRAWSTRING)
-                .should.equal(true);
             done();
         });
     });
