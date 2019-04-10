@@ -29,5 +29,6 @@
         "initializer_list": "cpp",
         "stdexcept": "cpp"
     },
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "terminal.integrated.rendererType": "dom"
 }

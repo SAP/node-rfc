@@ -14,137 +14,127 @@
 
 'use strict';
 
-const rfcClient = require('./noderfc').Client;
-const abapSystem = require('./abapSystem')();
+const setup = require('./setup');
+const client = setup.client;
 
-const should = require('should');
+beforeEach(function () {
+    return client.reopen();
+});
 
-describe('Errors promise', function() {
-    let client = new rfcClient(abapSystem);
+afterEach(function () {
+    return client.close();
+});
 
-    beforeEach(function() {
-        return client.reopen();
-    });
+afterAll(function (done) {
+    delete setup.client;
+    delete setup.rfcClient;
+    delete setup.rfcPool;
+    done();
+});
 
-    afterEach(function() {
-        return client.close();
-    });
+it('error: call() promise rejects invalid credentials', function (done) {
+    let wrongParams = Object.assign({}, setup.abapSystem);
+    wrongParams.user = 'WRONGUSER';
 
-    it('error: call() promise rejects invalid credentials', function(done) {
-        let wrongParams = Object.assign({}, abapSystem);
-        wrongParams.user = 'WRONGUSER';
-
-        let wrongClient = new rfcClient(wrongParams);
-        wrongClient
-            .open()
-            .then(res => {
-                should.not.exist(res);
-                return done(res);
-            })
-            .catch(err => {
-                should.exist(err);
-                err.should.have.properties({
-                    message: 'Name or password is incorrect (repeat logon)',
-                    code: 2,
-                    key: 'RFC_LOGON_FAILURE',
-                });
-                done();
-            });
-    });
-
-    it('error: call() promise rejects non-existing parameter', function(done) {
-        client
-            .call('STFC_CONNECTION', { XXX: 'wrong param' })
-            .then(res => {
-                should.not.exist(res);
-                return done(res);
-            })
-            .catch(err => {
-                should.exist(err);
-                err.should.be.an.Object();
-                err.should.have.properties({
-                    code: 20,
-                    key: 'RFC_INVALID_PARAMETER',
-                    message: "field 'XXX' not found",
-                });
-                done();
-            });
-    });
-
-    it('error: promise call() RFC_RAISE_ERROR', function(done) {
-        client
-            .call('RFC_RAISE_ERROR', { MESSAGETYPE: 'A' })
-            .then(res => {
-                should.not.exist(res);
-                return done(res);
-            })
-            .catch(err => {
-                should.exist(err);
-                err.should.be.an.Object();
-                err.should.have.properties({
-                    code: 4,
-                    key: 'Function not supported',
-                    abapMsgClass: 'SR',
-                    abapMsgType: 'A',
-                    abapMsgNumber: '006',
-                    message: 'Function not supported',
-                });
-                done();
-            });
-    });
-
-    it('error: open() promise requires minimum of connection parameters', function(done) {
-        let wrongParams = Object.assign({}, abapSystem);
-        delete wrongParams.ashost;
-
-        let wrongClient = new rfcClient(wrongParams);
-        wrongClient
-            .open()
-            .then(res => {
-                should.not.exist(res);
-                return done(res);
-            })
-            .catch(err => {
-                should.exist(err);
-                err.should.have.properties({
-                    message: 'Parameter ASHOST, GWHOST, MSHOST or SERVER_PORT is missing.',
-                    code: 20,
-                    key: 'RFC_INVALID_PARAMETER',
-                });
-                done();
-            });
-    });
-
-    it('error: promise call() requires at least two arguments', function(done) {
-        client.call('rfc').catch(err => {
-            should.exist(err);
-            err.should.have.properties({
-                name: 'TypeError',
-                message: 'Please provide remote function module name and parameters as arguments',
-            });
+    let wrongClient = new setup.rfcClient(wrongParams);
+    wrongClient
+        .open()
+        .then(res => {
+            expect(res).tpBeUndefined();
+            done();
+        })
+        .catch(err => {
+            expect(err).toBeDefined();
+            expect(err).toEqual(expect.objectContaining({
+                message: 'Name or password is incorrect (repeat logon)',
+                code: 2,
+                key: 'RFC_LOGON_FAILURE',
+            }));
             done();
         });
-    });
+});
 
-    it('error: promise call() rejects non-string rfm name', function(done) {
-        client.call(23, {}, 2).catch(err => {
-            should.exist(err);
-            err.should.have.properties({
-                name: 'TypeError',
-                message: 'First argument (remote function module name) must be an string',
-            });
-            done();
+it('error: call() promise rejects non-existing parameter', function () {
+    return client
+        .call('STFC_CONNECTION', { XXX: 'wrong param' })
+        .then(res => {
+            expect(res).tpBeUndefined();
+        })
+        .catch(err => {
+            expect(err).toBeDefined();
+            expect(err).toEqual(expect.objectContaining({
+                code: 20,
+                key: 'RFC_INVALID_PARAMETER',
+                message: "field 'XXX' not found",
+            }));
         });
-    });
+});
 
-    it('error: promise call() rejects non-object second argument (remote function module parameters)', function(done) {
-        client.call('rfc', 41, 2).catch(err => {
-            should.exist(err);
-            err.should.have.properties({
-                name: 'TypeError',
-                message: 'Second argument (remote function module parameters) must be an object',
-            });
-            done();
+it('error: promise call() RFC_RAISE_ERROR', function () {
+    return client
+        .call('RFC_RAISE_ERROR', { MESSAGETYPE: 'A' })
+        .then(res => {
+            expect(res).tpBeUndefined();
+        })
+        .catch(err => {
+            expect(err).toBeDefined();
+            expect(err).toEqual(expect.objectContaining({
+                code: 4,
+                key: 'Function not supported',
+                abapMsgClass: 'SR',
+                abapMsgType: 'A',
+                abapMsgNumber: '006',
+                message: 'Function not supported',
+            }));
         });
+});
+
+it('error: open() promise requires minimum of connection parameters', function () {
+    let wrongParams = Object.assign({}, setup.abapSystem);
+    delete wrongParams.ashost;
+
+    let wrongClient = new setup.rfcClient(wrongParams);
+    return wrongClient
+        .open()
+        .then(res => {
+            expect(res).toBeUndefined();
+        })
+        .catch(err => {
+            expect(err).toBeDefined();
+            expect(err).toEqual(expect.objectContaining({
+                message: 'Parameter ASHOST, GWHOST, MSHOST or SERVER_PORT is missing.',
+                code: 20,
+                key: 'RFC_INVALID_PARAMETER',
+            }));
+        });
+});
+
+it('error: promise call() requires at least two arguments', function () {
+    return client.call('rfc').catch(err => {
+        expect(err).toBeDefined();
+        expect(err).toEqual(expect.objectContaining({
+            name: 'TypeError',
+            message: 'Please provide remote function module name and parameters as arguments',
+        }));
+    });
+});
+
+it('error: promise call() rejects non-string rfm name', function () {
+    return client.call(23, {}, 2).catch(err => {
+        expect(err).toBeDefined();
+        expect(err).toEqual(expect.objectContaining({
+            name: 'TypeError',
+            message: 'First argument (remote function module name) must be an string',
+        }));
+    });
+});
+
+it('error: promise call() rejects non-object second argument (remote function module parameters)', function () {
+    return client.call('rfc', 41, 2).catch(err => {
+        expect(err).toBeDefined();
+        expect(err).toEqual(expect.objectContaining({
+            name: 'TypeError',
+            message: 'Second argument (remote function module parameters) must be an object',
+        }));
     });
 });

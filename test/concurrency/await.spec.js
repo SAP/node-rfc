@@ -14,90 +14,87 @@
 
 'use strict';
 
-const rfcClient = require('../noderfc').Client;
-const abapSystem = require('../abapSystem')();
+const setup = require('../setup');
+const client = setup.client;
 
-const should = require('should');
+//this.timeout(15000);
 
-const CONNECTIONS = require('./config').connections;
-
-describe('Concurrency await (node > 7.6.0)', function() {
-	this.timeout(15000);
-
-	let client = new rfcClient(abapSystem);
-
-	beforeEach(function(done) {
-		client.reopen(err => {
-			done(err);
-		});
+beforeEach(function (done) {
+	client.reopen(err => {
+		done(err);
 	});
+});
 
-	afterEach(function(done) {
-		client.close(() => {
-			done();
-		});
+afterEach(function (done) {
+	client.close(() => {
+		done();
 	});
+});
 
-	const REQUTEXT = 'Hellö SÄP!';
+afterAll(function (done) {
+	delete setup.client;
+	delete setup.rfcClient;
+	delete setup.rfcPool;
+	done();
+});
 
-	it(`await: ${CONNECTIONS} sequential calls using single connection`, function(done) {
-		(async () => {
-			for (let i = 0; i < CONNECTIONS; i++) {
-				try {
-					let res = await client.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' });
-					res.should.be.an.Object();
-					res.should.have.properties('RETURN');
-					res.RETURN.should.be.an.Array();
-					res.RETURN.length.should.equal(0);
-				} catch (ex) {
-					return done(ex);
-				}
-			}
-			done();
-		})();
-	});
+const REQUTEXT = 'Hellö SÄP!';
 
-	it(`await: ${CONNECTIONS} parallel connections`, function(done) {
-		(async () => {
-			let CLIENTS = [];
-			for (let i = 0; i < CONNECTIONS; i++) {
-				let c = await new rfcClient(abapSystem).open();
-				CLIENTS.push(c);
-			}
-			for (let c of CLIENTS) {
-				try {
-					let res = await client.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' });
-					res.should.be.an.Object();
-					res.should.have.properties('RETURN');
-					res.RETURN.should.be.an.Array();
-					res.RETURN.length.should.equal(0);
-					await c.close();
-				} catch (ex) {
-					return done(ex);
-				}
-			}
-			done();
-		})();
-	});
-
-	it(`await: ${CONNECTIONS} recursive calls using single connection`, function(done) {
-		let callbackCount = 0;
-		async function call() {
+it(`await: ${setup.CONNECTIONS} sequential calls using single connection`, function (done) {
+	(async () => {
+		for (let i = 0; i < setup.CONNECTIONS; i++) {
 			try {
 				let res = await client.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' });
-				res.should.be.an.Object();
-				res.should.have.properties('RETURN');
-				res.RETURN.should.be.an.Array();
-				res.RETURN.length.should.equal(0);
-				if (++callbackCount == CONNECTIONS) {
-					done();
-				} else {
-					call(callbackCount);
-				}
+				expect(res).toBeDefined();
+				expect(res).toHaveProperty('RETURN');
+				expect(res.RETURN.length).toBe(0);;
 			} catch (ex) {
-				done(ex);
+				return done(ex);
 			}
 		}
-		call();
-	});
+		done();
+	})();
+});
+
+it(`await: ${setup.CONNECTIONS} parallel connections`, function (done) {
+	(async () => {
+		let CLIENTS = [];
+		for (let i = 0; i < setup.CONNECTIONS; i++) {
+			let c = await new setup.rfcClient(setup.abapSystem).open();
+			CLIENTS.push(c);
+		}
+		for (let c of CLIENTS) {
+			try {
+				let res = await client.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' });
+				expect(res).toBeDefined();
+				expect(res).toHaveProperty('RETURN');
+				expect(res.RETURN.length).toBe(0);
+				await c.close();
+
+			} catch (ex) {
+				return done(ex);
+			}
+		}
+		done();
+	})();
+});
+
+it(`await: ${setup.CONNECTIONS} recursive calls using single connection`, function (done) {
+	let callbackCount = 0;
+	async function call() {
+		try {
+			let res = await client.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' });
+			expect(res).toBeDefined();
+			expect(res).toHaveProperty('RETURN');
+			expect(res.RETURN.length).toBe(0);
+			if (++callbackCount == setup.CONNECTIONS) {
+				done();
+			} else {
+				call(callbackCount);
+			}
+		} catch (ex) {
+			done(ex);
+		}
+	}
+	call();
 });

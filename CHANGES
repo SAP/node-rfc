@@ -1,10 +1,11 @@
 Change log
 ==========
 
-1.0.0-rc8 (xxxx-xx-xx)
+1.0.0-rc8 (2019-04-11)
 ---------------------
 
 * SAP NW RFC SDK loading error message improved 059383704c070fd05a5948d885192cce4c40a22b
+* jest test framework
 
 1.0.0-rc7 (2018-12-10)
 ---------------------

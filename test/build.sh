@@ -21,7 +21,7 @@
 
 # https://github.com/nodejs/node-addon-api/issues/387
 declare -a LTS_BUILD=("6.9.0" "8.9.0" "10.0.0" "11.0.0")
-declare -a LTS_TEST=("6.9.0" "6.15.1" "8.9.0" "8.14.0" "10.0.0" "10.14.1" "11.0.0", "11.3.0")
+declare -a LTS_TEST=("6.9.0" "6.17.1" "8.9.0" "8.15.1" "10.0.0" "10.15.3" "11.0.0", "11.3.0")
 
 version=`cat ./VERSION` 
 
@@ -35,6 +35,7 @@ elif [ "$platform" == "Darwin" ]; then
 	osext="darwin"
 else
 	printf "\nPlatform not supported: $platform\n"
+    return 1
 fi
 
 BUILD_LOG="test/pass-$osext.log"

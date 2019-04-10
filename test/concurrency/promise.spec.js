@@ -14,129 +14,125 @@
 
 'use strict';
 
-const rfcClient = require('../noderfc').Client;
-const abapSystem = require('../abapSystem')();
+const setup = require('../setup');
+const client = setup.client;
 
-const should = require('should');
 const Promise = require('bluebird');
 
-const CONNECTIONS = require('./config').connections;
+//this.timeout(15000);
 
-describe('Concurrency promises', function() {
-    this.timeout(15000);
+afterAll(function (done) {
+    delete setup.client;
+    delete setup.rfcClient;
+    delete setup.rfcPool;
+    done();
+});
 
-    let client = new rfcClient(abapSystem);
+it('concurrency: call() should not block', function () {
+    let asyncRes;
+    return client
+        .open()
+        .then(function () {
+            client.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
+                .then(res => {
+                    expect(res).toBeDefined();
+                    expect(res).toHaveProperty('RETURN');
+                    expect(res.RETURN.length).toBe(0);
+                    asyncRes = res;
+                    client.close();
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        })
 
-    beforeEach(function() {
-        return client.reopen();
-    });
+    expect(asyncRes).toBeUndefined();
+});
 
-    afterEach(function() {
-        return client.close();
-    });
-
-    it('concurrency: call() should not block', function(done) {
-        let asyncRes;
-        client
-            .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
-            .then(res => {
-                res.should.be.an.Object();
-                res.should.have.properties('RETURN');
-                res.RETURN.should.be.an.Array();
-                res.RETURN.length.should.equal(0);
-                asyncRes = res;
-                done();
+it(`concurrency: ${setup.CONNECTIONS} parallel call() promises`, function (done) {
+    let callbackCount = 0;
+    for (let i = 0; i < setup.CONNECTIONS; i++) {
+        new setup.rfcClient(setup.abapSystem)
+            .open()
+            .then(c => {
+                c.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
+                    .then(res => {
+                        expect(res).toBeDefined();
+                        expect(res).toHaveProperty('RETURN');
+                        expect(res.RETURN.length).toBe(0);
+                        c.close(() => {
+                            if (++callbackCount === setup.CONNECTIONS) done();
+                        });
+                    })
+                    .catch(err => {
+                        return done(err);
+                    });
             })
             .catch(err => {
                 return done(err);
             });
-        should.not.exist(asyncRes);
-    });
+    }
+});
 
-    it(`concurrency: ${CONNECTIONS} parallel call() promises`, function(done) {
-        let callbackCount = 0;
-        for (let i = 0; i < CONNECTIONS; i++) {
-            new rfcClient(abapSystem)
-                .open()
-                .then(c => {
-                    c.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
-                        .then(res => {
-                            res.should.be.an.Object();
-                            res.should.have.properties('RETURN');
-                            res.RETURN.should.be.an.Array();
-                            res.RETURN.length.should.equal(0);
-                            c.close(() => {
-                                if (++callbackCount === CONNECTIONS) done();
-                            });
-                        })
-                        .catch(err => {
-                            return done(err);
-                        });
-                })
-                .catch(err => {
-                    return done(err);
-                });
-        }
-    });
-
-    it(`concurrency: ${CONNECTIONS} concurrent call() promises, using single connection`, function(done) {
-        let callbackCount = 0;
-        for (let i = 0; i < CONNECTIONS; i++) {
-            client
-                .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
-                .then(res => {
-                    res.should.be.an.Object();
-                    res.should.have.properties('RETURN');
-                    res.RETURN.should.be.an.Array();
-                    res.RETURN.length.should.equal(0);
-                    if (++callbackCount == CONNECTIONS) done();
-                })
-                .catch(err => {
-                    return done(err);
-                });
-        }
-    });
-
-    it(`concurrency: ${CONNECTIONS} concurrent call() promises, using single connection and Promise.all()`, function() {
-        let promises = [];
-        for (let counter = 0; counter < CONNECTIONS; counter++) {
-            promises.push(
+it(`concurrency: ${setup.CONNECTIONS} concurrent call() promises, using single connection`, function () {
+    let callbackCount = 0;
+    return client
+        .open()
+        .then(function () {
+            for (let i = 0; i < setup.CONNECTIONS; i++) {
                 client
                     .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
                     .then(res => {
-                        res.should.be.an.Object();
-                        res.should.have.properties('RETURN');
-                        res.RETURN.should.be.an.Array();
-                        res.RETURN.length.should.equal(0);
+                        expect(res).toBeDefined();
+                        expect(res).toHaveProperty('RETURN');
+                        expect(res.RETURN.length).toBe(0);
+                        if (++callbackCount == setup.CONNECTIONS) client.close();
                     })
-                    .catch(err => {
-                        return err;
-                    })
-            );
-        }
-        return Promise.all(promises);
-    });
+            }
+        })
+});
 
-    it(`concurrency: ${CONNECTIONS} recursive call() promises, using single connection`, function(done) {
-        let callbackCount = 0;
-        function call() {
+it(`concurrency: ${setup.CONNECTIONS} concurrent call() promises, using single connection and Promise.all()`, function () {
+    let promises = [];
+    for (let counter = 0; counter < setup.CONNECTIONS; counter++) {
+        promises.push(
             client
                 .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
                 .then(res => {
-                    res.should.be.an.Object();
-                    res.should.have.properties('RETURN');
-                    res.RETURN.should.be.an.Array();
-                    res.RETURN.length.should.equal(0);
-                    if (++callbackCount == CONNECTIONS) {
-                        done();
-                    } else {
-                        call(callbackCount);
-                    }
+                    expect(res).toBeDefined();
+                    expect(res).toHaveProperty('RETURN');
+                    expect(res.RETURN.length).toBe(0);
                 })
-                .catch(err => {
-                    return done(err);
-                });
-        }
-        call();
-    });
+        );
+    }
+    return Promise.all(promises);
+});
+
+it(`concurrency: ${setup.CONNECTIONS} recursive call() promises, using single connection`, function () {
+    let callbackCount = 0;
+    function call() {
+        client
+            .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
+            .then(res => {
+                expect(res).toBeDefined();
+                expect(res).toHaveProperty('RETURN');
+                expect(res.RETURN.length).toBe(0);
+                if (++callbackCount == setup.CONNECTIONS) {
+                    client.close();
+                } else {
+                    call(callbackCount);
+                }
+            })
+            .catch(err => {
+                return done(err);
+            });
+    }
+
+    return client
+        .open()
+        .then(function () {
+            call();
+        });
+
+    call();
 });

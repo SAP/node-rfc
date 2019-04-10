@@ -28,6 +28,6 @@ let abapSystem = {
     },
 };
 
-module.exports = function(sid = 'DSP') {
+module.exports = function(sid = 'MME') {
     return abapSystem[sid];
 };

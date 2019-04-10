@@ -14,179 +14,172 @@
 
 'use strict';
 
-const rfcClient = require('./noderfc').Client;
-const abapSystem = require('./abapSystem')();
+const setup = require('./setup');
+const client = setup.client;
 
-const should = require('should');
-
-describe('Errors', function() {
-    let client = new rfcClient(abapSystem);
-
-    beforeEach(function(done) {
-        client.reopen(err => {
-            done(err);
-        });
+beforeEach(function (done) {
+    client.reopen(function (err) {
+        done(err);
     });
+});
 
-    afterEach(function(done) {
-        client.close(() => {
-            done();
-        });
+afterEach(function (done) {
+    client.close(function () {
+        done();
     });
+});
 
-    it('error: new client requires connection parameters', function(done) {
-        try {
-            new rfcClient();
-        } catch (err) {
-            should.exist(err);
-            err.should.have.properties({
-                name: 'TypeError',
-                message: 'Connection parameters must be an object',
-            });
-            done();
-        }
+afterAll(function (done) {
+    delete setup.client;
+    delete setup.rfcClient;
+    delete setup.rfcPool;
+    done();
+});
+
+it('error: new client requires connection parameters', function (done) {
+    try {
+        new setup.rfcClient();
+    } catch (err) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(expect.objectContaining({
+            name: 'TypeError',
+            message: 'Connection parameters must be an object',
+        }));
+        done();
+    }
+});
+
+it('error: connect() requires minimum of connection parameters', function (done) {
+    let wrongParams = Object.assign({}, setup.abapSystem);
+    delete wrongParams.ashost;
+
+    let wrongClient = new setup.rfcClient(wrongParams);
+    wrongClient.connect(function (err) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(expect.objectContaining({
+            message: 'Parameter ASHOST, GWHOST, MSHOST or SERVER_PORT is missing.',
+            code: 20,
+            key: 'RFC_INVALID_PARAMETER',
+        }));
+        done();
     });
+});
 
-    it('error: connect() requires minimum of connection parameters', function(done) {
-        let wrongParams = Object.assign({}, abapSystem);
-        delete wrongParams.ashost;
+it('error: conect() rejects invalid credentials', function (done) {
+    let wrongParams = Object.assign({}, setup.abapSystem);
+    wrongParams.user = 'WRONGUSER';
 
-        let wrongClient = new rfcClient(wrongParams);
-        wrongClient.connect(function(err) {
-            should.exist(err);
-            err.should.have.properties({
-                message: 'Parameter ASHOST, GWHOST, MSHOST or SERVER_PORT is missing.',
-                code: 20,
-                key: 'RFC_INVALID_PARAMETER',
-            });
-            done();
-        });
+    let wrongClient = new setup.rfcClient(wrongParams);
+    wrongClient.connect(function (err) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(expect.objectContaining({
+            message: 'Name or password is incorrect (repeat logon)',
+            code: 2,
+            key: 'RFC_LOGON_FAILURE',
+        }));
+        done();
     });
+});
 
-    it('error: conect() rejects invalid credentials', function(done) {
-        let wrongParams = Object.assign({}, abapSystem);
-        wrongParams.user = 'WRONGUSER';
+it('error: connect() requires a callback function', function (done) {
+    try {
+        client.connect();
+    } catch (err) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(expect.objectContaining({
+            name: 'TypeError',
+            message: 'First argument must be callback function',
+        }));
+        done();
+    }
+});
 
-        let wrongClient = new rfcClient(wrongParams);
-        wrongClient.connect(function(err) {
-            should.exist(err);
-            err.should.have.properties({
-                message: 'Name or password is incorrect (repeat logon)',
-                code: 2,
-                key: 'RFC_LOGON_FAILURE',
-            });
-            done();
-        });
+it('error: invoke() requires at least three arguments', function (done) {
+    try {
+        client.invoke('rfc', {});
+    } catch (err) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(expect.objectContaining({
+            message: 'Callback function must be supplied',
+        }));
+        done();
+    }
+});
+
+it('error: invoke() rejects non-existing parameter', function (done) {
+    client.invoke('STFC_CONNECTION', { XXX: 'wrong param' }, function (err) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(expect.objectContaining({
+            code: 20,
+            key: 'RFC_INVALID_PARAMETER',
+            message: "field 'XXX' not found",
+        }));
+        done();
     });
+});
 
-    it('error: connect() requires a callback function', function(done) {
-        try {
-            client.connect();
-        } catch (err) {
-            should.exist(err);
-            err.should.have.properties({
-                name: 'TypeError',
-                message: 'First argument must be callback function',
-            });
-            done();
-        }
+it('error: invoke() rejects non-string rfm name', function (done) {
+    client.invoke(23, {}, function (err) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(expect.objectContaining({
+            name: 'TypeError',
+            message: 'First argument (remote function module name) must be an string',
+        }));
+        done();
     });
+});
 
-    it('error: invoke() requires at least three arguments', function(done) {
-        try {
-            client.invoke('rfc', {});
-        } catch (err) {
-            should.exist(err);
-            err.should.have.properties({
-                message: 'Please provide rfc module name, parameters and callback as arguments',
-            });
-        } finally {
-            done();
-        }
+it('error: invoke() RFC_RAISE_ERROR', function (done) {
+    client.invoke('RFC_RAISE_ERROR', { MESSAGETYPE: 'A' }, function (err) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(expect.objectContaining({
+            code: 4,
+            key: 'Function not supported',
+            abapMsgClass: 'SR',
+            abapMsgType: 'A',
+            abapMsgNumber: '006',
+            message: 'Function not supported',
+        }));
+        done();
     });
+});
 
-    it('error: invoke() rejects non-existing parameter', function(done) {
-        client.invoke('STFC_CONNECTION', { XXX: 'wrong param' }, function(err) {
-            should.exist(err);
-            err.should.be.an.Object();
-            err.should.have.properties({
-                code: 20,
-                key: 'RFC_INVALID_PARAMETER',
-                message: "field 'XXX' not found",
-            });
-            done();
-        });
+it('error: non-existing field in input structure', function (done) {
+    let importStruct = {
+        XRFCCHAR1: 'A',
+        RFCCHAR2: 'BC',
+        RFCCHAR4: 'DEFG',
+    };
+
+    client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct }, function (err) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(expect.objectContaining({
+            name: 'RfcLibError',
+            code: 20,
+            key: 'RFC_INVALID_PARAMETER',
+            message: "field 'XRFCCHAR1' not found",
+        }));
+        done();
     });
+});
 
-    it('error: invoke() rejects non-string rfm name', function(done) {
-        try {
-            client.invoke(23, {}, 2);
-        } catch (err) {
-            should.exist(err);
-            err.should.have.properties({
-                name: 'TypeError',
-                message: 'First argument (rfc module name) must be an string',
-            });
-        } finally {
-            done();
-        }
-    });
-
-    it('error: invoke() RFC_RAISE_ERROR', function(done) {
-        client.invoke('RFC_RAISE_ERROR', { MESSAGETYPE: 'A' }, function(err) {
-            should.exist(err);
-            err.should.be.an.Object();
-            err.should.have.properties({
-                code: 4,
-                key: 'Function not supported',
-                abapMsgClass: 'SR',
-                abapMsgType: 'A',
-                abapMsgNumber: '006',
-                message: 'Function not supported',
-            });
-            done();
-        });
-    });
-
-    it('error: non-existing field in input structure', function(done) {
-        let importStruct = {
+it('error: non-existing field in input table', function (done) {
+    let importTable = [
+        {
             XRFCCHAR1: 'A',
             RFCCHAR2: 'BC',
             RFCCHAR4: 'DEFG',
-        };
+        },
+    ];
 
-        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct }, function(err) {
-            should.exist(err);
-            err.should.be.an.Object();
-            err.should.have.properties({
-                name: 'RfcLibError',
-                code: 20,
-                key: 'RFC_INVALID_PARAMETER',
-                message: "field 'XRFCCHAR1' not found",
-            });
-            done();
-        });
-    });
-
-    it('error: non-existing field in input table', function(done) {
-        let importTable = [
-            {
-                XRFCCHAR1: 'A',
-                RFCCHAR2: 'BC',
-                RFCCHAR4: 'DEFG',
-            },
-        ];
-
-        client.invoke('STFC_STRUCTURE', { RFCTABLE: importTable }, function(err) {
-            should.exist(err);
-            err.should.be.an.Object();
-            err.should.have.properties({
-                name: 'RfcLibError',
-                code: 20,
-                key: 'RFC_INVALID_PARAMETER',
-                message: "field 'XRFCCHAR1' not found",
-            });
-            done();
-        });
+    client.invoke('STFC_STRUCTURE', { RFCTABLE: importTable }, function (err) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(expect.objectContaining({
+            name: 'RfcLibError',
+            code: 20,
+            key: 'RFC_INVALID_PARAMETER',
+            message: "field 'XRFCCHAR1' not found",
+        }));
+        done();
     });
 });

@@ -14,187 +14,183 @@
 
 'use strict';
 
-const rfcClient = require('./noderfc').Client;
-const abapSystem = require('./abapSystem')();
+const setup = require('./setup');
+const client = setup.client;
 
-const should = require('should');
+afterAll(function (done) {
+    delete setup.client;
+    delete setup.rfcClient;
+    delete setup.rfcPool;
+    done();
+});
 
-// https://github.com/SAP/node-rfc/issues/57
-const UNICODETEST = 'ทดสอบสร้างลูกค้าจากภายนอกครั้งที่ 3'.repeat(7);
+it('Client, package and GitHub versions', function () {
+    let VERSION = require('fs')
+        .readFileSync('VERSION')
+        .toString()
+        .trim();
+    expect(require('../package.json').version).toBe(VERSION);
+    expect(client.version.binding).toBe(VERSION);
+});
 
-describe('Connection', function() {
-    let client = new rfcClient(abapSystem);
+it('Client getters', function () {
+    expect(client.id).toBeGreaterThan(0);
 
-    beforeEach(function(done) {
-        client.reopen(err => {
-            done(err);
-        });
-    });
+    expect(client.version).toHaveProperty('major');
+    expect(client.version).toHaveProperty('minor');
+    expect(client.version).toHaveProperty('patchLevel');
+    expect(client.version).toHaveProperty('binding', require('../package.json').version);
 
-    afterEach(function(done) {
-        client.close(() => {
-            done();
-        });
-    });
+    expect(client.options).toHaveProperty('rstrip');
+    expect(client.options).toHaveProperty('bcd');
 
-    it('VERSION == binding version == package.json version', function(done) {
-        let VERSION = require('fs')
-            .readFileSync('VERSION')
-            .toString()
-            .trim();
-        require('../package.json').version.should.be.equal(VERSION);
-        client.version.binding.should.equal(VERSION);
+    expect(() => client.version = { a: 1, b: 2 }).toThrow(new TypeError('Cannot set property version of #<Client> which has only a getter'));
+});
+
+it('isAlive ands ping() should be false when disconnected', function (done) {
+    expect(client.isAlive).toBeFalsy();
+    client.ping((err, res) => {
+        if (err) return done(err);
+        expect(res).toBeFalsy();
         done();
     });
+});
 
-    it('exception: Client getters', function(done) {
-        client.id.should.be.number;
-        client.id.should.be.greaterThan(0);
-        client.version.should.be.an.Object();
-        client.version.should.have.properties('major', 'minor', 'patchLevel', 'binding');
-        client.options.should.be.an.Object();
-        client.options.should.have.properties('rstrip', 'bcd');
-        try {
-            client.version = { a: 1, b: 2 };
-        } catch (ex) {
-            ex.should.have.properties({
-                name: 'TypeError',
-                message: 'Cannot set property version of #<Client> which has only a getter',
-            });
-            done();
-        }
-    });
-
-    it('connectionInfo() should return connection information', function(done) {
-        client.connectionInfo.should.be.an.Object();
-        client.connectionInfo.should.have.properties(
-            'host',
-            'partnerHost',
-            'sysNumber',
-            'sysId',
-            'client',
-            'user',
-            'language',
-            'trace',
-            'isoLanguage',
-            'codepage',
-            'partnerCodepage',
-            'rfcRole',
-            'type',
-            'partnerType',
-            'rel',
-            'partnerRel',
-            'kernelRel',
-            'cpicConvId',
-            'progName',
-            'partnerBytesPerChar',
-            'reserved'
-        );
-        client.connectionInfo.should.have.properties({
-            user: abapSystem.user.toUpperCase(),
-            sysNumber: abapSystem.sysnr,
-            client: abapSystem.client,
-        });
-        client.close(err => {
-            if (err) return done(err);
-            client.connectionInfo.should.be.an.Object().and.be.empty();
-            done();
-        });
-    });
-
-    it('isAlive and ping() should be true when connected', function(done) {
-        client.isAlive.should.be.true;
+it('isAlive and ping() should be true when connected', function (done) {
+    expect(client.isAlive).toBeFalsy();
+    client.connect(function (err) {
+        if (err) return done(err);
+        expect(client.isAlive).toBeTruthy();
         client.ping((err, res) => {
             if (err) return done(err);
-            res.should.be.true;
+            expect(res).toBeTruthy();
             done();
         });
     });
+});
 
-    it('isAlive ands ping() should be false when disconnected', function(done) {
-        client.close(() => {
-            client.isAlive.should.be.false;
-            client.ping((err, res) => {
+it('connectionInfo() should return connection information when connected', function (done) {
+    expect(Object.keys(client.connectionInfo).sort()).toEqual([
+        'host',
+        'partnerHost',
+        'sysNumber',
+        'sysId',
+        'client',
+        'user',
+        'language',
+        'trace',
+        'isoLanguage',
+        'codepage',
+        'partnerCodepage',
+        'rfcRole',
+        'type',
+        'partnerType',
+        'rel',
+        'partnerRel',
+        'kernelRel',
+        'cpicConvId',
+        'progName',
+        'partnerBytesPerChar',
+        'reserved'
+    ].sort());
+
+    expect(client.connectionInfo).toEqual(expect.objectContaining({
+        'user': setup.abapSystem.user.toUpperCase(),
+        'sysNumber': setup.abapSystem.sysnr,
+        'client': setup.abapSystem.client
+    }));
+
+    client.close(err => {
+        expect(client.connectionInfo).toEqual({});
+        done(err);
+    });
+});
+
+it('connectionInfo() should return {} when discconnected', function (done) {
+    expect(client.connectionInfo).toEqual({});
+    done();
+});
+
+
+it('reopen() should reopen the connection', function (done) {
+    client.close(function () {
+        expect(client.isAlive).toBeFalsy();
+        client.connect(function (err) {
+            if (err) return done(err);
+            expect(client.isAlive).toBeTruthy();
+            client.reopen(function (err) {
                 if (err) return done(err);
-                res.should.be.false;
-                client.close(err => {
-                    return done(err);
+                expect(client.isAlive).toBeTruthy();
+                let convId = client.connectionInfo.cpicConvId;
+                client.reopen(function (err) {
+                    if (err) return done(err);
+                    expect(client.isAlive).toBeTruthy();
+                    expect(convId === client.connectionInfo.cpicConvId).toBeFalsy();
+                    done();
                 });
             });
         });
     });
+});
 
-    it('reopen() should reopen the connection', function(done) {
-        client.isAlive.should.be.true;
-        client.reopen(function(err) {
-            should.not.exist(err);
-            client.isAlive.should.be.true;
-            let convId = client.connectionInfo.cpicConvId;
-            client.reopen(function(err) {
-                should.not.exist(err);
-                client.isAlive.should.be.true;
-                convId.should.not.be.equal(client.connectionInfo.cpicConvId);
+it('invoke() STFC_CONNECTION should return unicode string', function (done) {
+    client.connect(function (err) {
+        if (err) return done(err);
+        client.invoke('STFC_CONNECTION', { REQUTEXT: setup.UNICODETEST }, function (err, res) {
+            if (err) return done(err);
+            expect(res).toHaveProperty('ECHOTEXT');
+            expect(res.ECHOTEXT.indexOf(setup.UNICODETEST)).toBe(0);
+            client.close(function () {
                 done();
             });
         });
     });
+});
 
-    it('invoke() STFC_CONNECTION should return unicode string', function(done) {
-        client.invoke('STFC_CONNECTION', { REQUTEXT: UNICODETEST }, function(err, res) {
-            should.not.exist(err);
-            should.exist(res);
-            res.should.be.an.Object();
-            res.should.have.property('ECHOTEXT');
-            res.ECHOTEXT.should.startWith(UNICODETEST);
-            done();
-        });
-    });
+it('invoke() STFC_STRUCTURE should return structure and table', function (done) {
+    let importStruct = {
+        RFCFLOAT: 1.23456789,
+        RFCCHAR1: 'A',
+        RFCCHAR2: 'BC',
+        RFCCHAR4: 'DEFG',
 
-    it('invoke() STFC_STRUCTURE should return structure and table', function(done) {
-        let importStruct = {
-            RFCFLOAT: 1.23456789,
-            RFCCHAR1: 'A',
-            RFCCHAR2: 'BC',
-            RFCCHAR4: 'DEFG',
+        RFCINT1: 1,
+        RFCINT2: 2,
+        RFCINT4: 345,
 
-            RFCINT1: 1,
-            RFCINT2: 2,
-            RFCINT4: 345,
+        RFCHEX3: Buffer.from('\x01\x02\x03', 'ascii'),
 
-            RFCHEX3: Buffer.from('\x01\x02\x03', 'ascii'),
+        RFCTIME: '121120',
+        RFCDATE: '20140101',
 
-            RFCTIME: '121120',
-            RFCDATE: '20140101',
-
-            RFCDATA1: '1DATA1',
-            RFCDATA2: 'DATA222',
-        };
-        let INPUTROWS = 10;
-        let importTable = [];
-        for (let i = 0; i < INPUTROWS; i++) {
-            let row = {};
-            Object.assign(row, importStruct);
-            row.RFCINT1 = i;
-            importTable.push(row);
-        }
-
-        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function(err, res) {
-            should.not.exist(err);
-            should.exist(res);
-            res.should.be.an.Object();
-            res.should.have.properties('ECHOSTRUCT', 'RFCTABLE');
+        RFCDATA1: '1DATA1',
+        RFCDATA2: 'DATA222',
+    };
+    let INPUTROWS = 10;
+    let importTable = [];
+    for (let i = 0; i < INPUTROWS; i++) {
+        let row = {};
+        Object.assign(row, importStruct);
+        row.RFCINT1 = i;
+        importTable.push(row);
+    }
+    client.connect(function (err) {
+        if (err) return done(err);
+        client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: importStruct, RFCTABLE: importTable }, function (err, res) {
+            if (err) return done(err);
+            expect(Object.keys(res)).toEqual(['ECHOSTRUCT', 'RESPTEXT', 'IMPORTSTRUCT', 'RFCTABLE']);
 
             // ECHOSTRUCT match IMPORTSTRUCT
             for (let k in importStruct) {
                 if (k === 'RFCHEX3') {
-                    res.ECHOSTRUCT[k].toString().should.equal(importStruct[k].toString());
+                    expect(res.ECHOSTRUCT[k].toString()).toEqual(importStruct[k].toString());
                 } else {
-                    res.ECHOSTRUCT[k].should.equal(importStruct[k]);
+                    expect(res.ECHOSTRUCT[k]).toEqual(importStruct[k]);
                 }
             }
 
             // added row is incremented IMPORTSTRUCT
-            res.RFCTABLE.should.have.length(INPUTROWS + 1);
+            expect(res.RFCTABLE.length).toEqual(INPUTROWS + 1);
 
             // output table match import table
             for (let i = 0; i < INPUTROWS; i++) {
@@ -202,22 +198,24 @@ describe('Connection', function() {
                 let rowOut = res.RFCTABLE[i];
                 for (let k in rowIn) {
                     if (k === 'RFCHEX3') {
-                        rowIn[k].toString().should.equal(rowOut[k].toString());
+                        expect(rowIn[k].toString()).toEqual(rowOut[k].toString());
                     } else {
-                        rowIn[k].should.equal(rowOut[k]);
+                        expect(rowIn[k]).toEqual(rowOut[k]);
                     }
                 }
             }
 
             // added row match incremented IMPORTSTRUCT
-            res.RFCTABLE[INPUTROWS].RFCFLOAT.should.equal(importStruct.RFCFLOAT + 1);
-            res.RFCTABLE[INPUTROWS].RFCINT1.should.equal(importStruct.RFCINT1 + 1);
-            res.RFCTABLE[INPUTROWS].RFCINT2.should.equal(importStruct.RFCINT2 + 1);
-            res.RFCTABLE[INPUTROWS].RFCINT4.should.equal(importStruct.RFCINT4 + 1);
+            expect(res.RFCTABLE[INPUTROWS]).toEqual(expect.objectContaining({
+                RFCFLOAT: importStruct.RFCFLOAT + 1,
+                RFCINT1: importStruct.RFCINT1 + 1,
+                RFCINT2: importStruct.RFCINT2 + 1,
+                RFCINT4: importStruct.RFCINT4 + 1
+            }));
 
-            done();
+            client.close(function () {
+                done();
+            });
         });
     });
 });
-
-module.exports = UNICODETEST;

@@ -12,7 +12,7 @@ try {
 	if (ex.message.indexOf('sapnwrfc.node') !== -1)
 		ex.message += ['win32', 'linux', 'darwin'].indexOf(process.platform) !== -1 ?
 			'\n\n The SAP NW RFC SDK could not be loaded, check the installation: http://sap.github.io/node-rfc/install.html#sap-nw-rfc-sdk-installation' :
-            `\n\nPlatform not supported: ${process.platform}`;
+			`\n\nPlatform not supported: ${process.platform}`;
 	throw ex;
 }
 interface RfcConnectionInfo {
@@ -54,7 +54,7 @@ interface RfcClientOptions {
 }
 
 interface RfcClientInstance {
-	new (connectionParameters: RfcConnectionParameters, options?: RfcClientOptions): RfcClientInstance;
+	new(connectionParameters: RfcConnectionParameters, options?: RfcClientOptions): RfcClientInstance;
 	(connectionParameters: RfcConnectionParameters): RfcClientInstance;
 	connect(callback: Function): any;
 	invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): any;
@@ -286,11 +286,11 @@ export class Client {
 			return this.__client.ping(callback);
 		} else {
 			return new Promise((resolve, reject) => {
-				this.__client.ping((err: any) => {
+				this.__client.ping((err: any, res: boolean) => {
 					if (err) {
 						reject(err);
 					} else {
-						resolve(true);
+						resolve(res);
 					}
 				});
 			});
