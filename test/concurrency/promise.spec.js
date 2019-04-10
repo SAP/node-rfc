@@ -110,7 +110,7 @@ it(`concurrency: ${setup.CONNECTIONS} concurrent call() promises, using single c
 
 it(`concurrency: ${setup.CONNECTIONS} recursive call() promises, using single connection`, function () {
     let callbackCount = 0;
-    function call() {
+    function call(done) {
         client
             .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
             .then(res => {
@@ -123,9 +123,6 @@ it(`concurrency: ${setup.CONNECTIONS} recursive call() promises, using single co
                     call(callbackCount);
                 }
             })
-            .catch(err => {
-                return done(err);
-            });
     }
 
     return client

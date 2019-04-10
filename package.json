@@ -22,8 +22,6 @@
     "prepublishOnly": "npm ls",
     "preinstall": "npm install node-pre-gyp node-addon-api",
     "install": "node-pre-gyp install --fallback-to-build",
-    "build": "source test/build.sh",
-    "test": "source test/test.sh",
     "wrapper": "tsc -p src/ts",
     "examples": "tsc -p examples/ts",
     "install:dev": "npm i --save-dev @babel/core @types/node acorn aws-sdk compare-versions decimal.js eslint eslint-plugin-jest jest node-gyp prettier-eslint random-bytes typescript",

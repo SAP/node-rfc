@@ -21,7 +21,7 @@
 
 # https://github.com/nodejs/node-addon-api/issues/387
 declare -a LTS_BUILD=("6.9.0" "8.9.0" "10.0.0" "11.0.0")
-declare -a LTS_TEST=("6.9.0" "6.17.1" "8.9.0" "8.15.1" "10.0.0" "10.15.3" "11.0.0", "11.3.0")
+declare -a LTS_TEST=("6.9.0" "6.17.1" "8.9.0" "8.15.1" "10.0.0" "10.15.3" "11.0.0", "11.13.0")
 
 version=`cat ./VERSION` 
 
@@ -44,14 +44,14 @@ touch $BUILD_LOG
 
 NPMRELEASE="release/$version"
 mkdir -p $NPMRELEASE
-rm -rf $NPMRELEASE/*$osext*
+rm -rf $NPMRELEASE/rfc-$osext*
 
 #
 # Client
 #
 
 if [ "$1" != "test" ]; then
-    nvm use 11.3.0
+    nvm use 11.13.0
     npm run install:dev
     npm run install:prod
     
@@ -82,7 +82,7 @@ if [ "$1" != "test" ]; then
     #
 
     npm run wrapper
-    npm run examples
+    #npm run examples
 fi
 
 #
@@ -96,7 +96,7 @@ do
         nvm install $lts
     fi
     printf "\n============= testing: $lts =============\n"
-    npm run test
+    source ./test/test.sh
     if [ $? == 0 ]; then
         test="pass :"
     else
