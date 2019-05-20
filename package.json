@@ -52,7 +52,7 @@
     "node-pre-gyp"
   ],
   "files": [
-    "lib"
+    "lib", "src", "binding.gyp"
   ],
   "gypfile": true,
   "main": "./lib/index.js",
