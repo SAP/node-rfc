@@ -7,6 +7,7 @@ Change log
 * SAP NW RFC SDK loading error message improved
 * jest test framework
 * Build from source fix #85
+* tar security fix
 
 1.0.0-rc7 (2018-12-10)
 ---------------------

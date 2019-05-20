@@ -52,7 +52,9 @@
     "node-pre-gyp"
   ],
   "files": [
-    "lib", "src", "binding.gyp"
+    "lib",
+    "src",
+    "binding.gyp"
   ],
   "gypfile": true,
   "main": "./lib/index.js",
@@ -71,6 +73,7 @@
     "node-gyp": "^3.8.0",
     "prettier-eslint": "^8.8.2",
     "random-bytes": "^1.0.0",
+    "tar": ">=4.4.2",
     "typescript": "^3.4.3"
   },
   "dependencies": {
