@@ -45,14 +45,16 @@ touch $BUILD_LOG
 
 NPMRELEASE="release/$version"
 mkdir -p $NPMRELEASE
-rm -rf $NPMRELEASE/rfc-$osext*
+
 
 #
 # Client
 #
 
 if [ "$1" != "test" ]; then
-    
+
+    rm -rf $NPMRELEASE/rfc-$osext*
+
     rm -rf lib/binding/$osext-*
 
     for lts in "${LTS_BUILD[@]}"
