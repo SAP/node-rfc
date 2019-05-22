@@ -4,10 +4,10 @@ Change log
 1.0.0-rc8 (2019-05-22)
 ---------------------
 
-* SAP NW RFC SDK loading error message improved
+* SAP NW RFC SDK loading error message 
 * jest test framework
 * npm install --build-from-source fix #85
-* tar security fix
+* tar security audit fix
 * Option added to filter IMPORT or CHANGING parameters from the result set
 * RFC_INT8 ABAP type support added
 * .gitignore fix for vscode https://github.com/Microsoft/vscode-cpptools/issues/3347
