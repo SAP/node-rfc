@@ -114,7 +114,6 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
     RFC_RC rc = RFC_OK;
     RFC_ERROR_INFO errorInfo;
     SAP_UC *cValue;
-
     switch (typ)
     {
     case RFCTYPE_STRUCTURE:
@@ -163,6 +162,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         break;
     }
     case RFCTYPE_CHAR:
+    {
         if (!value.IsString())
         {
             char err[256];
@@ -174,6 +174,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         rc = RfcSetChars(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
         free(cValue);
         break;
+    }
     case RFCTYPE_BYTE:
     {
         if (!value.IsBuffer())
@@ -221,6 +222,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         break;
     }
     case RFCTYPE_STRING:
+    {
         if (!value.IsString())
         {
             char err[256];
@@ -232,7 +234,9 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
         free(cValue);
         break;
+    }
     case RFCTYPE_NUM:
+    {
         if (!value.IsString())
         {
             char err[256];
@@ -244,8 +248,10 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         rc = RfcSetNum(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
         free(cValue);
         break;
+    }
     case RFCTYPE_BCD: // fallthrough
     case RFCTYPE_FLOAT:
+    {
         if (!value.IsNumber() && !value.IsObject() && !value.IsString())
         {
             char err[256];
@@ -257,10 +263,12 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
         free(cValue);
         break;
-    case RFCTYPE_INT:
+    }
+    case RFCTYPE_INT: // fallthrough
     case RFCTYPE_INT1:
     case RFCTYPE_INT2:
     case RFCTYPE_INT8:
+    {
         if (!value.IsNumber())
         {
             char err[256];
@@ -268,23 +276,26 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             sprintf(err, "Integer number expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
-        else
+
+        // https://github.com/mhdawson/node-sqlite3/pull/3
+        double numDouble = value.ToNumber().DoubleValue();
+        if ((int64_t)numDouble != numDouble) // or std::trunc(numDouble) == numDouble;
         {
-            // https://github.com/mhdawson/node-sqlite3/pull/3
-            double numDouble = value.ToNumber().DoubleValue();
-            if ((int64_t)numDouble != numDouble) // or std::trunc(numDouble) == numDouble;
-            {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "Integer number expected when filling field %s of type %d, got %a", &fieldName[0], typ, numDouble);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
-            }
-            RFC_INT rfcInt = value.As<Napi::Number>().Int64Value();
-            //int64_t rfcInt = value.As<Napi::Number>().Int64Value();
-            rc = RfcSetInt(functionHandle, cName, rfcInt, &errorInfo);
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Integer number expected when filling field %s of type %d, got %a", &fieldName[0], typ, numDouble);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
+        //RFC_INT rfcInt = value.As<Napi::Number>().Int64Value();
+        int64_t rfcInt = value.As<Napi::Number>().Int64Value();
+        if (typ == RFCTYPE_INT8)
+            rc = RfcSetInt8(functionHandle, cName, rfcInt, &errorInfo);
+        else
+            rc = RfcSetInt(functionHandle, cName, rfcInt, &errorInfo);
         break;
+    }
     case RFCTYPE_DATE:
+    {
         if (!__dateToABAP.IsEmpty())
         {
             // YYYYMMDD format expected
@@ -301,7 +312,9 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         rc = RfcSetDate(functionHandle, cName, cValue, &errorInfo);
         free(cValue);
         break;
+    }
     case RFCTYPE_TIME:
+    {
         if (!__timeToABAP.IsEmpty())
         {
             // HHMMSS format expected
@@ -318,12 +331,15 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         rc = RfcSetTime(functionHandle, cName, cValue, &errorInfo);
         free(cValue);
         break;
+    }
     default:
+    {
         char err[256];
         std::string fieldName = wrapString(cName).ToString().Utf8Value();
         sprintf(err, "Unknown RFC type %u when filling %s", typ, &fieldName[0]);
         return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         break;
+    }
     }
     if (rc != RFC_OK)
     {
@@ -349,9 +365,12 @@ Napi::Value Client::wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_
     for (unsigned int i = 0; i < paramCount; i++)
     {
         RfcGetParameterDescByIndex(functionDescHandle, i, &paramDesc, NULL);
-        Napi::String name = wrapString(paramDesc.name).As<Napi::String>();
-        Napi::Value value = wrapVariable(paramDesc.type, functionHandle, paramDesc.name, paramDesc.nucLength, paramDesc.typeDescHandle);
-        (resultObj).Set(name, value);
+        if (paramDesc.direction != __filter_param_direction)
+        {
+            Napi::String name = wrapString(paramDesc.name).As<Napi::String>();
+            Napi::Value value = wrapVariable(paramDesc.type, functionHandle, paramDesc.name, paramDesc.nucLength, paramDesc.typeDescHandle);
+            (resultObj).Set(name, value);
+        }
     }
     return scope.Escape(resultObj);
 }
@@ -626,24 +645,35 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
     }
     case RFCTYPE_INT1:
     {
-        RFC_INT1 int1Value;
-        rc = RfcGetInt1(functionHandle, cName, &int1Value, &errorInfo);
+        RFC_INT1 intValue;
+        rc = RfcGetInt1(functionHandle, cName, &intValue, &errorInfo);
         if (rc != RFC_OK)
         {
             break;
         }
-        resultValue = Napi::Number::New(__env, int1Value);
+        resultValue = Napi::Number::New(__env, intValue);
         break;
     }
     case RFCTYPE_INT2:
     {
-        RFC_INT2 int2Value;
-        rc = RfcGetInt2(functionHandle, cName, &int2Value, &errorInfo);
+        RFC_INT2 intValue;
+        rc = RfcGetInt2(functionHandle, cName, &intValue, &errorInfo);
         if (rc != RFC_OK)
         {
             break;
         }
-        resultValue = Napi::Number::New(__env, int2Value);
+        resultValue = Napi::Number::New(__env, intValue);
+        break;
+    }
+    case RFCTYPE_INT8:
+    {
+        RFC_INT8 intValue;
+        rc = RfcGetInt8(functionHandle, cName, &intValue, &errorInfo);
+        if (rc != RFC_OK)
+        {
+            break;
+        }
+        resultValue = Napi::Number::New(__env, intValue);
         break;
     }
     case RFCTYPE_DATE:

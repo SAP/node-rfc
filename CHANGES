@@ -1,13 +1,15 @@
 Change log
 ==========
 
-1.0.0-rc8 (2019-05-24)
+1.0.0-rc8 (2019-05-22)
 ---------------------
 
 * SAP NW RFC SDK loading error message improved
 * jest test framework
 * Build from source fix #85
 * tar security fix
+* Option added to filter IMPORT or CHANGING parameters from the result set
+* RFC_INT8 support added
 
 1.0.0-rc7 (2018-12-10)
 ---------------------

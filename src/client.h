@@ -108,6 +108,7 @@ private:
   bool alive;
   bool __rstrip;
   int __bcd = 0; // 0: string, 1: number, 2: function
+  RFC_DIRECTION __filter_param_direction = (RFC_DIRECTION)0;
   Napi::FunctionReference __bcdFunction;
   // date
   Napi::FunctionReference __dateToABAP;

@@ -22,7 +22,7 @@ unsigned int Client::__refCounter = 0;
 
 class ConnectAsync : public Napi::AsyncWorker
 {
-  public:
+public:
     ConnectAsync(Napi::Function &callback, Client *client)
         : Napi::AsyncWorker(callback), client(client) {}
     ~ConnectAsync() {}
@@ -47,13 +47,13 @@ class ConnectAsync : public Napi::AsyncWorker
         }
     }
 
-  private:
+private:
     Client *client;
 };
 
 class CloseAsync : public Napi::AsyncWorker
 {
-  public:
+public:
     CloseAsync(Napi::Function &callback, Client *client)
         : Napi::AsyncWorker(callback), client(client) {}
     ~CloseAsync() {}
@@ -88,13 +88,13 @@ class CloseAsync : public Napi::AsyncWorker
         }
     }
 
-  private:
+private:
     Client *client;
 };
 
 class ReopenAsync : public Napi::AsyncWorker
 {
-  public:
+public:
     ReopenAsync(Napi::Function &callback, Client *client)
         : Napi::AsyncWorker(callback), client(client) {}
     ~ReopenAsync() {}
@@ -122,13 +122,13 @@ class ReopenAsync : public Napi::AsyncWorker
         }
     }
 
-  private:
+private:
     Client *client;
 };
 
 class PingAsync : public Napi::AsyncWorker
 {
-  public:
+public:
     PingAsync(Napi::Function &callback, Client *client)
         : Napi::AsyncWorker(callback), client(client) {}
     ~PingAsync() {}
@@ -144,13 +144,13 @@ class PingAsync : public Napi::AsyncWorker
         TRY_CATCH_CALL(Env().Global(), Callback(), 2, argv);
     }
 
-  private:
+private:
     Client *client;
 };
 
 class InvokeAsync : public Napi::AsyncWorker
 {
-  public:
+public:
     InvokeAsync(Napi::Function &callback, Client *client, RFC_FUNCTION_HANDLE functionHandle, RFC_FUNCTION_DESC_HANDLE functionDescHandle)
         : Napi::AsyncWorker(callback), callback(Napi::Persistent(callback)),
           client(client), functionHandle(functionHandle), functionDescHandle(functionDescHandle)
@@ -183,7 +183,7 @@ class InvokeAsync : public Napi::AsyncWorker
         callback.Reset();
     }
 
-  private:
+private:
     Napi::FunctionReference callback;
     Client *client;
     RFC_FUNCTION_HANDLE functionHandle;
@@ -192,7 +192,7 @@ class InvokeAsync : public Napi::AsyncWorker
 
 class PrepareAsync : public Napi::AsyncWorker
 {
-  public:
+public:
     PrepareAsync(Napi::Function &callback, Client *client,
                  Napi::String rfmName, Napi::Array &notRequestedParameters, Napi::Object &rfmParams)
         : Napi::AsyncWorker(callback),
@@ -275,7 +275,7 @@ class PrepareAsync : public Napi::AsyncWorker
         }
     }
 
-  private:
+private:
     Napi::FunctionReference callback;
     Client *client;
     SAP_UC *funcName;
@@ -405,6 +405,15 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
                 if (opt.IsNull())
                 {
                     sprintf(err, "Date option is not an object with toABAP and fromABAP functions");
+                    Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                }
+            }
+            else if (key.Utf8Value().compare(std::string("filter")) == (int)0)
+            {
+                __filter_param_direction = (RFC_DIRECTION)options.Get(key).As<Napi::Number>().Int32Value();
+                if (((int)__filter_param_direction < 1) || ((int)__filter_param_direction) > 4)
+                {
+                    sprintf(err, "Invalid key for the filter parameter direction (see RFC_DIRECTION): %u", (int)__filter_param_direction);
                     Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
                 }
             }
