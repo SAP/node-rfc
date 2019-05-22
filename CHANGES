@@ -6,10 +6,12 @@ Change log
 
 * SAP NW RFC SDK loading error message improved
 * jest test framework
-* Build from source fix #85
+* npm install --build-from-source fix #85
 * tar security fix
 * Option added to filter IMPORT or CHANGING parameters from the result set
-* RFC_INT8 support added
+* RFC_INT8 ABAP type support added
+* .gitignore fix for vscode https://github.com/Microsoft/vscode-cpptools/issues/3347
+* node v6 support dropped, v12 support added
 
 1.0.0-rc7 (2018-12-10)
 ---------------------

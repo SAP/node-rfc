@@ -20,8 +20,9 @@
 # npm -g install npm yarn
 
 # https://github.com/nodejs/node-addon-api/issues/387
-declare -a LTS_BUILD=("6.9.0" "8.9.0" "10.0.0" "11.0.0")
-declare -a LTS_TEST=("6.9.0" "6.17.1" "8.9.0" "8.15.1" "10.0.0" "10.15.3" "11.0.0", "11.13.0")
+declare -a LTS_BUILD=("8.9.0" "10.13.0" "11.0.0" "12.0.0")
+#declare -a LTS_TEST=("8.9.0" "8.16.0" "10.13.0" "10.15.3" "11.0.0" "11.15.0" "12.3.0")
+declare -a LTS_TEST=("8.16.0" "10.15.3" "11.15.0" "12.3.0")
 
 version=`cat ./VERSION` 
 
@@ -51,9 +52,6 @@ rm -rf $NPMRELEASE/rfc-$osext*
 #
 
 if [ "$1" != "test" ]; then
-    nvm use 11.13.0
-    npm run install:dev
-    npm run install:prod
     
     rm -rf lib/binding/$osext-*
 
@@ -62,7 +60,7 @@ if [ "$1" != "test" ]; then
         printf "\n============= building: $lts =============\n"
         nvm use $lts
         if [ $? -ne 0 ]; then
-            nvm install $lts
+            exit
         fi
         
         if [ "$osext" == "darwin" ]; then
@@ -89,20 +87,24 @@ fi
 # Test
 #
 
-for lts in "${LTS_TEST[@]}"
-do
-    nvm use $lts
-    if [ $? -ne 0 ]; then
-        nvm install $lts
-    fi
-    printf "\n============= testing: $lts =============\n"
-    source ./test/test.sh
-    if [ $? == 0 ]; then
-        test="pass :"
-    else
-        test="fail $?:"
-    fi
-    printf $test  >> $BUILD_LOG && printf " node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)') napi:$(node -e 'console.log(process.versions.napi)')\n" >> $BUILD_LOG
-done
+if [ "$1" != "build" ]; then
+
+    for lts in "${LTS_TEST[@]}"
+    do
+        nvm use $lts
+        if [ $? -ne 0 ]; then
+            exit
+        fi
+        printf "\n============= testing: $lts =============\n"
+        source ./test/test.sh
+        if [ $? == 0 ]; then
+            test="pass :"
+        else
+            test="fail $?:"
+        fi
+        printf $test  >> $BUILD_LOG && printf " node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)') napi:$(node -e 'console.log(process.versions.napi)')\n" >> $BUILD_LOG
+    done
+
+fi
 
 cat $BUILD_LOG
