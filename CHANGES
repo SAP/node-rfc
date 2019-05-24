@@ -1,6 +1,12 @@
 Change log
 ==========
 
+1.0.0-rc9 (2019-05-23)
+---------------------
+
+* Dependencies clean-up, reducing peer dependencies
+* READMEs and examples clean-up
+
 1.0.0-rc8 (2019-05-22)
 ---------------------
 

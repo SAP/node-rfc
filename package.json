@@ -1,7 +1,7 @@
 {
   "name": "node-rfc",
   "description": "nodejs bindings for SAP NW RFC SDK",
-  "version": "1.0.0-rc8",
+  "version": "1.0.0-rc9",
   "homepage": "https://github.com/SAP/node-rfc",
   "author": {
     "name": "Srdjan Boskovic",
@@ -24,7 +24,7 @@
     "install": "node-pre-gyp install --fallback-to-build",
     "wrapper": "tsc -p src/ts",
     "examples": "tsc -p examples/ts",
-    "install:dev": "npm i --save-dev @babel/core @types/node compare-versions decimal.js eslint eslint-plugin-jest jest node-gyp prettier-eslint random-bytes typescript",
+    "install:dev": "npm i --save-dev @babel/core @types/node compare-versions decimal.js jest node-gyp random-bytes typescript",
     "install:prod": "npm i --save @types/bluebird bluebird node-addon-api node-pre-gyp"
   },
   "binary": {
@@ -54,21 +54,18 @@
   "files": [
     "lib",
     "src",
+    "examples",
     "binding.gyp"
   ],
   "gypfile": true,
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "devDependencies": {
-    "@babel/core": "^7.4.4",
     "@types/node": "^12.0.2",
     "compare-versions": "^3.4.0",
     "decimal.js": "^10.2.0",
-    "eslint": "^5.16.0",
-    "eslint-plugin-jest": "^22.5.1",
     "jest": "^24.8.0",
     "node-gyp": "^4.0.0",
-    "prettier-eslint": "^8.8.2",
     "random-bytes": "^1.0.0",
     "typescript": "^3.4.5"
   },

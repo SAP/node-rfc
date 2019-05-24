@@ -9,30 +9,30 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 ## Features
 
--   Based on [N-API](https://github.com/nodejs/node-addon-api) standard
--   Stateless and stateful connections (multiple function calls in the same ABAP session (same context))
--   Async/await, promise and callback API
--   Sequential and parallel calls, using one or more clients
--   Automatic conversion between JavaScript and ABAP datatypes
--   Decimal and Date objects support
--   Connection pool
--   Extensive unit tests
+- Based on [N-API](https://github.com/nodejs/node-addon-api) standard
+- Stateless and stateful connections (multiple function calls in the same ABAP session (same context))
+- Async/await, promise and callback API
+- Sequential and parallel calls, using one or more clients
+- Automatic conversion between JavaScript and ABAP datatypes
+- Buffer, Decimal and Date objects support
+- Connection pool
+- Extensive unit tests
 
 ## Supported platforms
 
-* [active nodejs LTS releases](https://github.com/nodejs/LTS) 
+- [active nodejs LTS releases](https://github.com/nodejs/LTS) 
 
-* The _node-rfc_ connector can be [built from source](http://sap.github.io/node-rfc/install.html#building-from-source) on all [platforms supported by SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1) 
+- The _node-rfc_ connector can be [built from source](http://sap.github.io/node-rfc/install.html#building-from-source) on all [platforms supported by SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1) 
 
-* Pre-built binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 8.1, Ubuntu 16.04 and macOS 10.14.
+- Pre-built binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 8.1, Ubuntu 16.04 and macOS 10.14.
 
 ## Prerequisites
 
 ### All platforms
 
-* SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account required) and locally installed ([installation instructions](http://sap.github.io/node-rfc/install.html#sap-nw-rfc-library-installation)). More information on [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html). Using the latest version is reccomended, as the SAP NW RFC SDK is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.6C.
+- SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account required) and locally installed ([installation instructions](http://sap.github.io/node-rfc/install.html#sap-nw-rfc-library-installation)). More information on [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html). Using the latest version is reccomended, as the SAP NW RFC SDK is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.6C.
 
-* The build from source works with Python 2 only, see [Known Issues](https://github.com/SAP/node-rfc/tree/napi#known-issues)
+- The build from source works with Python 2 only, see [Known Issues](https://github.com/SAP/node-rfc/tree/napi#known-issues)
 
 ### Windows
 
@@ -47,7 +47,6 @@ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 ```
 
 * Remote paths must be set in SAP NWRFC SDK for macOS: [node-rfc/#58](https://github.com/SAP/node-rfc/issues/58#issuecomment-446544151)
-
 
 ## Installation
 
@@ -82,9 +81,9 @@ remote enabled ABAP function module from nodejs. The client can be used for one 
 
 Callback API example below shows basic principles. See also:
 
--   [**Examples and API**](examples/README.md)
+- [**Examples and API**](examples/README.md)
 
--   [**node-rfc documentation**](http://sap.github.io/node-rfc), complementing SAP NW RFC Library [programming guide and documentation](https://support.sap.com/en/products/connectors/nwrfcsdk.html)
+- [**node-rfc documentation**](http://sap.github.io/node-rfc), complementing SAP NW RFC Library [programming guide and documentation](https://support.sap.com/en/products/connectors/nwrfcsdk.html)
 
 ```javascript
 'use strict';
@@ -93,12 +92,12 @@ const rfcClient = require('node-rfc').Client;
 
 // ABAP system RFC connection parameters
 const abapSystem = {
-	user: 'demo',
-	passwd: 'welcome',
-	ashost: '10.68.104.164',
-	sysnr: '00',
-	client: '620',
-	lang: 'EN',
+    user: 'demo',
+    passwd: 'welcome',
+    ashost: '10.68.104.164',
+    sysnr: '00',
+    client: '620',
+    lang: 'EN',
 };
 
 // create new client
@@ -109,32 +108,32 @@ console.log('Client version: ', client.version);
 
 // open connection
 client.connect(function(err) {
-	if (err) {
-		// check for login/connection errors
-		return console.error('could not connect to server', err);
-	}
+    if (err) {
+        // check for login/connection errors
+        return console.error('could not connect to server', err);
+    }
 
-	// invoke ABAP function module, passing structure and table parameters
+    // invoke ABAP function module, passing structure and table parameters
 
-	// ABAP structure
-	const structure = {
-		RFCINT4: 345,
-		RFCFLOAT: 1.23456789,
-		// or RFCFLOAT: require('decimal.js')('1.23456789'), // as Decimal object
-		RFCCHAR4: 'ABCD',
-		RFCDATE: '20180625', // in ABAP date format
-		// or RFCDATE: new Date('2018-06-25'), // as JavaScript Date object
-	};
+    // ABAP structure
+    const structure = {
+        RFCINT4: 345,
+        RFCFLOAT: 1.23456789,
+        // or RFCFLOAT: require('decimal.js')('1.23456789'), // as Decimal object
+        RFCCHAR4: 'ABCD',
+        RFCDATE: '20180625', // in ABAP date format
+        // or RFCDATE: new Date('2018-06-25'), // as JavaScript Date object
+    };
 
-	// ABAP table
-	let table = [structure];
+    // ABAP table
+    let table = [structure];
 
-	client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: structure, RFCTABLE: table }, function(err, res) {
-		if (err) {
-			return console.error('Error invoking STFC_STRUCTURE:', err);
-		}
-		console.log('STFC_STRUCTURE call result:', res);
-	});
+    client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: structure, RFCTABLE: table }, function(err, res) {
+        if (err) {
+            return console.error('Error invoking STFC_STRUCTURE:', err);
+        }
+        console.log('STFC_STRUCTURE call result:', res);
+    });
 });
 ```
 
@@ -142,9 +141,9 @@ Finally, the connection is closed automatically when the instance is deleted by 
 
 ## Known Issues
 
-* Python 2 will not be maintained past 2020 and the current build system node-gyp does not support Python 3: [nodejs/node-addon-api/#445](https://github.com/nodejs/node-addon-api/issues/445)
+- Python 2 will not be maintained past 2020 and the current build system node-gyp does not support Python 3: [nodejs/node-addon-api/#445](https://github.com/nodejs/node-addon-api/issues/445)
 
-* NAPI Type checks [nodejs/node-addon-api/#265](https://github.com/nodejs/node-addon-api/issues/265)
+- NAPI Type checks [nodejs/node-addon-api/#265](https://github.com/nodejs/node-addon-api/issues/265)
 
 ## How to obtain support
 
@@ -155,4 +154,3 @@ Check out the SCN Forum (search for "node-rfc") and stackoverflow (use the tag "
 ## License
 
 Copyright (c) 2013 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the [LICENSE](LICENSE) file.
-
