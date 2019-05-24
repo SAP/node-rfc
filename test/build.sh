@@ -20,11 +20,11 @@
 # npm -g install npm yarn
 
 # https://github.com/nodejs/node-addon-api/issues/387
-declare -a LTS_TEST=("8.9.0" "10.13.0" "11.0.0" "12.0.0")
+declare -a LTS_BUILD=("8.9.0" "10.13.0" "11.0.0" "12.0.0")
 #declare -a LTS_TEST=("8.9.0" "8.16.0" "10.13.0" "10.15.3" "11.0.0" "11.15.0" "12.3.0")
-declare -a LTS_BUILD=("8.16.0" "10.15.3" "11.15.0" "12.3.0")
+declare -a LTS_TEST=("8.16.0" "10.15.3" "11.15.0" "12.3.0")
 
-version=`cat ./VERSION` 
+version=`cat ./VERSION`
 
 platform=`uname`
 
@@ -64,7 +64,7 @@ if [ "$1" != "test" ]; then
         if [ $? -ne 0 ]; then
             exit
         fi
-        
+
         if [ "$osext" == "darwin" ]; then
             # https://github.com/nodejs/node-gyp/issues/1564
             env CXXFLAGS="-mmacosx-version-min=10.9" node-pre-gyp clean configure build package && printf "build: node: $(node -v) npm:$(npm -v) abi:$(node -e 'console.log(process.versions.modules)')\n" >> $BUILD_LOG
@@ -73,7 +73,7 @@ if [ "$1" != "test" ]; then
         fi
 
         for filename in build/stage/$version/*.tar.gz; do
-            mv $filename $NPMRELEASE/. 
+            mv $filename $NPMRELEASE/.
         done
     done
 
