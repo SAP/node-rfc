@@ -90,8 +90,8 @@ it('connectionInfo() should return connection information when connected', funct
         'kernelRel',
         'cpicConvId',
         'progName',
-        'partnerBytesPerChar',
-        'reserved'
+        'partnerBytesPerChar'
+        //'reserved'
     ].sort());
 
     expect(client.connectionInfo).toEqual(expect.objectContaining({

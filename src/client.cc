@@ -659,7 +659,7 @@ Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
         infoObj.Set(Napi::String::New(env, "cpicConvId"), wrapString(connInfo.cpicConvId, 8));
         infoObj.Set(Napi::String::New(env, "progName"), wrapString(connInfo.progName, 128));
         infoObj.Set(Napi::String::New(env, "partnerBytesPerChar"), wrapString(connInfo.partnerBytesPerChar, 1));
-        infoObj.Set(Napi::String::New(env, "reserved"), wrapString(connInfo.reserved, 84));
+        // infoObj.Set(Napi::String::New(env, "reserved"), wrapString(connInfo.reserved, 84));
     }
 
     return infoObj;
