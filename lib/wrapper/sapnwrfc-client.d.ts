@@ -96,9 +96,9 @@ export declare class Client {
     call(rfmName: string, rfmParams: RfcObject, callOptions?: RfcCallOptions): Promise<RfcObject>;
     connect(callback: Function): void;
     invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): void;
-    close(callback: Function | undefined): void | Promise<void> | Promise<{}>;
-    reopen(callback: Function | undefined): void | Promise<void> | Promise<{}>;
-    ping(callback: Function | undefined): void | Promise<void> | Promise<{}>;
+    close(callback: Function | undefined): void | Promise<unknown>;
+    reopen(callback: Function | undefined): void | Promise<unknown>;
+    ping(callback: Function | undefined): void | Promise<unknown>;
     readonly isAlive: boolean;
     readonly connectionInfo: RfcConnectionInfo;
     readonly id: number;

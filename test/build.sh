@@ -46,7 +46,6 @@ touch $BUILD_LOG
 NPMRELEASE="release/$version"
 mkdir -p $NPMRELEASE
 
-
 #
 # Client
 #

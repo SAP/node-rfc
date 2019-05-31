@@ -79,8 +79,9 @@ it("BCD and FLOAT accept numbers", function(done) {
                 expect(outTyp).toEqual(EXPECTED_TYPES[k]);
                 expect(outVal).toEqual(inVal);
             }
-            xclient.close();
-            done();
+            xclient.close(() => {
+                done();
+            });
         });
     });
 });
@@ -163,7 +164,7 @@ it("BCD and FLOAT accept Decimals", function(done) {
                     expect(inVal.toString()).toEqual(outVal.toString());
                 else expect(inVal).toEqual(outVal);
             }
-            xclient.close(function() {
+            xclient.close(() => {
                 done();
             });
         });
