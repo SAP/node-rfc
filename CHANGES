@@ -1,6 +1,11 @@
 Change log
 ==========
 
+1.0.0-rc11 (xxxx-xx-xx)
+-----------------------
+
+* No pre-built binary for nodejs version 11
+
 1.0.0-rc10 (2019-05-31)
 -----------------------
 

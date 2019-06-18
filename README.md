@@ -20,7 +20,7 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 ## Supported platforms
 
-- [active nodejs LTS releases](https://github.com/nodejs/LTS) 
+- [Current and active nodejs LTS releases](https://github.com/nodejs/LTS) 
 
 - The _node-rfc_ connector can be [built from source](http://sap.github.io/node-rfc/install.html#building-from-source) on all [platforms supported by SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1) 
 
