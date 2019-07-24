@@ -3,8 +3,12 @@
         "sapnwrfcsdk_path_linux": "$(SAPNWRFC_HOME)",
         "sapnwrfcsdk_path_windows": "<!(echo %SAPNWRFC_HOME%)",
         "build_dir": '<(PRODUCT_DIR)',
+        "PLATFORM": 'win32',
         "conditions": [
-            ['OS=="win"', {"build_dir": "<(PRODUCT_DIR)/../win32_x64"}]
+            ['OS=="win"', {"build_dir": "<(PRODUCT_DIR)/../win32_x64"}],
+            ['OS=="win"', {"PLATFORM": "win32"}],
+            ['OS=="linux"', {"PLATFORM": "linux"}],
+            ['OS=="mac"', {"PLATFORM": "mac"}]
         ]
     },
     "targets": [
@@ -142,6 +146,10 @@
                 {
                     "files": ["<(build_dir)/<(module_name).node"],
                     "destination": "<(module_path)"
+                },
+                {
+                    "files": ["<(build_dir)/<(module_name).node"],
+                    "destination": "./lib/binding/<(PLATFORM)-<(target_arch)"
                 }
             ]
         }

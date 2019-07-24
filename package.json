@@ -30,6 +30,7 @@
   "binary": {
     "module_name": "sapnwrfc",
     "module_path": "./lib/binding/{platform}-{arch}-{node_abi}",
+    "module_path_wout_abi": "./lib/binding/{platform}-{arch}",
     "host": "https://github.com/SAP/node-rfc/releases/download/",
     "remote_path": "{version}",
     "package_name": "rfc-{platform}-{arch}-{node_abi}.tar.gz"
@@ -72,7 +73,7 @@
   "dependencies": {
     "@types/bluebird": "^3.5.27",
     "bluebird": "^3.5.5",
-    "node-addon-api": "^1.6.3",
+    "node-addon-api": "^1.7.1",
     "node-pre-gyp": "^0.12.0"
   }
 }

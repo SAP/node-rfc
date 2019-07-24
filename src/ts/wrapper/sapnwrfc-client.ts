@@ -1,10 +1,12 @@
 /// <reference types="node" />
 
 import * as Promise from 'bluebird';
+import * as fs from 'fs';
 const binary = require('node-pre-gyp');
+const validation = require('node-pre-gyp/lib/util/versioning');
 const path = require('path');
-const binding_path = binary.find(path.resolve(path.join(__dirname, '../../package.json')));
-
+const packageJsonPath = path.resolve(path.join(__dirname, '../../package.json'));
+let binding_path = binary.find(packageJsonPath);
 let binding: RfcClientBinding;
 try {
 	binding = require(binding_path);
@@ -13,7 +15,21 @@ try {
 		ex.message += ['win32', 'linux', 'darwin'].indexOf(process.platform) !== -1 ?
 			'\n\n The SAP NW RFC SDK could not be loaded, check the installation: http://sap.github.io/node-rfc/install.html#sap-nw-rfc-sdk-installation' :
 			`\n\nPlatform not supported: ${process.platform}`;
-	throw ex;
+	ex.message += "\n\nSearchPath: " + binding_path;
+	const packageJson = require(packageJsonPath);
+    packageJson.binary.module_path = packageJson.binary.module_path_wout_abi;
+    binding_path = validation.evaluate(packageJson, { module_root: path.dirname(packageJsonPath)}, 'v69').module;
+	try {
+		binding = require(binding_path);
+	} catch (ex2) {
+		if (ex2.message.indexOf('sapnwrfc.node') !== -1)
+			ex2.message += ['win32', 'linux', 'darwin'].indexOf(process.platform) !== -1 ?
+				'\n\n The SAP NW RFC SDK could not be loaded, check the installation: http://sap.github.io/node-rfc/install.html#sap-nw-rfc-sdk-installation' :
+				`\n\nPlatform not supported: ${process.platform}`;
+		ex2.message += "\n\nSearchPath: " + binding_path;
+		ex2.message += ex.message;
+		throw ex2;
+	}
 }
 interface RfcConnectionInfo {
 	host: string;
