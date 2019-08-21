@@ -11,5 +11,5 @@ module.exports = {
     abapSystem: abapSystem,
     client: client,
     UNICODETEST: UNICODETEST,
-    CONNECTIONS: 25
+    CONNECTIONS: 0x80
 };
