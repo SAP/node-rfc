@@ -5,6 +5,8 @@ Change log
 -----------------------
 
 * No pre-built binary for nodejs version 11
+* NodeJS version 6 dropped
+* Input parameter array check added, fix #100
 
 1.0.0-rc10 (2019-05-31)
 -----------------------
