@@ -61,14 +61,14 @@
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@types/node": "^12.7.2",
+    "@babel/core": "^7.6.0",
+    "@types/node": "^12.7.5",
     "async": "^3.1.0",
     "compare-versions": "^3.5.1",
     "decimal.js": "^10.2.0",
     "jest": "^24.9.0",
     "random-bytes": "^1.0.0",
-    "typescript": "^3.5.3"
+    "typescript": "^3.6.3"
   },
   "dependencies": {
     "@types/bluebird": "^3.5.27",
