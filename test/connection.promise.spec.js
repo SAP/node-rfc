@@ -17,24 +17,26 @@
 const setup = require("./setup");
 const client = setup.client;
 
-beforeEach(function() {
+beforeEach(function () {
     return client.reopen();
 });
 
-afterEach(function() {
+afterEach(function () {
     return client.close();
 });
 
-afterAll(function(done) {
+afterAll(function (done) {
     delete setup.client;
     delete setup.rfcClient;
     delete setup.rfcPool;
     done();
 });
 
-it("call() STFC_CONNECTION should return unicode string", function() {
+it("call() STFC_CONNECTION should return unicode string", function () {
     return client
-        .call("STFC_CONNECTION", { REQUTEXT: setup.UNICODETEST })
+        .call("STFC_CONNECTION", {
+            REQUTEXT: setup.UNICODETEST
+        })
         .then(res => {
             expect(res).toBeDefined();
             expect(res).toHaveProperty("ECHOTEXT");
@@ -42,7 +44,7 @@ it("call() STFC_CONNECTION should return unicode string", function() {
         });
 });
 
-it("call() STFC_STRUCTURE should return structure and table", function() {
+it("call() STFC_STRUCTURE should return structure and table", function () {
     let importStruct = {
         RFCFLOAT: 1.23456789,
         RFCCHAR1: "A",
@@ -94,14 +96,14 @@ it("call() STFC_STRUCTURE should return structure and table", function() {
         });
 });
 
-it("isAlive and ping() should be true when connected", function() {
+it("isAlive and ping() should be true when connected", function () {
     expect(client.isAlive).toBeTruthy();
     return client.ping().then(res => {
         expect(res).toBeTruthy();
     });
 });
 
-it("isAlive ands ping() should be false when disconnected", function(done) {
+it("isAlive ands ping() should be false when disconnected", function (done) {
     client.close().then(() => {
         expect(client.isAlive).toBeFalsy();
         client.ping().then(res => {

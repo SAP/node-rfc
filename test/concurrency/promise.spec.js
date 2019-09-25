@@ -33,7 +33,9 @@ it('concurrency: call() should not block', function () {
     return client
         .open()
         .then(function () {
-            client.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
+            client.call('BAPI_USER_GET_DETAIL', {
+                    USERNAME: 'DEMO'
+                })
                 .then(res => {
                     expect(res).toBeDefined();
                     expect(res).toHaveProperty('RETURN');
@@ -55,7 +57,9 @@ it(`concurrency: ${setup.CONNECTIONS} parallel call() promises`, function (done)
         new setup.rfcClient(setup.abapSystem)
             .open()
             .then(c => {
-                c.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
+                c.call('BAPI_USER_GET_DETAIL', {
+                        USERNAME: 'DEMO'
+                    })
                     .then(res => {
                         expect(res).toBeDefined();
                         expect(res).toHaveProperty('RETURN');
@@ -81,7 +85,9 @@ it(`concurrency: ${setup.CONNECTIONS} concurrent call() promises, using single c
         .then(function () {
             for (let i = 0; i < setup.CONNECTIONS; i++) {
                 client
-                    .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
+                    .call('BAPI_USER_GET_DETAIL', {
+                        USERNAME: 'DEMO'
+                    })
                     .then(res => {
                         expect(res).toBeDefined();
                         expect(res).toHaveProperty('RETURN');
@@ -97,12 +103,14 @@ it(`concurrency: ${setup.CONNECTIONS} concurrent call() promises, using single c
     for (let counter = 0; counter < setup.CONNECTIONS; counter++) {
         promises.push(
             client
-                .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
-                .then(res => {
-                    expect(res).toBeDefined();
-                    expect(res).toHaveProperty('RETURN');
-                    expect(res.RETURN.length).toBe(0);
-                })
+            .call('BAPI_USER_GET_DETAIL', {
+                USERNAME: 'DEMO'
+            })
+            .then(res => {
+                expect(res).toBeDefined();
+                expect(res).toHaveProperty('RETURN');
+                expect(res.RETURN.length).toBe(0);
+            })
         );
     }
     return Promise.all(promises);
@@ -110,9 +118,12 @@ it(`concurrency: ${setup.CONNECTIONS} concurrent call() promises, using single c
 
 it(`concurrency: ${setup.CONNECTIONS} recursive call() promises, using single connection`, function () {
     let callbackCount = 0;
+
     function call(done) {
         client
-            .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
+            .call('BAPI_USER_GET_DETAIL', {
+                USERNAME: 'DEMO'
+            })
             .then(res => {
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty('RETURN');

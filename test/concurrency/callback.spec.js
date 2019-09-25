@@ -40,7 +40,9 @@ afterAll(function (done) {
 
 it('concurrency: invoke() should not block', function (done) {
     let asyncRes;
-    client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' }, function (err, res) {
+    client.invoke('BAPI_USER_GET_DETAIL', {
+        USERNAME: 'DEMO'
+    }, function (err, res) {
         if (err) return done(err);
         expect(res).toBeDefined();
         expect(res).toHaveProperty('RETURN');
@@ -57,7 +59,9 @@ it(`concurrency: ${setup.CONNECTIONS} connections invoke() in parallel`, functio
         let c = new setup.rfcClient(setup.abapSystem);
         c.connect(err => {
             if (err) return done(err);
-            client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' }, function (err, res) {
+            client.invoke('BAPI_USER_GET_DETAIL', {
+                USERNAME: 'DEMO'
+            }, function (err, res) {
                 if (err) return done(err);
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty('RETURN');
@@ -73,7 +77,9 @@ it(`concurrency: ${setup.CONNECTIONS} connections invoke() in parallel`, functio
 it(`concurrency: ${setup.CONNECTIONS} concurrent invoke() calls using single connection`, function (done) {
     let callbackCount = 0;
     for (let count = 0; count < setup.CONNECTIONS; count++) {
-        client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'XDEMO' + client.id }, function (err, res) {
+        client.invoke('BAPI_USER_GET_DETAIL', {
+            USERNAME: 'XDEMO' + client.id
+        }, function (err, res) {
             if (err) return done(err);
             expect(res).toBeDefined();
             expect(res).toHaveProperty('RETURN');
@@ -94,8 +100,11 @@ it(`concurrency: ${setup.CONNECTIONS} concurrent invoke() calls using single con
 
 it(`concurrency: ${setup.CONNECTIONS} recursive invoke() calls using single connection`, function (done) {
     let callbackCount = 0;
+
     function call(count) {
-        client.invoke('BAPI_USER_GET_DETAIL', { USERNAME: 'XDEMO' + count }, function (err, res) {
+        client.invoke('BAPI_USER_GET_DETAIL', {
+            USERNAME: 'XDEMO' + count
+        }, function (err, res) {
             if (err) return done(err);
             expect(res).toBeDefined();
             expect(res).toHaveProperty('RETURN');

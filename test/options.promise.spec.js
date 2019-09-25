@@ -17,22 +17,22 @@
 const setup = require("./setup");
 const client = setup.client;
 
-beforeEach(function() {
+beforeEach(function () {
     return client.reopen();
 });
 
-afterEach(function() {
+afterEach(function () {
     return client.close();
 });
 
-afterAll(function(done) {
+afterAll(function (done) {
     delete setup.client;
     delete setup.rfcClient;
     delete setup.rfcPool;
     done();
 });
 
-it("options: pass when some parameters skipped", function() {
+it("options: pass when some parameters skipped", function () {
     //this.timeout(10000);
     let notRequested = [
         "ET_COMPONENTS",
@@ -45,12 +45,12 @@ it("options: pass when some parameters skipped", function() {
     ];
     return client
         .call(
-            "EAM_TASKLIST_GET_DETAIL",
-            {
+            "EAM_TASKLIST_GET_DETAIL", {
                 IV_PLNTY: "A",
                 IV_PLNNR: "00100000"
-            },
-            { notRequested: notRequested }
+            }, {
+                notRequested: notRequested
+            }
         )
         .then(res => {
             expect(res).toBeDefined();
@@ -59,7 +59,7 @@ it("options: pass when some parameters skipped", function() {
         });
 });
 
-it("options: error when all requested", function() {
+it("options: error when all requested", function () {
     return client
         .call("EAM_TASKLIST_GET_DETAIL", {
             IV_PLNTY: "A",
