@@ -17,26 +17,26 @@
 const setup = require("./setup");
 const client = setup.client;
 
-beforeEach(function (done) {
-    client.reopen(function (err) {
+beforeEach(function(done) {
+    client.reopen(function(err) {
         done(err);
     });
 });
 
-afterEach(function (done) {
-    client.close(function () {
+afterEach(function(done) {
+    client.close(function() {
         done();
     });
 });
 
-afterAll(function (done) {
+afterAll(function(done) {
     delete setup.client;
     delete setup.rfcClient;
     delete setup.rfcPool;
     done();
 });
 
-it("options: pass when some parameters skipped", function (done) {
+it("options: pass when some parameters skipped", function(done) {
     //this.timeout(10000);
     let notRequested = [
         "ET_COMPONENTS",
@@ -47,35 +47,38 @@ it("options: pass when some parameters skipped", function (done) {
         "ET_PRTS",
         "ET_RELATIONS"
     ];
-    client.connect(function (err) {
+    client.connect(function(err) {
         expect(err).toBeUndefined();
         client.invoke(
-            "EAM_TASKLIST_GET_DETAIL", {
+            "EAM_TASKLIST_GET_DETAIL",
+            {
                 IV_PLNTY: "A",
                 IV_PLNNR: "00100000"
             },
-            function (err, res) {
+            function(err, res) {
                 expect(err).toBeUndefined();
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty("ET_RETURN");
                 expect(res.ET_RETURN.length).toBe(0);
                 done();
-            }, {
+            },
+            {
                 notRequested: notRequested
             }
         );
     });
 });
 
-it("options: error when all requested", function (done) {
-    client.connect(function (err) {
+it("options: error when all requested", function(done) {
+    client.connect(function(err) {
         expect(err).toBeUndefined();
         client.invoke(
-            "EAM_TASKLIST_GET_DETAIL", {
+            "EAM_TASKLIST_GET_DETAIL",
+            {
                 IV_PLNTY: "A",
                 IV_PLNNR: "00100000"
             },
-            function (err, res) {
+            function(err, res) {
                 // ET_RETURN error if all params requested
                 expect(err).toBeUndefined();
                 expect(res).toBeDefined();

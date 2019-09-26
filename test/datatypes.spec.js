@@ -22,19 +22,19 @@ const randomBytes = require("random-bytes");
 
 const Utils = require("./utils");
 
-beforeEach(function (done) {
+beforeEach(function(done) {
     client.reopen(err => {
         done(err);
     });
 });
 
-afterEach(function (done) {
+afterEach(function(done) {
     client.close(() => {
         done();
     });
 });
 
-afterAll(function (done) {
+afterAll(function(done) {
     delete setup.client;
     delete setup.rfcClient;
     delete setup.rfcPool;
@@ -43,18 +43,20 @@ afterAll(function (done) {
 
 const DECIMAL_FIELDS = "ZDEC";
 
-it("error: ARRAY rejects non array", function (done) {
+it("error: ARRAY rejects non array", function(done) {
     client.invoke(
-        "RFC_READ_TABLE", {
+        "RFC_READ_TABLE",
+        {
             QUERY_TABLE: "MARA",
             OPTIONS: "A string instead of an array"
         },
-        function (err) {
+        function(err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     name: "TypeError",
-                    message: "Array expected when filling field OPTIONS of type 5"
+                    message:
+                        "Array expected when filling field OPTIONS of type 5"
                 })
             );
             done();
@@ -62,8 +64,7 @@ it("error: ARRAY rejects non array", function (done) {
     );
 });
 
-
-it("BCD and FLOAT accept numbers", function (done) {
+it("BCD and FLOAT accept numbers", function(done) {
     let isInput = {
         // Float
         ZFLTP: 0.123456789,
@@ -88,29 +89,30 @@ it("BCD and FLOAT accept numbers", function (done) {
     });
     expect(xclient.options.bcd).toEqual("number");
     xclient.connect(() => {
-        xclient.invoke("/COE/RBP_FE_DATATYPES", {
-            IS_INPUT: isInput
-        }, function (
-            err,
-            res
-        ) {
-            expect(err).toBeUndefined();
-            expect(res).toHaveProperty("ES_OUTPUT");
-            for (let k in isInput) {
-                let inVal = isInput[k];
-                let outVal = res.ES_OUTPUT[k];
-                let outTyp = typeof outVal;
-                expect(outTyp).toEqual(EXPECTED_TYPES[k]);
-                expect(outVal).toEqual(inVal);
+        xclient.invoke(
+            "/COE/RBP_FE_DATATYPES",
+            {
+                IS_INPUT: isInput
+            },
+            function(err, res) {
+                expect(err).toBeUndefined();
+                expect(res).toHaveProperty("ES_OUTPUT");
+                for (let k in isInput) {
+                    let inVal = isInput[k];
+                    let outVal = res.ES_OUTPUT[k];
+                    let outTyp = typeof outVal;
+                    expect(outTyp).toEqual(EXPECTED_TYPES[k]);
+                    expect(outVal).toEqual(inVal);
+                }
+                xclient.close(() => {
+                    done();
+                });
             }
-            xclient.close(() => {
-                done();
-            });
-        });
+        );
     });
 });
 
-it("BCD and FLOAT accept strings", function (done) {
+it("BCD and FLOAT accept strings", function(done) {
     let isInput = {
         // Float
         ZFLTP: "0.123456789",
@@ -129,31 +131,32 @@ it("BCD and FLOAT accept strings", function (done) {
         ZQUAN_SIGN: "string"
     };
     expect(client.options.bcd).toEqual("string");
-    client.invoke("/COE/RBP_FE_DATATYPES", {
-        IS_INPUT: isInput
-    }, function (
-        err,
-        res
-    ) {
-        expect(err).toBeUndefined();
-        expect(res).toHaveProperty("ES_OUTPUT");
-        for (let k in isInput) {
-            let inVal = isInput[k];
-            let outVal = res.ES_OUTPUT[k];
-            let outTyp = typeof outVal;
-            expect(outTyp).toEqual(EXPECTED_TYPES[k]);
-            //outTyp).toBe('string');
-            //if (DECIMAL_FIELDS.indexOf(k) > -1) {
-            //    outVal).toBe(inVal);
-            //} else {
-            //    outVal).toBe(inVal);
-            //}
+    client.invoke(
+        "/COE/RBP_FE_DATATYPES",
+        {
+            IS_INPUT: isInput
+        },
+        function(err, res) {
+            expect(err).toBeUndefined();
+            expect(res).toHaveProperty("ES_OUTPUT");
+            for (let k in isInput) {
+                let inVal = isInput[k];
+                let outVal = res.ES_OUTPUT[k];
+                let outTyp = typeof outVal;
+                expect(outTyp).toEqual(EXPECTED_TYPES[k]);
+                //outTyp).toBe('string');
+                //if (DECIMAL_FIELDS.indexOf(k) > -1) {
+                //    outVal).toBe(inVal);
+                //} else {
+                //    outVal).toBe(inVal);
+                //}
+            }
+            done();
         }
-        done();
-    });
+    );
 });
 
-it("BCD and FLOAT accept Decimals", function (done) {
+it("BCD and FLOAT accept Decimals", function(done) {
     let isInput = {
         ZFLTP: Decimal("0.123456789"),
 
@@ -177,66 +180,69 @@ it("BCD and FLOAT accept Decimals", function (done) {
     });
     expect(xclient.options.bcd).toEqual(Decimal);
     xclient.connect(() => {
-        xclient.invoke("/COE/RBP_FE_DATATYPES", {
-            IS_INPUT: isInput
-        }, function (
-            err,
-            res
-        ) {
-            expect(err).toBeUndefined();
-            expect(res).toHaveProperty("ES_OUTPUT");
-            for (let k in isInput) {
-                let inVal = isInput[k];
-                let outVal = res.ES_OUTPUT[k];
-                let outTyp = typeof outVal;
-                expect(outTyp).toEqual(EXPECTED_TYPES[k]);
-                if (k == "ZFLTP")
-                    expect(inVal.toString()).toEqual(outVal.toString());
-                else expect(inVal).toEqual(outVal);
+        xclient.invoke(
+            "/COE/RBP_FE_DATATYPES",
+            {
+                IS_INPUT: isInput
+            },
+            function(err, res) {
+                expect(err).toBeUndefined();
+                expect(res).toHaveProperty("ES_OUTPUT");
+                for (let k in isInput) {
+                    let inVal = isInput[k];
+                    let outVal = res.ES_OUTPUT[k];
+                    let outTyp = typeof outVal;
+                    expect(outTyp).toEqual(EXPECTED_TYPES[k]);
+                    if (k == "ZFLTP")
+                        expect(inVal.toString()).toEqual(outVal.toString());
+                    else expect(inVal).toEqual(outVal);
+                }
+                xclient.close(() => {
+                    done();
+                });
             }
-            xclient.close(() => {
-                done();
-            });
-        });
+        );
     });
 });
 
-it("RAW/BYTE accepts Buffer", function (done) {
+it("RAW/BYTE accepts Buffer", function(done) {
     let isInput = {
         ZRAW: Utils.XBYTES_TEST
     };
-    client.invoke("/COE/RBP_FE_DATATYPES", {
-        IS_INPUT: isInput
-    }, function (
-        err,
-        res
-    ) {
-        expect(err).toBeUndefined();
-        expect(res).toHaveProperty("ES_OUTPUT");
-        let test = Utils.compareBuffers(isInput.ZRAW, res.ES_OUTPUT.ZRAW);
-        expect(test.content).toBeTruthy();
-        done();
-    });
+    client.invoke(
+        "/COE/RBP_FE_DATATYPES",
+        {
+            IS_INPUT: isInput
+        },
+        function(err, res) {
+            expect(err).toBeUndefined();
+            expect(res).toHaveProperty("ES_OUTPUT");
+            let test = Utils.compareBuffers(isInput.ZRAW, res.ES_OUTPUT.ZRAW);
+            expect(test.content).toBeTruthy();
+            done();
+        }
+    );
 });
 
-it("XSTRING accepts Buffer", function (done) {
+it("XSTRING accepts Buffer", function(done) {
     let isInput = {
         ZRAWSTRING: Utils.XBYTES_TEST
     };
-    client.invoke("/COE/RBP_FE_DATATYPES", {
-        IS_INPUT: isInput
-    }, function (
-        err,
-        res
-    ) {
-        expect(err).toBeUndefined();
-        expect(res).toHaveProperty("ES_OUTPUT");
-        expect(isInput.ZRAWSTRING).toEqual(res.ES_OUTPUT.ZRAWSTRING);
-        done();
-    });
+    client.invoke(
+        "/COE/RBP_FE_DATATYPES",
+        {
+            IS_INPUT: isInput
+        },
+        function(err, res) {
+            expect(err).toBeUndefined();
+            expect(res).toHaveProperty("ES_OUTPUT");
+            expect(isInput.ZRAWSTRING).toEqual(res.ES_OUTPUT.ZRAWSTRING);
+            done();
+        }
+    );
 });
 
-it.skip("BYTE and XSTRING tables", function (done) {
+it.skip("BYTE and XSTRING tables", function(done) {
     let IT_SXMSMGUIDT = [];
     let IT_SDOKCNTBINS = [];
 
@@ -275,7 +281,7 @@ it.skip("BYTE and XSTRING tables", function (done) {
         IT_SXMSMGUIDT: IT_SXMSMGUIDT,
         IT_SDOKCNTBINS: IT_SDOKCNTBINS
     };
-    client.invoke("/COE/RBP_FE_DATATYPES", inp, function (err, result) {
+    client.invoke("/COE/RBP_FE_DATATYPES", inp, function(err, result) {
         expect(err).toBeUndefined();
         expect(res).toHaveProperty("ES_OUTPUT");
 
@@ -301,18 +307,19 @@ it.skip("BYTE and XSTRING tables", function (done) {
     });
 });
 
-it("DATE accepts string", function (done) {
+it("DATE accepts string", function(done) {
     const testDate = "20180625";
     let importStruct = {
         RFCDATE: testDate
     };
     let importTable = [importStruct];
     client.invoke(
-        "STFC_STRUCTURE", {
+        "STFC_STRUCTURE",
+        {
             IMPORTSTRUCT: importStruct,
             RFCTABLE: importTable
         },
-        function (err, res) {
+        function(err, res) {
             expect(err).toBeUndefined();
             expect(res).toHaveProperty("ECHOSTRUCT");
             expect(res.ECHOSTRUCT.RFCDATE).toEqual(testDate);
@@ -322,7 +329,7 @@ it("DATE accepts string", function (done) {
     );
 });
 
-it("DATE accepts Date", function (done) {
+it("DATE accepts Date", function(done) {
     const Months = [
         "01",
         "02",
@@ -368,7 +375,8 @@ it("DATE accepts Date", function (done) {
         });
 
         xclient.invoke(
-            "STFC_STRUCTURE", {
+            "STFC_STRUCTURE",
+            {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable
             },
@@ -393,22 +401,24 @@ it("DATE accepts Date", function (done) {
     });
 });
 
-it("error: INT rejects string", function (done) {
+it("error: INT rejects string", function(done) {
     let importStruct = {
         RFCINT1: "1"
     };
     let importTable = [importStruct];
     client.invoke(
-        "STFC_STRUCTURE", {
+        "STFC_STRUCTURE",
+        {
             IMPORTSTRUCT: importStruct,
             RFCTABLE: importTable
         },
-        function (err) {
+        function(err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     name: "TypeError",
-                    message: "Integer number expected when filling field RFCINT1 of type 10"
+                    message:
+                        "Integer number expected when filling field RFCINT1 of type 10"
                 })
             );
             done();
@@ -416,22 +426,24 @@ it("error: INT rejects string", function (done) {
     );
 });
 
-it("error: CHAR rejects string", function (done) {
+it("error: CHAR rejects string", function(done) {
     let importStruct = {
         RFCCHAR4: 65
     };
     let importTable = [importStruct];
     client.invoke(
-        "STFC_STRUCTURE", {
+        "STFC_STRUCTURE",
+        {
             IMPORTSTRUCT: importStruct,
             RFCTABLE: importTable
         },
-        function (err) {
+        function(err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     name: "TypeError",
-                    message: "Char expected when filling field RFCCHAR4 of type 0"
+                    message:
+                        "Char expected when filling field RFCCHAR4 of type 0"
                 })
             );
             done();
@@ -439,23 +451,25 @@ it("error: CHAR rejects string", function (done) {
     );
 });
 
-it("error: BCD and FLOAT reject not a number string", function (done) {
+it("error: BCD and FLOAT reject not a number string", function(done) {
     let importStruct = {
         RFCFLOAT: "A"
     };
     let importTable = [importStruct];
     client.invoke(
-        "STFC_STRUCTURE", {
+        "STFC_STRUCTURE",
+        {
             IMPORTSTRUCT: importStruct,
             RFCTABLE: importTable
         },
-        function (err) {
+        function(err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     code: 22,
                     key: "RFC_CONVERSION_FAILURE",
-                    message: "Cannot convert string value A at position 0 for the field RFCFLOAT to type RFCTYPE_FLOAT"
+                    message:
+                        "Cannot convert string value A at position 0 for the field RFCFLOAT to type RFCTYPE_FLOAT"
                 })
             );
             done();
@@ -463,23 +477,25 @@ it("error: BCD and FLOAT reject not a number string", function (done) {
     );
 });
 
-it("error: DATE rejects number", function (done) {
+it("error: DATE rejects number", function(done) {
     const testDate = 41;
     let importStruct = {
         RFCDATE: testDate
     };
     let importTable = [importStruct];
     client.invoke(
-        "STFC_STRUCTURE", {
+        "STFC_STRUCTURE",
+        {
             IMPORTSTRUCT: importStruct,
             RFCTABLE: importTable
         },
-        function (err) {
+        function(err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     name: "TypeError",
-                    message: "ABAP date format YYYYMMDD expected when filling field RFCDATE of type 1"
+                    message:
+                        "ABAP date format YYYYMMDD expected when filling field RFCDATE of type 1"
                 })
             );
             done();
@@ -487,23 +503,25 @@ it("error: DATE rejects number", function (done) {
     );
 });
 
-it("error: INT1 rejects float with fractional part", function (done) {
+it("error: INT1 rejects float with fractional part", function(done) {
     let importStruct = {
         RFCINT1: 1 + Number.EPSILON,
         RFCINT2: 1.0
     };
     let importTable = [importStruct];
     client.invoke(
-        "STFC_STRUCTURE", {
+        "STFC_STRUCTURE",
+        {
             IMPORTSTRUCT: importStruct,
             RFCTABLE: importTable
         },
-        function (err) {
+        function(err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     name: "TypeError",
-                    message: "Integer number expected when filling field RFCINT1 of type 10, got 0x1.0000000000001p+0"
+                    message:
+                        "Integer number expected when filling field RFCINT1 of type 10, got 0x1.0000000000001p+0"
                 })
             );
             done();
@@ -511,23 +529,25 @@ it("error: INT1 rejects float with fractional part", function (done) {
     );
 });
 
-it("error: INT2 rejects float", function (done) {
+it("error: INT2 rejects float", function(done) {
     let importStruct = {
         RFCINT2: 1 + Number.EPSILON,
         RFCINT1: 1.0
     };
     let importTable = [importStruct];
     client.invoke(
-        "STFC_STRUCTURE", {
+        "STFC_STRUCTURE",
+        {
             IMPORTSTRUCT: importStruct,
             RFCTABLE: importTable
         },
-        function (err) {
+        function(err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     name: "TypeError",
-                    message: "Integer number expected when filling field RFCINT2 of type 9, got 0x1.0000000000001p+0"
+                    message:
+                        "Integer number expected when filling field RFCINT2 of type 9, got 0x1.0000000000001p+0"
                 })
             );
             done();
@@ -535,22 +555,24 @@ it("error: INT2 rejects float", function (done) {
     );
 });
 
-it("error: INT4 rejects float", function (done) {
+it("error: INT4 rejects float", function(done) {
     let importStruct = {
         RFCINT4: 1 + Number.EPSILON
     };
     let importTable = [importStruct];
     client.invoke(
-        "STFC_STRUCTURE", {
+        "STFC_STRUCTURE",
+        {
             IMPORTSTRUCT: importStruct,
             RFCTABLE: importTable
         },
-        function (err) {
+        function(err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     name: "TypeError",
-                    message: "Integer number expected when filling field RFCINT4 of type 8, got 0x1.0000000000001p+0"
+                    message:
+                        "Integer number expected when filling field RFCINT4 of type 8, got 0x1.0000000000001p+0"
                 })
             );
             done();
@@ -558,22 +580,24 @@ it("error: INT4 rejects float", function (done) {
     );
 });
 
-it("error: INT1 positive infinity", function (done) {
+it("error: INT1 positive infinity", function(done) {
     let importStruct = {
         RFCINT1: Number.POSITIVE_INFINITY
     };
     let importTable = [importStruct];
     client.invoke(
-        "STFC_STRUCTURE", {
+        "STFC_STRUCTURE",
+        {
             IMPORTSTRUCT: importStruct,
             RFCTABLE: importTable
         },
-        function (err) {
+        function(err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     name: "TypeError",
-                    message: "Integer number expected when filling field RFCINT1 of type 10, got inf"
+                    message:
+                        "Integer number expected when filling field RFCINT1 of type 10, got inf"
                 })
             );
             done();
@@ -581,22 +605,24 @@ it("error: INT1 positive infinity", function (done) {
     );
 });
 
-it("error: INT1 negative infinity", function (done) {
+it("error: INT1 negative infinity", function(done) {
     let importStruct = {
         RFCINT1: Number.POSITIVE_INFINITY
     };
     let importTable = [importStruct];
     client.invoke(
-        "STFC_STRUCTURE", {
+        "STFC_STRUCTURE",
+        {
             IMPORTSTRUCT: importStruct,
             RFCTABLE: importTable
         },
-        function (err) {
+        function(err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     name: "TypeError",
-                    message: "Integer number expected when filling field RFCINT1 of type 10, got inf"
+                    message:
+                        "Integer number expected when filling field RFCINT1 of type 10, got inf"
                 })
             );
             done();
@@ -614,7 +640,7 @@ it("error: INT1 negative infinity", function (done) {
 // MAX: 9,007,199,254,740,991 (2 ** 53 - 1)
 // MIN: -9,007,199,254,740,991
 
-it("INT max positive", function (done) {
+it("INT max positive", function(done) {
     let importStruct = {
         RFCINT1: 254,
         RFCINT2: 32766,
@@ -622,11 +648,12 @@ it("INT max positive", function (done) {
     };
     let importTable = [importStruct];
     client.invoke(
-        "STFC_STRUCTURE", {
+        "STFC_STRUCTURE",
+        {
             IMPORTSTRUCT: importStruct,
             RFCTABLE: importTable
         },
-        function (err, res) {
+        function(err, res) {
             expect(err).toBeUndefined();
             expect(res).toBeDefined();
             expect(res).toHaveProperty("ECHOSTRUCT");
@@ -647,7 +674,7 @@ it("INT max positive", function (done) {
     );
 });
 
-it("INT max negative", function (done) {
+it("INT max negative", function(done) {
     let importStruct = {
         RFCINT1: -2,
         RFCINT2: -32768,
@@ -655,11 +682,12 @@ it("INT max negative", function (done) {
     };
     let importTable = [importStruct];
     client.invoke(
-        "STFC_STRUCTURE", {
+        "STFC_STRUCTURE",
+        {
             IMPORTSTRUCT: importStruct,
             RFCTABLE: importTable
         },
-        function (err, res) {
+        function(err, res) {
             expect(err).toBeUndefined();
             expect(res).toBeDefined();
             expect(res).toHaveProperty("ECHOSTRUCT");

@@ -19,3 +19,4 @@ examples/dist/
 ci/
 # https://github.com/Microsoft/vscode-cpptools/issues/3347
 .vscode/ipch
+.buildinfo

@@ -18,7 +18,7 @@ const setup = require("./setup");
 const Pool = setup.rfcPool;
 const abapSystem = setup.abapSystem;
 
-it("pool: default options", function (done) {
+it("pool: default options", function(done) {
     const pool = new Pool(abapSystem);
     pool.acquire()
         .then(client => {
@@ -37,7 +37,7 @@ it("pool: default options", function (done) {
         });
 });
 
-it("pool: bcd number", function (done) {
+it("pool: bcd number", function(done) {
     const pool = new Pool(abapSystem, undefined, {
         bcd: "number"
     });
@@ -51,7 +51,7 @@ it("pool: bcd number", function (done) {
             pool.releaseAll().then(() => {
                 expect(pool.status.ready).toBe(0);
                 done();
-            })
+            });
         })
         .catch(err => {
             if (err) return done(err);

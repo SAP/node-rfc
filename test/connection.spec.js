@@ -17,26 +17,26 @@
 const setup = require("./setup");
 const client = setup.client;
 
-beforeEach(function (done) {
+beforeEach(function(done) {
     client.reopen(err => {
         done(err);
     });
 });
 
-afterEach(function (done) {
+afterEach(function(done) {
     client.close(() => {
         done();
     });
 });
 
-afterAll(function (done) {
+afterAll(function(done) {
     delete setup.client;
     delete setup.rfcClient;
     delete setup.rfcPool;
     done();
 });
 
-it("Client, package and GitHub versions", function () {
+it("Client, package and GitHub versions", function() {
     let VERSION = require("fs")
         .readFileSync("VERSION")
         .toString()
@@ -45,7 +45,7 @@ it("Client, package and GitHub versions", function () {
     expect(client.version.binding).toBe(VERSION);
 });
 
-it("Client getters", function () {
+it("Client getters", function() {
     expect(client.id).toBeGreaterThan(0);
 
     expect(client.version).toHaveProperty("major");
@@ -59,17 +59,20 @@ it("Client getters", function () {
     expect(client.options).toHaveProperty("rstrip");
     expect(client.options).toHaveProperty("bcd");
 
-    expect(() => (client.version = {
-        a: 1,
-        b: 2
-    })).toThrow(
+    expect(
+        () =>
+            (client.version = {
+                a: 1,
+                b: 2
+            })
+    ).toThrow(
         new TypeError(
             "Cannot set property version of #<Client> which has only a getter"
         )
     );
 });
 
-it("isAlive ands ping() should be false when disconnected", function (done) {
+it("isAlive ands ping() should be false when disconnected", function(done) {
     client.close(() => {
         expect(client.isAlive).toBeFalsy();
         client.ping((err, res) => {
@@ -80,8 +83,8 @@ it("isAlive ands ping() should be false when disconnected", function (done) {
     });
 });
 
-it("isAlive and ping() should be true when connected", function (done) {
-    client.connect(function (err) {
+it("isAlive and ping() should be true when connected", function(done) {
+    client.connect(function(err) {
         if (err) return done(err);
         expect(client.isAlive).toBeTruthy();
         client.ping((err, res) => {
@@ -92,7 +95,7 @@ it("isAlive and ping() should be true when connected", function (done) {
     });
 });
 
-it("connectionInfo() should return connection information when connected", function (done) {
+it("connectionInfo() should return connection information when connected", function(done) {
     let connectionInfo = client.connectionInfo;
     expect(Object.keys(connectionInfo).sort()).toEqual(
         [
@@ -131,7 +134,7 @@ it("connectionInfo() should return connection information when connected", funct
     done();
 });
 
-it("connectionInfo() should return {} when disconnected", function (done) {
+it("connectionInfo() should return {} when disconnected", function(done) {
     client.close(() => {
         expect(client.isAlive).toBeFalsy();
         expect(client.connectionInfo).toEqual({});
@@ -139,17 +142,17 @@ it("connectionInfo() should return {} when disconnected", function (done) {
     });
 });
 
-it("reopen() should reopen the connection", function (done) {
-    client.close(function () {
+it("reopen() should reopen the connection", function(done) {
+    client.close(function() {
         expect(client.isAlive).toBeFalsy();
-        client.connect(function (err) {
+        client.connect(function(err) {
             if (err) return done(err);
             expect(client.isAlive).toBeTruthy();
-            client.reopen(function (err) {
+            client.reopen(function(err) {
                 if (err) return done(err);
                 expect(client.isAlive).toBeTruthy();
                 let convId = client.connectionInfo.cpicConvId;
-                client.reopen(function (err) {
+                client.reopen(function(err) {
                     if (err) return done(err);
                     expect(client.isAlive).toBeTruthy();
                     expect(
@@ -162,18 +165,19 @@ it("reopen() should reopen the connection", function (done) {
     });
 });
 
-it("invoke() STFC_CONNECTION should return unicode string", function (done) {
-    client.connect(function (err) {
+it("invoke() STFC_CONNECTION should return unicode string", function(done) {
+    client.connect(function(err) {
         if (err) return done(err);
         client.invoke(
-            "STFC_CONNECTION", {
+            "STFC_CONNECTION",
+            {
                 REQUTEXT: setup.UNICODETEST
             },
-            function (err, res) {
+            function(err, res) {
                 if (err) return done(err);
                 expect(res).toHaveProperty("ECHOTEXT");
                 expect(res.ECHOTEXT.indexOf(setup.UNICODETEST)).toBe(0);
-                client.close(function () {
+                client.close(function() {
                     done();
                 });
             }
@@ -181,7 +185,7 @@ it("invoke() STFC_CONNECTION should return unicode string", function (done) {
     });
 });
 
-it("invoke() STFC_STRUCTURE should return structure and table", function (done) {
+it("invoke() STFC_STRUCTURE should return structure and table", function(done) {
     let importStruct = {
         RFCFLOAT: 1.23456789,
         RFCCHAR1: "A",
@@ -208,14 +212,15 @@ it("invoke() STFC_STRUCTURE should return structure and table", function (done) 
         row.RFCINT1 = i;
         importTable.push(row);
     }
-    client.connect(function (err) {
+    client.connect(function(err) {
         if (err) return done(err);
         client.invoke(
-            "STFC_STRUCTURE", {
+            "STFC_STRUCTURE",
+            {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable
             },
-            function (err, res) {
+            function(err, res) {
                 if (err) return done(err);
                 expect(Object.keys(res)).toEqual([
                     "ECHOSTRUCT",
@@ -263,7 +268,7 @@ it("invoke() STFC_STRUCTURE should return structure and table", function (done) 
                     })
                 );
 
-                client.close(function () {
+                client.close(function() {
                     done();
                 });
             }

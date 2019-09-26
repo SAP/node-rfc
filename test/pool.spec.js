@@ -21,19 +21,19 @@ const abapSystem = setup.abapSystem;
 let pool;
 let ID;
 
-beforeAll(function (done) {
+beforeAll(function(done) {
     pool = new Pool(abapSystem);
     done();
 });
 
-afterAll(function () {
+afterAll(function() {
     delete setup.client;
     delete setup.rfcClient;
     delete setup.rfcPool;
     return pool.releaseAll();
 });
 
-it("pool: acquire id", function (done) {
+it("pool: acquire id", function(done) {
     pool.acquire()
         .then(client => {
             expect(client.id).toBeGreaterThan(0);
@@ -51,7 +51,7 @@ it("pool: acquire id", function (done) {
         });
 });
 
-it("pool: acquire id=1", function (done) {
+it("pool: acquire id=1", function(done) {
     pool.acquire()
         .then(client => {
             expect(ID).not.toBeNaN();
@@ -62,14 +62,14 @@ it("pool: acquire id=1", function (done) {
             pool.releaseAll().then(() => {
                 expect(pool.status.ready).toBe(0);
                 done();
-            });;
+            });
         })
         .catch(err => {
             if (err) return done(err);
         });
 });
 
-it("pool: acquire id=3", function (done) {
+it("pool: acquire id=3", function(done) {
     pool.acquire()
         .then(client => {
             expect(ID).not.toBeNaN();
@@ -84,7 +84,7 @@ it("pool: acquire id=3", function (done) {
         });
 });
 
-it("pool: acquire 10", function (done) {
+it("pool: acquire 10", function(done) {
     let id = new Set();
     for (let i = ID + 1; i < ID + 11; i++) {
         id.add(i);
@@ -99,7 +99,7 @@ it("pool: acquire 10", function (done) {
     }
 });
 
-it("pool: unique client id across pools", function (done) {
+it("pool: unique client id across pools", function(done) {
     pool.acquire()
         .then(client => {
             expect(ID).not.toBeNaN();
@@ -121,7 +121,7 @@ it("pool: unique client id across pools", function (done) {
         });
 });
 
-it("error: pool internal error", function (done) {
+it("error: pool internal error", function(done) {
     let xpool = new Pool(abapSystem, {
         min: 0,
         max: 10
@@ -138,7 +138,7 @@ it("error: pool internal error", function (done) {
     });
 });
 
-it("pool: default options", function (done) {
+it("pool: default options", function(done) {
     pool.acquire()
         .then(client => {
             expect(client.id).toBeGreaterThan(0);
@@ -149,18 +149,19 @@ it("pool: default options", function (done) {
             pool.releaseAll().then(() => {
                 expect(pool.status.ready).toBe(0);
                 done();
-            });;
+            });
         })
         .catch(err => {
             if (err) return done(err);
         });
 });
 
-xit("pool: bcd number", function (done) {
+xit("pool: bcd number", function(done) {
     const poolOptions = new Pool(abapSystem, undefined, {
         bcd: "number"
     });
-    poolOptions.acquire()
+    poolOptions
+        .acquire()
         .then(client => {
             expect(client.id).toBeGreaterThan(0);
             // expect(client.id).toEqual(2);
