@@ -1,15 +1,10 @@
 /// <reference types="node" />
 
 import * as Promise from "bluebird";
-const binary = require("node-pre-gyp");
-const path = require("path");
-const binding_path = binary.find(
-    path.resolve(path.join(__dirname, "../../package.json"))
-);
 
 let binding: RfcClientBinding;
 try {
-    binding = require(binding_path);
+    binding = require("../binding/sapnwrfc");
 } catch (ex) {
     if (ex.message.indexOf("sapnwrfc.node") !== -1)
         ex.message +=
@@ -49,7 +44,7 @@ interface RfcClientVersion {
     binding: string;
 }
 
-export interface RfcClientOptions {
+interface RfcClientOptions {
     rstrip: boolean;
     bcd: string | Function;
     date: Function;
@@ -69,9 +64,9 @@ interface RfcClientInstance {
         callback: Function,
         callOptions?: object
     ): any;
-    ping(callback?: Function): any | Promise<boolean>;
-    close(callback?: Function): any | Promise<void>;
-    reopen(callback?: Function): any | Promise<void>;
+    ping(callback: Function | undefined): void | Promise<void>;
+    close(callback: Function | undefined): void | Promise<void>;
+    reopen(callback: Function | undefined): void | Promise<void>;
     isAlive(): boolean;
     connectionInfo(): RfcConnectionInfo;
     id: number;
@@ -308,7 +303,7 @@ export class Client {
         }
     }
 
-    close(callback?: Function): Promise<void> | any {
+    close(callback: Function | undefined) {
         if (typeof callback === "function") {
             return this.__client.close(callback);
         } else {
@@ -324,7 +319,7 @@ export class Client {
         }
     }
 
-    reopen(callback?: Function): Promise<void> | any {
+    reopen(callback: Function | undefined) {
         if (typeof callback === "function") {
             return this.__client.reopen(callback);
         } else {
@@ -340,7 +335,7 @@ export class Client {
         }
     }
 
-    ping(callback?: Function): Promise<boolean> | any {
+    ping(callback: Function | undefined) {
         if (typeof callback === "function") {
             return this.__client.ping(callback);
         } else {

@@ -1,18 +1,18 @@
 Change log
 ==========
 
-1.0.0-rc11 (xxxx-xx-xx)
+1.0.0-rc11 (2019-10-01)
 -----------------------
 
-* No pre-built binary for nodejs version 11
 * NodeJS version 6 dropped
 * Input parameter array check added, fix #100
 * Connection options support in Conncetion Pool, fix #104
+* Build tools changed, node-gyp and node-pregyp replaced with cmake-js and prebuild, fix #72
 
 1.0.0-rc10 (2019-05-31)
 -----------------------
 
-* revert to node-pre-gyp@12.0, node-pre-gyp#463
+* Revert to node-pre-gyp@12.0, node-pre-gyp#463
 
 1.0.0-rc9 (2019-05-23)
 ----------------------

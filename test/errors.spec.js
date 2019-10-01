@@ -118,23 +118,17 @@ it("error: invoke() requires at least three arguments", function(done) {
 });
 
 it("error: invoke() rejects non-existing parameter", function(done) {
-    client.invoke(
-        "STFC_CONNECTION",
-        {
-            XXX: "wrong param"
-        },
-        function(err) {
-            expect(err).toBeDefined();
-            expect(err).toEqual(
-                expect.objectContaining({
-                    code: 20,
-                    key: "RFC_INVALID_PARAMETER",
-                    message: "field 'XXX' not found"
-                })
-            );
-            done();
-        }
-    );
+    client.invoke("STFC_CONNECTION", { XXX: "wrong param" }, function(err) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(
+            expect.objectContaining({
+                code: 20,
+                key: "RFC_INVALID_PARAMETER",
+                message: "field 'XXX' not found"
+            })
+        );
+        done();
+    });
 });
 
 it("error: invoke() rejects non-string rfm name", function(done) {
@@ -152,26 +146,20 @@ it("error: invoke() rejects non-string rfm name", function(done) {
 });
 
 it("error: invoke() RFC_RAISE_ERROR", function(done) {
-    client.invoke(
-        "RFC_RAISE_ERROR",
-        {
-            MESSAGETYPE: "A"
-        },
-        function(err) {
-            expect(err).toBeDefined();
-            expect(err).toEqual(
-                expect.objectContaining({
-                    code: 4,
-                    key: "Function not supported",
-                    abapMsgClass: "SR",
-                    abapMsgType: "A",
-                    abapMsgNumber: "006",
-                    message: "Function not supported"
-                })
-            );
-            done();
-        }
-    );
+    client.invoke("RFC_RAISE_ERROR", { MESSAGETYPE: "A" }, function(err) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(
+            expect.objectContaining({
+                code: 4,
+                key: "Function not supported",
+                abapMsgClass: "SR",
+                abapMsgType: "A",
+                abapMsgNumber: "006",
+                message: "Function not supported"
+            })
+        );
+        done();
+    });
 });
 
 it("error: non-existing field in input structure", function(done) {
@@ -181,24 +169,20 @@ it("error: non-existing field in input structure", function(done) {
         RFCCHAR4: "DEFG"
     };
 
-    client.invoke(
-        "STFC_STRUCTURE",
-        {
-            IMPORTSTRUCT: importStruct
-        },
-        function(err) {
-            expect(err).toBeDefined();
-            expect(err).toEqual(
-                expect.objectContaining({
-                    name: "RfcLibError",
-                    code: 20,
-                    key: "RFC_INVALID_PARAMETER",
-                    message: "field 'XRFCCHAR1' not found"
-                })
-            );
-            done();
-        }
-    );
+    client.invoke("STFC_STRUCTURE", { IMPORTSTRUCT: importStruct }, function(
+        err
+    ) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(
+            expect.objectContaining({
+                name: "RfcLibError",
+                code: 20,
+                key: "RFC_INVALID_PARAMETER",
+                message: "field 'XRFCCHAR1' not found"
+            })
+        );
+        done();
+    });
 });
 
 it("error: non-existing field in input table", function(done) {
@@ -210,22 +194,16 @@ it("error: non-existing field in input table", function(done) {
         }
     ];
 
-    client.invoke(
-        "STFC_STRUCTURE",
-        {
-            RFCTABLE: importTable
-        },
-        function(err) {
-            expect(err).toBeDefined();
-            expect(err).toEqual(
-                expect.objectContaining({
-                    name: "RfcLibError",
-                    code: 20,
-                    key: "RFC_INVALID_PARAMETER",
-                    message: "field 'XRFCCHAR1' not found"
-                })
-            );
-            done();
-        }
-    );
+    client.invoke("STFC_STRUCTURE", { RFCTABLE: importTable }, function(err) {
+        expect(err).toBeDefined();
+        expect(err).toEqual(
+            expect.objectContaining({
+                name: "RfcLibError",
+                code: 20,
+                key: "RFC_INVALID_PARAMETER",
+                message: "field 'XRFCCHAR1' not found"
+            })
+        );
+        done();
+    });
 });

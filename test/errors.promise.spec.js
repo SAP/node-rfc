@@ -58,9 +58,7 @@ it("error: call() promise rejects invalid credentials", function(done) {
 
 it("error: call() promise rejects non-existing parameter", function() {
     return client
-        .call("STFC_CONNECTION", {
-            XXX: "wrong param"
-        })
+        .call("STFC_CONNECTION", { XXX: "wrong param" })
         .then(res => {
             expect(res).tpBeUndefined();
         })
@@ -78,9 +76,7 @@ it("error: call() promise rejects non-existing parameter", function() {
 
 it("error: promise call() RFC_RAISE_ERROR", function() {
     return client
-        .call("RFC_RAISE_ERROR", {
-            MESSAGETYPE: "A"
-        })
+        .call("RFC_RAISE_ERROR", { MESSAGETYPE: "A" })
         .then(res => {
             expect(res).tpBeUndefined();
         })

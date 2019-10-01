@@ -1,15 +1,15 @@
 {
-  "name": "node-rfc",
+  "name": "node-rfc-cmake",
   "description": "nodejs bindings for SAP NW RFC SDK",
   "version": "1.0.0-rc11",
-  "homepage": "https://github.com/SAP/node-rfc",
+  "homepage": "https://github.com/sap/node-rfc",
   "author": {
     "name": "Srdjan Boskovic",
     "email": "srdjan.boskovic@sap.com"
   },
   "engines": {
-    "node": "8.x || 10.x || 11.x || 12.x",
-    "npm": "^6.9.0"
+    "node": ">=8.9.0",
+    "npm": "^6.11.3"
   },
   "cpu": [
     "!arm"
@@ -19,20 +19,23 @@
     "test": "test"
   },
   "scripts": {
-    "prepublishOnly": "npm ls",
-    "preinstall": "npm install node-pre-gyp node-addon-api",
-    "install": "node-pre-gyp install --fallback-to-build",
+    "prepublishOnly": "npm ls --depth=0",
+    "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
+    "install": "prebuild-install --tag-prefix -r napi || npm run prebuild",
+    "prebuild": "prebuild --backend cmake-js -r napi --force --strip --verbose --tag-prefix",
     "wrapper": "tsc -p src/ts",
     "examples": "tsc -p examples/ts",
-    "install:dev": "npm i --save-dev @babel/core @types/node compare-versions decimal.js jest random-bytes typescript async eslint eslint-plugin-jest",
-    "install:prod": "npm i --save @types/bluebird bluebird node-addon-api node-pre-gyp"
+    "install:dev": "npm i --save-dev @babel/core @types/bluebird @types/node cmake-js compare-versions decimal.js jest random-bytes typescript async",
+    "install:prod": "npm i --savegit bluebird node-addon-api"
   },
   "binary": {
+    "napi_versions": [
+      3
+    ],
     "module_name": "sapnwrfc",
-    "module_path": "./lib/binding/{platform}-{arch}-{node_abi}",
-    "host": "https://github.com/SAP/node-rfc/releases/download/",
-    "remote_path": "{version}",
-    "package_name": "rfc-{platform}-{arch}-{node_abi}.tar.gz"
+    "module_path": "./lib/binding/",
+    "host": "https://github.com/sap/node-rfc/releases/download/",
+    "remote_path": "v{version}"
   },
   "license": "Apache-2.0",
   "keywords": [
@@ -46,36 +49,32 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SAP/node-rfc.git"
+    "url": "git+https://github.com/sap/node-rfc.git"
   },
-  "bundledDependencies": [
-    "node-pre-gyp"
-  ],
   "files": [
     "lib",
     "src",
-    "examples",
-    "binding.gyp"
+    "CMakeLists.txt",
+    "VERSION"
   ],
-  "gypfile": true,
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "devDependencies": {
     "@babel/core": "^7.6.2",
-    "@types/node": "^12.7.5",
+    "@types/bluebird": "^3.5.27",
+    "@types/node": "^12.7.8",
     "async": "^3.1.0",
-    "compare-versions": "^3.5.1",
+    "cmake-js": "^5.3.2",
     "decimal.js": "^10.2.0",
-    "eslint": "^6.4.0",
-    "eslint-plugin-jest": "^22.17.0",
     "jest": "^24.9.0",
+    "prebuild": "^9.1.0",
+    "prebuild-install": "^5.3.2",
     "random-bytes": "^1.0.0",
+    "tslint": "^5.20.0",
     "typescript": "^3.6.3"
   },
   "dependencies": {
-    "@types/bluebird": "^3.5.27",
     "bluebird": "^3.5.5",
-    "node-addon-api": "^1.7.1",
-    "node-pre-gyp": "^0.13.0"
+    "node-addon-api": "^1.7.1"
   }
 }

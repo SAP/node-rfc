@@ -62,9 +62,7 @@ it("options: pass when some parameters skipped", function(done) {
                 expect(res.ET_RETURN.length).toBe(0);
                 done();
             },
-            {
-                notRequested: notRequested
-            }
+            { notRequested: notRequested }
         );
     });
 });

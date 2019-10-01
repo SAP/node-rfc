@@ -50,9 +50,7 @@ it("options: pass when some parameters skipped", function() {
                 IV_PLNTY: "A",
                 IV_PLNNR: "00100000"
             },
-            {
-                notRequested: notRequested
-            }
+            { notRequested: notRequested }
         )
         .then(res => {
             expect(res).toBeDefined();

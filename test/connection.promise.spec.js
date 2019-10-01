@@ -34,9 +34,7 @@ afterAll(function(done) {
 
 it("call() STFC_CONNECTION should return unicode string", function() {
     return client
-        .call("STFC_CONNECTION", {
-            REQUTEXT: setup.UNICODETEST
-        })
+        .call("STFC_CONNECTION", { REQUTEXT: setup.UNICODETEST })
         .then(res => {
             expect(res).toBeDefined();
             expect(res).toHaveProperty("ECHOTEXT");

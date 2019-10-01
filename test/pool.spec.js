@@ -27,10 +27,14 @@ beforeAll(function(done) {
 });
 
 afterAll(function() {
+    pool.releaseAll();
+});
+
+afterAll(function(done) {
     delete setup.client;
     delete setup.rfcClient;
     delete setup.rfcPool;
-    return pool.releaseAll();
+    done();
 });
 
 it("pool: acquire id", function(done) {
@@ -41,10 +45,9 @@ it("pool: acquire id", function(done) {
             //client.id.should.equal(1);
             expect(client.isAlive).toBeTruthy();
             expect(pool.status.ready).toBe(1);
-            pool.releaseAll().then(() => {
-                expect(pool.status.ready).toBe(0);
-                done();
-            });
+            pool.releaseAll();
+            expect(pool.status.ready).toBe(0);
+            done();
         })
         .catch(err => {
             if (err) return done(err);
@@ -59,10 +62,9 @@ it("pool: acquire id=1", function(done) {
             ID = client.id;
             expect(client.isAlive).toBeTruthy();
             expect(pool.status.ready).toBe(1);
-            pool.releaseAll().then(() => {
-                expect(pool.status.ready).toBe(0);
-                done();
-            });
+            pool.releaseAll();
+            expect(pool.status.ready).toBe(0);
+            done();
         })
         .catch(err => {
             if (err) return done(err);
@@ -122,10 +124,7 @@ it("pool: unique client id across pools", function(done) {
 });
 
 it("error: pool internal error", function(done) {
-    let xpool = new Pool(abapSystem, {
-        min: 0,
-        max: 10
-    });
+    let xpool = new Pool(abapSystem, { min: 0, max: 10 });
     xpool.acquire().catch(err => {
         expect(err).toBeDefined();
         expect(err).toEqual(
@@ -136,44 +135,4 @@ it("error: pool internal error", function(done) {
         );
         done();
     });
-});
-
-it("pool: default options", function(done) {
-    pool.acquire()
-        .then(client => {
-            expect(client.id).toBeGreaterThan(0);
-            // expect(client.id).toEqual(2);
-            expect(client.isAlive).toBeTruthy();
-            expect(pool.status.ready).toBe(1);
-            expect(client.options.bcd).toEqual("string");
-            pool.releaseAll().then(() => {
-                expect(pool.status.ready).toBe(0);
-                done();
-            });
-        })
-        .catch(err => {
-            if (err) return done(err);
-        });
-});
-
-xit("pool: bcd number", function(done) {
-    const poolOptions = new Pool(abapSystem, undefined, {
-        bcd: "number"
-    });
-    poolOptions
-        .acquire()
-        .then(client => {
-            expect(client.id).toBeGreaterThan(0);
-            // expect(client.id).toEqual(2);
-            expect(client.isAlive).toBeTruthy();
-            expect(poolOptions.status.ready).toBe(1);
-            expect(client.options.bcd).toEqual("number");
-            poolOptions.releaseAll().then(() => {
-                expect(poolOptions.status.ready).toBe(0);
-                done();
-            });
-        })
-        .catch(err => {
-            if (err) return done(err);
-        });
 });

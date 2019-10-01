@@ -12,54 +12,53 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-"use strict";
+'use strict';
 
-const setup = require("../setup");
+const setup = require('../setup');
 const client = setup.client;
 
-const Promise = require("bluebird");
+const Promise = require('bluebird');
 
-afterAll(function(done) {
+//this.timeout(15000);
+
+afterAll(function (done) {
     delete setup.client;
     delete setup.rfcClient;
     delete setup.rfcPool;
     done();
 });
 
-it("concurrency: call() should not block", function() {
+it('concurrency: call() should not block', function () {
     let asyncRes;
-    return client.open().then(function() {
-        client
-            .call("BAPI_USER_GET_DETAIL", {
-                USERNAME: "DEMO"
-            })
-            .then(res => {
-                expect(res).toBeDefined();
-                expect(res).toHaveProperty("RETURN");
-                expect(res.RETURN.length).toBe(0);
-                asyncRes = res;
-                client.close();
-            })
-            .catch(err => {
-                console.error(err);
-            });
-    });
+    return client
+        .open()
+        .then(function () {
+            client.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
+                .then(res => {
+                    expect(res).toBeDefined();
+                    expect(res).toHaveProperty('RETURN');
+                    expect(res.RETURN.length).toBe(0);
+                    asyncRes = res;
+                    client.close();
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        })
 
     expect(asyncRes).toBeUndefined();
 });
 
-it(`concurrency: ${setup.CONNECTIONS} parallel call() promises`, function(done) {
+it(`concurrency: ${setup.CONNECTIONS} parallel call() promises`, function (done) {
     let callbackCount = 0;
     for (let i = 0; i < setup.CONNECTIONS; i++) {
         new setup.rfcClient(setup.abapSystem)
             .open()
             .then(c => {
-                c.call("BAPI_USER_GET_DETAIL", {
-                    USERNAME: "DEMO"
-                })
+                c.call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
                     .then(res => {
                         expect(res).toBeDefined();
-                        expect(res).toHaveProperty("RETURN");
+                        expect(res).toHaveProperty('RETURN');
                         expect(res.RETURN.length).toBe(0);
                         c.close(() => {
                             if (++callbackCount === setup.CONNECTIONS) done();
@@ -75,35 +74,33 @@ it(`concurrency: ${setup.CONNECTIONS} parallel call() promises`, function(done) 
     }
 });
 
-it(`concurrency: ${setup.CONNECTIONS} concurrent call() promises, using single connection`, function() {
+it(`concurrency: ${setup.CONNECTIONS} concurrent call() promises, using single connection`, function () {
     let callbackCount = 0;
-    return client.open().then(function() {
-        for (let i = 0; i < setup.CONNECTIONS; i++) {
-            client
-                .call("BAPI_USER_GET_DETAIL", {
-                    USERNAME: "DEMO"
-                })
-                .then(res => {
-                    expect(res).toBeDefined();
-                    expect(res).toHaveProperty("RETURN");
-                    expect(res.RETURN.length).toBe(0);
-                    if (++callbackCount == setup.CONNECTIONS) client.close();
-                });
-        }
-    });
+    return client
+        .open()
+        .then(function () {
+            for (let i = 0; i < setup.CONNECTIONS; i++) {
+                client
+                    .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
+                    .then(res => {
+                        expect(res).toBeDefined();
+                        expect(res).toHaveProperty('RETURN');
+                        expect(res.RETURN.length).toBe(0);
+                        if (++callbackCount == setup.CONNECTIONS) client.close();
+                    })
+            }
+        })
 });
 
-it(`concurrency: ${setup.CONNECTIONS} concurrent call() promises, using single connection and Promise.all()`, function() {
+it(`concurrency: ${setup.CONNECTIONS} concurrent call() promises, using single connection and Promise.all()`, function () {
     let promises = [];
     for (let counter = 0; counter < setup.CONNECTIONS; counter++) {
         promises.push(
             client
-                .call("BAPI_USER_GET_DETAIL", {
-                    USERNAME: "DEMO"
-                })
+                .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
                 .then(res => {
                     expect(res).toBeDefined();
-                    expect(res).toHaveProperty("RETURN");
+                    expect(res).toHaveProperty('RETURN');
                     expect(res.RETURN.length).toBe(0);
                 })
         );
@@ -111,29 +108,28 @@ it(`concurrency: ${setup.CONNECTIONS} concurrent call() promises, using single c
     return Promise.all(promises);
 });
 
-it(`concurrency: ${setup.CONNECTIONS} recursive call() promises, using single connection`, function() {
+it(`concurrency: ${setup.CONNECTIONS} recursive call() promises, using single connection`, function () {
     let callbackCount = 0;
-
     function call(done) {
         client
-            .call("BAPI_USER_GET_DETAIL", {
-                USERNAME: "DEMO"
-            })
+            .call('BAPI_USER_GET_DETAIL', { USERNAME: 'DEMO' })
             .then(res => {
                 expect(res).toBeDefined();
-                expect(res).toHaveProperty("RETURN");
+                expect(res).toHaveProperty('RETURN');
                 expect(res.RETURN.length).toBe(0);
                 if (++callbackCount == setup.CONNECTIONS) {
                     client.close();
                 } else {
                     call(callbackCount);
                 }
-            });
+            })
     }
 
-    return client.open().then(function() {
-        call();
-    });
+    return client
+        .open()
+        .then(function () {
+            call();
+        });
 
     call();
 });

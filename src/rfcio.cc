@@ -140,13 +140,6 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             break;
         }
-        if (!value.IsArray())
-        {
-            char err[256];
-            std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Array expected when filling field %s of type %d", &fieldName[0], typ);
-            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
-        }
         Napi::Array array = value.As<Napi::Array>();
         unsigned int rowCount = array.Length();
 
@@ -188,7 +181,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Buffer expected when filling field %s of type %d", &fieldName[0], typ);
+            sprintf(err, "Buffer expected when filling field '%s' of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
 
@@ -211,7 +204,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Buffer expected when filling field %s of type %d", &fieldName[0], typ);
+            sprintf(err, "Buffer expected when filling field '%s' of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         Napi::Uint8Array buf = value.As<Uint8Array>();

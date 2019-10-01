@@ -59,13 +59,7 @@ it("Client getters", function() {
     expect(client.options).toHaveProperty("rstrip");
     expect(client.options).toHaveProperty("bcd");
 
-    expect(
-        () =>
-            (client.version = {
-                a: 1,
-                b: 2
-            })
-    ).toThrow(
+    expect(() => (client.version = { a: 1, b: 2 })).toThrow(
         new TypeError(
             "Cannot set property version of #<Client> which has only a getter"
         )
@@ -170,9 +164,7 @@ it("invoke() STFC_CONNECTION should return unicode string", function(done) {
         if (err) return done(err);
         client.invoke(
             "STFC_CONNECTION",
-            {
-                REQUTEXT: setup.UNICODETEST
-            },
+            { REQUTEXT: setup.UNICODETEST },
             function(err, res) {
                 if (err) return done(err);
                 expect(res).toHaveProperty("ECHOTEXT");
@@ -216,10 +208,7 @@ it("invoke() STFC_STRUCTURE should return structure and table", function(done) {
         if (err) return done(err);
         client.invoke(
             "STFC_STRUCTURE",
-            {
-                IMPORTSTRUCT: importStruct,
-                RFCTABLE: importTable
-            },
+            { IMPORTSTRUCT: importStruct, RFCTABLE: importTable },
             function(err, res) {
                 if (err) return done(err);
                 expect(Object.keys(res)).toEqual([

@@ -38,30 +38,27 @@ afterAll(function(done) {
 
 it("performance: invoke() BAPI_USER_GET_DETAIL", function(done) {
     //this.timeout(15000);
-    client.invoke(
-        "BAPI_USER_GET_DETAIL",
-        {
-            USERNAME: "DEMO"
-        },
-        function(err, res) {
-            if (err) return done(err);
-            expect(res).toBeDefined();
-            expect(Object.keys(res).sort()).toEqual(
-                expect.arrayContaining([
-                    "ADDRESS",
-                    "ACTIVITYGROUPS",
-                    "DEFAULTS",
-                    "GROUPS",
-                    "ISLOCKED",
-                    "LOGONDATA",
-                    "PARAMETER",
-                    "PROFILES",
-                    "RETURN"
-                ])
-            );
-            done();
-        }
-    );
+    client.invoke("BAPI_USER_GET_DETAIL", { USERNAME: "DEMO" }, function(
+        err,
+        res
+    ) {
+        if (err) return done(err);
+        expect(res).toBeDefined();
+        expect(Object.keys(res).sort()).toEqual(
+            expect.arrayContaining([
+                "ADDRESS",
+                "ACTIVITYGROUPS",
+                "DEFAULTS",
+                "GROUPS",
+                "ISLOCKED",
+                "LOGONDATA",
+                "PARAMETER",
+                "PROFILES",
+                "RETURN"
+            ])
+        );
+        done();
+    });
 });
 
 it("performance: invoke() STFC_PERFORMANCE", function(done) {
