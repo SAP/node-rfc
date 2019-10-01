@@ -66,7 +66,6 @@ Alternatively, or if the _node-rfc_ package not provided for your platform, [bul
 git clone -b https://github.com/SAP/node-rfc.git
 cd node-rfc
 npm install
-node-pre-gyp configure build
 # set connection properties in test/abapSystem
 npm run test
 ```
@@ -140,8 +139,6 @@ client.connect(function(err) {
 Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method on the client instance.
 
 ## Known Issues
-
-- Python 2 will not be maintained past 2020 and the current build system node-gyp does not support Python 3: [nodejs/node-addon-api/#445](https://github.com/nodejs/node-addon-api/issues/445)
 
 - NAPI Type checks [nodejs/node-addon-api/#265](https://github.com/nodejs/node-addon-api/issues/265)
 
