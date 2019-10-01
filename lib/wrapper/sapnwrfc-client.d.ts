@@ -29,7 +29,7 @@ interface RfcClientVersion {
     patch: string;
     binding: string;
 }
-export interface RfcClientOptions {
+interface RfcClientOptions {
     rstrip: boolean;
     bcd: string | Function;
     date: Function;
@@ -96,9 +96,9 @@ export declare class Client {
     call(rfmName: string, rfmParams: RfcObject, callOptions?: RfcCallOptions): Promise<RfcObject>;
     connect(callback: Function): void;
     invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): void;
-    close(callback?: Function): Promise<void> | any;
-    reopen(callback?: Function): Promise<void> | any;
-    ping(callback?: Function): Promise<boolean> | any;
+    close(callback: Function | undefined): void | Promise<unknown>;
+    reopen(callback: Function | undefined): void | Promise<unknown>;
+    ping(callback: Function | undefined): void | Promise<unknown>;
     readonly isAlive: boolean;
     readonly connectionInfo: RfcConnectionInfo;
     readonly id: number;
