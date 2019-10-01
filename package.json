@@ -1,7 +1,7 @@
 {
-  "name": "node-rfc-cmake",
+  "name": "node-rfc",
   "description": "nodejs bindings for SAP NW RFC SDK",
-  "version": "1.0.0-rc13",
+  "version": "1.0.0-rc14",
   "homepage": "https://github.com/sap/node-rfc",
   "author": {
     "name": "Srdjan Boskovic",
