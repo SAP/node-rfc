@@ -12,129 +12,548 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-#include "rfcio.h"
-#include "Client.h"
-#include "error.h"
+#include "client.h"
+#include "macros.h"
 
-using namespace v8;
-using namespace node;
-
-Nan::Persistent<Function> Client::constructor;
-
-Client::Client() : connectionHandle(NULL),
-                   connectionParams(NULL),
-                   paramSize(0),
-                   alive(false)
+namespace node_rfc
 {
+
+unsigned int Client::__refCounter = 0;
+
+class ConnectAsync : public Napi::AsyncWorker
+{
+public:
+    ConnectAsync(Napi::Function &callback, Client *client)
+        : Napi::AsyncWorker(callback), client(client) {}
+    ~ConnectAsync() {}
+
+    void Execute()
+    {
+        client->connectionHandle = RfcOpenConnection(client->connectionParams, client->paramSize, &client->errorInfo);
+    }
+
+    void OnOK()
+    {
+        client->alive = (client->errorInfo.code == RFC_OK);
+
+        if (!client->alive)
+        {
+            Napi::Value argv[1] = {client->wrapError(&client->errorInfo)};
+            TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
+        }
+        else
+        {
+            TRY_CATCH_CALL(Env().Global(), Callback(), 0, {});
+        }
+    }
+
+private:
+    Client *client;
+};
+
+class CloseAsync : public Napi::AsyncWorker
+{
+public:
+    CloseAsync(Napi::Function &callback, Client *client)
+        : Napi::AsyncWorker(callback), client(client) {}
+    ~CloseAsync() {}
+
+    void Execute()
+    {
+        client->alive = false;
+        RFC_INT isValid;
+        RfcIsConnectionHandleValid(client->connectionHandle, &isValid, &client->errorInfo);
+        if (client->errorInfo.code == RFC_OK)
+        {
+            // valid handle, close
+            RfcCloseConnection(client->connectionHandle, &client->errorInfo);
+        }
+        else
+        {
+            // invalid handle, assume closed
+            client->errorInfo.code = RFC_OK;
+        }
+    }
+
+    void OnOK()
+    {
+        if (client->errorInfo.code != RFC_OK)
+        {
+            Napi::Value argv[1] = {client->wrapError(&client->errorInfo)};
+            TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
+        }
+        else
+        {
+            TRY_CATCH_CALL(Env().Global(), Callback(), 0, {});
+        }
+    }
+
+private:
+    Client *client;
+};
+
+class ReopenAsync : public Napi::AsyncWorker
+{
+public:
+    ReopenAsync(Napi::Function &callback, Client *client)
+        : Napi::AsyncWorker(callback), client(client) {}
+    ~ReopenAsync() {}
+
+    void Execute()
+    {
+        client->alive = false;
+
+        RfcCloseConnection(client->connectionHandle, &client->errorInfo);
+
+        client->connectionHandle = RfcOpenConnection(client->connectionParams, client->paramSize, &client->errorInfo);
+    }
+
+    void OnOK()
+    {
+        client->alive = client->errorInfo.code == RFC_OK;
+        if (client->alive)
+        {
+            TRY_CATCH_CALL(Env().Global(), Callback(), 0, {});
+        }
+        else
+        {
+            Napi::Value argv[1] = {client->wrapError(&client->errorInfo)};
+            TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
+        }
+    }
+
+private:
+    Client *client;
+};
+
+class PingAsync : public Napi::AsyncWorker
+{
+public:
+    PingAsync(Napi::Function &callback, Client *client)
+        : Napi::AsyncWorker(callback), client(client) {}
+    ~PingAsync() {}
+
+    void Execute()
+    {
+        RfcPing(client->connectionHandle, &client->errorInfo);
+    }
+
+    void OnOK()
+    {
+        Napi::Value argv[2] = {Env().Undefined(), Napi::Boolean::New(Env(), client->errorInfo.code == RFC_OK)};
+        TRY_CATCH_CALL(Env().Global(), Callback(), 2, argv);
+    }
+
+private:
+    Client *client;
+};
+
+class InvokeAsync : public Napi::AsyncWorker
+{
+public:
+    InvokeAsync(Napi::Function &callback, Client *client, RFC_FUNCTION_HANDLE functionHandle, RFC_FUNCTION_DESC_HANDLE functionDescHandle)
+        : Napi::AsyncWorker(callback), callback(Napi::Persistent(callback)),
+          client(client), functionHandle(functionHandle), functionDescHandle(functionDescHandle)
+    {
+    }
+    ~InvokeAsync() {}
+
+    void Execute()
+    {
+        RfcInvoke(client->connectionHandle, functionHandle, &client->errorInfo);
+
+        client->UnlockMutex();
+    }
+
+    void OnOK()
+    {
+        Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
+
+        if (client->errorInfo.code != RFC_OK)
+        {
+            argv[0] = client->wrapError(&client->errorInfo);
+        }
+        else
+        {
+            client->alive = true;
+            argv[1] = client->wrapResult(functionDescHandle, functionHandle);
+        }
+        RfcDestroyFunction(functionHandle, NULL);
+        TRY_CATCH_CALL(Env().Global(), callback, 2, argv)
+        callback.Reset();
+    }
+
+private:
+    Napi::FunctionReference callback;
+    Client *client;
+    RFC_FUNCTION_HANDLE functionHandle;
+    RFC_FUNCTION_DESC_HANDLE functionDescHandle;
+};
+
+class PrepareAsync : public Napi::AsyncWorker
+{
+public:
+    PrepareAsync(Napi::Function &callback, Client *client,
+                 Napi::String rfmName, Napi::Array &notRequestedParameters, Napi::Object &rfmParams)
+        : Napi::AsyncWorker(callback),
+          callback(Napi::Persistent(callback)), client(client),
+          notRequested(Napi::Persistent(notRequestedParameters)), rfmParams(Napi::Persistent(rfmParams))
+    {
+        funcName = client->fillString(rfmName);
+    }
+    ~PrepareAsync() {}
+
+    void Execute()
+    {
+        functionDescHandle = RfcGetFunctionDesc(client->connectionHandle, funcName, &client->errorInfo);
+        free(funcName);
+    }
+
+    void OnOK()
+    {
+        RFC_FUNCTION_HANDLE functionHandle = NULL;
+        Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
+
+        if (functionDescHandle == NULL || client->errorInfo.code != RFC_OK)
+            argv[0] = client->wrapError(&client->errorInfo);
+
+        if (argv[0].IsUndefined())
+        {
+
+            client->LockMutex();
+
+            functionHandle = RfcCreateFunction(functionDescHandle, &client->errorInfo);
+            RFC_RC rc;
+
+            for (unsigned int i = 0; i < notRequested.Value().Length(); i++)
+            {
+                Napi::String name = notRequested.Value().Get(i).ToString();
+                SAP_UC *paramName = client->fillString(name);
+                rc = RfcSetParameterActive(functionHandle, paramName, 0, &client->errorInfo);
+                free(const_cast<SAP_UC *>(paramName));
+                if (rc != RFC_OK)
+                {
+                    argv[0] = client->wrapError(&client->errorInfo);
+                    break;
+                }
+            }
+        }
+
+        notRequested.Reset();
+
+        if (argv[0].IsUndefined())
+        {
+            Napi::Object params = rfmParams.Value();
+            Napi::Array paramNames = params.GetPropertyNames();
+            unsigned int paramSize = paramNames.Length();
+
+            for (unsigned int i = 0; i < paramSize; i++)
+            {
+                Napi::String name = paramNames.Get(i).ToString();
+                Napi::Value value = params.Get(name);
+                argv[0] = client->fillFunctionParameter(functionDescHandle, functionHandle, name, value);
+
+                if (!argv[0].IsUndefined())
+                {
+                    break;
+                }
+            }
+        }
+
+        rfmParams.Reset();
+
+        if (argv[0].IsUndefined())
+        {
+            Napi::Function callbackFunction = callback.Value();
+            (new InvokeAsync(callbackFunction, client, functionHandle, functionDescHandle))->Queue();
+        }
+        else
+        {
+            client->UnlockMutex();
+            TRY_CATCH_CALL(Env().Global(), callback, 1, argv);
+            callback.Reset();
+        }
+    }
+
+private:
+    Napi::FunctionReference callback;
+    Client *client;
+    SAP_UC *funcName;
+
+    Napi::Reference<Napi::Array> notRequested;
+    Napi::Reference<Napi::Object> rfmParams;
+
+    RFC_FUNCTION_DESC_HANDLE functionDescHandle;
+};
+
+Napi::FunctionReference Client::constructor;
+
+Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
+{
+    char err[256];
+
+    init(info.Env());
+
+    if (!info.IsConstructCall())
+    {
+        Napi::Error::New(info.Env(), "Use the new operator to create instances of Rfc connection.").ThrowAsJavaScriptException();
+    }
+
+    if (info.Length() < 1)
+    {
+        Napi::Error::New(info.Env(), "Please provide connection parameters as argument").ThrowAsJavaScriptException();
+    }
+
+    if (!info[0].IsObject())
+    {
+        Napi::TypeError::New(info.Env(), "Connection parameters must be an object").ThrowAsJavaScriptException();
+    }
+
+    if (info.Length() > 2)
+    {
+        Napi::TypeError::New(info.Env(), "Too many parameters, only connection parameters object and options object expected").ThrowAsJavaScriptException();
+    }
+
+    if (info.Length() == 2)
+    {
+        if (!info[1].IsUndefined() && !info[1].IsObject())
+        {
+            Napi::TypeError::New(info.Env(), "Options must be an object").ThrowAsJavaScriptException();
+        }
+
+        Napi::Object options = info[1].ToObject();
+        Napi::Array props = options.GetPropertyNames();
+        for (unsigned int i = 0; i < props.Length(); i++)
+        {
+            Napi::String key = props.Get(i).ToString();
+            Napi::Value opt = options.Get(key).As<Napi::Value>();
+            if (key.Utf8Value().compare(std::string("rstrip")) == (int)0)
+            {
+                __rstrip = options.Get(key).As<Napi::Boolean>();
+            }
+            else if (key.Utf8Value().compare(std::string("bcd")) == (int)0)
+            {
+                if (opt.IsFunction())
+                {
+                    __bcd = NODERFC_BCD_FUNCTION;
+                    __bcdFunction = Napi::Persistent(opt.As<Napi::Function>());
+                }
+                else if (opt.IsString())
+                {
+                    std::string bcdString = opt.ToString().Utf8Value();
+                    if (bcdString.compare(std::string("number")) == (int)0)
+                    {
+                        __bcd = NODERFC_BCD_NUMBER;
+                    }
+                    else
+                    {
+                        sprintf(err, "Unknown bcd option, only 'number' or function allowed: %s", &bcdString[0]);
+                        Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                    }
+                }
+            }
+            else if (key.Utf8Value().compare(std::string("date")) == (int)0)
+            {
+                if (!opt.IsObject())
+                {
+                    opt = info.Env().Null();
+                }
+                else
+                {
+                    Napi::String fn = Napi::String::New(info.Env(), "toABAP");
+                    Napi::Value toABAP = opt.As<Napi::Object>().Get(fn);
+                    fn = Napi::String::New(info.Env(), "fromABAP");
+                    Napi::Value fromABAP = opt.As<Napi::Object>().Get(fn);
+                    if (!toABAP.IsFunction() || !fromABAP.IsFunction())
+                    {
+                        opt = info.Env().Null();
+                    }
+                    else
+                    {
+                        __dateToABAP = Napi::Persistent(toABAP.As<Napi::Function>());
+                        __dateFromABAP = Napi::Persistent(fromABAP.As<Napi::Function>());
+                    }
+                }
+                if (opt.IsNull())
+                {
+                    sprintf(err, "Date option is not an object with toABAP and fromABAP functions");
+                    Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                }
+            }
+            else if (key.Utf8Value().compare(std::string("time")) == (int)0)
+            {
+                if (!opt.IsObject())
+                {
+                    opt = info.Env().Null();
+                }
+                else
+                {
+                    Napi::String fn = Napi::String::New(info.Env(), "toABAP");
+                    Napi::Value toABAP = opt.As<Napi::Object>().Get(fn);
+                    fn = Napi::String::New(info.Env(), "fromABAP");
+                    Napi::Value fromABAP = opt.As<Napi::Object>().Get(fn);
+                    if (!toABAP.IsFunction() || !fromABAP.IsFunction())
+                    {
+                        opt = info.Env().Null();
+                    }
+                    else
+                    {
+                        __timeToABAP = Napi::Persistent(toABAP.As<Napi::Function>());
+                        __timeFromABAP = Napi::Persistent(fromABAP.As<Napi::Function>());
+                    }
+                }
+                if (opt.IsNull())
+                {
+                    sprintf(err, "Date option is not an object with toABAP and fromABAP functions");
+                    Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                }
+            }
+            else if (key.Utf8Value().compare(std::string("filter")) == (int)0)
+            {
+                __filter_param_direction = (RFC_DIRECTION)options.Get(key).As<Napi::Number>().Int32Value();
+                if (((int)__filter_param_direction < 1) || ((int)__filter_param_direction) > 4)
+                {
+                    sprintf(err, "Invalid key for the filter parameter direction (see RFC_DIRECTION): %u", (int)__filter_param_direction);
+                    Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                }
+            }
+            else
+            {
+                std::string optionName = key.Utf8Value();
+                sprintf(err, "Unknown option: %s", &optionName[0]);
+                Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+            }
+        }
+    }
+
+    this->alive = false;
+    Napi::Object connectionParams = info[0].ToObject();
+    Napi::Array paramNames = connectionParams.GetPropertyNames();
+    this->paramSize = paramNames.Length();
+    this->connectionParams = static_cast<RFC_CONNECTION_PARAMETER *>(malloc(this->paramSize * sizeof(RFC_CONNECTION_PARAMETER)));
+    for (unsigned int i = 0; i < this->paramSize; i++)
+    {
+        Napi::String name = paramNames.Get(i).ToString();
+        Napi::String value = connectionParams.Get(name).ToString();
+        //printf("\n%s: %s\n", &name.Utf8Value()[0], &value.Utf8Value()[0]);
+        this->connectionParams[i].name = fillString(name);
+        this->connectionParams[i].value = fillString(value);
+    }
+
+    this->__refId = ++Client::__refCounter;
+
     uv_sem_init(&this->invocationMutex, 1);
 }
 
-Client::~Client()
+Client::~Client(void)
 {
     RFC_INT isValid;
     RFC_ERROR_INFO errorInfo;
+
+    this->alive = false;
+
     RFC_RC rc = RfcIsConnectionHandleValid(this->connectionHandle, &isValid, &errorInfo);
     if (rc == RFC_OK && isValid)
     {
         rc = RfcCloseConnection(this->connectionHandle, &errorInfo);
         if (rc != RFC_OK)
         {
-            v8::String::Utf8Value utf8Error(wrapError(&errorInfo)->ToString());
-            std::string err = std::string(*utf8Error, utf8Error.length());
-            printf("\n%s", &err[0]);
+            printf("Error closing connection: %d", rc);
         }
     }
-    this->alive = false;
-    uv_sem_destroy(&this->invocationMutex);
+
     for (unsigned int i = 0; i < this->paramSize; i++)
     {
         free(const_cast<SAP_UC *>(connectionParams[i].name));
         free(const_cast<SAP_UC *>(connectionParams[i].value));
     }
     free(connectionParams);
+    uv_sem_destroy(&this->invocationMutex);
+
+    __bcdFunction.Reset();
+    __dateToABAP.Reset();
+    __dateFromABAP.Reset();
+    __timeToABAP.Reset();
+    __timeFromABAP.Reset();
 }
 
-NAN_MODULE_INIT(Client::Init)
+Napi::Object Client::Init(Napi::Env env, Napi::Object exports)
 {
-    // Prepare constructor template
-    Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(New);
-    tpl->SetClassName(Nan::New("Client").ToLocalChecked());
-    tpl->InstanceTemplate()->SetInternalFieldCount(1);
+    Napi::HandleScope scope(env);
 
-    // Prototype
-    Nan::SetPrototypeMethod(tpl, "connect", Connect);
-    Nan::SetPrototypeMethod(tpl, "close", Close);
-    Nan::SetPrototypeMethod(tpl, "reopen", Reopen);
-    Nan::SetPrototypeMethod(tpl, "isAlive", IsAlive);
-    Nan::SetPrototypeMethod(tpl, "invoke", Invoke);
-    Nan::SetPrototypeMethod(tpl, "getVersion", GetVersion);
-    Nan::SetPrototypeMethod(tpl, "connectionInfo", ConnectionInfo);
-    Nan::SetPrototypeMethod(tpl, "ping", Ping);
+    Napi::Function t = DefineClass(env,
+                                   "Client", {
+                                                 InstanceAccessor("version", &Client::VersionGetter, nullptr),
+                                                 InstanceAccessor("options", &Client::OptionsGetter, nullptr),
+                                                 InstanceAccessor("id", &Client::IdGetter, nullptr),
+                                                 InstanceMethod("connectionInfo", &Client::ConnectionInfo),
+                                                 InstanceMethod("connect", &Client::Connect),
+                                                 InstanceMethod("invoke", &Client::Invoke),
+                                                 InstanceMethod("ping", &Client::Ping),
+                                                 InstanceMethod("close", &Client::Close),
+                                                 InstanceMethod("reopen", &Client::Reopen),
+                                                 InstanceMethod("isAlive", &Client::IsAlive),
+                                             });
 
-    constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
-    Nan::Set(target, Nan::New("Client").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
+    constructor = Napi::Persistent(t);
+    constructor.SuppressDestruct();
+
+    exports.Set("Client", t);
+    return exports;
 }
 
-NAN_METHOD(Client::New)
+Napi::Value Client::Connect(const Napi::CallbackInfo &info)
 {
-    if (!info.IsConstructCall())
+    if (info[0].IsUndefined())
     {
-        Local<Value> e = Nan::TypeError("Use the new operator to create instances of Rfc connection.");
-        Nan::ThrowError(e);
-        info.GetReturnValue().Set(e);
-        return;
+        Napi::TypeError::New(info.Env(), "First argument must be callback function").ThrowAsJavaScriptException();
+    }
+    if (!info[0].IsFunction())
+    {
+        Napi::TypeError::New(info.Env(), "First argument must be callback function").ThrowAsJavaScriptException();
     }
 
-    if (info.Length() < 1)
-    {
-        Local<Value> e = Nan::Error("Please provide connection parameters as argument");
-        Nan::ThrowError(e);
-        return info.GetReturnValue().Set(e);
-    }
+    Napi::Function callback = info[0].As<Napi::Function>();
 
-    if (!info[0]->IsObject())
-    {
-        Local<Value> e = Nan::TypeError("Connection parameters must be an object");
-        Nan::ThrowError(e);
-        info.GetReturnValue().Set(e);
-        return;
-    }
+    (new ConnectAsync(callback, this))->Queue();
 
-    Client *wrapper = new Client();
-    wrapper->Wrap(info.This());
+    return info.Env().Undefined();
+}
 
-    if (info.Length() > 1)
+Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
+{
+    Napi::Array notRequested = Napi::Array::New(info.Env());
+    Napi::Value bcd;
+
+    Napi::Function callback = info[2].As<Napi::Function>();
+
+    if (info[3].IsObject())
     {
-        if (!info[1]->IsBoolean())
+        Napi::Object options = info[3].ToObject();
+        Napi::Array props = options.GetPropertyNames();
+        for (unsigned int i = 0; i < props.Length(); i++)
         {
-            Local<Value> e = Nan::TypeError("Third parameter for 'rstrip' must be true or false");
-            Nan::ThrowError(e);
-            info.GetReturnValue().Set(e);
-            return;
+            Napi::String key = props.Get(i).ToString();
+            if (key.Utf8Value().compare(std::string("notRequested")) == (int)0)
+            {
+                notRequested = options.Get(key).As<Napi::Array>();
+            }
+            else
+            {
+                char err[256];
+                std::string optionName = key.Utf8Value();
+                sprintf(err, "Unknown option: %s", &optionName[0]);
+                Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+            }
         }
-
-        wrapper->rstrip = info[1]->BooleanValue();
-    }
-    else
-    {
-        wrapper->rstrip = true;
     }
 
-    Local<Object> connectionParams = info[0]->ToObject();
-    Local<Array> paramNames = connectionParams->GetPropertyNames();
-    wrapper->paramSize = paramNames->Length();
-    wrapper->connectionParams = static_cast<RFC_CONNECTION_PARAMETER *>(malloc(wrapper->paramSize * sizeof(RFC_CONNECTION_PARAMETER)));
+    Napi::String rfmName = info[0].As<Napi::String>();
+    Napi::Object rfmParams = info[1].As<Napi::Object>();
 
-    for (unsigned int i = 0; i < wrapper->paramSize; i++)
-    {
-        Local<Value> name = paramNames->Get(i);
-        Local<Value> value = connectionParams->Get(name->ToString());
+    (new PrepareAsync(callback, this, rfmName, notRequested, rfmParams))->Queue();
 
-        wrapper->connectionParams[i].name = fillString(name);
-        wrapper->connectionParams[i].value = fillString(value);
-    }
-
-    info.GetReturnValue().Set(info.This());
+    return info.Env().Undefined();
 }
 
 void Client::LockMutex(void)
@@ -147,336 +566,179 @@ void Client::UnlockMutex(void)
     uv_sem_post(&this->invocationMutex);
 }
 
-void Client::ConnectAsync(uv_work_t *req)
+Napi::Value Client::Close(const Napi::CallbackInfo &info)
 {
-    ClientBaton *baton = static_cast<ClientBaton *>(req->data);
+    if (info[0].IsUndefined())
+    {
+        Napi::TypeError::New(info.Env(), "First argument must be callback function").ThrowAsJavaScriptException();
+    }
+    if (!info[0].IsFunction())
+    {
+        Napi::TypeError::New(info.Env(), "Callback function argument missing").ThrowAsJavaScriptException();
+    }
+    Napi::Function callback = info[0].As<Napi::Function>();
 
-    baton->wrapper->connectionHandle = RfcOpenConnection(baton->wrapper->connectionParams, baton->wrapper->paramSize, &baton->errorInfo);
+    (new CloseAsync(callback, this))->Queue();
+
+    return info.Env().Undefined();
 }
 
-void Client::ConnectAsyncAfter(uv_work_t *req, int status)
+Napi::Value Client::Ping(const Napi::CallbackInfo &info)
 {
-    Nan::HandleScope scope;
 
-    ClientBaton *baton = static_cast<ClientBaton *>(req->data);
-
-    if (baton->errorInfo.code != RFC_OK)
+    if (info[0].IsUndefined())
     {
-        Local<Value> argv[] = {wrapError(&baton->errorInfo)};
-
-        Nan::TryCatch try_catch;
-        Local<Function> callback = Nan::New<Function>(baton->callback);
-        Nan::Call(callback, Nan::New<Object>(), 1, argv);
-
-        if (try_catch.HasCaught())
-        {
-            Nan::FatalException(try_catch);
-        }
+        Napi::TypeError::New(info.Env(), "First argument must be callback function").ThrowAsJavaScriptException();
     }
-    else
+    if (!info[0].IsFunction())
     {
-        baton->wrapper->alive = true;
-        Local<Function> callback = Nan::New<Function>(baton->callback);
-        Nan::Call(callback, Nan::New<Object>(), 0, NULL);
+        Napi::TypeError::New(info.Env(), "Callback function argument missing").ThrowAsJavaScriptException();
     }
+    Napi::Function callback = info[0].As<Napi::Function>();
 
-    baton->callback.Reset();
-    delete baton;
+    (new PingAsync(callback, this))->Queue();
+
+    return info.Env().Undefined();
 }
 
-NAN_METHOD(Client::Connect)
+Napi::Value Client::Reopen(const Napi::CallbackInfo &info)
 {
-    if (!info[0]->IsFunction())
+    if (info[0].IsUndefined())
     {
-        Local<Value> e = Nan::TypeError("First Argument must be callback function");
-        Nan::ThrowError(e);
-        info.GetReturnValue().Set(e);
-        return;
+        Napi::TypeError::New(info.Env(), "First argument must be callback function").ThrowAsJavaScriptException();
     }
+    if (!info[0].IsFunction())
+    {
+        Napi::TypeError::New(info.Env(), "Callback function argument missing").ThrowAsJavaScriptException();
+    }
+    Napi::Function callback = info[0].As<Napi::Function>();
 
-    Client *wrapper = Unwrap<Client>(info.This());
+    (new ReopenAsync(callback, this))->Queue();
 
-    ClientBaton *baton = new ClientBaton();
-    baton->request.data = baton;
-    baton->wrapper = wrapper;
-
-    Local<Function> callback = info[0].As<Function>();
-    baton->callback.Reset(callback);
-
-    uv_queue_work(uv_default_loop(), &baton->request, ConnectAsync, (uv_after_work_cb)ConnectAsyncAfter);
-
-    info.GetReturnValue().SetUndefined();
+    return info.Env().Undefined();
 }
 
-NAN_METHOD(Client::Close)
+Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
 {
-    Client *wrapper = Unwrap<Client>(info.This());
-    RFC_INT isValid;
-    RFC_ERROR_INFO errorInfo;
-    RFC_RC rc = RfcIsConnectionHandleValid(wrapper->connectionHandle, &isValid, &errorInfo);
-
-    wrapper->alive = false;
-
-    if (rc == RFC_OK && isValid)
-    {
-        rc = RfcCloseConnection(wrapper->connectionHandle, &errorInfo);
-        if (rc != RFC_OK)
-        {
-            info.GetReturnValue().Set(wrapError(&errorInfo));
-        }
-        else
-        {
-            info.GetReturnValue().SetUndefined();
-        }
-    }
-}
-
-NAN_METHOD(Client::Reopen)
-{
-    Client *wrapper = Unwrap<Client>(info.This());
-
-    wrapper->Close(info);
-    wrapper->Connect(info);
-}
-
-NAN_METHOD(Client::IsAlive)
-{
-    Client *wrapper = Unwrap<Client>(info.This());
-    info.GetReturnValue().Set(Nan::New(wrapper->alive));
-}
-
-void Client::InvokeAsync(uv_work_t *req)
-{
-    InvokeBaton *baton = static_cast<InvokeBaton *>(req->data);
-
-    RfcInvoke(baton->wrapper->connectionHandle, baton->functionHandle, &baton->errorInfo);
-    baton->wrapper->UnlockMutex();
-}
-
-void Client::InvokeAsyncAfter(uv_work_t *req, int status)
-{
-    Nan::HandleScope scope;
-
-    InvokeBaton *baton = static_cast<InvokeBaton *>(req->data);
-
-    Local<Value> argv[] = {Nan::Null(), Nan::Null()};
-
-    if (baton->errorInfo.code != RFC_OK)
-    {
-        argv[0] = wrapError(&baton->errorInfo);
-        RfcDestroyFunction(baton->functionHandle, NULL);
-
-        Nan::TryCatch try_catch;
-
-        Local<Function> callback = Nan::New<Function>(baton->callback);
-        Nan::Call(callback, Nan::New<Object>(), 1, argv);
-
-        if (try_catch.HasCaught())
-        {
-            Nan::FatalException(try_catch);
-        }
-    }
-    else
-    {
-        argv[1] = wrapResult(baton->functionDescHandle, baton->functionHandle, baton->wrapper->rstrip);
-        RfcDestroyFunction(baton->functionHandle, NULL);
-
-        Nan::TryCatch try_catch;
-
-        Local<Function> callback = Nan::New<Function>(baton->callback);
-        Nan::Call(callback, Nan::New<Object>(), 2, argv);
-
-        if (try_catch.HasCaught())
-        {
-            Nan::FatalException(try_catch);
-        }
-    }
-
-    baton->callback.Reset();
-    delete baton;
-}
-
-NAN_METHOD(Client::Invoke)
-{
-    RFC_RC rc;
-    Local<Array> notRequested = Nan::New<Array>();
-
-    if (info.Length() < 3)
-    {
-        Local<Value> e = Nan::Error("Please provide function module, parameters and callback as arguments");
-        Nan::ThrowError(e);
-        return info.GetReturnValue().Set(e);
-    }
-    if (!info[0]->IsString())
-    {
-        Local<Value> e = Nan::TypeError("First argument (rfc function name) must be an string");
-        Nan::ThrowError(e);
-        return info.GetReturnValue().Set(e);
-    }
-    if (!info[1]->IsObject())
-    {
-        Local<Value> e = Nan::TypeError("Second argument (rfc function arguments) must be an object");
-        Nan::ThrowError(e);
-        return info.GetReturnValue().Set(e);
-    }
-    if (!info[2]->IsFunction())
-    {
-        Local<Value> e = Nan::TypeError("Third argument must be callback function");
-        Nan::ThrowError(e);
-        return info.GetReturnValue().Set(e);
-    }
-    if (info.Length() == 4)
-    {
-        if (!info[3]->IsObject())
-        {
-            Local<Value> e = Nan::TypeError("Fourth argument is optional object");
-            Nan::ThrowError(e);
-            return info.GetReturnValue().Set(e);
-        }
-        v8::Local<v8::Object> obj = info[3]->ToObject();
-        v8::Local<v8::Array> props = obj->GetPropertyNames();
-        for (unsigned int i = 0; i < props->Length(); i++)
-        {
-            Local<Value> key = props->Get(i)->ToString();
-            notRequested = obj->Get(key->ToString()).As<Array>();
-        }
-    }
-
-    Client *wrapper = Unwrap<Client>(info.This());
-
-    InvokeBaton *baton = new InvokeBaton();
-    baton->request.data = baton;
-    baton->wrapper = wrapper;
-    Local<Function> callback = info[2].As<Function>();
-    baton->callback.Reset(callback);
-
-    Handle<Value> argv[2] = {Nan::Null(), Nan::Null()};
-    SAP_UC *funcName = fillString(info[0]);
-
-    baton->wrapper->LockMutex();
-    baton->functionDescHandle = RfcGetFunctionDesc(wrapper->connectionHandle, funcName, &baton->errorInfo);
-    free(funcName);
-    if (baton->functionDescHandle == NULL)
-    {
-        // ABAP function module not found
-        argv[0] = wrapError(&baton->errorInfo);
-        Nan::Call(callback, Nan::New<Object>(), 1, argv);
-        delete baton;
-        info.GetReturnValue().SetUndefined();
-    }
-    else
-    {
-
-        baton->functionHandle = RfcCreateFunction(baton->functionDescHandle, &baton->errorInfo);
-
-        if (notRequested->Length() != 0)
-        {
-            for (unsigned int i = 0; i < notRequested->Length(); i++)
-            {
-                Local<String> name = notRequested->Get(i)->ToString();
-                SAP_UC *paramName = fillString(name);
-                rc = RfcSetParameterActive(baton->functionHandle, paramName, 0, &baton->errorInfo);
-                free(const_cast<SAP_UC *>(paramName));
-                if (rc != RFC_OK)
-                {
-                    return info.GetReturnValue().Set(wrapError(&baton->errorInfo));
-                }
-            }
-        }
-
-        Local<Object> params = info[1]->ToObject();
-        Local<Array> paramNames = params->GetPropertyNames();
-        unsigned int paramSize = paramNames->Length();
-
-        for (unsigned int i = 0; i < paramSize; i++)
-        {
-            Local<Value> name = paramNames->Get(i);
-            Local<Value> value = params->Get(name->ToString());
-            argv[0] = fillFunctionParameter(baton->functionDescHandle, baton->functionHandle, name, value);
-            if (!argv[0]->IsNull())
-            {
-                // Invalid parameter name, skip RFC invoke
-                Local<Function> callback = Nan::New<Function>(baton->callback);
-                Nan::Call(callback, Nan::New<Object>(), 1, argv);
-                delete baton;
-                return info.GetReturnValue().SetUndefined();
-            }
-        }
-
-        uv_queue_work(uv_default_loop(), &baton->request, InvokeAsync, (uv_after_work_cb)InvokeAsyncAfter);
-
-        info.GetReturnValue().SetUndefined();
-    }
-}
-
-NAN_METHOD(Client::Ping)
-{
-    Client *wrapper = Unwrap<Client>(info.This());
-
-    RFC_RC rc;
-    RFC_ERROR_INFO errorInfo;
-    rc = RfcPing(wrapper->connectionHandle, &errorInfo);
-    if (rc != RFC_OK)
-    {
-        info.GetReturnValue().Set(Nan::False());
-    }
-    else
-    {
-        info.GetReturnValue().Set(Nan::True());
-    }
-}
-
-NAN_METHOD(Client::ConnectionInfo)
-{
-    Client *wrapper = Unwrap<Client>(info.This());
-    Local<Object> infoObj = Nan::New<Object>();
-
     RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
     RFC_ATTRIBUTES connInfo;
+    RFC_INT isValid;
 
-    rc = RfcGetConnectionAttributes(wrapper->connectionHandle, &connInfo, &errorInfo);
+    Client *client = this;
+    Napi::Env env = info.Env();
+    Napi::Object infoObj = Napi::Object::New(env);
 
-    if (rc != RFC_OK)
+    rc = RfcIsConnectionHandleValid(this->connectionHandle, &isValid, &errorInfo);
+    if (rc == RFC_OK && isValid)
     {
-        return info.GetReturnValue().Set(wrapError(&errorInfo));
+        rc = RfcGetConnectionAttributes(client->connectionHandle, &connInfo, &errorInfo);
+
+        if (rc != RFC_OK)
+        {
+            return wrapError(&errorInfo);
+        }
+
+        infoObj.Set(Napi::String::New(env, "host"), wrapString(connInfo.host, 100));
+        infoObj.Set(Napi::String::New(env, "partnerHost"), wrapString(connInfo.partnerHost, 100));
+        infoObj.Set(Napi::String::New(env, "sysNumber"), wrapString(connInfo.sysNumber, 2));
+        infoObj.Set(Napi::String::New(env, "sysId"), wrapString(connInfo.sysId, 8));
+        infoObj.Set(Napi::String::New(env, "client"), wrapString(connInfo.client, 3));
+        infoObj.Set(Napi::String::New(env, "user"), wrapString(connInfo.user, 8));
+        infoObj.Set(Napi::String::New(env, "language"), wrapString(connInfo.language, 2));
+        infoObj.Set(Napi::String::New(env, "trace"), wrapString(connInfo.trace, 1));
+        infoObj.Set(Napi::String::New(env, "isoLanguage"), wrapString(connInfo.isoLanguage, 2));
+        infoObj.Set(Napi::String::New(env, "codepage"), wrapString(connInfo.codepage, 4));
+        infoObj.Set(Napi::String::New(env, "partnerCodepage"), wrapString(connInfo.partnerCodepage, 4));
+        infoObj.Set(Napi::String::New(env, "rfcRole"), wrapString(connInfo.rfcRole, 1));
+        infoObj.Set(Napi::String::New(env, "type"), wrapString(connInfo.type, 1));
+        infoObj.Set(Napi::String::New(env, "partnerType"), wrapString(connInfo.partnerType, 1));
+        infoObj.Set(Napi::String::New(env, "rel"), wrapString(connInfo.rel, 4));
+        infoObj.Set(Napi::String::New(env, "partnerRel"), wrapString(connInfo.partnerRel, 4));
+        infoObj.Set(Napi::String::New(env, "kernelRel"), wrapString(connInfo.kernelRel, 4));
+        infoObj.Set(Napi::String::New(env, "cpicConvId"), wrapString(connInfo.cpicConvId, 8));
+        infoObj.Set(Napi::String::New(env, "progName"), wrapString(connInfo.progName, 128));
+        infoObj.Set(Napi::String::New(env, "partnerBytesPerChar"), wrapString(connInfo.partnerBytesPerChar, 1));
+        // infoObj.Set(Napi::String::New(env, "reserved"), wrapString(connInfo.reserved, 84));
     }
 
-    Nan::Set(infoObj, Nan::New("dest").ToLocalChecked(), wrapString(connInfo.dest, 64));
-    Nan::Set(infoObj, Nan::New("host").ToLocalChecked(), wrapString(connInfo.host, 100));
-    Nan::Set(infoObj, Nan::New("partnerHost").ToLocalChecked(), wrapString(connInfo.partnerHost, 100));
-    Nan::Set(infoObj, Nan::New("sysNumber").ToLocalChecked(), wrapString(connInfo.sysNumber, 2));
-    Nan::Set(infoObj, Nan::New("sysId").ToLocalChecked(), wrapString(connInfo.sysId, 8));
-    Nan::Set(infoObj, Nan::New("client").ToLocalChecked(), wrapString(connInfo.client, 3));
-    Nan::Set(infoObj, Nan::New("user").ToLocalChecked(), wrapString(connInfo.user, 8, true));
-    Nan::Set(infoObj, Nan::New("language").ToLocalChecked(), wrapString(connInfo.language, 2));
-    Nan::Set(infoObj, Nan::New("trace").ToLocalChecked(), wrapString(connInfo.trace, 1));
-    Nan::Set(infoObj, Nan::New("isoLanguage").ToLocalChecked(), wrapString(connInfo.isoLanguage, 2));
-    Nan::Set(infoObj, Nan::New("codepage").ToLocalChecked(), wrapString(connInfo.codepage, 4));
-    Nan::Set(infoObj, Nan::New("partnerCodepage").ToLocalChecked(), wrapString(connInfo.partnerCodepage, 4));
-    Nan::Set(infoObj, Nan::New("rfcRole").ToLocalChecked(), wrapString(connInfo.rfcRole, 1));
-    Nan::Set(infoObj, Nan::New("type").ToLocalChecked(), wrapString(connInfo.type, 1));
-    Nan::Set(infoObj, Nan::New("partnerType").ToLocalChecked(), wrapString(connInfo.partnerType, 1));
-    Nan::Set(infoObj, Nan::New("rel").ToLocalChecked(), wrapString(connInfo.rel, 4, True));
-    Nan::Set(infoObj, Nan::New("partnerRel").ToLocalChecked(), wrapString(connInfo.partnerRel, 4, true));
-    Nan::Set(infoObj, Nan::New("kernelRel").ToLocalChecked(), wrapString(connInfo.kernelRel, 4, true));
-    Nan::Set(infoObj, Nan::New("cpicConvId").ToLocalChecked(), wrapString(connInfo.cpicConvId, 8));
-    Nan::Set(infoObj, Nan::New("progName").ToLocalChecked(), wrapString(connInfo.progName, 128, true));
-    Nan::Set(infoObj, Nan::New("partnerBytesPerChar").ToLocalChecked(), wrapString(connInfo.partnerBytesPerChar, 1));
-    Nan::Set(infoObj, Nan::New("reserved").ToLocalChecked(), wrapString(connInfo.reserved, 84));
-
-    info.GetReturnValue().Set(infoObj);
+    return infoObj;
 }
 
-NAN_METHOD(Client::GetVersion)
+Napi::Value Client::IsAlive(const Napi::CallbackInfo &info)
 {
-    Isolate *isolate = Isolate::GetCurrent();
+    return Napi::Boolean::New(info.Env(), this->alive);
+}
+
+Napi::Value Client::IdGetter(const Napi::CallbackInfo &info)
+{
+    return Napi::Number::New(info.Env(), this->__refId);
+}
+
+Napi::Value Client::VersionGetter(const Napi::CallbackInfo &info)
+{
     unsigned major, minor, patchLevel;
 
     RfcGetVersion(&major, &minor, &patchLevel);
-    Local<Object> version = Object::New(isolate);
-    version->Set(String::NewFromUtf8(isolate, "major"), Integer::New(isolate, major));
-    version->Set(String::NewFromUtf8(isolate, "minor"), Integer::New(isolate, minor));
-    version->Set(String::NewFromUtf8(isolate, "patchLevel"), Uint32::New(isolate, patchLevel));
-    info.GetReturnValue().Set(version);
+
+    Napi::Object version = Napi::Object::New(__env);
+    version.Set(Napi::String::New(__env, "major"), major);
+    version.Set(Napi::String::New(__env, "minor"), minor);
+    version.Set(Napi::String::New(__env, "patchLevel"), patchLevel);
+    version.Set(Napi::String::New(__env, "binding"), Napi::String::New(__env, SAPNWRFC_BINDING_VERSION));
+    return version;
 }
+
+Napi::Value Client::OptionsGetter(const Napi::CallbackInfo &info)
+{
+    Napi::Object options = Napi::Object::New(__env);
+    options.Set(Napi::String::New(__env, "rstrip"), Napi::Boolean::New(__env, __rstrip));
+    if (__bcd == NODERFC_BCD_STRING)
+    {
+        options.Set(Napi::String::New(__env, "bcd"), Napi::String::New(__env, "string"));
+    }
+    else if (__bcd == NODERFC_BCD_NUMBER)
+    {
+        options.Set(Napi::String::New(__env, "bcd"), Napi::String::New(__env, "number"));
+    }
+    else if (__bcd == NODERFC_BCD_FUNCTION)
+    {
+        options.Set(Napi::String::New(__env, "bcd"), __bcdFunction.Value());
+    }
+    else
+    {
+        options.Set(Napi::String::New(__env, "bcd"), Napi::String::New(__env, "?"));
+    }
+
+    Napi::Object date = Napi::Object::New(__env);
+    if (!__dateToABAP.IsEmpty())
+    {
+        date.Set(Napi::String::New(__env, "toABAP"), __dateToABAP.Value());
+    }
+    if (!__dateFromABAP.IsEmpty())
+    {
+        date.Set(Napi::String::New(__env, "fromABAP"), __dateFromABAP.Value());
+    }
+    if (date.GetPropertyNames().Length() > 0)
+    {
+        options.Set(Napi::String::New(__env, "date"), date);
+    }
+
+    Napi::Object time = Napi::Object::New(__env);
+    if (!__timeToABAP.IsEmpty())
+    {
+        time.Set(Napi::String::New(__env, "toABAP"), __timeToABAP.Value());
+    }
+    if (!__timeFromABAP.IsEmpty())
+    {
+        time.Set(Napi::String::New(__env, "fromABAP"), __timeFromABAP.Value());
+    }
+    if (time.GetPropertyNames().Length() > 0)
+    {
+        options.Set(Napi::String::New(__env, "time"), time);
+    }
+
+    return options;
+}
+
+} // namespace node_rfc

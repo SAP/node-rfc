@@ -1,282 +1,63 @@
-// Copyright 2014 SAP AG.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http: //www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-// either express or implied. See the License for the specific
-// language governing permissions and limitations under the License.
+#include "client.h"
 
-#include "rfcio.h"
-#include "error.h"
-
-using namespace v8;
+////////////////////////////////////////////////////////////////////////////////
+// RFC ERRORS
+////////////////////////////////////////////////////////////////////////////////
+namespace node_rfc
+{
 
 ////////////////////////////////////////////////////////////////////////////////
 // FILL FUNCTIONS (to RFC)
 ////////////////////////////////////////////////////////////////////////////////
 
-SAP_UC *fillString(const Handle<Value> &valuestr)
+SAP_UC *Client::fillString(const Napi::String napistr)
 {
     RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
     SAP_UC *sapuc;
     unsigned int sapucSize, resultLen = 0;
 
-    v8::String::Utf8Value utf8String(valuestr);
-    std::string str = std::string(*utf8String, utf8String.length());
-    char *cStr = &str[0];
+    //std::string str = std::string(napistr);
+    std::string str = napistr.Utf8Value();
+    sapucSize = str.length() + 1;
 
-    sapucSize = strlen(cStr) + 1;
+    // printf("%s: %u\n", &str[0], sapucSize);
+
     sapuc = mallocU(sapucSize);
     memsetU(sapuc, 0, sapucSize);
-    rc = RfcUTF8ToSAPUC((RFC_BYTE *)cStr, strlen(cStr), sapuc, &sapucSize, &resultLen, &errorInfo);
+    rc = RfcUTF8ToSAPUC((RFC_BYTE *)&str[0], str.length(), sapuc, &sapucSize, &resultLen, &errorInfo);
 
     if (rc != RFC_OK)
-    {
-        printf("Unhandled Error"); // FIXME: error handling
-    }
+        Napi::Error::Fatal("fillString", "node-rfc internal error");
 
     return sapuc;
 }
 
-Local<Value> fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Handle<Value> value, RFC_TYPE_DESC_HANDLE functionDescHandle)
+SAP_UC *Client::fillString(std::string str)
 {
-    Isolate *isolate = Isolate::GetCurrent();
-    EscapableHandleScope scope(isolate);
-    RFC_RC rc = RFC_OK;
+    RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
-    RFC_STRUCTURE_HANDLE structHandle;
-    RFC_TABLE_HANDLE tableHandle;
-    SAP_UC *cValue;
+    SAP_UC *sapuc;
+    unsigned int sapucSize, resultLen = 0;
 
-    switch (typ)
-    {
-    case RFCTYPE_STRUCTURE:
-    {
-        rc = RfcGetStructure(functionHandle, cName, &structHandle, &errorInfo);
-        if (rc != RFC_OK)
-        {
-            break;
-        }
-        Local<Object> structObj = value->ToObject();
-        Local<Array> structNames = structObj->GetPropertyNames();
-        unsigned int structSize = structNames->Length();
+    sapucSize = str.length() + 1;
 
-        RFC_FIELD_DESC fieldDesc;
-        for (unsigned int i = 0; i < structSize; i++)
-        {
-            Local<Value> name = structNames->Get(i);
-            Local<Value> value = structObj->Get(name->ToString());
+    // printf("%s: %u\n", &str[0], sapucSize);
 
-            cValue = fillString(name); // cValue = cName
-            rc = RfcGetFieldDescByName(functionDescHandle, cValue, &fieldDesc, &errorInfo);
-            free(cValue);
-            if (rc != RFC_OK)
-            {
-                return scope.Escape(wrapError(&errorInfo));
-            }
-            Local<Value> fillError = fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
-            if (fillError != Nan::Null())
-            {
-                return scope.Escape(fillError);
-            }
-        }
-        break;
-    }
-    case RFCTYPE_TABLE:
-    {
-        rc = RfcGetTable(functionHandle, cName, &tableHandle, &errorInfo);
+    sapuc = mallocU(sapucSize);
+    memsetU(sapuc, 0, sapucSize);
+    rc = RfcUTF8ToSAPUC((RFC_BYTE *)&str[0], str.length(), sapuc, &sapucSize, &resultLen, &errorInfo);
 
-        if (rc != RFC_OK)
-        {
-            break;
-        }
-        Local<Array> array = value.As<Array>();
-        unsigned int rowCount = array->Length();
-
-        for (unsigned int i = 0; i < rowCount; i++)
-        {
-            structHandle = RfcAppendNewRow(tableHandle, &errorInfo);
-            if (structHandle == NULL)
-            {
-                rc = RFC_INVALID_HANDLE;
-                break;
-            }
-
-            // FIXME: DRY from RFCTYPE_STRUCTURE!
-            Local<Object> structObj = Nan::CloneElementAt(array, i).ToLocalChecked();
-            Local<Array> structNames = structObj->GetPropertyNames();
-            unsigned int structSize = structNames->Length();
-
-            RFC_FIELD_DESC fieldDesc;
-            for (unsigned int i = 0; i < structSize; i++)
-            {
-                Local<Value> name = structNames->Get(i);
-                Local<Value> value = structObj->Get(name->ToString());
-
-                cValue = fillString(name); // cValue = cName
-                rc = RfcGetFieldDescByName(functionDescHandle, cValue, &fieldDesc, &errorInfo);
-                free(cValue);
-                if (rc != RFC_OK)
-                {
-                    return scope.Escape(wrapError(&errorInfo));
-                }
-                Local<Value> fillError = fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
-                if (fillError != Nan::Null())
-                {
-                    return scope.Escape(fillError);
-                }
-            }
-            // FIXME: END DRY
-        }
-        break;
-    }
-    case RFCTYPE_CHAR:
-        if (!value->IsString())
-        {
-            char cBuf[256];
-            String::Utf8Value s(wrapString(cName));
-            std::string fieldName(*s);
-            sprintf(cBuf, "Char expected when filling field %s of type %d", &fieldName[0], typ);
-            Handle<Value> e = Nan::Error(cBuf);
-            return scope.Escape(e->ToObject());
-        }
-        cValue = fillString(value);
-        rc = RfcSetChars(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
-        free(cValue);
-        break;
-    case RFCTYPE_BYTE:
-    {
-        v8::String::Utf8Value asciiValue(value->ToString());
-        unsigned int size = asciiValue.length();
-        SAP_RAW *byteValue = (SAP_RAW *)malloc(size);
-        memcpy(byteValue, reinterpret_cast<SAP_RAW *>(*asciiValue), size);
-        rc = RfcSetBytes(functionHandle, cName, byteValue, sizeof(byteValue), &errorInfo);
-        free(byteValue);
-        break;
-    }
-    case RFCTYPE_XSTRING:
-    {
-        v8::String::Utf8Value asciiValue(value->ToString());
-        unsigned int size = asciiValue.length();
-        SAP_RAW *byteValue = (SAP_RAW *)malloc(size);
-        memcpy(byteValue, reinterpret_cast<SAP_RAW *>(*asciiValue), size);
-        rc = RfcSetXString(functionHandle, cName, byteValue, sizeof(byteValue), &errorInfo);
-        free(byteValue);
-        break;
-    }
-    case RFCTYPE_STRING:
-        if (!value->IsString())
-        {
-            char cBuf[256];
-            String::Utf8Value s(wrapString(cName));
-            std::string fieldName(*s);
-            sprintf(cBuf, "Char expected when filling field %s of type %d", &fieldName[0], typ);
-            Handle<Value> e = Nan::Error(cBuf);
-            return scope.Escape(e->ToObject());
-        }
-        cValue = fillString(value);
-        rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
-        free(cValue);
-        break;
-    case RFCTYPE_NUM:
-        if (!value->IsString())
-        {
-            char cBuf[256];
-            String::Utf8Value s(wrapString(cName));
-            std::string fieldName(*s);
-            sprintf(cBuf, "Char expected when filling field %s of type %d", &fieldName[0], typ);
-            Handle<Value> e = Nan::Error(cBuf);
-            return scope.Escape(e->ToObject());
-        }
-        cValue = fillString(value);
-        rc = RfcSetNum(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
-        free(cValue);
-        break;
-    case RFCTYPE_BCD: // fallthrough
-    case RFCTYPE_FLOAT:
-        if (!value->IsNumber() && !value->IsObject() && !value->IsString())
-        {
-            char cBuf[256];
-            String::Utf8Value s(wrapString(cName));
-            std::string fieldName(*s);
-            sprintf(cBuf, "Number, number object or string expected when filling field %s of type %d", &fieldName[0], typ);
-            Handle<Value> e = Nan::Error(cBuf);
-            return scope.Escape(e->ToObject());
-        }
-        cValue = fillString(value->ToString());
-        rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
-        //rc = RfcSetFloat(functionHandle, cName, value.As<Number>()->Value(), &errorInfo);
-        break;
-    case RFCTYPE_INT:
-    case RFCTYPE_INT1:
-    case RFCTYPE_INT2:
-        if (!value->IsInt32())
-        {
-            char cBuf[256];
-            String::Utf8Value s(wrapString(cName));
-            std::string fieldName(*s);
-            sprintf(cBuf, "Number expected when filling field %s of type %d", &fieldName[0], typ);
-            Handle<Value> e = Nan::Error(cBuf);
-            return scope.Escape(e->ToObject());
-        }
-        rc = RfcSetInt(functionHandle, cName, value.As<Integer>()->Value(), &errorInfo);
-        break;
-    case RFCTYPE_DATE:
-        if (!value->IsString())
-        {
-            char cBuf[256];
-            String::Utf8Value s(wrapString(cName));
-            std::string fieldName(*s);
-            sprintf(cBuf, "Char expected when filling field %s of type %d", &fieldName[0], typ);
-            Handle<Value> e = Nan::Error(cBuf);
-            return scope.Escape(e->ToObject());
-        }
-        //cValue = fillString(value.strftime('%Y%m%d'));
-        cValue = fillString(value);
-        rc = RfcSetDate(functionHandle, cName, cValue, &errorInfo);
-        free(cValue);
-        break;
-    case RFCTYPE_TIME:
-        if (!value->IsString())
-        {
-            char cBuf[256];
-            String::Utf8Value s(wrapString(cName));
-            std::string fieldName(*s);
-            sprintf(cBuf, "Char expected when filling field %s of type %d", &fieldName[0], typ);
-            Handle<Value> e = Nan::Error(cBuf);
-            return scope.Escape(e->ToObject());
-        }
-        //cValue = fillString(value.strftime('%H%M%S'))
-        cValue = fillString(value);
-        rc = RfcSetTime(functionHandle, cName, cValue, &errorInfo);
-        free(cValue);
-        break;
-    default:
-        char cBuf[256];
-        String::Utf8Value s(wrapString(cName));
-        std::string fieldName(*s);
-        sprintf(cBuf, "Unknown RFC type %d when filling %s", typ, &fieldName[0]);
-        Handle<Value> e = Nan::Error(cBuf);
-        return scope.Escape(e->ToObject());
-        break;
-    }
     if (rc != RFC_OK)
-    {
-        return scope.Escape(wrapError(&errorInfo));
-    }
-    return Nan::Null();
+        Napi::Error::Fatal("fillString", "node-rfc internal error");
+
+    return sapuc;
 }
 
-Handle<Value> fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, Local<Value> name, Local<Value> value)
+Napi::Value Client::fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, Napi::String name, Napi::Value value)
 {
-    Nan::EscapableHandleScope scope;
+    Napi::EscapableHandleScope scope(value.Env());
+
     RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
     RFC_PARAMETER_DESC paramDesc;
@@ -285,41 +66,321 @@ Handle<Value> fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle,
     free(cName);
     if (rc != RFC_OK)
     {
-        // invalid parameter name
         return scope.Escape(wrapError(&errorInfo));
     }
     return scope.Escape(fillVariable(paramDesc.type, functionHandle, paramDesc.name, value, paramDesc.typeDescHandle));
 }
 
+Napi::Value Client::fillStructure(RFC_STRUCTURE_HANDLE structHandle, RFC_TYPE_DESC_HANDLE functionDescHandle, SAP_UC *cName, Napi::Value value)
+{
+    RFC_RC rc;
+    RFC_ERROR_INFO errorInfo;
+
+    Napi::EscapableHandleScope scope(value.Env());
+
+    Napi::Object structObj = value.ToObject(); // ->ToObject();
+    Napi::Array structNames = structObj.GetPropertyNames();
+    unsigned int structSize = structNames.Length();
+
+    RFC_FIELD_DESC fieldDesc;
+
+    Napi::Value retVal = value.Env().Undefined();
+
+    for (unsigned int i = 0; i < structSize; i++)
+    {
+        Napi::String name = structNames.Get(i).ToString();
+        Napi::Value value = structObj.Get(name);
+
+        SAP_UC *cValue = fillString(name);
+        rc = RfcGetFieldDescByName(functionDescHandle, cValue, &fieldDesc, &errorInfo);
+        free(cValue);
+        if (rc != RFC_OK)
+        {
+            retVal = wrapError(&errorInfo);
+            break;
+        }
+        retVal = fillVariable(fieldDesc.type, structHandle, fieldDesc.name, value, fieldDesc.typeDescHandle);
+        if (!retVal.IsUndefined())
+        {
+            break;
+        }
+    }
+    return retVal;
+}
+
+Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Napi::Value value, RFC_TYPE_DESC_HANDLE functionDescHandle)
+{
+    Napi::EscapableHandleScope scope(value.Env());
+    RFC_RC rc = RFC_OK;
+    RFC_ERROR_INFO errorInfo;
+    SAP_UC *cValue;
+    switch (typ)
+    {
+    case RFCTYPE_STRUCTURE:
+    {
+        RFC_STRUCTURE_HANDLE structHandle;
+        rc = RfcGetStructure(functionHandle, cName, &structHandle, &errorInfo);
+        if (rc != RFC_OK)
+        {
+            return scope.Escape(wrapError(&errorInfo));
+        }
+        Napi::Value rv = fillStructure(structHandle, functionDescHandle, cName, value);
+        if (!rv.IsUndefined())
+        {
+            return scope.Escape(rv);
+        }
+        break;
+    }
+    case RFCTYPE_TABLE:
+    {
+        RFC_TABLE_HANDLE tableHandle;
+        rc = RfcGetTable(functionHandle, cName, &tableHandle, &errorInfo);
+
+        if (rc != RFC_OK)
+        {
+            break;
+        }
+        Napi::Array array = value.As<Napi::Array>();
+        unsigned int rowCount = array.Length();
+
+        for (unsigned int i = 0; i < rowCount; i++)
+        {
+            RFC_STRUCTURE_HANDLE structHandle = RfcAppendNewRow(tableHandle, &errorInfo);
+            Napi::Value line = array.Get(i);
+            if (line.IsBuffer() || line.IsString() || line.IsNumber())
+            {
+                Napi::Object lineObj = Napi::Object::New(value.Env());
+                lineObj.Set(Napi::String::New(value.Env(), ""), line);
+                line = lineObj;
+            }
+            Napi::Value rv = fillStructure(structHandle, functionDescHandle, cName, line);
+            if (!rv.IsUndefined())
+            {
+                return scope.Escape(rv);
+            }
+        }
+        break;
+    }
+    case RFCTYPE_CHAR:
+    {
+        if (!value.IsString())
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
+        cValue = fillString(value.As<Napi::String>());
+        rc = RfcSetChars(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
+        free(cValue);
+        break;
+    }
+    case RFCTYPE_BYTE:
+    {
+        if (!value.IsBuffer())
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Buffer expected when filling field '%s' of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
+
+        Napi::Uint8Array buf = value.As<Uint8Array>();
+        char *asciiValue = (char *)&buf[0];
+        unsigned int size = buf.ByteLength();
+        SAP_RAW *byteValue = (SAP_RAW *)malloc(size);
+
+        memcpy(byteValue, reinterpret_cast<SAP_RAW *>(asciiValue), size);
+        //memcpy(byteValue, asciiValue, size);
+        rc = RfcSetBytes(functionHandle, cName, byteValue, size, &errorInfo);
+        free(byteValue);
+        //std::string fieldName = wrapString(cName).ToString().Utf8Value();
+        //printf("\nbin %d %s size: %u", rc, &fieldName[0], size);
+        break;
+    }
+    case RFCTYPE_XSTRING:
+    {
+        if (!value.IsBuffer())
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Buffer expected when filling field '%s' of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
+        Napi::Uint8Array buf = value.As<Uint8Array>();
+        char *asciiValue = (char *)&buf[0];
+        unsigned int size = buf.ByteLength();
+        SAP_RAW *byteValue = (SAP_RAW *)malloc(size);
+
+        memcpy(byteValue, reinterpret_cast<SAP_RAW *>(asciiValue), size);
+
+        //std::string fieldName = wrapString(cName).ToString().Utf8Value();
+        //printf("\nxin %d %s size: %u", rc, &fieldName[0], size);
+        //memcpy(byteValue, asciiValue, size);
+        rc = RfcSetXString(functionHandle, cName, byteValue, size, &errorInfo);
+        free(byteValue);
+        break;
+    }
+    case RFCTYPE_STRING:
+    {
+        if (!value.IsString())
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
+        cValue = fillString(value.ToString());
+        rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
+        free(cValue);
+        break;
+    }
+    case RFCTYPE_NUM:
+    {
+        if (!value.IsString())
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
+        cValue = fillString(value.ToString());
+        rc = RfcSetNum(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
+        free(cValue);
+        break;
+    }
+    case RFCTYPE_BCD: // fallthrough
+    case RFCTYPE_FLOAT:
+    {
+        if (!value.IsNumber() && !value.IsObject() && !value.IsString())
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Number, number object or string expected when filling field %s of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
+        cValue = fillString(value.ToString());
+        rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
+        free(cValue);
+        break;
+    }
+    case RFCTYPE_INT: // fallthrough
+    case RFCTYPE_INT1:
+    case RFCTYPE_INT2:
+    case RFCTYPE_INT8:
+    {
+        if (!value.IsNumber())
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Integer number expected when filling field %s of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
+
+        // https://github.com/mhdawson/node-sqlite3/pull/3
+        double numDouble = value.ToNumber().DoubleValue();
+        if ((int64_t)numDouble != numDouble) // or std::trunc(numDouble) == numDouble;
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Integer number expected when filling field %s of type %d, got %a", &fieldName[0], typ, numDouble);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
+        //RFC_INT rfcInt = value.As<Napi::Number>().Int64Value();
+        int64_t rfcInt = value.As<Napi::Number>().Int64Value();
+        if (typ == RFCTYPE_INT8)
+            rc = RfcSetInt8(functionHandle, cName, rfcInt, &errorInfo);
+        else
+            rc = RfcSetInt(functionHandle, cName, rfcInt, &errorInfo);
+        break;
+    }
+    case RFCTYPE_DATE:
+    {
+        if (!__dateToABAP.IsEmpty())
+        {
+            // YYYYMMDD format expected
+            value = __dateToABAP.Call({value});
+        }
+        if (!value.IsString())
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "ABAP date format YYYYMMDD expected when filling field %s of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
+        cValue = fillString(value.ToString());
+        rc = RfcSetDate(functionHandle, cName, cValue, &errorInfo);
+        free(cValue);
+        break;
+    }
+    case RFCTYPE_TIME:
+    {
+        if (!__timeToABAP.IsEmpty())
+        {
+            // HHMMSS format expected
+            value = __timeToABAP.Call({value});
+        }
+        if (!value.IsString())
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "ABAP time format HHMMSS expected when filling field %s of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
+        cValue = fillString(value.ToString());
+        rc = RfcSetTime(functionHandle, cName, cValue, &errorInfo);
+        free(cValue);
+        break;
+    }
+    default:
+    {
+        char err[256];
+        std::string fieldName = wrapString(cName).ToString().Utf8Value();
+        sprintf(err, "Unknown RFC type %u when filling %s", typ, &fieldName[0]);
+        return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        break;
+    }
+    }
+    if (rc != RFC_OK)
+    {
+        return scope.Escape(wrapError(&errorInfo));
+    }
+    return scope.Env().Undefined();
+} // namespace node_rfc
+
 ////////////////////////////////////////////////////////////////////////////////
 // WRAP FUNCTIONS (from RFC)
 ////////////////////////////////////////////////////////////////////////////////
 
-Handle<Object> wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, bool rstrip)
+Napi::Value Client::wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle)
 {
-    Nan::EscapableHandleScope scope;
+    Napi::EscapableHandleScope scope(__env);
 
     RFC_PARAMETER_DESC paramDesc;
     unsigned int paramCount = 0;
 
     RfcGetParameterCount(functionDescHandle, &paramCount, NULL);
-    Local<Object> resultObj = Nan::New<Object>();
+    Napi::Object resultObj = Napi::Object::New(__env);
 
     for (unsigned int i = 0; i < paramCount; i++)
     {
         RfcGetParameterDescByIndex(functionDescHandle, i, &paramDesc, NULL);
-        Nan::Set(resultObj, wrapString(paramDesc.name), wrapVariable(paramDesc.type, functionHandle, paramDesc.name, paramDesc.nucLength, paramDesc.typeDescHandle, rstrip));
+        if (paramDesc.direction != __filter_param_direction)
+        {
+            Napi::String name = wrapString(paramDesc.name).As<Napi::String>();
+            Napi::Value value = wrapVariable(paramDesc.type, functionHandle, paramDesc.name, paramDesc.nucLength, paramDesc.typeDescHandle);
+            (resultObj).Set(name, value);
+        }
     }
-
     return scope.Escape(resultObj);
 }
 
-Handle<Value> wrapString(SAP_UC *uc, int length, bool rstrip)
+Napi::Value Client::wrapString(SAP_UC *uc, int length)
 {
-    Nan::EscapableHandleScope scope;
-
     RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
+
+    Napi::EscapableHandleScope scope(__env);
 
     if (length == -1)
     {
@@ -327,22 +388,34 @@ Handle<Value> wrapString(SAP_UC *uc, int length, bool rstrip)
     }
     if (length == 0)
     {
-        return scope.Escape(Nan::New("").ToLocalChecked());
+        return Napi::String::New(__env, "");
     }
-    unsigned int utf8Size = length * 2;
+    // try with 3 bytes per unicode character
+    unsigned int utf8Size = length * 3;
     char *utf8 = (char *)malloc(utf8Size + 1);
     utf8[0] = '\0';
-
     unsigned int resultLen = 0;
     rc = RfcSAPUCToUTF8(uc, length, (RFC_BYTE *)utf8, &utf8Size, &resultLen, &errorInfo);
 
     if (rc != RFC_OK)
     {
-        free((void *)utf8);
-        return scope.Escape(Nan::New("node-rfc internal error: wrapString").ToLocalChecked());
+        // not enough, try with 6
+        free((char *)utf8);
+        utf8Size = length * 6;
+        utf8 = (char *)malloc(utf8Size + 1);
+        utf8[0] = '\0';
+        resultLen = 0;
+        rc = RfcSAPUCToUTF8(uc, length, (RFC_BYTE *)utf8, &utf8Size, &resultLen, &errorInfo);
+        if (rc != RFC_OK)
+        {
+            free((char *)utf8);
+            char err[255];
+            sprintf(err, "wrapString fatal error: length: %d utf8Size: %u resultLen: %u", length, utf8Size, resultLen);
+            Napi::Error::Fatal(err, "node-rfc internal error");
+        }
     }
 
-    if (rstrip && strlen(utf8))
+    if (__rstrip && strlen(utf8))
     {
         int i = strlen(utf8) - 1;
 
@@ -353,14 +426,14 @@ Handle<Value> wrapString(SAP_UC *uc, int length, bool rstrip)
         utf8[i + 1] = '\0';
     }
 
-    Local<Value> resultValue = Nan::New(utf8).ToLocalChecked();
-    free((void *)utf8);
+    Napi::Value resultValue = Napi::String::New(__env, utf8);
+    free((char *)utf8);
     return scope.Escape(resultValue);
 }
 
-Handle<Value> wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle, bool rstrip)
+Napi::Value Client::wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle)
 {
-    Nan::EscapableHandleScope scope;
+    Napi::EscapableHandleScope scope(__env);
 
     RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
@@ -369,31 +442,38 @@ Handle<Value> wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE 
     rc = RfcGetFieldCount(typeDesc, &fieldCount, &errorInfo);
     if (rc != RFC_OK)
     {
-        // FIXME error handling
-        printf("Unhandled Error");
+        Napi::Error::New(__env, wrapError(&errorInfo).ToString()).ThrowAsJavaScriptException();
     }
 
-    Local<Object> resultObj = Nan::New<Object>();
+    Napi::Object resultObj = Napi::Object::New(__env);
 
     for (unsigned int i = 0; i < fieldCount; i++)
     {
         rc = RfcGetFieldDescByIndex(typeDesc, i, &fieldDesc, &errorInfo);
         if (rc != RFC_OK)
         {
-            // FIXME error handling
-            printf("Unhandled Error");
+            Napi::Error::New(__env, wrapError(&errorInfo).ToString()).ThrowAsJavaScriptException();
         }
-        Nan::Set(resultObj, wrapString(fieldDesc.name), wrapVariable(fieldDesc.type, structHandle, fieldDesc.name, fieldDesc.nucLength, fieldDesc.typeDescHandle, rstrip));
+        (resultObj).Set(wrapString(fieldDesc.name), wrapVariable(fieldDesc.type, structHandle, fieldDesc.name, fieldDesc.nucLength, fieldDesc.typeDescHandle));
+    }
+
+    if (fieldCount == 1)
+    {
+        Napi::String fieldName = resultObj.GetPropertyNames().Get((uint32_t)0).As<Napi::String>();
+        if (fieldName.Utf8Value().size() == 0)
+        {
+            return scope.Escape(resultObj.Get(fieldName));
+        }
     }
 
     return scope.Escape(resultObj);
 }
 
-Handle<Value> wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, unsigned int cLen, RFC_TYPE_DESC_HANDLE typeDesc, bool rstrip)
+Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, unsigned int cLen, RFC_TYPE_DESC_HANDLE typeDesc)
 {
-    Nan::EscapableHandleScope scope;
+    Napi::EscapableHandleScope scope(__env);
 
-    Local<Value> resultValue;
+    Napi::Value resultValue;
 
     RFC_RC rc = RFC_OK;
     RFC_ERROR_INFO errorInfo;
@@ -408,7 +488,7 @@ Handle<Value> wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_
         {
             break;
         }
-        resultValue = wrapStructure(typeDesc, structHandle, rstrip);
+        resultValue = wrapStructure(typeDesc, structHandle);
         break;
     }
     case RFCTYPE_TABLE:
@@ -419,19 +499,18 @@ Handle<Value> wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_
         {
             break;
         }
-        //RFC_FIELD_DESC fieldDesc;
         unsigned int rowCount;
         rc = RfcGetRowCount(tableHandle, &rowCount, &errorInfo);
-        Handle<Array> table = Nan::New<Array>();
 
-        for (unsigned int i = 0; i < rowCount; i++)
+        Napi::Array table = Napi::Array::New(__env);
+
+        while (rowCount-- > 0)
         {
-            RfcMoveTo(tableHandle, i, NULL);
-            structHandle = RfcGetCurrentRow(tableHandle, NULL);
-            Handle<Value> row = wrapStructure(typeDesc, structHandle, rstrip);
-            Nan::Set(table, Nan::New(i), row);
+            RfcMoveTo(tableHandle, rowCount, NULL);
+            Napi::Value row = wrapStructure(typeDesc, tableHandle);
+            RfcDeleteCurrentRow(tableHandle, &errorInfo);
+            (table).Set(rowCount, row);
         }
-
         resultValue = table;
         break;
     }
@@ -443,7 +522,7 @@ Handle<Value> wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_
         {
             break;
         }
-        resultValue = wrapString(charValue, cLen, rstrip);
+        resultValue = wrapString(charValue, cLen);
         free(charValue);
         break;
     }
@@ -477,31 +556,44 @@ Handle<Value> wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_
     case RFCTYPE_BYTE:
     {
         SAP_RAW *byteValue = (SAP_RAW *)malloc(cLen);
+
+        //std::string fieldName = wrapString(cName).ToString().Utf8Value();
+        //printf("\nbout %d %s cLen: %u", rc, &fieldName[0], cLen);
+
         rc = RfcGetBytes(functionHandle, cName, byteValue, cLen, &errorInfo);
         if (rc != RFC_OK)
         {
             free(byteValue);
             break;
         }
-        resultValue = Nan::NewBuffer(reinterpret_cast<char *>(byteValue), cLen).ToLocalChecked();
+        resultValue = Napi::Buffer<char>::New(__env, reinterpret_cast<char *>(byteValue), cLen); // .As<Napi::Uint8Array>(); // as a buffer
+        //resultValue = Napi::String::New(env, reinterpret_cast<const char *>(byteValue)); // or as a string
         // do not free byteValue - it will be freed when the buffer is garbage collected
         break;
     }
+
     case RFCTYPE_XSTRING:
     {
         SAP_RAW *byteValue;
         unsigned int strLen, resultLen;
         rc = RfcGetStringLength(functionHandle, cName, &strLen, &errorInfo);
+
         byteValue = (SAP_RAW *)malloc(strLen + 1);
         byteValue[strLen] = '\0';
+
         rc = RfcGetXString(functionHandle, cName, byteValue, strLen, &resultLen, &errorInfo);
+
+        //std::string fieldName = wrapString(cName).ToString().Utf8Value();
+        //printf("\nxout %d %s cLen: %u strLen %u resultLen %u", rc, &fieldName[0], cLen, strLen, resultLen);
+
         if (rc != RFC_OK)
         {
             free(byteValue);
             break;
         }
-        resultValue = Nan::New(reinterpret_cast<const char *>(byteValue)).ToLocalChecked();
-        free(byteValue);
+        resultValue = Napi::Buffer<char>::New(__env, reinterpret_cast<char *>(byteValue), resultLen); // as a buffer
+        //resultValue = Napi::String::New(__env, reinterpret_cast<const char *>(byteValue)); // or as a string
+        // do not free byteValue - it will be freed when the buffer is garbage collected
         break;
     }
     case RFCTYPE_BCD:
@@ -520,15 +612,24 @@ Handle<Value> wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_
             free(sapuc);
             break;
         }
-        resultValue = wrapString(sapuc, resultLen);
+        resultValue = wrapString(sapuc, resultLen).ToString();
         free(sapuc);
+
+        if (__bcd == NODERFC_BCD_FUNCTION)
+        {
+            resultValue = __bcdFunction.Call({resultValue});
+        }
+        else if (__bcd == NODERFC_BCD_NUMBER)
+        {
+            resultValue = resultValue.ToNumber();
+        }
         break;
     }
     case RFCTYPE_FLOAT:
     {
         RFC_FLOAT floatValue;
         rc = RfcGetFloat(functionHandle, cName, &floatValue, &errorInfo);
-        resultValue = Nan::New(floatValue);
+        resultValue = Napi::Number::New(__env, floatValue);
         break;
     }
     case RFCTYPE_INT:
@@ -539,29 +640,40 @@ Handle<Value> wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_
         {
             break;
         }
-        resultValue = Nan::New(intValue);
+        resultValue = Napi::Number::New(__env, intValue);
         break;
     }
     case RFCTYPE_INT1:
     {
-        RFC_INT1 int1Value;
-        rc = RfcGetInt1(functionHandle, cName, &int1Value, &errorInfo);
+        RFC_INT1 intValue;
+        rc = RfcGetInt1(functionHandle, cName, &intValue, &errorInfo);
         if (rc != RFC_OK)
         {
             break;
         }
-        resultValue = Nan::New(int1Value);
+        resultValue = Napi::Number::New(__env, intValue);
         break;
     }
     case RFCTYPE_INT2:
     {
-        RFC_INT2 int2Value;
-        rc = RfcGetInt2(functionHandle, cName, &int2Value, &errorInfo);
+        RFC_INT2 intValue;
+        rc = RfcGetInt2(functionHandle, cName, &intValue, &errorInfo);
         if (rc != RFC_OK)
         {
             break;
         }
-        resultValue = Nan::New(int2Value);
+        resultValue = Napi::Number::New(__env, intValue);
+        break;
+    }
+    case RFCTYPE_INT8:
+    {
+        RFC_INT8 intValue;
+        rc = RfcGetInt8(functionHandle, cName, &intValue, &errorInfo);
+        if (rc != RFC_OK)
+        {
+            break;
+        }
+        resultValue = Napi::Number::New(__env, intValue);
         break;
     }
     case RFCTYPE_DATE:
@@ -573,6 +685,10 @@ Handle<Value> wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_
             break;
         }
         resultValue = wrapString(dateValue, 8);
+        if (!__dateFromABAP.IsEmpty())
+        {
+            resultValue = __dateFromABAP.Call({resultValue});
+        }
         break;
     }
     case RFCTYPE_TIME:
@@ -583,17 +699,19 @@ Handle<Value> wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_
         {
             break;
         }
-        resultValue = wrapString(timeValue, 6); // FIXME: use v8::Date object
+        resultValue = wrapString(timeValue, 6);
+        if (!__timeFromABAP.IsEmpty())
+        {
+            resultValue = __timeFromABAP.Call({resultValue});
+        }
         break;
     }
     default:
-        resultValue = Nan::New("FIXME UNKNOWN TYPE").ToLocalChecked();
-        char cBuf[256];
-        String::Utf8Value s(wrapString(cName));
-        std::string fieldName(*s);
-        sprintf(cBuf, "Unknown RFC type %d when wrapping %s", typ, &fieldName[0]);
-        Handle<Value> e = Nan::Error(cBuf);
-        return scope.Escape(e->ToObject());
+        char err[256];
+        std::string fieldName = wrapString(cName).ToString().Utf8Value();
+        sprintf(err, "Unknown RFC type %d when wrapping %s", typ, &fieldName[0]);
+        Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+
         break;
     }
     if (rc != RFC_OK)
@@ -603,3 +721,4 @@ Handle<Value> wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_
 
     return scope.Escape(resultValue);
 }
+} // namespace node_rfc

@@ -1,0 +1,22 @@
+{
+	"compileOnSave": false,
+	"compilerOptions": {
+		"sourceMap": true,
+		"target": "es2015",
+		"module": "commonjs",
+		"declaration": true,
+		"strict": true,
+		"moduleResolution": "node",
+		"allowJs": false,
+		"stripInternal": true,
+		"listFiles": true,
+		"removeComments": true,
+		"lib": ["es2015"],
+		"outDir": "../dist"
+	},
+	"files": ["async.ts", "abapSystem.ts"],
+	"exclude": ["node_modules", "dist", "build", "doc", "lib", "test", ".vscode"],
+	"atom": {
+		"rewriteTsconfig": false
+	}
+}

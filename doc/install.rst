@@ -108,7 +108,8 @@ must be disabled:
 
 This location is fixed to the default ``/usr/local/sap/nwrfcsdk/lib`` rpath, embedded into node-rfc package published on npm.
 
-After moving SAP NW RFC SDK to another location on your system, the rpaths must be adjusted in SAP NW RFC SDK and in sapnwrfc.node libraries.
+After moving SAP NW RFC SDK to another location on your system, the rpaths must be adjusted,
+in SAP NW RFC SDK and in sapnwrfc.node libraries.
 
 For SAP NW RFC SDK, set the SAPNWRFC_HOME env variable to new SAP NW RFC SDK root directory and re-run the above script.
 
@@ -265,7 +266,10 @@ Change into the ``doc`` directory and type:
 
 The result is found in ``_build/html`` and for other options call ``make``.
 
-* If you get an error *'sphinx-build' is not recognized as an internal or external command, operable program or batch file* on calling ``make html``, install ``sphinx``
+.. hint::
+
+    If you get an error *'sphinx-build' is not recognized as an internal or external command, operable program or batch file*
+    on calling ``make html``, install ``sphinx``.
 
 The docu is hosted on GitHub Pages, a propietary solution where a git branch ``gh-pages`` is created
 as an orphan and the output of the documentation build process (``_build/html``) is stored in that branch.

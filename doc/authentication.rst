@@ -26,8 +26,8 @@ NW ABAP servers support in addition:
 * SAP logon tickets
 * Security Assertion Markup Language (SAML)
 
-Assuming you are familiar with abovementioned concepts and have ABAP backend system 
-configured for SNC communication, here you may find connection strings examples, 
+Assuming you are familiar with abovementioned concepts and have ABAP backend system
+configured for SNC communication, here you may find connection strings examples,
 for testing plain and secure RFC connections, with various authentication methods.
 
 
@@ -93,8 +93,8 @@ is used for opening the SNC connection and the same user is used for the authent
 
 
 In this example the SNC_LIB key contains the path to security library
-(SAP cryptographic library or 3rd party product). Alternatively, the 
-SNC_LIB can be set as the environment variable, in which case it does 
+(SAP cryptographic library or 3rd party product). Alternatively, the
+SNC_LIB can be set as the environment variable, in which case it does
 not have to be provided as a parameter for opening SNC connection.
 
 .. _secure-auth-x509:
@@ -102,18 +102,18 @@ not have to be provided as a parameter for opening SNC connection.
 SNC with X509
 -------------
 
-The client system PSE is used for opening SNC connection and forwarding user 
+The client system PSE is used for opening SNC connection and forwarding user
 X509 certificate to NW ABAP backend system, for authentication and logon.
 
 **Prerequisites**
 
 * The user does not have to be logged into the client system, neither the Single
   Sign On must be configured on a client
-* The trusted relationship must be established between the NW ABAP backend and 
+* The trusted relationship must be established between the NW ABAP backend and
   the client system.
-* The client system must be registered in the NW ABAP backend Access Control 
+* The client system must be registered in the NW ABAP backend Access Control
   List (ACL), using transaction SNC0
-* Keystores are generated on a client system, using SAP cryptography tool *SAPGENPSE* and 
+* Keystores are generated on a client system, using SAP cryptography tool *SAPGENPSE* and
   the environment variable SECUDIR points to the folder with generated keystores
 
 .. figure:: _static/SNC0-1.png

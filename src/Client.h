@@ -12,72 +12,119 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-#ifndef CLIENT_H
-#define CLIENT_H
+#ifndef NODE_SAPNWRFC_CLIENT_H_
+#define NODE_SAPNWRFC_CLIENT_H_
 
-#include <nan.h>
+#define SAPNWRFC_BINDING_VERSION "1.0.0"
+
+#define NODERFC_BCD_STRING 0
+#define NODERFC_BCD_NUMBER 1
+#define NODERFC_BCD_FUNCTION 2
+
+#include <uv.h>
+#include <napi.h>
 #include <sapnwrfc.h>
 
-using namespace v8;
+using namespace Napi;
 
-class Client : public Nan::ObjectWrap
+namespace node_rfc
+{
+
+class Client : public Napi::ObjectWrap<Client>
 {
 public:
-  static NAN_MODULE_INIT(Init);
+    friend class ConnectAsync;
+    friend class CloseAsync;
+    friend class ReopenAsync;
+    friend class PingAsync;
+    friend class PrepareAsync;
+    friend class InvokeAsync;
+
+    static Napi::FunctionReference constructor;
+    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+
+    void init(Napi::Env env)
+    {
+        __env = env;
+
+        paramSize = 0;
+        connectionParams = NULL;
+        connectionHandle = NULL;
+        alive = false;
+        __rstrip = true;
+        __bcd = NODERFC_BCD_STRING;
+
+        rc = (RFC_RC)0;
+        errorInfo.code = rc;
+    };
+
+    Client(const Napi::CallbackInfo &info);
+    ~Client(void);
 
 private:
-  explicit Client();
-  ~Client();
+    static unsigned int __refCounter;
+    unsigned int __refId;
 
-  static NAN_METHOD(GetVersion);
+    // Client API
 
-  static NAN_METHOD(New);
-  static NAN_METHOD(Close);
-  static NAN_METHOD(Reopen);
-  static NAN_METHOD(IsAlive);
-  static NAN_METHOD(ConnectionInfo);
-  static NAN_METHOD(Ping);
-  static NAN_METHOD(RunCallback);
+    Napi::Value IdGetter(const Napi::CallbackInfo &info);
+    Napi::Value VersionGetter(const Napi::CallbackInfo &info);
+    Napi::Value OptionsGetter(const Napi::CallbackInfo &info);
 
-  static Nan::Persistent<Function> constructor;
+    Napi::Value ConnectionInfo(const Napi::CallbackInfo &info);
 
-  static NAN_METHOD(Connect);
-  static void ConnectAsync(uv_work_t *req);
-  static void ConnectAsyncAfter(uv_work_t *req, int);
+    Napi::Value Connect(const Napi::CallbackInfo &info);
+    Napi::Value Invoke(const Napi::CallbackInfo &info);
 
-  void LockMutex(void);
-  void UnlockMutex(void);
-  static NAN_METHOD(Invoke);
-  static void InvokeAsync(uv_work_t *req);
-  static void InvokeAsyncAfter(uv_work_t *req, int);
+    Napi::Value Ping(const Napi::CallbackInfo &info);
+    Napi::Value Close(const Napi::CallbackInfo &info);
+    Napi::Value Reopen(const Napi::CallbackInfo &info);
+    Napi::Value IsAlive(const Napi::CallbackInfo &info);
 
-  RFC_CONNECTION_HANDLE connectionHandle;
-  RFC_CONNECTION_PARAMETER *connectionParams;
-  unsigned int paramSize;
-  bool rstrip;
-  bool alive;
+    // SAP NW RFC SDK
 
-  uv_sem_t invocationMutex;
+    SAP_UC *fillString(const Napi::String napistr);
+    SAP_UC *fillString(std::string str);
+    Napi::Value fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, Napi::String name, Napi::Value value);
+    Napi::Value fillStructure(RFC_STRUCTURE_HANDLE structHandle, RFC_TYPE_DESC_HANDLE functionDescHandle, SAP_UC *cName, Napi::Value value);
+    Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Napi::Value value, RFC_TYPE_DESC_HANDLE functionDescHandle);
+
+    Napi::Value wrapString(SAP_UC *uc, int length = -1);
+    Napi::Value wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle);
+    Napi::Value wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, unsigned int cLen, RFC_TYPE_DESC_HANDLE typeDesc);
+    Napi::Value wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle);
+
+    // RFC ERRORS
+
+    Napi::Value RfcLibError(RFC_ERROR_INFO *errorInfo);
+    Napi::Value AbapError(RFC_ERROR_INFO *errorInfo);
+    Napi::Value wrapError(RFC_ERROR_INFO *errorInfo);
+
+    Napi::Env __env = NULL;
+
+    unsigned int paramSize;
+    RFC_CONNECTION_PARAMETER *connectionParams;
+    RFC_CONNECTION_HANDLE connectionHandle;
+    bool alive;
+    bool __rstrip;
+    int __bcd = 0; // 0: string, 1: number, 2: function
+    RFC_DIRECTION __filter_param_direction = (RFC_DIRECTION)0;
+    Napi::FunctionReference __bcdFunction;
+    // date
+    Napi::FunctionReference __dateToABAP;
+    Napi::FunctionReference __dateFromABAP;
+    // time
+    Napi::FunctionReference __timeToABAP;
+    Napi::FunctionReference __timeFromABAP;
+
+    RFC_RC rc;
+    RFC_ERROR_INFO errorInfo;
+
+    void LockMutex(void);
+    void UnlockMutex(void);
+    uv_sem_t invocationMutex;
 };
 
-struct ClientBaton
-{
-  uv_work_t request;
-  Nan::Persistent<Function> callback;
+} // namespace node_rfc
 
-  RFC_ERROR_INFO errorInfo;
-  Client *wrapper;
-};
-
-struct InvokeBaton
-{
-  uv_work_t request;
-  Nan::Persistent<Function> callback;
-
-  RFC_FUNCTION_HANDLE functionHandle;
-  RFC_FUNCTION_DESC_HANDLE functionDescHandle;
-  RFC_ERROR_INFO errorInfo;
-  Client *wrapper;
-};
-
-#endif
+#endif // NODE_SAPNWRFC_CLIENT_H_
