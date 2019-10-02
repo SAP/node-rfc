@@ -67,7 +67,7 @@ git clone -b https://github.com/SAP/node-rfc.git
 cd node-rfc
 npm install
 # set connection properties in test/abapSystem
-npm run test
+npm test
 ```
 
 ## Getting started
