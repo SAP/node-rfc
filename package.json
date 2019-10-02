@@ -1,61 +1,80 @@
 {
   "name": "node-rfc",
-  "version": "0.1.16",
-  "description": "nodejs bindings for SAP NW RFC Library",
-  "main": "index.js",
-  "directories": {
-    "doc": "doc",
-    "test": "test"
-  },
-  "dependencies": {
-    "nan": "^2.10.0",
-    "node-pre-gyp": "^0.9.1"
-  },
-  "devDependencies": {
-    "decimal.js": "^10.0.0",
-    "mocha": "^5.0.5",
-    "node-abi": "^2.3.0",
-    "should": "^13.1.3"
-  },
-  "scripts": {
-    "test": "mocha",
-    "preinstall": "npm install node-pre-gyp",
-    "install": "node-pre-gyp install --fallback-to-build"
-  },
-  "binary": {
-    "module_name": "rfc",
-    "module_path": "./build/rfc",
-    "host": "https://github.com/sap/node-rfc/releases/download/",
-    "remote_path": "{version}"
-  },
-  "engines": {
-    "node": "4.x || 6.x || 8.x || 9.x"
-  },
-  "os": [
-    "!darwin"
-  ],
-  "cpu": [
-    "!arm"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.wdf.sap.corp/D037732/node-rfc.git"
-  },
-  "keywords": [
-    "sap",
-    "rfc",
-    "rfc sdk",
-    "node",
-    "nodejs"
-  ],
+  "description": "nodejs bindings for SAP NW RFC SDK",
+  "version": "1.0.0",
+  "homepage": "https://github.com/sap/node-rfc",
   "author": {
     "name": "Srdjan Boskovic",
     "email": "srdjan.boskovic@sap.com"
   },
-  "license": "Apache-2.0",
-  "gypfile": true,
-  "bugs": {
-    "url": "https://github.com/SAP/node-rfc/issues"
+  "engines": {
+    "node": ">=8.9.0",
+    "npm": "^6.11.3"
   },
-  "homepage": "https://github.com/SAP/node-rfc#readme"
+  "cpu": [
+    "!arm"
+  ],
+  "directories": {
+    "doc": "doc",
+    "test": "test"
+  },
+  "scripts": {
+    "prepublishOnly": "npm ls --depth=0",
+    "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
+    "install": "prebuild-install --tag-prefix -r napi || npm run prebuild",
+    "prebuild": "prebuild --backend cmake-js -r napi --force --strip --verbose --tag-prefix",
+    "upload": "prebuild -r napi -u --verbose",
+    "wrapper": "tsc -p src/ts",
+    "examples": "tsc -p examples/ts",
+    "test": "jest --testTimeout 30000"
+  },
+  "binary": {
+    "napi_versions": [
+      3
+    ],
+    "module_name": "sapnwrfc",
+    "module_path": "./lib/binding/",
+    "host": "https://github.com/sap/node-rfc/releases/download/",
+    "remote_path": "v{version}"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "sap",
+    "rfc",
+    "rfc sdk",
+    "sapnwrfc",
+    "sapnw",
+    "node",
+    "nodejs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sap/node-rfc.git"
+  },
+  "files": [
+    "lib",
+    "src",
+    "CMakeLists.txt",
+    "VERSION"
+  ],
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "devDependencies": {
+    "@babel/core": "^7.6.2",
+    "@types/bluebird": "^3.5.27",
+    "@types/node": "^12.7.8",
+    "async": "^3.1.0",
+    "cmake-js": "^5.3.2",
+    "decimal.js": "^10.2.0",
+    "jest": "^24.9.0",
+    "prebuild": "^9.1.1",
+    "prebuild-install": "^5.3.2",
+    "random-bytes": "^1.0.0",
+    "tslint": "^5.20.0",
+    "typescript": "^3.6.3"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.5",
+    "node-addon-api": "^1.7.1"
+  }
 }

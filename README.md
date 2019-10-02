@@ -1,13 +1,3 @@
-# :heavy_exclamation_mark: Notice :heavy_exclamation_mark:
-
-**The package is ported to [N-API](https://github.com/nodejs/node-addon-api), a ABI stable C interface provided by Node.js.**
-
-**Only critical fixes will be provided for Nan based version.**
-
-**Please continue using the [N-API version](https://github.com/SAP/node-rfc/tree/napi), as a prerelease, considering minor [incompatible changes](https://github.com/SAP/node-rfc/releases/tag/1.0.0-rc7).**
-
-# SAP NW RFC SDK Client for Nodejs
-
 Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/products/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/).
 
 [![NPM](https://nodei.co/npm/node-rfc.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-rfc/)
@@ -15,31 +5,72 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![release](https://img.shields.io/npm/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![downloads](https://img.shields.io/github/downloads/sap/node-rfc/total.svg)](https://www.npmjs.com/package/node-rfc)
+[![dpw](https://img.shields.io/npm/dw/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 
 ## Features
 
--   Based on the latest nodejs [N-API](https://github.com/nodejs/node-addon-api) standard
--   Stateless and stateful connections (multiple function calls in the same ABAP session (same context))
--   Async/await, promise and callback API
--   Sequential and parallel calls, using one or more clients
--   Automatic conversion between JavaScript and ABAP datatypes
--   Decimal and Date objects support
--   Connection pool
--   Extensive unit tests
-
-## Prerequisites
-
-SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account is required) and locally installed. More information on [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html).
-
-SAP NW RFC Library is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.0B. Using the latest version is reccomended.
+- Based on [N-API](https://github.com/nodejs/node-addon-api) standard
+- Stateless and stateful connections (multiple function calls in the same ABAP session (same context))
+- Async/await, promise and callback API
+- Sequential and parallel calls, using one or more clients
+- Automatic conversion between JavaScript and ABAP datatypes
+- Buffer, Decimal and Date objects support
+- Connection pool
+- Extensive unit tests
 
 ## Supported platforms
 
-Compiled binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 7.1 and Ubuntu 16.04 Linux platforms.
+- [Current and active nodejs LTS releases](https://github.com/nodejs/LTS)
 
-Build from source is required on other platforms, supported both by [SAP](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md).
+- The _node-rfc_ connector can be [built from source](http://sap.github.io/node-rfc/install.html#building-from-source) on all [platforms supported by SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1)
 
-## Usage and API
+- Pre-built binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 8.1, Ubuntu 16.04 and macOS 10.14.
+
+## Prerequisites
+
+### All platforms
+
+- SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account required) and locally installed ([installation instructions](http://sap.github.io/node-rfc/install.html#sap-nw-rfc-library-installation)). More information on [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html). Using the latest version is reccomended, as the SAP NW RFC SDK is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.6C.
+
+- The build from source requires [CMake](https://cmake.org/)
+
+### Windows
+
+Visual C++ Redistributable for Visual Studio 2015, or [newer](https://www.microsoft.com/en-us/download/details.aspx?id=48145), must be installed, per [SAP Note 1375494 - SAP system does not start after applying SAP kernel patch](https://launchpad.support.sap.com/#/notes/1375494).
+
+### macOS
+
+- The macOS firewall stealth mode must be disabled ([Can't ping a machine - why?](https://discussions.apple.com/thread/2554739)):
+
+```shell
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
+```
+
+- Remote paths must be set in SAP NWRFC SDK for macOS: [node-rfc/#58](https://github.com/SAP/node-rfc/issues/58#issuecomment-446544151)
+
+## Installation
+
+After the SAP NW RFC SDK is installed on your system, you can install the _node-rfc_ package from npm:
+
+```shell
+yarn add node-rfc
+```
+
+```shell
+npm install node-rfc
+```
+
+Alternatively, or if the _node-rfc_ package not provided for your platform, [buld the package from the latest source]((http://sap.github.io/node-rfc/install.html#building-from-source)) and install:
+
+```shell
+git clone -b https://github.com/SAP/node-rfc.git
+cd node-rfc
+npm install
+# set connection properties in test/abapSystem
+npm run test
+```
+
+## Getting started
 
 **Note:** the module must be [installed](#installation) before use.
 
@@ -49,9 +80,9 @@ remote enabled ABAP function module from nodejs. The client can be used for one 
 
 Callback API example below shows basic principles. See also:
 
--   [**Examples and API**](https://github.com/SAP/node-rfc/blob/napi/examples/README.md)
+- [**Examples and API**](examples/README.md)
 
--   [**node-rfc documentation**](http://sap.github.io/node-rfc), complementing SAP NW RFC Library [programming guide and documentation](https://support.sap.com/en/products/connectors/nwrfcsdk.html)
+- [**node-rfc documentation**](http://sap.github.io/node-rfc), complementing SAP NW RFC Library [programming guide and documentation](https://support.sap.com/en/products/connectors/nwrfcsdk.html)
 
 ```javascript
 'use strict';
@@ -60,12 +91,12 @@ const rfcClient = require('node-rfc').Client;
 
 // ABAP system RFC connection parameters
 const abapSystem = {
-	user: 'demo',
-	passwd: 'welcome',
-	ashost: '10.68.104.164',
-	sysnr: '00',
-	client: '620',
-	lang: 'EN',
+    user: 'demo',
+    passwd: 'welcome',
+    ashost: '10.68.104.164',
+    sysnr: '00',
+    client: '620',
+    lang: 'EN',
 };
 
 // create new client
@@ -76,74 +107,47 @@ console.log('Client version: ', client.version);
 
 // open connection
 client.connect(function(err) {
-	if (err) {
-		// check for login/connection errors
-		return console.error('could not connect to server', err);
-	}
+    if (err) {
+        // check for login/connection errors
+        return console.error('could not connect to server', err);
+    }
 
-	// invoke ABAP function module, passing structure and table parameters
+    // invoke ABAP function module, passing structure and table parameters
 
-	// ABAP structure
-	const structure = {
-		RFCINT4: 345,
-		RFCFLOAT: 1.23456789,
-		// or RFCFLOAT: require('decimal.js')('1.23456789'), // as Decimal object
-		RFCCHAR4: 'ABCD',
-		RFCDATE: '20180625', // in ABAP date format
-		// or RFCDATE: new Date('2018-06-25'), // as JavaScript Date object
-	};
+    // ABAP structure
+    const structure = {
+        RFCINT4: 345,
+        RFCFLOAT: 1.23456789,
+        // or RFCFLOAT: require('decimal.js')('1.23456789'), // as Decimal object
+        RFCCHAR4: 'ABCD',
+        RFCDATE: '20180625', // in ABAP date format
+        // or RFCDATE: new Date('2018-06-25'), // as JavaScript Date object
+    };
 
-	// ABAP table
-	let table = [structure];
+    // ABAP table
+    let table = [structure];
 
-	client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: structure, RFCTABLE: table }, function(err, res) {
-		if (err) {
-			return console.error('Error invoking STFC_STRUCTURE:', err);
-		}
-		console.log('STFC_STRUCTURE call result:', res);
-	});
+    client.invoke('STFC_STRUCTURE', { IMPORTSTRUCT: structure, RFCTABLE: table }, function(err, res) {
+        if (err) {
+            return console.error('Error invoking STFC_STRUCTURE:', err);
+        }
+        console.log('STFC_STRUCTURE call result:', res);
+    });
 });
 ```
 
 Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method on the client instance.
 
-## Installation
+## Known Issues
 
-From npm:
+- NAPI Type checks [nodejs/node-addon-api/#265](https://github.com/nodejs/node-addon-api/issues/265)
 
-```shell
-npm install node-rfc@next
-```
+## How to obtain support
 
-Build from the latest source:
+If you encounter an issue or have a feature request, you can create a [ticket](https://github.com/SAP/node-rfc/issues).
 
-```shell
-# The SAPNWRFC_HOME env variable must point to root folder of
-# SAP NW RFC SDK libraries on your system, like /usr/local/sap/nwrfcsdk
-git clone -b napi https://github.com/SAP/node-rfc.git
-cd node-rfc
-npm install
-node-pre-gyp configure build
-# set connection properties in test/abapSystem
-npm run test
-```
+Check out the SCN Forum (search for "node-rfc") and stackoverflow (use the tag "node-rfc"), to discuss code-related problems and questions.
 
-Nan based version:
+## License
 
-```shell
-npm install node-rfc
-```
-
-## Links
-
--   https://support.sap.com/connectors
--   https://wiki.scn.sap.com/wiki/display/ABAPConn/ABAP+Connectivity+-+RFC
--   [SAP HANA Cloud Connector](https://help.hana.ondemand.com/help/frameset.htm?e6c7616abb5710148cfcf3e75d96d596.html)
-
-Developer resources:
-
--   [Embedder's Guide](https://github.com/v8/v8/wiki/Embedder's%20Guide)
--   [v8 API docs](https://v8docs.nodesource.com/)
--   [N-API API docs](https://nodejs.github.io/node-addon-api/index.html)
--   [Node.js ES2015 Support](http://node.green/)
--   [Node.js LTS Releases](https://github.com/nodejs/LTS)
+Copyright (c) 2013 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the [LICENSE](LICENSE) file.

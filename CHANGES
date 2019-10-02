@@ -1,16 +1,122 @@
 Change log
 ==========
 
-0.2.0 (pre release)
--------------------
+1.0.0 (2019-10-02)
+------------------
 
-* N-API based
-* Promise and callback API
-* Typescript wrapper
+* NAPI 1.0.0 RC merged back to master 1.0.0 release
+* Build documentation update
+
+1.0.0-rc11 (2019-10-01)
+-----------------------
+
+* NodeJS version 6 dropped
+* Input parameter array check added, fix #100
+* Connection options support in Conncetion Pool, fix #104
+* Build tools changed, node-gyp and node-pregyp replaced with cmake-js and prebuild, fix #72
+
+1.0.0-rc10 (2019-05-31)
+-----------------------
+
+* Revert to node-pre-gyp@12.0, node-pre-gyp#463
+
+1.0.0-rc9 (2019-05-23)
+----------------------
+
+* Dependencies clean-up, reducing peer dependencies
+* READMEs and examples clean-up
+
+1.0.0-rc8 (2019-05-22)
+----------------------
+
+* SAP NW RFC SDK loading error message
+* jest test framework
+* npm install --build-from-source fix #85
+* tar security audit fix
+* Option added to filter IMPORT or CHANGING parameters from the result set
+* RFC_INT8 ABAP type support added
+* .gitignore fix for vscode https://github.com/Microsoft/vscode-cpptools/issues/3347
+* node v6 support dropped, v12 support added
+
+1.0.0-rc7 (2018-12-10)
+----------------------
+
+* N-API, asynchronous and non-blocking
+* Callback, promise, async/await API
+* Connection pool
+* Typescript and ES-next syntax support
 * C/C++ style guide
 * Error handling harmonisation
+* Descriptive error when SAP NW RFC SDK shared lib not found
 * String handling optimisation
+* Tables processing harmonisation and memory consumption fix
+* BYTE and XSTRING unicode encoding removed
+* BCD and FLOAT accept strings, numbers or Decimal.js objects, configurable by options parameter
+* client.options getter returns rstrip and bcd formatting options (string, number or function)
 * More unit tests
+* Empty fieldname removed from structures and tables (arrays)
+* Darwin support (in process)
+* README links update, from Service Marketplace to Support Portal
+
+Incompatible changes:
+
+* client.connectionInfo() gunction replaced by client.connectionInfo getter
+* client.getVersion() replaced by client.version getter, format changed as well
+* client.isAlive() replaced by client.isAlive getter
+* XSTRING and BYTE types work with Buffers only
+
+1.0.0-rc6 (2018-12-06)
+----------------------
+
+* N-API, asynchronous and non-blocking
+* Callback, promise, async/await API
+* Connection pool
+* Typescript and ES-next syntax support
+* C/C++ style guide
+* Error handling harmonisation
+* Descriptive error when SAP NW RFC SDK shared lib not found
+* String handling optimisation
+* Tables processing harmonisation and memory consumption fix
+* BYTE and XSTRING unicode encoding removed
+* BCD and FLOAT accept strings, numbers or Decimal.js objects
+* client.getOptions() return rstrip and bcd output formatting options (string, number or function)
+* More unit tests
+* Empty fieldname removed from structures and tables (arrays)
+* Darwin support (in process)
+* README links update, from Service Marketplace to Support Portal
+
+Incompatible changes:
+
+* client.connectionInfo() gunction replaced by client.connectionInfo getter
+* client.getVersion() replaced by client.version getter, format changed as well
+* client.isAlive() replaced by client.isAlive getter
+* XSTRING and BYTE types work with Buffers only
+
+1.0.0-rc5 (2018-10-30)
+----------------------
+
+* N-API, asynchronous and non-blocking
+* Callback, promise, async/await API
+* Connection pool
+* Typescript and ES-next syntax support
+* C/C++ style guide
+* Error handling harmonisation
+* Descriptive error when SAP NW RFC SDK shared lib not found
+* String handling optimisation
+* Tables processing harmonisation and memory consumption fix
+* BYTE and XSTRING unicode encoding removed
+* BCD and FLOAT accept strings, numbers or Decimal.js objects, return numbers
+* More unit tests
+* Empty fieldname removed from structures and tables (arrays)
+* Darwin support (in process)
+* README links update, from Service Marketplace to Support Portal
+
+Incompatible changes:
+
+* client.connectionInfo() gunction replaced by client.connectionInfo getter
+* client.getVersion() replaced by client.version getter, format changed as well
+* client.isAlive() replaced by client.isAlive getter
+* XSTRING and BYTE types work with Buffers only
 
 0.1.16 (2018-27-04)
 -------------------
