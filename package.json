@@ -23,10 +23,9 @@
     "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
     "install": "prebuild-install --tag-prefix -r napi || npm run prebuild",
     "prebuild": "prebuild --backend cmake-js -r napi --force --strip --verbose --tag-prefix",
+    "upload": "prebuild -r napi -u --verbose",
     "wrapper": "tsc -p src/ts",
-    "examples": "tsc -p examples/ts",
-    "install:dev": "npm i --save-dev @babel/core @types/bluebird @types/node cmake-js compare-versions decimal.js jest random-bytes typescript async",
-    "install:prod": "npm i --savegit bluebird node-addon-api"
+    "examples": "tsc -p examples/ts"
   },
   "binary": {
     "napi_versions": [
