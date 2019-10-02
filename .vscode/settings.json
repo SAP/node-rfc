@@ -4,5 +4,6 @@
         "string": "cpp",
         "string_view": "cpp",
         "typeinfo": "cpp"
-    }
+    },
+    "restructuredtext.confPath": "${workspaceFolder}/doc"
 }

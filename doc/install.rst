@@ -4,7 +4,7 @@
 Installation
 ============
 
-If `SAP NetWeaver RFC SDK <https://support.sap.com/en/product/connectors/nwrfcsdk.html>`_ and `NodeJS <http://nodejs.org/>`_ 
+If `SAP NetWeaver RFC SDK <https://support.sap.com/en/product/connectors/nwrfcsdk.html>`_ and `NodeJS <http://nodejs.org/>`_
 are already installed on your system, you can install the :mod:`node-rfc` package from npm, or build from source.
 
 You may use the current or any of `LTS node releases  <https://github.com/nodejs/Release>`_ and the latest SAP NW RFC SDK
@@ -64,7 +64,7 @@ Linux
           libicudata.so.50 (libc6,x86-64) => /usr/local/sap/nwrfcsdk/lib/libicudata.so.50
           libgssapi_krb5.so.2 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2
           libgssapi.so.3 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libgssapi.so.3
-        $    
+        $
 
 macOS
 -----
@@ -79,7 +79,7 @@ must be disabled:
 
 1. Create the SAP NW RFC SDK home directory ``/usr/local/sap/nwrfcsdk`` (this location is fixed, more info below)
 2. Set SAPNWRFC_HOME environment variable: ``SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk``
-3. Unpack the SAP NW RFC SDK archive to it, e.g. ``/usr/local/sap/nwrfcsdk/lib`` shall exist. 
+3. Unpack the SAP NW RFC SDK archive to it, e.g. ``/usr/local/sap/nwrfcsdk/lib`` shall exist.
 4. Set the remote paths in SAP NW RFC SDK by running following bash script:
 
      .. code-block:: sh
@@ -93,7 +93,7 @@ must be disabled:
         # add LC_RPATH
         #
         for filename in *.dylib; do
-            install_name_tool -add_rpath $RPATH $filename 
+            install_name_tool -add_rpath $RPATH $filename
         done
 
         #
@@ -110,7 +110,7 @@ This location is fixed to the default ``/usr/local/sap/nwrfcsdk/lib`` rpath, emb
 
 After moving SAP NW RFC SDK to another location on your system, the rpaths must be adjusted in SAP NW RFC SDK and in sapnwrfc.node libraries.
 
-For SAP NW RFC SDK, set the SAPNWRFC_HOME env variable to new SAP NW RFC SDK root directory and re-run the above script. 
+For SAP NW RFC SDK, set the SAPNWRFC_HOME env variable to new SAP NW RFC SDK root directory and re-run the above script.
 
 For node-rfc:
 
@@ -201,7 +201,7 @@ SAP NW RFC SDK
 
     (Windows)
     This error indicates that the node-rfc connector was not able to find the
-    SAP NW RFC SDK libraries on your system. Please check, if the ``$SAPNWRFC_HOME\lib`` directory 
+    SAP NW RFC SDK libraries on your system. Please check, if the ``$SAPNWRFC_HOME\lib`` directory
     is in your ``PATH`` environment variable.
 
 2. ``ImportError: DLL load failed: %1 is not a valid Win32 application.``
@@ -237,29 +237,11 @@ a persistent change of the environment variable, do the following (Windows 7):
 Building from Source
 ====================
 
-Windows
--------
-
-Toolchain used for building on Windows is VS2013 Professional Update 2, with native tools command prompts for 32 and 64 bit architectures:
+Check `prerequisites <https://github.com/SAP/node-rfc/tree/napi#prerequisites>`_ for your platform and run:
 
 .. code-block:: sh
 
-  node-pre-gyp clean
-  node-pre-gyp configure --msvs_version=2013
-  node-pre-gyp build
-
-Linux and macOS
----------------
-
-.. code-block:: sh
-
-  node-pre-gyp clean configure build
-
-In case of `'utility' file not found <https://github.com/nodejs/node-gyp/issues/1564>`_ isssues with certain node releases on macOS, try:
-
-.. code-block:: sh
-
-  env CXXFLAGS="-mmacosx-version-min=10.9" node-pre-gyp clean configure build 
+  npm run prebuild
 
 For unit tests run
 
@@ -285,8 +267,8 @@ The result is found in ``_build/html`` and for other options call ``make``.
 
 * If you get an error *'sphinx-build' is not recognized as an internal or external command, operable program or batch file* on calling ``make html``, install ``sphinx``
 
-The docu is hosted on GitHub Pages, a propietary solution where a git branch ``gh-pages`` is created 
-as an orphan and the output of the documentation build process (``_build/html``) is stored in that branch. 
+The docu is hosted on GitHub Pages, a propietary solution where a git branch ``gh-pages`` is created
+as an orphan and the output of the documentation build process (``_build/html``) is stored in that branch.
 
 GitHub then serves these files under a special ``/pages/`` url.
 
