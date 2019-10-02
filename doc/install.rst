@@ -282,7 +282,7 @@ To update GitHub Pages, copy everyhing under ``_build/html`` and overwrite the e
 
   rm -Rf ~/tmp/html
 
-  cp doc/_build/html ~/tmp/.
+  cp -r doc/_build/html ~/tmp/.
 
   git checkout gh-pages
 
