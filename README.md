@@ -3,6 +3,7 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 [![NPM](https://nodei.co/npm/node-rfc.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-rfc/)
 
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![N-API v3 Badge](https://github.com/nodejs/abi-stable-node/raw/doc/assets/N-API%20v3%20Badge.svg?sanitize=true)](https://github.com/nodejs/abi-stable-node/)
 [![release](https://img.shields.io/npm/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![downloads](https://img.shields.io/github/downloads/sap/node-rfc/total.svg)](https://www.npmjs.com/package/node-rfc)
 [![dpw](https://img.shields.io/npm/dw/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
