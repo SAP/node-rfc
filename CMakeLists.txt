@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # project
 file (STRINGS "VERSION" VERSION)
-project(sapnwrfc VERSION 1.0) # ${VERSION}
+project(sapnwrfc VERSION ${VERSION})
 
 # node platform
 execute_process(COMMAND node -p "process.platform"
