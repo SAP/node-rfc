@@ -1,6 +1,12 @@
 Change log
 ==========
 
+1.0.1 (XXXX-XX-XX)
+------------------
+
+* Min NodeJS version fixed in package.json, per https://nodejs.org/dist/latest/docs/api/n-api.html#n_api_n_api_version_matrix
+* README: N-API badge added
+
 1.0.0 (2019-10-02)
 ------------------
 
