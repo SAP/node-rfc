@@ -609,6 +609,15 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         unsigned int strLen = 2 * cLen + 1;
         SAP_UC *sapuc = mallocU(strLen + 1);
         rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
+        if (rc == 23) // Buffer too small, use returned requried result length
+        {
+            //std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            //printf("\nWarning: Buffer for BCD type %d to small when wrapping %s\ncLen=%u, buffer=%u, trying with %u", typ, &fieldName[0], cLen, strLen, resultLen);
+            free(sapuc);
+            strLen = resultLen;
+            sapuc = mallocU(strLen + 1);
+            rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
+        }
         if (rc != RFC_OK)
         {
             free(sapuc);
@@ -648,6 +657,15 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         unsigned int strLen = 2 * cLen + 10;
         SAP_UC *sapuc = mallocU(strLen + 1);
         rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
+        if (rc == 23) // Buffer too small, use returned requried result length
+        {
+            //std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            //printf("\nWarning: Buffer for BCD type %d to small when wrapping %s\ncLen=%u, buffer=%u, trying with %u", typ, &fieldName[0], cLen, strLen, resultLen);
+            free(sapuc);
+            strLen = resultLen;
+            sapuc = mallocU(strLen + 1);
+            rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
+        }
         if (rc != RFC_OK)
         {
             free(sapuc);
