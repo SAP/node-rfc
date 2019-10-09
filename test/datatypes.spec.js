@@ -42,15 +42,131 @@ afterAll(function(done) {
 });
 
 const DECIMAL_FIELDS = "ZDEC";
+// Predefined numeric types: https://help.sap.com/doc/abapdocu_752_index_htm/7.52/en-US/index.htm?file=abenddic_builtin_types_intro.htm
+// JavaScript safe integers range https://www.ecma-international.org/ecma-262/8.0/#sec-number.max_safe_integer
+
+const RFC_MATH = {
+    RFC_INT1MAX: 255,
+    RFC_INT2MAX: 32768,
+    RFC_INT4MAX: 2147483648,
+    RFC_INT4MAX: 9223372036854775808,
+    FLOAT_MIN: "2.2250738585072014E-308",
+    FLOAT_MAX: "1.7976931348623157E+308",
+    DECF16_MIN: "1E-383",
+    DECF16_MAX: "9.999999999999999E+384",
+    DECF34_MIN: "1E-6143",
+    DECF34_MAX: "9.999999999999999999999999999999999E+6144",
+
+    RFCINT1: { MIN: 0, MAX: 255 },
+    RFCINT2: { MIN: -32768, MAX: 32767 },
+    RFCINT4: { MIN: -2147483648, MAX: 2147483647 },
+    RFCINT8: { MIN: -9223372036854775808, MAX: 9223372036854775807 },
+    DECF16_POS: { MIN: "1E-383", MAX: "9.999999999999999E+384" },
+    DECF16_NEG: { MIN: "-1E-383", MAX: "-9.999999999999999E+384" },
+    DECF34_POS: {
+        MIN: "1E-6143",
+        MAX: "9.999999999999999999999999999999999E+6144"
+    },
+    DECF34_NEG: {
+        MIN: "-1E-6143",
+        MAX: "-9.999999999999999999999999999999999E+6144"
+    },
+    FLOAT_POS: {
+        MIN: "2.2250738585072014e-308",
+        MAX: "1.7976931348623157e+308"
+    },
+    FLOAT_NEG: {
+        MIN: "-2.2250738585072014e-308",
+        MAX: "-1.7976931348623157e+308"
+    },
+    DATE: { MIN: "00010101", MAX: "99991231" },
+    TIME: { MIN: "000000", MAX: "235959" }
+};
+
+it("Min/Max positive", function(done) {
+    let isInput = {
+        // Float
+        ZFLTP_MIN: RFC_MATH.FLOAT_POS.MIN,
+        ZFLTP_MAX: RFC_MATH.FLOAT_POS.MAX,
+
+        // Decimal
+        ZDECF16_MIN: RFC_MATH.DECF16_POS.MIN,
+        ZDECF16_MAX: RFC_MATH.DECF16_POS.MAX,
+
+        ZDECF34_MIN: RFC_MATH.DECF34_POS.MIN,
+        ZDECF34_MAX: RFC_MATH.DECF34_POS.MAX
+    };
+
+    client.invoke("/COE/RBP_FE_DATATYPES", { IS_INPUT: isInput }, function(
+        err,
+        res
+    ) {
+        expect(err).toBeUndefined();
+        expect(res).toHaveProperty("ES_OUTPUT");
+        for (let k in isInput) {
+            let inVal = isInput[k];
+            let outVal = res.ES_OUTPUT[k];
+            let outTyp = typeof outVal;
+            if (k.indexOf("FLTP") !== -1) {
+                expect(outTyp).toEqual("number");
+                expect(outVal.toString()).toEqual(inVal);
+            } else {
+                expect(outTyp).toEqual("string");
+                expect(outVal).toEqual(inVal);
+            }
+        }
+        client.close(() => {
+            done();
+        });
+    });
+});
+
+it("Min/Max negative", function(done) {
+    let isInput = {
+        // Float
+        ZFLTP_MIN: RFC_MATH.FLOAT_NEG.MIN,
+        ZFLTP_MAX: RFC_MATH.FLOAT_NEG.MAX,
+
+        // Decimal
+        ZDECF16_MIN: RFC_MATH.DECF16_NEG.MIN,
+        ZDECF16_MAX: RFC_MATH.DECF16_NEG.MAX,
+
+        ZDECF34_MIN: RFC_MATH.DECF34_NEG.MIN,
+        ZDECF34_MAX: RFC_MATH.DECF34_NEG.MAX
+    };
+
+    client.invoke("/COE/RBP_FE_DATATYPES", { IS_INPUT: isInput }, function(
+        err,
+        res
+    ) {
+        expect(err).toBeUndefined();
+        expect(res).toHaveProperty("ES_OUTPUT");
+        for (let k in isInput) {
+            let inVal = isInput[k];
+            let outVal = res.ES_OUTPUT[k];
+            let outTyp = typeof outVal;
+            if (k.indexOf("FLTP") !== -1) {
+                expect(outTyp).toEqual("number");
+                expect(outVal.toString()).toEqual(inVal);
+            } else {
+                expect(outTyp).toEqual("string");
+                expect(outVal).toEqual(inVal);
+            }
+        }
+        client.close(() => {
+            done();
+        });
+    });
+});
 
 it("BCD and FLOAT accept numbers", function(done) {
     let isInput = {
         // Float
         ZFLTP: 0.123456789,
-
         // Decimal
         ZDEC: 12345.67,
-
+        ZDECF16_MIN: 12345.67,
+        ZDECF34_MIN: 12345.67,
         // Currency, Quantity
         ZCURR: 1234.56,
         ZQUAN: 12.3456,
@@ -61,7 +177,9 @@ it("BCD and FLOAT accept numbers", function(done) {
         ZDEC: "number",
         ZCURR: "number",
         ZQUAN: "number",
-        ZQUAN_SIGN: "number"
+        ZQUAN_SIGN: "number",
+        ZDECF16_MIN: "number",
+        ZDECF34_MIN: "number"
     };
     let xclient = new setup.rfcClient(setup.abapSystem, { bcd: "number" });
     expect(xclient.options.bcd).toEqual("number");
@@ -92,6 +210,8 @@ it("BCD and FLOAT accept strings", function(done) {
         ZFLTP: "0.123456789",
         // Decimal
         ZDEC: "12345.67",
+        ZDECF16_MIN: "12345.67",
+        ZDECF34_MIN: "12345.67",
         // Currency, Quantity
         ZCURR: "1234.56",
         ZQUAN: "12.3456",
@@ -102,7 +222,9 @@ it("BCD and FLOAT accept strings", function(done) {
         ZDEC: "string",
         ZCURR: "string",
         ZQUAN: "string",
-        ZQUAN_SIGN: "string"
+        ZQUAN_SIGN: "string",
+        ZDECF16_MIN: "string",
+        ZDECF34_MIN: "string"
     };
     expect(client.options.bcd).toEqual("string");
     client.invoke("/COE/RBP_FE_DATATYPES", { IS_INPUT: isInput }, function(
@@ -133,7 +255,8 @@ it("BCD and FLOAT accept Decimals", function(done) {
 
         // Decimal
         ZDEC: Decimal("12345.67"),
-
+        ZDECF16_MIN: Decimal("12345.67"),
+        ZDECF34_MIN: Decimal("54321.76"),
         // Currency, Quantity
         ZCURR: Decimal("1234.56"),
         ZQUAN: Decimal("12.3456"),
@@ -144,7 +267,9 @@ it("BCD and FLOAT accept Decimals", function(done) {
         ZDEC: "object",
         ZCURR: "object",
         ZQUAN: "object",
-        ZQUAN_SIGN: "object"
+        ZQUAN_SIGN: "object",
+        ZDECF16_MIN: "object",
+        ZDECF34_MIN: "object"
     };
     let xclient = new setup.rfcClient(setup.abapSystem, { bcd: Decimal });
     expect(xclient.options.bcd).toEqual(Decimal);
@@ -537,16 +662,6 @@ it("error: INT1 negative infinity", function(done) {
         }
     );
 });
-
-// ABAP integers range https://help.sap.com/http.svc/rc/abapdocu_752_index_htm/7.52/en-US/index.htm?file=abenddic_builtin_types_intro.htm
-// RFCINT1: 0 to 255
-// RFCINT2: -32,768 to 32,767
-// RFCINT4: -2,147,483,648 to +2,147,483,647
-// RFCINT8: -9,223,372,036,854,775,808 to +9,223,372,036,854,775,807
-
-// JavaScript safe integers range https://www.ecma-international.org/ecma-262/8.0/#sec-number.max_safe_integer
-// MAX: 9,007,199,254,740,991 (2 ** 53 - 1)
-// MIN: -9,007,199,254,740,991
 
 it("INT max positive", function(done) {
     let importStruct = {

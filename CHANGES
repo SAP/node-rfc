@@ -1,11 +1,12 @@
 Change log
 ==========
 
-1.0.1 (XXXX-XX-XX)
+1.0.1 (2019-10-09)
 ------------------
 
 * Min NodeJS version fixed in package.json, per https://nodejs.org/dist/latest/docs/api/n-api.html#n_api_n_api_version_matrix
 * README: N-API badge added
+* ABAP decimal floating point data types added: RFCTYPE_DECF16 and RFCTYPE_DECF34
 
 1.0.0 (2019-10-02)
 ------------------

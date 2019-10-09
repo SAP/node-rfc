@@ -250,6 +250,8 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         break;
     }
     case RFCTYPE_BCD: // fallthrough
+    case RFCTYPE_DECF16:
+    case RFCTYPE_DECF34:
     case RFCTYPE_FLOAT:
     {
         if (!value.IsNumber() && !value.IsObject() && !value.IsString())
@@ -630,6 +632,38 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         RFC_FLOAT floatValue;
         rc = RfcGetFloat(functionHandle, cName, &floatValue, &errorInfo);
         resultValue = Napi::Number::New(__env, floatValue);
+        break;
+    }
+    case RFCTYPE_DECF16:
+    case RFCTYPE_DECF34:
+    {
+        // An upper bound for the length of the _string representation_
+        // of the BCD is given by (2*cLen)-1 (each digit is encoded in 4bit,
+        // the first 4 bit are reserved for the sign)
+        // Furthermore, a sign char, a decimal separator char may be present
+        // => (2*cLen)+1
+        // and exponent char, sign and exponent
+        // => +9
+        unsigned int resultLen;
+        unsigned int strLen = 2 * cLen + 10;
+        SAP_UC *sapuc = mallocU(strLen + 1);
+        rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
+        if (rc != RFC_OK)
+        {
+            free(sapuc);
+            break;
+        }
+        resultValue = wrapString(sapuc, resultLen).ToString();
+        free(sapuc);
+
+        if (__bcd == NODERFC_BCD_FUNCTION)
+        {
+            resultValue = __bcdFunction.Call({resultValue});
+        }
+        else if (__bcd == NODERFC_BCD_NUMBER)
+        {
+            resultValue = resultValue.ToNumber();
+        }
         break;
     }
     case RFCTYPE_INT:
