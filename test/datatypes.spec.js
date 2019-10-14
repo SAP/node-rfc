@@ -44,35 +44,35 @@ afterAll(function(done) {
 // Numeric types
 //
 // ABAP:       https://help.sap.com/doc/abapdocu_752_index_htm/7.52/en-US/index.htm?file=abenddic_builtin_types_intro.htm
-// JavaScript: https://www.ecma-international.org/ecma-262/8.0/#sec-number.max_safe_integer
+// JavaScript: https://www.ecma-international.org/ecma-262/10.0/index.html#Title
 //
 const RFC_MATH = {
     RFC_INT1: { MIN: 0, MAX: 255 },
-    RFC_INT2: { MIN: -32768, MAX: 32767 },
-    RFC_INT4: { MIN: -2147483648, MAX: 2147483647 },
-    RFC_INT8: { MIN: -9223372036854775808, MAX: 9223372036854775807 },
+    RFC_INT2: { NEG: -32768, POS: 32767 },
+    RFC_INT4: { NEG: -2147483648, POS: 2147483647 },
+    RFC_INT8: { NEG: -9223372036854775808, POS: 9223372036854775807 },
     FLOAT: {
-        POS: {
-            MIN: "2.2250738585072014E-308",
-            MAX: "1.7976931348623157E+308"
-        },
         NEG: {
             MIN: "-2.2250738585072014E-308",
             MAX: "-1.7976931348623157E+308"
+        },
+        POS: {
+            MIN: "2.2250738585072014E-308",
+            MAX: "1.7976931348623157E+308"
         }
     },
     DECF16: {
-        POS: { MIN: "1E-383", MAX: "9.999999999999999E+384" },
-        NEG: { MIN: "-1E-383", MAX: "-9.999999999999999E+384" }
+        NEG: { MIN: "-1E-383", MAX: "-9.999999999999999E+384" },
+        POS: { MIN: "1E-383", MAX: "9.999999999999999E+384" }
     },
     DECF34: {
-        POS: {
-            MIN: "1E-6143",
-            MAX: "9.999999999999999999999999999999999E+6144"
-        },
         NEG: {
             MIN: "-1E-6143",
             MAX: "-9.999999999999999999999999999999999E+6144"
+        },
+        POS: {
+            MIN: "1E-6143",
+            MAX: "9.999999999999999999999999999999999E+6144"
         }
     },
     DATE: { MIN: "00010101", MAX: "99991231" },
@@ -99,18 +99,26 @@ it("Min/Max positive", function(done) {
     ) {
         expect(err).toBeUndefined();
         expect(res).toHaveProperty("ES_OUTPUT");
-        for (let k in isInput) {
-            let inVal = isInput[k];
-            let outVal = res.ES_OUTPUT[k];
-            let outTyp = typeof outVal;
-            if (k.indexOf("FLTP") !== -1) {
-                expect(outTyp).toEqual("number");
-                expect(outVal).toEqual(parseFloat(inVal));
-            } else {
-                expect(outTyp).toEqual("string");
-                expect(outVal).toEqual(inVal);
-            }
-        }
+        const output = res.ES_OUTPUT;
+
+        expect(typeof output.ZFLTP_MIN).toEqual("number");
+        expect(output.ZFLTP_MIN).toEqual(parseFloat(isInput.ZFLTP_MIN));
+
+        expect(typeof output.ZFLTP_MAX).toEqual("number");
+        expect(output.ZFLTP_MAX).toEqual(parseFloat(isInput.ZFLTP_MAX));
+
+        expect(typeof output.ZDECF16_MIN).toEqual("string");
+        expect(output.ZDECF16_MIN).toEqual(isInput.ZDECF16_MIN);
+
+        expect(typeof output.ZDECF16_MAX).toEqual("string");
+        expect(output.ZDECF16_MAX).toEqual(isInput.ZDECF16_MAX);
+
+        expect(typeof output.ZDECF34_MIN).toEqual("string");
+        expect(output.ZDECF34_MIN).toEqual(isInput.ZDECF34_MIN);
+
+        expect(typeof output.ZDECF34_MAX).toEqual("string");
+        expect(output.ZDECF34_MAX).toEqual(isInput.ZDECF34_MAX);
+
         client.close(() => {
             done();
         });
@@ -137,18 +145,26 @@ it("Min/Max negative", function(done) {
     ) {
         expect(err).toBeUndefined();
         expect(res).toHaveProperty("ES_OUTPUT");
-        for (let k in isInput) {
-            let inVal = isInput[k];
-            let outVal = res.ES_OUTPUT[k];
-            let outTyp = typeof outVal;
-            if (k.indexOf("FLTP") !== -1) {
-                expect(outTyp).toEqual("number");
-                expect(outVal).toEqual(parseFloat(inVal));
-            } else {
-                expect(outTyp).toEqual("string");
-                expect(outVal).toEqual(inVal);
-            }
-        }
+        const output = res.ES_OUTPUT;
+
+        expect(typeof output.ZFLTP_MIN).toEqual("number");
+        expect(output.ZFLTP_MIN).toEqual(parseFloat(isInput.ZFLTP_MIN));
+
+        expect(typeof output.ZFLTP_MAX).toEqual("number");
+        expect(output.ZFLTP_MAX).toEqual(parseFloat(isInput.ZFLTP_MAX));
+
+        expect(typeof output.ZDECF16_MIN).toEqual("string");
+        expect(output.ZDECF16_MIN).toEqual(isInput.ZDECF16_MIN);
+
+        expect(typeof output.ZDECF16_MAX).toEqual("string");
+        expect(output.ZDECF16_MAX).toEqual(isInput.ZDECF16_MAX);
+
+        expect(typeof output.ZDECF34_MIN).toEqual("string");
+        expect(output.ZDECF34_MIN).toEqual(isInput.ZDECF34_MIN);
+
+        expect(typeof output.ZDECF34_MAX).toEqual("string");
+        expect(output.ZDECF34_MAX).toEqual(isInput.ZDECF34_MAX);
+
         client.close(() => {
             done();
         });
