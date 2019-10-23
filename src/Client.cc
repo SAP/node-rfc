@@ -719,10 +719,7 @@ Napi::Value Client::OptionsGetter(const Napi::CallbackInfo &info)
     {
         date.Set(Napi::String::New(__env, "fromABAP"), __dateFromABAP.Value());
     }
-    if (date.GetPropertyNames().Length() > 0)
-    {
-        options.Set(Napi::String::New(__env, "date"), date);
-    }
+    options.Set(Napi::String::New(__env, "date"), date);
 
     Napi::Object time = Napi::Object::New(__env);
     if (!__timeToABAP.IsEmpty())
@@ -733,10 +730,7 @@ Napi::Value Client::OptionsGetter(const Napi::CallbackInfo &info)
     {
         time.Set(Napi::String::New(__env, "fromABAP"), __timeFromABAP.Value());
     }
-    if (time.GetPropertyNames().Length() > 0)
-    {
-        options.Set(Napi::String::New(__env, "time"), time);
-    }
+    options.Set(Napi::String::New(__env, "time"), time);
 
     return options;
 }
