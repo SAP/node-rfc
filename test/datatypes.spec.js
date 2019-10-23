@@ -489,7 +489,7 @@ it("error: INT rejects string", function(done) {
     );
 });
 
-it("error: CHAR rejects string", function(done) {
+it("error: CHAR rejects int", function(done) {
     let importStruct = {
         RFCCHAR4: 65
     };
