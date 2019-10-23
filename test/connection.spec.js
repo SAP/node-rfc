@@ -58,6 +58,8 @@ it("Client getters", function() {
 
     expect(client.options).toHaveProperty("rstrip");
     expect(client.options).toHaveProperty("bcd");
+    expect(client.options).toHaveProperty("date");
+    expect(client.options).toHaveProperty("time");
 
     expect(() => (client.version = { a: 1, b: 2 })).toThrow(
         new TypeError(
