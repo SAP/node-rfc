@@ -77,7 +77,11 @@ npm test
 
 In order to call remote enabled ABAP function module, we need to create a client
 with valid logon credentials, connect to SAP ABAP NetWeaver system and then invoke a
-remote enabled ABAP function module from nodejs. The client can be used for one or more subsequent RFC calls and for more examples check unit tests.
+remote enabled ABAP function module from nodejs.
+
+Connection parameters for remote ABAP systems are documented in **sapnwrfc.ini** file, located in the SAP NWRFC SDK `demo` folder
+
+The client can be used for one or more subsequent RFC calls and for more examples check unit tests.
 
 Callback API example below shows basic principles. See also:
 
