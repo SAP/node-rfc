@@ -140,7 +140,12 @@ public:
 
     void OnOK()
     {
-        Napi::Value argv[2] = {Env().Undefined(), Napi::Boolean::New(Env(), client->errorInfo.code == RFC_OK)};
+        Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
+        RFC_INT isValid = 0;
+        if (client->errorInfo.code == RFC_OK) {
+            RfcIsConnectionHandleValid(client->connectionHandle, &isValid, &client->errorInfo);
+        }
+        argv[1] = Napi::Boolean::New(Env(), isValid && client->errorInfo.code == RFC_OK);
         TRY_CATCH_CALL(Env().Global(), Callback(), 2, argv);
     }
 
