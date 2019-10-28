@@ -312,8 +312,11 @@ it("RAW/BYTE accepts Buffer", function(done) {
     ) {
         expect(err).toBeUndefined();
         expect(res).toHaveProperty("ES_OUTPUT");
-        let test = Utils.compareBuffers(isInput.ZRAW, res.ES_OUTPUT.ZRAW);
-        expect(test.content).toBeTruthy();
+        expect(isInput.ZRAW.length).toEqual(13);
+        expect(res.ES_OUTPUT.ZRAW.length).toEqual(17);
+        expect(
+            Utils.compareBuffers(isInput.ZRAW, res.ES_OUTPUT.ZRAW)
+        ).toBeTruthy();
         done();
     });
 });
