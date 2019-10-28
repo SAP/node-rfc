@@ -117,20 +117,6 @@ it("error: invoke() requires at least three arguments", function(done) {
     }
 });
 
-it("error: invoke() rejects non-existing parameter", function(done) {
-    client.invoke("STFC_CONNECTION", { XXX: "wrong param" }, function(err) {
-        expect(err).toBeDefined();
-        expect(err).toEqual(
-            expect.objectContaining({
-                code: 20,
-                key: "RFC_INVALID_PARAMETER",
-                message: "field 'XXX' not found"
-            })
-        );
-        done();
-    });
-});
-
 it("error: invoke() rejects non-string rfm name", function(done) {
     client.invoke(23, {}, function(err) {
         expect(err).toBeDefined();
@@ -145,17 +131,14 @@ it("error: invoke() rejects non-string rfm name", function(done) {
     });
 });
 
-it("error: invoke() RFC_RAISE_ERROR", function(done) {
-    client.invoke("RFC_RAISE_ERROR", { MESSAGETYPE: "A" }, function(err) {
+it("error: invoke() rejects non-existing parameter", function(done) {
+    client.invoke("STFC_CONNECTION", { XXX: "wrong param" }, function(err) {
         expect(err).toBeDefined();
         expect(err).toEqual(
             expect.objectContaining({
-                code: 4,
-                key: "Function not supported",
-                abapMsgClass: "SR",
-                abapMsgType: "A",
-                abapMsgNumber: "006",
-                message: "Function not supported"
+                code: 20,
+                key: "RFC_INVALID_PARAMETER",
+                message: "field 'XXX' not found"
             })
         );
         done();

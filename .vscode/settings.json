@@ -30,5 +30,6 @@
         "stdexcept": "cpp"
     },
     "git.ignoreLimitWarning": true,
-    "terminal.integrated.rendererType": "dom"
+    "terminal.integrated.rendererType": "dom",
+    "cmake.configureOnOpen": true
 }

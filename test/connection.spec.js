@@ -72,7 +72,6 @@ it("isAlive ands ping() should be false when disconnected", function(done) {
     client.close(() => {
         expect(client.isAlive).toBeFalsy();
         client.ping((err, res) => {
-            if (err) return done(err);
             expect(res).toBeFalsy();
             done();
         });
@@ -84,7 +83,6 @@ it("isAlive and ping() should be true when connected", function(done) {
         if (err) return done(err);
         expect(client.isAlive).toBeTruthy();
         client.ping((err, res) => {
-            if (err) return done(err);
             expect(res).toBeTruthy();
             done();
         });
