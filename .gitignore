@@ -7,6 +7,7 @@
 *.exp
 *.lib
 *.swp
+*.code-workspace
 .deps
 .buildinfo
 obj.target
@@ -22,3 +23,4 @@ ci/
 .vscode/ipch
 prebuilds/
 .prebuildrc
+
