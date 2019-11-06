@@ -31,5 +31,6 @@
   },
   "git.ignoreLimitWarning": true,
   "terminal.integrated.rendererType": "dom",
-  "cmake.configureOnOpen": false
+  "cmake.configureOnOpen": false,
+  "restructuredtext.confPath": ""
 }

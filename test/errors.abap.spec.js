@@ -130,14 +130,16 @@ it("error: invoke() AbapApplicationError E11", function(done) {
     client.invoke(
         "RFC_RAISE_ERROR",
         { METHOD: "11", MESSAGETYPE: "E" },
-        function(err) {
+        function(rec, err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
-                    code: 17,
-                    name: "RfcLibError",
-                    key: "RFC_NOT_FOUND",
-                    message: "Function RFCPING not found"
+                    COUNTER: 1,
+                    CSTRING: "",
+                    RETURN_VALUE: "",
+                    MESSAGETYPE: "E",
+                    METHOD: "11",
+                    PARAMETER: ""
                 })
             );
             // Assures that the connection handle is correctly synchronized
