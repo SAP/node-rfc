@@ -110,9 +110,10 @@ it("error: open() promise requires minimum of connection parameters", function()
             expect(err).toEqual(
                 expect.objectContaining({
                     message:
-                        "Parameter ASHOST, GWHOST, MSHOST or SERVER_PORT is missing.",
+                        "Parameter ASHOST, GWHOST, MSHOST or PORT is missing.",
                     code: 20,
-                    key: "RFC_INVALID_PARAMETER"
+                    key: "RFC_INVALID_PARAMETER",
+                    name: "RfcLibError"
                 })
             );
         });

@@ -1,11 +1,12 @@
 Change log
 ==========
 
-1.0.2 (2019-xx-xx)
+1.0.2 (2019-11-06)
 ------------------
 
 * Ping confirms the connection handle validity
 * Unit tests for ABAP errors
+* SAP NWRFC SDK version shell scripts
 
 1.0.1 (2019-10-09)
 ------------------

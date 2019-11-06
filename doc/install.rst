@@ -84,27 +84,49 @@ must be disabled:
 
      .. code-block:: sh
 
-        #!/bin/bash
+       #!/bin/bash
 
-        RPATH="$SAPNWRFC_HOME/lib"
-        cd $RPATH
+      if [ -z "$SAPNWRFC_HOME" ]; then
+         echo "SAPNWRFC_HOME env variable not set. Should point to SAP NWRFC SDK library root"
+         exit 1
+      fi
 
-        #
-        # add LC_RPATH
-        #
-        for filename in *.dylib; do
-            install_name_tool -add_rpath $RPATH $filename
-        done
+      #
+      # lib folder fix
+      #
 
-        #
-        # fix LC_LOAD_DYLIB
-        #
+      cd lib
+      RPATH="$SAPNWRFC_HOME/lib"
+      for filename in *.dylib; do
+         # LC_RPATH
+         install_name_tool -add_rpath $RPATH $filename
+         # LC_ID_DYLIB
+         install_name_tool -id @rpath/$filename $filename
+      done
 
-        # in libisui18n
-        install_name_tool -change libicuuc.50.dylib @rpath/libicuuc.50.dylib libicui18n.50.dylib
-        install_name_tool -change libicudata.50.dylib @rpath/libicudata.50.dylib libicui18n.50.dylib
-        # in libicuuc
-        install_name_tool -change libicudata.50.dylib @rpath/libicudata.50.dylib libicuuc.50.dylib
+      # LC_LOAD_DYLIB
+      install_name_tool -change @loader_path/libicuuc.50.dylib @rpath/libicuuc.50.dylib libicui18n.50.dylib
+      install_name_tool -change @loader_path/libicudata.50.dylib @rpath/libicudata.50.dylib libicui18n.50.dylib
+      install_name_tool -change @loader_path/libicudata.50.dylib @rpath/libicudata.50.dylib libicuuc.50.dylib
+      cd ..
+
+      #
+      # bin folder fix
+      #
+
+      cd bin
+      for filename in *; do
+         chmod +x $filename
+         # LC_RPATH
+         install_name_tool -add_rpath $RPATH $filename
+         # LC_ID_DYLIB
+         install_name_tool -id @rpath/$filename $filename
+         # LC_LOAD_DYLIB
+         install_name_tool -change @loader_path/libsapnwrfc.dylib @rpath/libsapnwrfc.dylib $filename
+         install_name_tool -change @loader_path/libsapucum.dylib @rpath/libsapucum.dylib $filename
+      done
+      install_name_tool -change @loader_path/libsapucum.dylib @rpath/libsapucum.dylib ./startrfc
+      cd ..
 
 This location is fixed to the default ``/usr/local/sap/nwrfcsdk/lib`` rpath, embedded into node-rfc package published on npm.
 

@@ -2,6 +2,9 @@
 cmake_minimum_required(VERSION 3.15)
 cmake_policy(SET CMP0042 NEW)
 
+# verbose
+set(CMAKE_VERBOSE_MAKEFILE on)
+
 # C++ standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -88,6 +91,12 @@ add_compile_definitions(
     NAPI_CPP_EXCEPTION)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+
+    # display SAP NWRFC SDK version
+    execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ci/utils/nwrfcsdk-version-linux.sh OUTPUT_VARIABLE SAPNWRFCSDK_VERSION)
+    message("SAP NWRFC SDK: " ${SAPNWRFCSDK_VERSION})
+
+
     target_compile_options(${PROJECT_NAME} PUBLIC -std=c++11 -Wall)
 
     add_compile_definitions(
@@ -113,6 +122,10 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(NODE_INCLUDE_DIR "C:\\Tools\\nvm\\v10.15.3\\include\\node")
 
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+
+    # display SAP NWRFC SDK version
+    execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ci/utils/nwrfcsdk-version-darwin.sh OUTPUT_VARIABLE SAPNWRFCSDK_VERSION)
+    message("SAP NWRFC SDK: " ${SAPNWRFCSDK_VERSION})
 
     target_compile_options(${PROJECT_NAME} PUBLIC -stdlib=libc++ -std=c++0x -Wall -mmacosx-version-min=10.10)
 
