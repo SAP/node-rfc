@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.15)
 cmake_policy(SET CMP0042 NEW)
 
 # verbose
-set(CMAKE_VERBOSE_MAKEFILE on)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # C++ standard
 set(CMAKE_CXX_STANDARD 11)
@@ -84,9 +84,15 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions")
 
 #target_compile_options(${PROJECT_NAME} PUBLIC -fno-exceptions)
 
-add_compile_definitions(
+# https://launchpad.support.sap.com/#/notes/2573953
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+    _CONSOLE
     SAPwithUNICODE
+    UNICODE
+    _UNICODE
     SAPwithTHREADS
+    _LARGEFILE_SOURCE
+    _FILE_OFFSET_BITS=64
     NDEBUG
     NAPI_CPP_EXCEPTION)
 
@@ -102,24 +108,32 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     add_compile_definitions(
         SAPonLIN
         SAPonUNIX
-        _LARGEFILE_SOURCE
-        _FILE_OFFSET_BITS=64
         __NO_MATH_INLINES)
 
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    # display SAP NWRFC SDK version
+    execute_process(
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}\\ci\\utils\\nwrfcsdk-version.bat"
+        OUTPUT_VARIABLE SAPNWRFCSDK_VERSION)
+    message("SAP NWRFC SDK: " ${SAPNWRFCSDK_VERSION})
 
-    add_compile_definitions(
-        PLATFORM=win32
-        WIN32
-        _AFXDLL
-        _CRT_NON_CONFORMING_SWPRINTFS
-        _CRT_SECURE_NO_DEPRECATE
-        _CRT_NONSTDC_NO_DEPRECATE
+    # https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically
+    target_compile_definitions(${PROJECT_NAME} PUBLIC
+        SAP_PLATFORM_MAKENAME=ntintel
         SAPonNT
-        UNICODE
-        _UNICODE)
+        _CRT_NON_CONFORMING_SWPRINTFS
+        _CRT_SECURE_NO_DEPRECATES
+        _CRT_NONSTDC_NO_DEPRECATE
+        _AFXDLL
+        WIN32
+        _WIN32_WINNT=0x0502
+        WIN64
+        _AMD64_
+        NDEBUG
+        _ATL_ALLOW_CHAR_UNSIGNED
+    )
 
-    set(NODE_INCLUDE_DIR "C:\\Tools\\nvm\\v10.15.3\\include\\node")
+    set(NODE_INCLUDE_DIR "$ENV{NODEJS_HOME}\\include\\node")
 
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 
@@ -131,8 +145,6 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 
     add_compile_definitions(
         SAPonDARW
-        _LARGEFILE_SOURCE
-        _FILE_OFFSET_BITS=64
         __NO_MATH_INLINES)
 
 endif()
