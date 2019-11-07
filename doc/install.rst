@@ -80,55 +80,11 @@ must be disabled:
 1. Create the SAP NW RFC SDK home directory ``/usr/local/sap/nwrfcsdk`` (this location is fixed, more info below)
 2. Set SAPNWRFC_HOME environment variable: ``SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk``
 3. Unpack the SAP NW RFC SDK archive to it, e.g. ``/usr/local/sap/nwrfcsdk/lib`` shall exist.
-4. Set the remote paths in SAP NW RFC SDK by running following bash script:
+4. Set the remote paths in SAP NW RFC SDK by running `paths_fix.sh <https://github.com/SAP/PyRFC/blob/master/ci/utils/paths_fix.sh>`_ script.
+5. Unzip the `unchar.zip` file attached to `SAP OSS Note 2573953 <https://launchpad.support.sap.com/#/notes/2573953>`_
+   and copy the `uchar.h` file to SAP NW RFC SDK include directory:
 
-     .. code-block:: sh
-
-       #!/bin/bash
-
-      if [ -z "$SAPNWRFC_HOME" ]; then
-         echo "SAPNWRFC_HOME env variable not set. Should point to SAP NWRFC SDK library root"
-         exit 1
-      fi
-
-      #
-      # lib folder fix
-      #
-
-      cd lib
-      RPATH="$SAPNWRFC_HOME/lib"
-      for filename in *.dylib; do
-         # LC_RPATH
-         install_name_tool -add_rpath $RPATH $filename
-         # LC_ID_DYLIB
-         install_name_tool -id @rpath/$filename $filename
-      done
-
-      # LC_LOAD_DYLIB
-      install_name_tool -change @loader_path/libicuuc.50.dylib @rpath/libicuuc.50.dylib libicui18n.50.dylib
-      install_name_tool -change @loader_path/libicudata.50.dylib @rpath/libicudata.50.dylib libicui18n.50.dylib
-      install_name_tool -change @loader_path/libicudata.50.dylib @rpath/libicudata.50.dylib libicuuc.50.dylib
-      cd ..
-
-      #
-      # bin folder fix
-      #
-
-      cd bin
-      for filename in *; do
-         chmod +x $filename
-         # LC_RPATH
-         install_name_tool -add_rpath $RPATH $filename
-         # LC_ID_DYLIB
-         install_name_tool -id @rpath/$filename $filename
-         # LC_LOAD_DYLIB
-         install_name_tool -change @loader_path/libsapnwrfc.dylib @rpath/libsapnwrfc.dylib $filename
-         install_name_tool -change @loader_path/libsapucum.dylib @rpath/libsapucum.dylib $filename
-      done
-      install_name_tool -change @loader_path/libsapucum.dylib @rpath/libsapucum.dylib ./startrfc
-      cd ..
-
-This location is fixed to the default ``/usr/local/sap/nwrfcsdk/lib`` rpath, embedded into node-rfc package published on npm.
+This default rpath location is ``/usr/local/sap/nwrfcsdk/lib`` is embedded into node-rfc package published on npm.
 
 After moving SAP NW RFC SDK to another location on your system, the rpaths must be adjusted,
 in SAP NW RFC SDK and in sapnwrfc.node libraries.
@@ -140,8 +96,8 @@ For node-rfc:
      .. code-block:: sh
 
         $ npm install node-rfc@next
-        $ cd node_modules/node-rfc/lib/binding/darwin-x64-node-v64
-        $ install_name_tool -rpath /usr/local/sap/nwrfcsdk/lib /usr/new-path/lib sapnwrfc.node
+        $ cd node_modules/node-rfc/lib/binding
+        $ install_name_tool -rpath /usr/local/sap/nwrfcsdk/lib <new path> sapnwrfc.node
 
 The v64 suffix is the node abi version for the node release 10 and the suffix for your node release you may find here: https://nodejs.org/en/download/releases.
 
