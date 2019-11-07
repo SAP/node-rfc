@@ -47,7 +47,9 @@ Visual C++ Redistributable for Visual Studio 2015, or [newer](https://www.micros
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 ```
 
-- Remote paths must be set in SAP NWRFC SDK for macOS: [node-rfc/#58](https://github.com/SAP/node-rfc/issues/58#issuecomment-446544151)
+- Remote paths must be set in SAP NWRFC SDK for macOS: [documentation](http://sap.github.io/node-rfc/install.html#macos
+
+- Build from source requires `uchar.h` file, attached to [SAP OSS Note 2573953](https://launchpad.support.sap.com/#/notes/2573953), to be copied to SAP NW RFC SDK include directory: [documentation](http://sap.github.io/PyRFC/install.html#macos)
 
 ## Installation
 
