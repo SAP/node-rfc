@@ -1,22 +1,87 @@
-# run from NodeJS folder
-#  .. ci/utils/node-version-install.sh 10.17.0
+# NodeJS Version Manager
 
 if [ -z "$NODEJS_HOME" ]; then
-	printf "\nNODEJS_HOME env variable, for nodejs releases root folder not set\n"
+    printf "\nNODEJS_HOME env variable, for nodejs releases root folder not set\n"
     return 1
 fi
 
-if [[ -z $1 || ! "$1" =~ ^(ls|use|remove)$ ]]; then
-	printf "Options:\n"
+if ! [ -d "$NODEJS_HOME" ]; then
+    printf "\nNODEJS_HOME env variable points to non-existing directory: $NODEJS_HOME\n"
+    return 1
+fi
+
+if [[ -z $1 || ! "$1" =~ ^(ls|use|remove|lsr)$ ]]; then
+    printf "Options:\n"
     printf "  nvm use [<version>]\n"
     printf "  nvm remove <version>\n"
     printf "  nvm ls\n"
+    printf "  nvm lsr [<version>]\n"
     return 2
 fi
 
+# Remove NodeJS from PATH
+clear_node_path () {
+    NODEPATH=""
+    while read -d ':' p; do
+    if ! [[ $p =~ $NODEJS_HOME ]]; then
+        NODEPATH=$NODEPATH:$p
+    fi
+    done <<< "$PATH:"
+    PATH="${NODEPATH:1}" # chop first ":"
+    unset NODEPATH
+}
+
+# Add/update NodeJS in PATH
+set_node_path () {
+    # check version parameter
+    if [[ -z $1 ]]; then
+        printf "Version missing\n"
+        return 1
+    fi
+
+    # set NODEJS version path
+    NODEPATH=""
+    replaced=false
+    while read -d ':' p; do
+        if [[ $p =~ $NODEJS_HOME ]]; then
+            if [ "$arch" = "win-x64" ]; then
+                NODEPATH=$NODEPATH$:$NODEJS_HOME\\$1
+            else
+                NODEPATH=$NODEPATH$:$NODEJS_HOME/$1/bin
+            fi
+            replaced=true
+        elif [ "$p" != "" ]; then
+            NODEPATH=$NODEPATH:$p
+        fi
+    done <<< "$PATH:"
+    if [ "$replaced" = false ]; then
+        if [ "$arch" = "win-x64" ]; then
+            NODEPATH=$NODEPATH$:$NODEJS_HOME\\$1
+        else
+            NODEPATH=$NODEPATH$:$NODEJS_HOME/$1/bin
+        fi
+    fi
+    PATH="${NODEPATH:1}" # chop first ":"
+    unset NODEPATH
+}
+
+set_version_prefix () {
+    if [[ -z "$1" ]]; then
+        printf "Version argument missing\n"
+        return 4
+    fi
+    # add "v" prefix if missing
+    first_char="$(printf '%s' "$1" | cut -c1)"
+    if [ "$first_char" = v ]; then
+        NVMVERSION=$1
+    else
+        NVMVERSION=v$1
+    fi
+}
+
+
 platform=`uname`
 arch=""
-export PATH_NODE_BASE=$PATH
 
 if [ "$platform" = "Linux" ]; then
     arch="linux-x64"
@@ -25,28 +90,47 @@ elif [ "$platform" = "Darwin" ]; then
 elif [ "$platform" = "MINGW64_NT-10.0-17763" ]; then
     arch="win-x64"
 else
-	printf "\nPlatform not supported: $platform\n"
+    printf "\nPlatform not supported: $platform\n"
     return 3
 fi
 
+
+if [ "$1" = "lsr" ]; then
+    curl -s http://nodejs.org/dist/ -o - | grep -E 'v[0-9].*|latest-*' | sed -e 's/.*node-//' -e 's/\.tar\.gz.*//' -e 's/<[^>]*>//' -e 's/\/<[^>]*>.*//'
+    return
+fi
+
+if command -v node >/dev/null; then
+    ACTIVE_VERSION=`node -v`
+else
+    ACTIVE_VERSION=""
+fi
+
 if [ "$1" = "remove" ]; then
-    if [ -z "$2" ]; then
-        printf "nvm remove: version missing\n"
+    set_version_prefix $2
+    if [ ! -d $NODEJS_HOME/$NVMVERSION ]; then
+        printf "Version not found, not removed: $NVMVERSION\n"
         return 4
-    else
-        rm -Rf $NODEJS_HOME/v$2
-        printf "nodejs removed: $2\n"
-        if [ "$NODE_VERSION" = "v$2" ]; then
-            printf "active version unset: $2\n"
-            export NODE_VERSION=""
-            export PATH=$PATH_NODE_BASE
-        fi
-        return
     fi
+    rm -Rf $NODEJS_HOME/$NVMVERSION
+    printf "nodejs version removed: $NVMVERSION\n"
+    if [ "$NVMVERSION" = "$ACTIVE_VERSION" ]; then
+        printf "active version unset: $ACTIVE_VERSION\n"
+        clear_node_path
+    fi
+    return 0
 fi
 
 if [ "$1" = "ls" ]; then
-    ls -ltr $NODEJS_HOME
+    (cd $NODEJS_HOME &&
+        for d in */ ; do
+            v=${d%?}
+            if [ "$ACTIVE_VERSION" = "$v" ]; then
+                v="$v*"
+            fi
+            printf "$v\n"
+
+        done)
     return
 fi
 
@@ -56,56 +140,49 @@ if [ "$1" = "use" ]; then
         return 4
     fi
 
-    if [ ! -d $NODEJS_HOME/v$2 ]; then
-        pwd=`pwd`
-        if [ "$arch" == "win-x64" ]; then
+    # add "v" prefix if missing
+    set_version_prefix $2
+
+    # check if installed
+    if [ ! -d $NODEJS_HOME/$NVMVERSION ]; then
+        if [ "$arch" = "win-x64" ]; then
             # Windows installation
-            cd $NODEJS_HOME &&
-                curl -OJ https://nodejs.org/dist/v$2/node-v$2-$arch.zip &&
-                curl -OJ https://nodejs.org/download/release/v$2/node-v$2-headers.tar.gz &&
-                echo unpacking: node-v$2-$arch.zip
-                winrar x -ibck node-v$2-$arch.zip \*\.\* &&
-                echo unpacking: node-v$2-headers.tar.gz &&
-                tar -xzf node-v$2-headers.tar.gz &&
-                mv node-v$2-$arch v$2 &&
-                mv node-v$2/include v$2/. &&
-                rm -rf node-v$2
+            (cd $NODEJS_HOME &&
+                curl -OJ https://nodejs.org/dist/$NVMVERSION/node-$NVMVERSION-$arch.zip &&
+                curl -OJ https://nodejs.org/download/release/$NVMVERSION/node-$NVMVERSION-headers.tar.gz &&
+                echo unpacking: node-$NVMVERSION-$arch.zip
+                winrar x -ibck node-$NVMVERSION-$arch.zip \*\.\* &&
+                echo unpacking: node-$NVMVERSION-headers.tar.gz &&
+                tar -xzf node-$NVMVERSION-headers.tar.gz &&
+                mv node-$NVMVERSION-$arch $NVMVERSION &&
+                mv node-$NVMVERSION/include $NVMVERSION/. &&
+                rm -rf node-$NVMVERSION)
         else
             # Linux/Darwin installation
-            cd $NODEJS_HOME &&
-                curl -OJ https://nodejs.org/dist/v$2/node-v$2-$arch.tar.gz &&
-                tar -xzf node-v$2-$arch.tar.gz &&
-                mv node-v$2-$arch v$2
+            (cd $NODEJS_HOME &&
+                curl -OJ https://nodejs.org/dist/$NVMVERSION/node-$NVMVERSION-$arch.tar.gz &&
+                tar -xzf node-$NVMVERSION-$arch.tar.gz &&
+                mv node-$NVMVERSION-$arch $NVMVERSION)
         fi
-        cd $pwd
-        unset pwd
-        rm -f $NODEJS_HOME/node-v$2-$arch.zip
-        rm -f $NODEJS_HOME/node-v$2-headers.tar.gz
+        rm -f $NODEJS_HOME/node-$NVMVERSION-$arch.*
+        rm -f $NODEJS_HOME/node-$NVMVERSION-headers.tar.gz
 
-        if [ ! -d $NODEJS_HOME/v$2 ]; then
-            printf "not found: v$2\n"
+        if [ ! -d $NODEJS_HOME/$NVMVERSION ]; then
+            printf "not found: $NVMVERSION\n"
             return 404
         fi
-        if [ "$arch" == "win-x64" ]; then
-            export PATH=$PATH_NODE_BASE:$NODEJS_HOME\\v$2
-        else
-            export PATH=$PATH_NODE_BASE:$NODEJS_HOME/v$2/bin
-        fi
+
+        set_node_path $NVMVERSION
+
         npm -g install npm
     else
-        if [ "$arch" == "win-x64" ]; then
-            export PATH=$PATH_NODE_BASE:$NODEJS_HOME\\v$2
-        else
-            export PATH=$PATH_NODE_BASE:$NODEJS_HOME/v$2/bin
-        fi
+        set_node_path $NVMVERSION
     fi
-    export NODE_VERSION=v$2
+    unset NVMVERSION
+
     printf "nodejs: `node -v` npm: `npm -v`\n"
 
 else
     printf "\nOption not supported: $1\n"
     return 6
 fi
-
-
-
