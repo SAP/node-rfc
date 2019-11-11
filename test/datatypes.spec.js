@@ -171,6 +171,27 @@ it("Min/Max negative", function(done) {
     });
 });
 
+it("error: ARRAY rejects non array", function(done) {
+    client.invoke(
+        "RFC_READ_TABLE",
+        {
+            QUERY_TABLE: "MARA",
+            OPTIONS: "A string instead of an array"
+        },
+        function(err) {
+            expect(err).toBeDefined();
+            expect(err).toEqual(
+                expect.objectContaining({
+                    name: "TypeError",
+                    message:
+                        "Array expected when filling field OPTIONS of type 5"
+                })
+            );
+            done();
+        }
+    );
+});
+
 it("BCD and FLOAT accept numbers", function(done) {
     let isInput = {
         // Float
@@ -705,7 +726,7 @@ it("INT max positive", function(done) {
 
 it("INT max negative", function(done) {
     let importStruct = {
-        RFCINT1: -2,
+        RFCINT1: 0,
         RFCINT2: -32768,
         RFCINT4: -2147483648
     };
@@ -718,9 +739,9 @@ it("INT max negative", function(done) {
             expect(res).toBeDefined();
             expect(res).toHaveProperty("ECHOSTRUCT");
             expect(res).toHaveProperty("RFCTABLE");
-            expect(res.ECHOSTRUCT.RFCINT1).toBe(254);
-            expect(res.RFCTABLE[0].RFCINT1).toBe(254);
-            expect(res.RFCTABLE[1].RFCINT1).toBe(255);
+            expect(res.ECHOSTRUCT.RFCINT1).toBe(0);
+            expect(res.RFCTABLE[0].RFCINT1).toBe(0);
+            expect(res.RFCTABLE[1].RFCINT1).toBe(1);
 
             expect(res.ECHOSTRUCT.RFCINT2).toBe(-32768);
             expect(res.RFCTABLE[0].RFCINT2).toBe(-32768);
@@ -729,6 +750,74 @@ it("INT max negative", function(done) {
             expect(res.ECHOSTRUCT.RFCINT4).toBe(-2147483648);
             expect(res.RFCTABLE[0].RFCINT4).toBe(-2147483648);
             expect(res.RFCTABLE[1].RFCINT4).toBe(-2147483647);
+            done();
+        }
+    );
+});
+
+it("INT1 positive overflow", function(done) {
+    let importStruct = {
+        RFCINT1: 256
+        //RFCINT2: 32766,
+        //RFCINT4: 2147483646
+    };
+    let importTable = [importStruct];
+    client.invoke(
+        "STFC_STRUCTURE",
+        { IMPORTSTRUCT: importStruct, RFCTABLE: importTable },
+        function(err, res) {
+            expect(err).toBeDefined();
+            expect(err).toEqual(
+                expect.objectContaining({
+                    name: "TypeError",
+                    message:
+                        "Overflow or other error when filling integer field RFCINT1 of type 10, value: 256"
+                })
+            );
+            done();
+        }
+    );
+});
+
+it("INT2 positive overflow", function(done) {
+    let importStruct = {
+        RFCINT2: RFC_MATH.RFC_INT2.POS + 1
+    };
+    let importTable = [importStruct];
+    client.invoke(
+        "STFC_STRUCTURE",
+        { IMPORTSTRUCT: importStruct, RFCTABLE: importTable },
+        function(err, res) {
+            expect(err).toBeDefined();
+            expect(err).toEqual(
+                expect.objectContaining({
+                    name: "TypeError",
+                    message:
+                        "Overflow or other error when filling integer field RFCINT2 of type 9, value: 32768"
+                })
+            );
+            done();
+        }
+    );
+});
+
+it("INT2 negative overflow", function(done) {
+    let importStruct = {
+        RFCINT2: RFC_MATH.RFC_INT2.NEG - 1
+    };
+    let importTable = [importStruct];
+    client.invoke(
+        "STFC_STRUCTURE",
+        { IMPORTSTRUCT: importStruct, RFCTABLE: importTable },
+        function(err, res) {
+            expect(err).toBeDefined();
+            expect(err).toEqual(
+                expect.objectContaining({
+                    name: "TypeError",
+                    message:
+                        "Overflow or other error when filling integer field RFCINT2 of type 9, value: -32769"
+                })
+            );
             done();
         }
     );

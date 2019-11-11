@@ -6,7 +6,10 @@ Change log
 
 * Ping confirms the connection handle validity
 * Unit tests for ABAP errors
-* SAP NWRFC SDK version shell scripts
+* CI scripts: SAP NWRFC SDK version, NodeJS version manager
+* INT1 and INT2 overflow check
+* Input parameter array check added, fix #100
+* Connection options support in Connection Pool, fix #104
 
 1.0.1 (2019-10-09)
 ------------------
@@ -26,7 +29,7 @@ Change log
 
 * NodeJS version 6 dropped
 * Input parameter array check added, fix #100
-* Connection options support in Conncetion Pool, fix #104
+* Connection options support in Connection Pool, fix #104
 * Build tools changed, node-gyp and node-pregyp replaced with cmake-js and prebuild, fix #72
 
 1.0.0-rc10 (2019-05-31)

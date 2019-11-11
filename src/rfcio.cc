@@ -140,6 +140,13 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             break;
         }
+        if (!value.IsArray())
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "Array expected when filling field %s of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
         Napi::Array array = value.As<Napi::Array>();
         unsigned int rowCount = array.Length();
 
@@ -288,12 +295,28 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             sprintf(err, "Integer number expected when filling field %s of type %d, got %a", &fieldName[0], typ, numDouble);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
-        //RFC_INT rfcInt = value.As<Napi::Number>().Int64Value();
-        int64_t rfcInt = value.As<Napi::Number>().Int64Value();
+        RFC_INT rfcInt = value.As<Napi::Number>().Int64Value();
+        //int64_t rfcInt = value.As<Napi::Number>().Int64Value();
+        //printf("typ: %d value: %d %u", typ, rfcInt, UINT8_MAX);
         if (typ == RFCTYPE_INT8)
+        {
             rc = RfcSetInt8(functionHandle, cName, rfcInt, &errorInfo);
+        }
         else
+        {
+            if (
+                (typ == RFCTYPE_INT1 && rfcInt > UINT8_MAX) ||
+                (typ == RFCTYPE_INT2 && ((rfcInt > INT16_MAX) || (rfcInt < INT16_MIN)))
+            )
+            {
+                char err[256];
+                std::string fieldName = wrapString(cName).ToString().Utf8Value();
+                sprintf(err, "Overflow or other error when filling integer field %s of type %d, value: %d", &fieldName[0], typ, rfcInt);
+                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+            }
+
             rc = RfcSetInt(functionHandle, cName, rfcInt, &errorInfo);
+        }
         break;
     }
     case RFCTYPE_DATE:
