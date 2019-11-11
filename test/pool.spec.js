@@ -27,14 +27,10 @@ beforeAll(function(done) {
 });
 
 afterAll(function() {
-    pool.releaseAll();
-});
-
-afterAll(function(done) {
     delete setup.client;
     delete setup.rfcClient;
     delete setup.rfcPool;
-    done();
+    return pool.releaseAll();
 });
 
 it("pool: acquire id", function(done) {
@@ -45,9 +41,10 @@ it("pool: acquire id", function(done) {
             //client.id.should.equal(1);
             expect(client.isAlive).toBeTruthy();
             expect(pool.status.ready).toBe(1);
-            pool.releaseAll();
-            expect(pool.status.ready).toBe(0);
-            done();
+            pool.releaseAll().then(() => {
+                expect(pool.status.ready).toBe(0);
+                done();
+            });
         })
         .catch(err => {
             if (err) return done(err);
@@ -62,9 +59,10 @@ it("pool: acquire id=1", function(done) {
             ID = client.id;
             expect(client.isAlive).toBeTruthy();
             expect(pool.status.ready).toBe(1);
-            pool.releaseAll();
-            expect(pool.status.ready).toBe(0);
-            done();
+            pool.releaseAll().then(() => {
+                expect(pool.status.ready).toBe(0);
+                done();
+            });
         })
         .catch(err => {
             if (err) return done(err);

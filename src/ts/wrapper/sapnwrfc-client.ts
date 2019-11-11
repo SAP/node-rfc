@@ -44,7 +44,7 @@ interface RfcClientVersion {
     binding: string;
 }
 
-interface RfcClientOptions {
+export interface RfcClientOptions {
     rstrip: boolean;
     bcd: string | Function;
     date: Function;
@@ -303,7 +303,7 @@ export class Client {
         }
     }
 
-    close(callback: Function | undefined) {
+    close(callback?: Function): Promise<void> | any {
         if (typeof callback === "function") {
             return this.__client.close(callback);
         } else {
@@ -319,7 +319,7 @@ export class Client {
         }
     }
 
-    reopen(callback: Function | undefined) {
+    reopen(callback?: Function): Promise<void> | any {
         if (typeof callback === "function") {
             return this.__client.reopen(callback);
         } else {
@@ -335,7 +335,7 @@ export class Client {
         }
     }
 
-    ping(callback: Function | undefined) {
+    ping(callback?: Function): Promise<boolean> | any {
         if (typeof callback === "function") {
             return this.__client.ping(callback);
         } else {
