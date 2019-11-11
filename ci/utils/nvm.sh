@@ -179,8 +179,8 @@ if [ "$1" = "use" ]; then
         set_node_path $NVMVERSION
     fi
     unset NVMVERSION
-
     printf "nodejs: `node -v` npm: `npm -v`\n"
+    export NODEJS_VERSION=`node -v`
 
 else
     printf "\nOption not supported: $1\n"
