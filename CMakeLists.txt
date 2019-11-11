@@ -38,10 +38,22 @@ execute_process(COMMAND node -p "require('node-addon-api').include"
 string(REPLACE "\n" "" NAPI_INCLUDE_DIR ${NAPI_INCLUDE_DIR})
 string(REPLACE "\"" "" NAPI_INCLUDE_DIR ${NAPI_INCLUDE_DIR})
 
-# node include dir
-set(NODE_INCLUDE_DIR $ENV{NODEJS_HOME})
-string(CONCAT NODE_INCLUDE_DIR  ${NODE_INCLUDE_DIR} "/" $ENV{NODEJS_VERSION} "/include/node")
-string(REPLACE "\\" "/" NODE_INCLUDE_DIR ${NODE_INCLUDE_DIR})
+# NodeJS include dir
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    execute_process(COMMAND cmd /c npm -g root
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE NODE_INCLUDE_DIR
+    )
+    string(REPLACE "\\" "/" NODE_INCLUDE_DIR ${NODE_INCLUDE_DIR})
+    string(CONCAT NODE_INCLUDE_DIR ${NODE_INCLUDE_DIR} "/../include/node")
+else()
+    execute_process(COMMAND npm -g root
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE NODE_INCLUDE_DIR
+    )
+    string(CONCAT NODE_INCLUDE_DIR ${NODE_INCLUDE_DIR} "/../../include/node")
+endif()
+string(REPLACE "\n" "" NODE_INCLUDE_DIR ${NODE_INCLUDE_DIR})
 
 # build and binding path
 string(CONCAT ADDON_BINDING_PATH "node-v" ${NODE_ABI_VERSION} "-" ${NODE_PLATFORM} "-" ${NODE_ARCH} )
@@ -154,5 +166,3 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 target_include_directories(${PROJECT_NAME} PRIVATE ${NODE_INCLUDE_DIR} ${NAPI_INCLUDE_DIR} ${SAPNWRFC_INCLUDE_DIR})
 target_link_directories(${PROJECT_NAME} PRIVATE ${SAPNWRFC_LIB_DIR})
 target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB} ${SAPNWRFC_LIB_FILES})
-
-
