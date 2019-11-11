@@ -39,12 +39,9 @@ string(REPLACE "\n" "" NAPI_INCLUDE_DIR ${NAPI_INCLUDE_DIR})
 string(REPLACE "\"" "" NAPI_INCLUDE_DIR ${NAPI_INCLUDE_DIR})
 
 # node include dir
-execute_process(COMMAND bash -c "npm root -g"
-    OUTPUT_VARIABLE NODE_INCLUDE_DIR
-    )
-string(REPLACE "\n" "" NODE_INCLUDE_DIR ${NODE_INCLUDE_DIR})
-string(REPLACE "\"" "" NODE_INCLUDE_DIR ${NODE_INCLUDE_DIR})
-string(CONCAT NODE_INCLUDE_DIR ${NODE_INCLUDE_DIR} "/../../include/node")
+set(NODE_INCLUDE_DIR $ENV{NODEJS_HOME})
+string(CONCAT NODE_INCLUDE_DIR  ${NODE_INCLUDE_DIR} "/" $ENV{NODEJS_VERSION} "/include/node")
+string(REPLACE "\\" "/" NODE_INCLUDE_DIR ${NODE_INCLUDE_DIR})
 
 # build and binding path
 string(CONCAT ADDON_BINDING_PATH "node-v" ${NODE_ABI_VERSION} "-" ${NODE_PLATFORM} "-" ${NODE_ARCH} )
@@ -132,8 +129,6 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
         NDEBUG
         _ATL_ALLOW_CHAR_UNSIGNED
     )
-
-    set(NODE_INCLUDE_DIR "$ENV{NODEJS_HOME}\\include\\node")
 
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 
