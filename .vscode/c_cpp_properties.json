@@ -9,7 +9,7 @@
         "/usr/include",
         "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/usr/include",
         "${workspaceRoot}",
-        "${NODEJS_HOME}/${NODE_VERSION}/include/node",
+        "${NODEJS_HOME}/${NODEJS_VERSION}/include/node",
         "${SAPNWRFC_HOME}/include",
         "${workspaceRoot}/node_modules/node-addon-api"
       ],
@@ -43,7 +43,7 @@
         "/usr/include",
         "/usr/local/include",
         "${workspaceRoot}",
-        "${NODEJS_HOME}/${NODE_VERSION}/include/node",
+        "${NODEJS_HOME}/${NODEJS_VERSION}/include/node",
         "${SAPNWRFC_HOME}/include"
       ],
       "defines": [],
@@ -66,6 +66,7 @@
       "includePath": [
         "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include",
         "${workspaceRoot}",
+        "${NODEJS_HOME}/${NODEJS_VERSION}/include/node",
         "${SAPNWRFC_HOME}/include"
       ],
       "defines": [
