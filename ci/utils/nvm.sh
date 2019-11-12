@@ -129,7 +129,7 @@ if [ "$1" = "ls" ]; then
         for d in */ ; do
             v=${d%?}
             if [ "$ACTIVE_VERSION" = "$v" ]; then
-                v="$v*"
+                v="$v *"
             fi
             printf "$v\n"
 
@@ -212,7 +212,14 @@ if [ "$1" = "latest" ]; then
             return 6
         fi
     fi
-    cat $NODEJS_HOME/latest-versions
+    while read line;do
+        printf "$line\n"
+        if [[ $line == *"$ACTIVE_VERSION"* ]]; then
+            printf "$line *\n"
+        else
+            printf "$line\n"
+        fi
+    done <$NODEJS_HOME/latest-versions
 else
     printf "\nOption not supported: $1\n"
     return 6
