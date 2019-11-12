@@ -10,12 +10,13 @@ if ! [ -d "$NODEJS_HOME" ]; then
     return 1
 fi
 
-if [[ -z $1 || ! "$1" =~ ^(ls|use|remove|lsr)$ ]]; then
+if [[ -z $1 || ! "$1" =~ ^(ls|use|remove|lsr|latest)$ ]]; then
     printf "Options:\n"
-    printf "  nvm use [<version>]\n"
-    printf "  nvm remove <version>\n"
-    printf "  nvm ls\n"
-    printf "  nvm lsr [<version>]\n"
+    printf "  nvm use [<version>]   download if not already and activate <version>\n"
+    printf "  nvm remove <version>  remove <version>\n"
+    printf "  nvm ls                show installed versions\n"
+    printf "  nvm lsr [<version>]   show all nodejs versions\n"
+    printf "  nvm latest [update]   show latest nodejs versions, update alias/version mappings\n"
     return 2
 fi
 
@@ -72,7 +73,9 @@ set_version_prefix () {
     fi
     # add "v" prefix if missing
     first_char="$(printf '%s' "$1" | cut -c1)"
-    if [ "$first_char" = v ]; then
+    if [ "$first_char" = l ]; then
+        NVMVERSION=$(grep -E -m1 "$1" $NODEJS_HOME/latest-versions | grep -E -o 'v([0-9][0-9]?\.){2}[0-9][0-9]?')
+    elif [ "$first_char" = v ]; then
         NVMVERSION=$1
     else
         NVMVERSION=v$1
@@ -181,8 +184,50 @@ if [ "$1" = "use" ]; then
     unset NVMVERSION
     printf "nodejs: `node -v` npm: `npm -v`\n"
     export NODEJS_VERSION=`node -v`
+    return 0
+fi
 
+# https://stackoverflow.com/questions/14093452/grep-only-the-first-match-and-stop
+# https://stackoverflow.com/questions/16675179/how-to-use-sed-to-extract-substring
+# https://stackoverflow.com/questions/16703647/why-curl-return-and-error-23-failed-writing-body
+
+
+if [ "$1" = "latest" ]; then
+    if ! [ -z "$2" ]; then
+        if [ "$2" = "update" ]; then
+            # get latest aliases
+            # declare -A LATEST
+            rm -Rf $NODEJS_HOME/latest-versions && touch $NODEJS_HOME/latest-versions
+            rm -Rf $NODEJS_HOME/latest && curl -JLsN https://nodejs.org/dist/ | grep -E 'latest-|latest/' |  cut -d '"' -f2 > $NODEJS_HOME/latest
+            while read ALIAS; do
+                ALIAS="${ALIAS//\/}"
+                VERSION=$(curl -JLsN "https://nodejs.org/dist/$ALIAS" | grep -E -m1 -o 'v([0-9][0-9]?\.){2}[0-9][0-9]?' | head -1 )
+                #LATEST[$ALIAS]=$VERSION
+                #printf "$ALIAS ${LATEST[$ALIAS]}\n" >> $NODEJS_HOME/latest-versions
+                printf "%-16s %9s\n" $ALIAS $VERSION >> $NODEJS_HOME/latest-versions
+            done <$NODEJS_HOME/latest
+            rm -Rf $NODEJS_HOME/latest
+        else
+            printf "nvm latest option not supported: $2\n"
+            return 6
+        fi
+    fi
+    cat $NODEJS_HOME/latest-versions
 else
     printf "\nOption not supported: $1\n"
     return 6
 fi
+
+
+
+# get version for alias
+# curl -JLs https://nodejs.org/dist/latest-dubnium | grep -E -m1 -o 'v([0-9][0-9]?\.){2}[0-9][0-9]?' | head -1
+### # get alias/version mapping
+### declare -A LATEST
+### while read ALIAS; do
+###     ALIAS="${ALIAS//\/}"
+###     VERSION=$(curl -JLsN "https://nodejs.org/dist/$ALIAS" | grep -E -m1 -o 'v([0-9][0-9]?\.){2}[0-9][0-9]?' | head -1 )
+###     #printf "$ALIAS $VERSION\n"
+###     LATEST[$ALIAS]=$VERSION
+###     printf "$ALIAS ${LATEST[$ALIAS]}\n"
+### done < <(curl -JLsN "https://nodejs.org/dist/" | grep -E 'latest-|latest/' |  cut -d '"' -f2)
