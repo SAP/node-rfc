@@ -353,7 +353,7 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
                     }
                     else
                     {
-                        sprintf(err, "Unknown bcd option, only 'number' or function allowed: %s", &bcdString[0]);
+                        sprintf_s(err, "Unknown bcd option, only 'number' or function allowed: %s", &bcdString[0]);
                         Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
                     }
                 }
@@ -382,7 +382,7 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
                 }
                 if (opt.IsNull())
                 {
-                    sprintf(err, "Date option is not an object with toABAP and fromABAP functions");
+                    sprintf_s(err, "Date option is not an object with toABAP and fromABAP functions");
                     Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
                 }
             }
@@ -410,7 +410,7 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
                 }
                 if (opt.IsNull())
                 {
-                    sprintf(err, "Date option is not an object with toABAP and fromABAP functions");
+                    sprintf_s(err, "Date option is not an object with toABAP and fromABAP functions");
                     Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
                 }
             }
@@ -419,14 +419,14 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
                 __filter_param_direction = (RFC_DIRECTION)options.Get(key).As<Napi::Number>().Int32Value();
                 if (((int)__filter_param_direction < 1) || ((int)__filter_param_direction) > 4)
                 {
-                    sprintf(err, "Invalid key for the filter parameter direction (see RFC_DIRECTION): %u", (int)__filter_param_direction);
+                    sprintf_s(err, "Invalid key for the filter parameter direction (see RFC_DIRECTION): %u", (int)__filter_param_direction);
                     Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
                 }
             }
             else
             {
                 std::string optionName = key.Utf8Value();
-                sprintf(err, "Unknown option: %s", &optionName[0]);
+                sprintf_s(err, "Unknown option: %s", &optionName[0]);
                 Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
             }
         }
@@ -548,7 +548,7 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
             {
                 char err[256];
                 std::string optionName = key.Utf8Value();
-                sprintf(err, "Unknown option: %s", &optionName[0]);
+                sprintf_s(err, "Unknown option: %s", &optionName[0]);
                 Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
             }
         }

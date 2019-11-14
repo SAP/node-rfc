@@ -142,6 +142,25 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
         _ATL_ALLOW_CHAR_UNSIGNED
     )
 
+    target_compile_options(${PROJECT_NAME} PUBLIC
+        -EHs
+        -Gy
+        -J
+        -MD
+        -nologo
+        -W3
+        -Z7
+        -GL -O2 -Oy- 
+        /we4552 /we4700 /we4789
+    )
+
+
+    target_link_options(${PROJECT_NAME} PUBLIC
+        -NXCOMPAT -STACK:0x2000000 -SWAPRUN:NET -DEBUG
+        -OPT:REF -DEBUGTYPE:CV,FIXUP -MACHINE:amd64 -nologo
+        -LTCG
+    )
+
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 
     # display SAP NWRFC SDK version
