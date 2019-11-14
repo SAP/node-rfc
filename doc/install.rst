@@ -261,7 +261,7 @@ To update GitHub Pages, copy everyhing under ``_build/html`` and overwrite the e
   rm -Rf ~/tmp/html
   cp -r doc/_build/html ~/tmp/.
   git checkout gh-pages
-  rm -Rf *.html *.js *.inv _* doc .buildinfo
+  rm -Rf * && rm .DS_Store
   cp -R ~/tmp/html/. .
   touch .nojekyll
   git add .

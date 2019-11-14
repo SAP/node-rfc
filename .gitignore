@@ -10,6 +10,7 @@
 *.code-workspace
 .deps
 .buildinfo
+_sources
 obj.target
 build/
 node_modules*/
