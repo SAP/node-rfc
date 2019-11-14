@@ -124,9 +124,9 @@ Test
 
 Check if the module can be found and loaded:
 
-.. code-block:: js
+.. code-block:: javascript
 
-  var r = require ('node-rfc)
+  const r = require ('node-rfc)
 
 Call remote enabled function modules in NW backend system (maintain your test system parameters first):
 
@@ -259,14 +259,23 @@ To update GitHub Pages, copy everyhing under ``_build/html`` and overwrite the e
 .. code-block:: sh
 
   rm -Rf ~/tmp/html
-
   cp -r doc/_build/html ~/tmp/.
-
   git checkout gh-pages
-
   rm -Rf *.html *.js *.inv _* doc .buildinfo
-
   cp -R ~/tmp/html/. .
-
   touch .nojekyll
+  git add .
+  git commit -m "release vx.x.x"
+  git push
 
+Publish Release
+---------------
+
+.. code-block:: sh
+
+    git tag -a v1.0.2 bb4501 -m "v1.0.2"
+    git push origin --tags
+    # for each platform
+    git pull
+    npm run prebuild --backend cmake-js -r napi --force --strip --verbose --tag-prefix
+    npm run prebuild -r napi -u $PTA --verbose
