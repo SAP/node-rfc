@@ -273,9 +273,13 @@ Publish Release
 
 .. code-block:: sh
 
+    # push to github
     git tag -a v1.0.3 e585cb2 -m "v1.0.3"
     git push origin --tags
     # for each platform
     git pull
     npm run prebuild
     prebuild -r napi -u $PTA --verbose
+
+    # push to npm
+    npm publish
