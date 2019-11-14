@@ -1,9 +1,10 @@
 Change log
 ==========
 
-1.0.3 (2019-11-15)
+1.0.3 (2019-11-14)
 ------------------
 * Windows build options and warning clean-up
+* VERSION file removed
 
 1.0.2 (2019-11-11)
 ------------------
