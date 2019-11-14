@@ -10,7 +10,10 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # project
-file (STRINGS "VERSION" VERSION)
+execute_process(COMMAND node -p "require('./package.json').version"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE VERSION)
+string(REPLACE "\n" "" VERSION ${VERSION})
 project(sapnwrfc VERSION ${VERSION})
 
 # node platform
