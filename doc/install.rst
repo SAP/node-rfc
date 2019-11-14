@@ -273,9 +273,9 @@ Publish Release
 
 .. code-block:: sh
 
-    git tag -a v1.0.2 bb4501 -m "v1.0.2"
+    git tag -a v1.0.3 e585cb2 -m "v1.0.3"
     git push origin --tags
     # for each platform
     git pull
-    npm run prebuild --backend cmake-js -r napi --force --strip --verbose --tag-prefix
-    npm run prebuild -r napi -u $PTA --verbose
+    npm run prebuild
+    prebuild -r napi -u $PTA --verbose
