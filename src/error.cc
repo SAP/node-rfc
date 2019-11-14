@@ -1,4 +1,4 @@
-#include "client.h"
+#include "Client.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // RFC ERRORS
@@ -65,7 +65,7 @@ Napi::Value Client::wrapError(RFC_ERROR_INFO *errorInfo)
     }
 
     // unknown error group
-    sprintf_s(cBuf, "Unknown error group: %u", errorInfo->group);
+    sprintf(cBuf, "Unknown error group: %u", errorInfo->group);
     Napi::Error::Fatal(cBuf, "node-rfc internal error");
     return scope.Escape(Napi::String::New(__env, cBuf));
 }
