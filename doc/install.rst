@@ -279,7 +279,7 @@ Publish Release
     # for each platform
     git pull
     npm run prebuild
-    prebuild -r napi -u $PTA --verbose
+    prebuild -r napi -u $PAT --verbose
 
     # push to npm
     npm publish
