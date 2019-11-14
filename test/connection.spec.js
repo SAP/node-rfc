@@ -36,13 +36,8 @@ afterAll(function(done) {
     done();
 });
 
-it("Client, package and GitHub versions", function() {
-    let VERSION = require("fs")
-        .readFileSync("VERSION")
-        .toString()
-        .trim();
-    expect(require("../package.json").version).toBe(VERSION);
-    expect(client.version.binding).toBe(VERSION);
+it("Client and package versions", function() {
+    expect(require("../package.json").version).toBe(client.version.binding);
 });
 
 it("Client getters", function() {
