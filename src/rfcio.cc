@@ -144,7 +144,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Array expected when filling field %s of type %d", &fieldName[0], typ);
+            sprintf_s(err, "Array expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         Napi::Array array = value.As<Napi::Array>();
@@ -174,7 +174,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
+            sprintf_s(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.As<Napi::String>());
@@ -188,7 +188,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Buffer expected when filling field '%s' of type %d", &fieldName[0], typ);
+            sprintf_s(err, "Buffer expected when filling field '%s' of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
 
@@ -211,7 +211,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Buffer expected when filling field '%s' of type %d", &fieldName[0], typ);
+            sprintf_s(err, "Buffer expected when filling field '%s' of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         Napi::Uint8Array buf = value.As<Uint8Array>();
@@ -234,7 +234,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
+            sprintf_s(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.ToString());
@@ -248,7 +248,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
+            sprintf_s(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.ToString());
@@ -265,7 +265,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Number, number object or string expected when filling field %s of type %d", &fieldName[0], typ);
+            sprintf_s(err, "Number, number object or string expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.ToString());
@@ -282,7 +282,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Integer number expected when filling field %s of type %d", &fieldName[0], typ);
+            sprintf_s(err, "Integer number expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
 
@@ -292,10 +292,10 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Integer number expected when filling field %s of type %d, got %a", &fieldName[0], typ, numDouble);
+            sprintf_s(err, "Integer number expected when filling field %s of type %d, got %a", &fieldName[0], typ, numDouble);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
-        RFC_INT rfcInt = value.As<Napi::Number>().Int64Value();
+        RFC_INT rfcInt = (RFC_INT)value.As<Napi::Number>().Int64Value();
         //int64_t rfcInt = value.As<Napi::Number>().Int64Value();
         //printf("typ: %d value: %d %u", typ, rfcInt, UINT8_MAX);
         if (typ == RFCTYPE_INT8)
@@ -311,7 +311,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             {
                 char err[256];
                 std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "Overflow or other error when filling integer field %s of type %d, value: %d", &fieldName[0], typ, rfcInt);
+                sprintf_s(err, "Overflow or other error when filling integer field %s of type %d, value: %d", &fieldName[0], typ, rfcInt);
                 return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
             }
 
@@ -330,7 +330,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "ABAP date format YYYYMMDD expected when filling field %s of type %d", &fieldName[0], typ);
+            sprintf_s(err, "ABAP date format YYYYMMDD expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.ToString());
@@ -349,7 +349,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             char err[256];
             std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "ABAP time format HHMMSS expected when filling field %s of type %d", &fieldName[0], typ);
+            sprintf_s(err, "ABAP time format HHMMSS expected when filling field %s of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.ToString());
@@ -361,7 +361,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
     {
         char err[256];
         std::string fieldName = wrapString(cName).ToString().Utf8Value();
-        sprintf(err, "Unknown RFC type %u when filling %s", typ, &fieldName[0]);
+        sprintf_s(err, "Unknown RFC type %u when filling %s", typ, &fieldName[0]);
         return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         break;
     }
@@ -435,7 +435,7 @@ Napi::Value Client::wrapString(SAP_UC *uc, int length)
         {
             free((char *)utf8);
             char err[255];
-            sprintf(err, "wrapString fatal error: length: %d utf8Size: %u resultLen: %u", length, utf8Size, resultLen);
+            sprintf_s(err, "wrapString fatal error: length: %d utf8Size: %u resultLen: %u", length, utf8Size, resultLen);
             Napi::Error::Fatal(err, "node-rfc internal error");
         }
     }
@@ -748,7 +748,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             break;
         }
-        resultValue = Napi::Number::New(__env, intValue);
+        resultValue = Napi::Number::New(__env, (double)intValue);
         break;
     }
     case RFCTYPE_DATE:
@@ -784,7 +784,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
     default:
         char err[256];
         std::string fieldName = wrapString(cName).ToString().Utf8Value();
-        sprintf(err, "Unknown RFC type %d when wrapping %s", typ, &fieldName[0]);
+        sprintf_s(err, "Unknown RFC type %d when wrapping %s", typ, &fieldName[0]);
         Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
 
         break;
