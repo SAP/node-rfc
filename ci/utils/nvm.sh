@@ -46,9 +46,9 @@ set_node_path () {
     while read -d ':' p; do
         if [[ $p =~ $NODEJS_HOME ]]; then
             if [ "$arch" = "win-x64" ]; then
-                NODEPATH=$NODEPATH$:$NODEJS_HOME\\$1
+                NODEPATH=$NODEPATH:$NODEJS_HOME\\$1
             else
-                NODEPATH=$NODEPATH$:$NODEJS_HOME/$1/bin
+                NODEPATH=$NODEPATH:$NODEJS_HOME/$1/bin
             fi
             replaced=true
         elif [ "$p" != "" ]; then
@@ -57,9 +57,9 @@ set_node_path () {
     done <<< "$PATH:"
     if [ "$replaced" = false ]; then
         if [ "$arch" = "win-x64" ]; then
-            NODEPATH=$NODEPATH$:$NODEJS_HOME\\$1
+            NODEPATH=$NODEPATH:$NODEJS_HOME\\$1
         else
-            NODEPATH=$NODEPATH$:$NODEJS_HOME/$1/bin
+            NODEPATH=$NODEPATH:$NODEJS_HOME/$1/bin
         fi
     fi
     PATH="${NODEPATH:1}" # chop first ":"
