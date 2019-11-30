@@ -84,7 +84,7 @@ it("isAlive and ping() should be true when connected", function(done) {
     });
 });
 
-it("connectionInfo() should return connection information when connected", function(done) {
+it("connectionInfo should return connection information when connected", function(done) {
     let connectionInfo = client.connectionInfo;
     expect(Object.keys(connectionInfo).sort()).toEqual(
         [
