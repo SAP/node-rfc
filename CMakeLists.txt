@@ -41,22 +41,46 @@ execute_process(COMMAND node -p "require('node-addon-api').include"
 string(REPLACE "\n" "" NAPI_INCLUDE_DIR ${NAPI_INCLUDE_DIR})
 string(REPLACE "\"" "" NAPI_INCLUDE_DIR ${NAPI_INCLUDE_DIR})
 
-# NodeJS include dir
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-    execute_process(COMMAND cmd /c npm -g root
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE NODE_INCLUDE_DIR
-    )
-    string(REPLACE "\\" "/" NODE_INCLUDE_DIR ${NODE_INCLUDE_DIR})
-    string(CONCAT NODE_INCLUDE_DIR ${NODE_INCLUDE_DIR} "/../include/node")
-else()
-    execute_process(COMMAND npm -g root
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE NODE_INCLUDE_DIR
-    )
-    string(CONCAT NODE_INCLUDE_DIR ${NODE_INCLUDE_DIR} "/../../include/node")
+# NodeJS headers path
+if (NOT DEFINED ENV{NODE_HEADERS_DIR})
+    if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows") # Try defaults if not defined
+        execute_process(COMMAND cmd /c npm -g root
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE NODE_HEADERS_DIR
+        )
+        string(REPLACE "\\" "/" NODE_HEADERS_DIR ${NODE_HEADERS_DIR})
+        string(CONCAT NODE_HEADERS_DIR ${NODE_HEADERS_DIR} "/../include/node")
+    else()
+        execute_process(COMMAND npm -g root
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE NODE_HEADERS_DIR
+        )
+        string(CONCAT NODE_HEADERS_DIR ${NODE_HEADERS_DIR} "/../../include/node")
+    endif()
+    string(REPLACE "\n" "" NODE_HEADERS_DIR ${NODE_HEADERS_DIR})
 endif()
-string(REPLACE "\n" "" NODE_INCLUDE_DIR ${NODE_INCLUDE_DIR})
+
+# download headers
+if (NOT EXISTS "${NODE_HEADERS_DIR}")
+    execute_process(COMMAND node -v WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE NODE_HEADERS_VERSION)
+    string(REPLACE "\n" "" NODE_HEADERS_VERSION ${NODE_HEADERS_VERSION})
+    set(NODE_HEADERS_FILENAME "node-${NODE_HEADERS_VERSION}-headers.tar.gz")
+    set(NODE_HEADERS_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+    set(NODE_HEADERS_ARCHIVE_PATH ${NODE_HEADERS_DIR}/${NODE_HEADERS_FILENAME})
+    message("Downloading ${NODE_HEADERS_FILENAME} to: ${NODE_HEADERS_DIR}")
+    file(DOWNLOAD "https://nodejs.org/download/release/${NODE_HEADERS_VERSION}/${NODE_HEADERS_FILENAME}" "${NODE_HEADERS_ARCHIVE_PATH}" SHOW_PROGRESS)
+
+    if (NOT EXISTS "${NODE_HEADERS_ARCHIVE_PATH}")
+        message(FATAL_ERROR "Not found: ${NODE_HEADERS_ARCHIVE_PATH}")
+    else()
+        execute_process(COMMAND tar -xzf ${NODE_HEADERS_ARCHIVE_PATH})
+        file(REMOVE ${NODE_HEADERS_ARCHIVE_PATH})
+        set(NODE_HEADERS_DIR "${NODE_HEADERS_DIR}/node-${NODE_HEADERS_VERSION}/include/node")
+        if (NOT EXISTS "${NODE_HEADERS_DIR}")
+            message(FATAL_ERROR "NodeJS headers missing: ${NODE_HEADERS_DIR}")
+        endif()
+    endif()
+endif()
 
 # build and binding path
 string(CONCAT ADDON_BINDING_PATH "node-v" ${NODE_ABI_VERSION} "-" ${NODE_PLATFORM} "-" ${NODE_ARCH} )
@@ -114,7 +138,6 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ci/utils/nwrfcsdk-version-linux.sh OUTPUT_VARIABLE SAPNWRFCSDK_VERSION)
     message("SAP NWRFC SDK: " ${SAPNWRFCSDK_VERSION})
 
-
     target_compile_options(${PROJECT_NAME} PUBLIC -std=c++11 -Wall)
 
     add_compile_definitions(
@@ -142,7 +165,6 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
         _WIN32_WINNT=0x0502
         WIN64
         _AMD64_
-        NDEBUG
         _ATL_ALLOW_CHAR_UNSIGNED
     )
 
@@ -154,7 +176,7 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
         -nologo
         -W3
         -Z7
-        -GL -O2 -Oy- 
+        -GL -O2 -Oy-
         /we4552 /we4700 /we4789
     )
 
@@ -186,6 +208,6 @@ set (${PROJECT_NAME}_USE_STATIC_LIBS OFF)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 
 # build target
-target_include_directories(${PROJECT_NAME} PRIVATE ${NODE_INCLUDE_DIR} ${NAPI_INCLUDE_DIR} ${SAPNWRFC_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${NODE_HEADERS_DIR} ${NAPI_INCLUDE_DIR} ${SAPNWRFC_INCLUDE_DIR})
 target_link_directories(${PROJECT_NAME} PRIVATE ${SAPNWRFC_LIB_DIR})
 target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB} ${SAPNWRFC_LIB_FILES})
