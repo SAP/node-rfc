@@ -4,7 +4,7 @@ Change log
 1.0.4 (XXXX-YY-ZZ)
 ------------------
 
-* Build script fix when node headers missing, fix #110
+* Windows 32 bit build enabled, fix #124
 
 
 1.0.3 (2019-11-14)
