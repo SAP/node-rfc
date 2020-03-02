@@ -1,5 +1,6 @@
 {
-  "configurations": [{
+  "configurations": [
+    {
       "name": "Mac",
       "includePath": [
         "/Library/Developer/CommandLineTools/usr/include/c++/v1",
@@ -9,7 +10,7 @@
         "/usr/include",
         "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/usr/include",
         "${workspaceRoot}",
-        "${NODEJS_HOME}/${NODEJS_VERSION}/include/node",
+        "${NVM_BIN}/../include/node",
         "${SAPNWRFC_HOME}/include",
         "${workspaceRoot}/node_modules/node-addon-api"
       ],
@@ -27,15 +28,11 @@
         "limitSymbolsToIncludedHeaders": true,
         "databaseFilename": ""
       },
-      "macFrameworkPath": [
-        "/System/Library/Frameworks",
-        "/Library/Frameworks"
-      ],
+      "macFrameworkPath": ["/System/Library/Frameworks", "/Library/Frameworks"],
       "compilerPath": "/usr/bin/clang",
       "cStandard": "c11",
       "cppStandard": "c++17",
-      "configurationProvider": "vector-of-bool.cmake-tools",
-      "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+      "configurationProvider": "vector-of-bool.cmake-tools"
     },
     {
       "name": "Linux",
@@ -49,11 +46,7 @@
       "defines": [],
       "intelliSenseMode": "clang-x64",
       "browse": {
-        "path": [
-          "/usr/include",
-          "/usr/local/include",
-          "${workspaceRoot}"
-        ],
+        "path": ["/usr/include", "/usr/local/include", "${workspaceRoot}"],
         "limitSymbolsToIncludedHeaders": true,
         "databaseFilename": ""
       },
@@ -69,11 +62,7 @@
         "${NODEJS_HOME}/${NODEJS_VERSION}/include/node",
         "${SAPNWRFC_HOME}/include"
       ],
-      "defines": [
-        "_DEBUG",
-        "UNICODE",
-        "_UNICODE"
-      ],
+      "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
       "intelliSenseMode": "msvc-x64",
       "browse": {
         "path": [

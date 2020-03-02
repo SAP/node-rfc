@@ -192,17 +192,13 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
 
-        Napi::Uint8Array buf = value.As<Uint8Array>();
-        char *asciiValue = (char *)&buf[0];
+        Napi::Buffer<char> buf = value.As<Napi::Buffer<char>>();
         unsigned int size = buf.ByteLength();
         SAP_RAW *byteValue = (SAP_RAW *)malloc(size);
+        memcpy(byteValue, buf.Data(), size);
 
-        memcpy(byteValue, reinterpret_cast<SAP_RAW *>(asciiValue), size);
-        //memcpy(byteValue, asciiValue, size);
         rc = RfcSetBytes(functionHandle, cName, byteValue, size, &errorInfo);
         free(byteValue);
-        //std::string fieldName = wrapString(cName).ToString().Utf8Value();
-        //printf("\nbin %d %s size: %u", rc, &fieldName[0], size);
         break;
     }
     case RFCTYPE_XSTRING:
@@ -214,16 +210,12 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             sprintf(err, "Buffer expected when filling field '%s' of type %d", &fieldName[0], typ);
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
-        Napi::Uint8Array buf = value.As<Uint8Array>();
-        char *asciiValue = (char *)&buf[0];
+
+        Napi::Buffer<char> buf = value.As<Napi::Buffer<char>>();
         unsigned int size = buf.ByteLength();
         SAP_RAW *byteValue = (SAP_RAW *)malloc(size);
+        memcpy(byteValue, buf.Data(), size);
 
-        memcpy(byteValue, reinterpret_cast<SAP_RAW *>(asciiValue), size);
-
-        //std::string fieldName = wrapString(cName).ToString().Utf8Value();
-        //printf("\nxin %d %s size: %u", rc, &fieldName[0], size);
-        //memcpy(byteValue, asciiValue, size);
         rc = RfcSetXString(functionHandle, cName, byteValue, size, &errorInfo);
         free(byteValue);
         break;
