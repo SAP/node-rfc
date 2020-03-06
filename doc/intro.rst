@@ -5,19 +5,17 @@ Introduction
 ============
 
 
-The NodeJS connector (a synonym for the :mod:`node-rfc` package) wraps the existing *SAP NW RFC Library*,
-often colloquially called *SAP C connector* or *SAP NW RFC SDK*. To start using :mod:`node-rfc`
-and similar connectors effectively, we highly recommend reading a series of insightful articles
-about RFC communication and *SAP NW RFC Library*, published in the SAP Professional Journal (SPJ),
-in 2009, by Ulrich Schmidt and Guangwei Li: *Improve communication between your C/C++ applications
-and SAP systems with SAP NetWeaver RFC SDK*
-`Part 1: RFC client programs <http://www.sdn.sap.com/irj/sdn/index?overridelayout=true&rid=/library/uuid/302f1a30-f4cb-2c10-e985-c8a280a96e43>`_,
-`Part 2: RFC server programs <http://www.sdn.sap.com/irj/scn/go/portal/prtroot/docs/library/uuid/b02b0719-4ccc-2c10-71ab-fe31483e466f>`_,
-`Part 3: Advanced topics <http://www.sdn.sap.com/irj/sdn/go/portal/prtroot/docs/library/uuid/5070f62a-6acd-2c10-8cb5-858ef06adbb9>`_.
+The NodeJS connector (a synonym for the :mod:`node-rfc` package) wraps the existing *SAP NW RFC SDK Library*,
+often colloquially called *SAP C connector*. To start using :mod:`node-rfc` and similar connectors effectively,
+we highly recommend the `SAP NW RFC SDK documentation and programming guide <https://support.sap.com/en/product/connectors/nwrfcsdk.html>`_
+and the series of three insightful articles about RFC communication and SAP NW RFC Library,
+published in the SAP Professional Journal (SPJ), by Ulrich Schmidt and Guangwei Li:
 
-The lecture of these articles and `NW RFC SDK Guide (SAP Help) <http://help.sap.com/saphelp_nw73ehp1/helpdata/en/48/a88c805134307de10000000a42189b/content.htm?frameset=/en/48/a994a77e28674be10000000a421937/frameset.htm>`_
-are recommended as an introduction into RFC communication and programming, while :mod:`node-rfc` documentation is
-focused merely on technical aspects of :mod:`node-rfc` API.
+`Part 1: RFC client programs <https://wiki.scn.sap.com/wiki/x/zz27Gg>`_,
+`Part 2: RFC server programs <https://wiki.scn.sap.com/wiki/x/9z27Gg>`_,
+`Part 3: Advanced topics <https://wiki.scn.sap.com/wiki/x/FD67Gg>`_.
+
+The :mod:`node-rfc` documentation here is focused merely on technical aspects of :mod:`node-rfc` API.
 
 
 Example usage
