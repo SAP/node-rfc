@@ -46,35 +46,32 @@ string(REPLACE "\n" "" NAPI_INCLUDE_DIR ${NAPI_INCLUDE_DIR})
 string(REPLACE "\"" "" NAPI_INCLUDE_DIR ${NAPI_INCLUDE_DIR})
 
 # NodeJS headers download, if needed
-if (DEFINED ENV{NVM_DIR})
-    set (NODEJS_HOME "$ENV{NVM_DIR}/versions/node")
-elseif (DEFINED ENV{NVM_HOME})
-    set (NODEJS_HOME "$ENV{NVM_HOME}")
-else()
-    message (FATAL_ERROR "NVM not found")
-endif()
+if (NOT DEFINED ENV{NODE_HEADERS_INCLUDE_DIR})
+	if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+		execute_process(COMMAND cmd /c "npm -g prefix"
+			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+			OUTPUT_VARIABLE NODE_HEADERS_INCLUDE_DIR
+		)
+	else()
+	    execute_process(COMMAND npm -g prefix
+			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+			OUTPUT_VARIABLE NODE_HEADERS_INCLUDE_DIR
+		)
+	endif()
+    string(CONCAT NODE_HEADERS_INCLUDE_DIR ${NODE_HEADERS_INCLUDE_DIR} "/include")
+    string(REPLACE "\n" "" NODE_HEADERS_INCLUDE_DIR ${NODE_HEADERS_INCLUDE_DIR})
 
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-	set(NODE_HEADERS_INCLUDE_DIR "${NODEJS_HOME}/${NODE_VERSION}/include/node")
-else()
-	execute_process(COMMAND npm -g root
-		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-		OUTPUT_VARIABLE NODE_HEADERS_INCLUDE_DIR
-	)
-	string(CONCAT NODE_HEADERS_INCLUDE_DIR ${NODE_HEADERS_INCLUDE_DIR} "/../../include/node")
-endif()
-string(REPLACE "\n" "" NODE_HEADERS_INCLUDE_DIR ${NODE_HEADERS_INCLUDE_DIR})
+    if (NOT EXISTS "${NODE_HEADERS_INCLUDE_DIR}")
+        set(NODE_HEADERS_FILENAME "node-${NODE_VERSION}-headers.tar.gz")
+        set(NODE_HEADERS_DOWNLD_PATH ${CMAKE_CURRENT_BINARY_DIR}/${NODE_HEADERS_FILENAME})
+        message("Downloading ${NODE_HEADERS_FILENAME} to ${NODE_HEADERS_DOWNLD_PATH} ...")
+        file(DOWNLOAD "https://nodejs.org/download/release/${NODE_VERSION}/${NODE_HEADERS_FILENAME}" "${NODE_HEADERS_DOWNLD_PATH}" ) # SHOW_PROGRESS)
 
-if (NOT EXISTS "${NODE_HEADERS_INCLUDE_DIR}")
-    set(NODE_HEADERS_FILENAME "node-${NODE_VERSION}-headers.tar.gz")
-    set(NODE_HEADERS_DOWNLD_PATH ${CMAKE_CURRENT_BINARY_DIR}/${NODE_HEADERS_FILENAME})
-    message("Downloading ${NODE_HEADERS_FILENAME} to ${NODE_HEADERS_DOWNLD_PATH} ...")
-    file(DOWNLOAD "https://nodejs.org/download/release/${NODE_VERSION}/${NODE_HEADERS_FILENAME}" "${NODE_HEADERS_DOWNLD_PATH}" ) # SHOW_PROGRESS)
-    file(DOWNLOAD "https://nodejs.org/download/release/${NODE_VERSION}/${NODE_HEADERS_FILENAME}" "${NODE_HEADERS_DOWNLD_PATH}" ) # SHOW_PROGRESS)
-
-    execute_process(COMMAND tar -xzf ${NODE_HEADERS_DOWNLD_PATH})
-    file(REMOVE ${NODE_HEADERS_DOWNLD_PATH})
-	file(RENAME "${CMAKE_CURRENT_BINARY_DIR}/node-${NODE_VERSION}/include" "${NODEJS_HOME}/${NODE_VERSION}/include")
+        execute_process(COMMAND tar -xzf ${NODE_HEADERS_DOWNLD_PATH})
+        file(REMOVE ${NODE_HEADERS_DOWNLD_PATH})
+        file(RENAME "${CMAKE_CURRENT_BINARY_DIR}/node-${NODE_VERSION}/include" "${NODE_HEADERS_INCLUDE_DIR}")
+        file(REMOVE_RECURSE "${CMAKE_CURRENT_BINARY_DIR}/node-${NODE_VERSION}")
+    endif()
 endif()
 
 # build and binding path
@@ -114,13 +111,11 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions")
 # https://launchpad.support.sap.com/#/notes/2573953
 target_compile_definitions(${PROJECT_NAME} PUBLIC
     _CONSOLE
-    SAPwithUNICODE
-    UNICODE
-    _UNICODE
-    SAPwithTHREADS
-    _LARGEFILE_SOURCE
+    SAPwithUNICODE UNICODE _UNICODE
     _FILE_OFFSET_BITS=64
+    _LARGEFILE_SOURCE
     NDEBUG
+    SAPwithTHREADS
     NAPI_CPP_EXCEPTION)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
@@ -220,6 +215,6 @@ set (${PROJECT_NAME}_USE_STATIC_LIBS OFF)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 
 # build target
-target_include_directories(${PROJECT_NAME} PRIVATE ${NODE_HEADERS_INCLUDE_DIR} ${NAPI_INCLUDE_DIR} ${SAPNWRFC_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE "${NODE_HEADERS_INCLUDE_DIR}/node" ${NAPI_INCLUDE_DIR} ${SAPNWRFC_INCLUDE_DIR})
 target_link_directories(${PROJECT_NAME} PRIVATE ${SAPNWRFC_LIB_DIR})
 target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB} ${SAPNWRFC_LIB_FILES})
