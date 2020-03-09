@@ -1,7 +1,7 @@
 Change log
 ==========
 
-1.0.4 (2020-03-09)
+1.0.5 (2020-03-09)
 ------------------
 
 * Windows 32 bit build enabled in build script, fix #124
