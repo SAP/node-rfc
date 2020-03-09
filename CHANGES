@@ -1,11 +1,14 @@
 Change log
 ==========
 
-1.0.4 (XXXX-YY-ZZ)
+1.0.4 (2020-03-09)
 ------------------
 
-* Windows 32 bit build enabled, fix #124
-
+* Windows 32 bit build enabled in build script, fix #124
+* .vscode added to .gitignore
+* README
+* NVM dependency removed from Make script
+* Documentation, fix #120
 
 1.0.3 (2019-11-14)
 ------------------
