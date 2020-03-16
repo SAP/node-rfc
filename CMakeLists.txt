@@ -88,7 +88,7 @@ else()
 endif()
 
 # source files and target library
-add_library(${PROJECT_NAME} SHARED src/node_sapnwrfc.cc src/client.cc src/rfcio.cc src/error.cc)
+add_library(${PROJECT_NAME} SHARED src/node_sapnwrfc.cc src/Client.cc src/rfcio.cc src/error.cc)
 
 # build path ignored on Windows, copy after build
 if ( MSVC )
