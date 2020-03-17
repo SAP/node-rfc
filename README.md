@@ -6,7 +6,7 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 [![N-API v3 Badge](https://github.com/nodejs/abi-stable-node/raw/doc/assets/N-API%20v3%20Badge.svg?sanitize=true)](https://github.com/nodejs/abi-stable-node/)
 [![release](https://img.shields.io/npm/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![downloads](https://img.shields.io/github/downloads/sap/node-rfc/total.svg)](https://www.npmjs.com/package/node-rfc)
-[![dpw](https://img.shields.io/npm/dw/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
+[![dpw](https://img.shields.io/npm/dm/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 
 ## Features
 
