@@ -39,7 +39,7 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 ### Windows
 
--   Visual C++ Redistributable is required for runtime. The version is given in [SAP Note 2573790 - Installation, Support and Availability of the SAP NetWeaver RFC Library 7.50](https://launchpad.support.sap.com/#/notes/2573790)
+-   [Visual C++ Redistributable](https://www.microsoft.com/en-US/download/details.aspx?id=40784) is required for runtime. The version is given in [SAP Note 2573790 - Installation, Support and Availability of the SAP NetWeaver RFC Library 7.50](https://launchpad.support.sap.com/#/notes/2573790)
 
 -   Build toolchain requires [Microsoft C++ Build Tools](https://aka.ms/buildtools), the latest version reccomended
 
