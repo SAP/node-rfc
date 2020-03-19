@@ -72,10 +72,8 @@ private:
     Napi::Value OptionsGetter(const Napi::CallbackInfo &info);
 
     Napi::Value ConnectionInfo(const Napi::CallbackInfo &info);
-
     Napi::Value Connect(const Napi::CallbackInfo &info);
     Napi::Value Invoke(const Napi::CallbackInfo &info);
-
     Napi::Value Ping(const Napi::CallbackInfo &info);
     Napi::Value Close(const Napi::CallbackInfo &info);
     Napi::Value Reopen(const Napi::CallbackInfo &info);
@@ -109,6 +107,7 @@ private:
     bool __rstrip;
     int __bcd = 0; // 0: string, 1: number, 2: function
     RFC_DIRECTION __filter_param_direction = (RFC_DIRECTION)0;
+
     Napi::FunctionReference __bcdFunction;
     // date
     Napi::FunctionReference __dateToABAP;

@@ -23,8 +23,8 @@ SAP_UC *Client::fillString(const Napi::String napistr)
 
     // printf("%s: %u\n", &str[0], sapucSize);
 
-    sapuc = mallocU(sapucSize);
-    memsetU(sapuc, 0, sapucSize);
+    sapuc = (SAP_UC *)mallocU(sapucSize);
+    memsetU((SAP_UTF16 *)sapuc, 0, sapucSize);
     rc = RfcUTF8ToSAPUC((RFC_BYTE *)&str[0], str.length(), sapuc, &sapucSize, &resultLen, &errorInfo);
 
     if (rc != RFC_OK)
@@ -44,8 +44,8 @@ SAP_UC *Client::fillString(std::string str)
 
     // printf("%s: %u\n", &str[0], sapucSize);
 
-    sapuc = mallocU(sapucSize);
-    memsetU(sapuc, 0, sapucSize);
+    sapuc = (SAP_UC *)mallocU(sapucSize);
+    memsetU((SAP_UTF16 *)sapuc, 0, sapucSize);
     rc = RfcUTF8ToSAPUC((RFC_BYTE *)&str[0], str.length(), sapuc, &sapucSize, &resultLen, &errorInfo);
 
     if (rc != RFC_OK)
@@ -178,7 +178,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.As<Napi::String>());
-        rc = RfcSetChars(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
+        rc = RfcSetChars(functionHandle, cName, cValue, strlenU((SAP_UTF16 *)cValue), &errorInfo);
         free(cValue);
         break;
     }
@@ -230,7 +230,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.ToString());
-        rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
+        rc = RfcSetString(functionHandle, cName, cValue, strlenU((SAP_UTF16 *)cValue), &errorInfo);
         free(cValue);
         break;
     }
@@ -244,7 +244,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.ToString());
-        rc = RfcSetNum(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
+        rc = RfcSetNum(functionHandle, cName, cValue, strlenU((SAP_UTF16 *)cValue), &errorInfo);
         free(cValue);
         break;
     }
@@ -261,7 +261,7 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
         }
         cValue = fillString(value.ToString());
-        rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
+        rc = RfcSetString(functionHandle, cName, cValue, strlenU((SAP_UTF16 *)cValue), &errorInfo);
         free(cValue);
         break;
     }
@@ -400,7 +400,7 @@ Napi::Value Client::wrapString(SAP_UC *uc, int length)
 
     if (length == -1)
     {
-        length = strlenU(uc);
+        length = strlenU((SAP_UTF16 *)uc);
     }
     if (length == 0)
     {
@@ -532,7 +532,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
     }
     case RFCTYPE_CHAR:
     {
-        RFC_CHAR *charValue = mallocU(cLen);
+        RFC_CHAR *charValue = (RFC_CHAR *)mallocU(cLen);
         rc = RfcGetChars(functionHandle, cName, charValue, cLen, &errorInfo);
         if (rc != RFC_OK)
         {
@@ -546,7 +546,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
     {
         unsigned int resultLen = 0, strLen = 0;
         RfcGetStringLength(functionHandle, cName, &strLen, &errorInfo);
-        SAP_UC *stringValue = mallocU(strLen + 1);
+        SAP_UC *stringValue = (RFC_CHAR *)mallocU(strLen + 1);
         rc = RfcGetString(functionHandle, cName, stringValue, strLen + 1, &resultLen, &errorInfo);
         if (rc != RFC_OK)
         {
@@ -558,7 +558,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
     }
     case RFCTYPE_NUM:
     {
-        RFC_NUM *numValue = mallocU(cLen);
+        RFC_NUM *numValue = (RFC_CHAR *)mallocU(cLen);
         rc = RfcGetNum(functionHandle, cName, numValue, cLen, &errorInfo);
         if (rc != RFC_OK)
         {
@@ -621,7 +621,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         // => (2*cLen)+1
         unsigned int resultLen;
         unsigned int strLen = 2 * cLen + 1;
-        SAP_UC *sapuc = mallocU(strLen + 1);
+        SAP_UC *sapuc = (SAP_UC *)mallocU(strLen + 1);
         rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
         if (rc == 23) // Buffer too small, use returned requried result length
         {
@@ -629,7 +629,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             //printf("\nWarning: Buffer for BCD type %d to small when wrapping %s\ncLen=%u, buffer=%u, trying with %u", typ, &fieldName[0], cLen, strLen, resultLen);
             free(sapuc);
             strLen = resultLen;
-            sapuc = mallocU(strLen + 1);
+            sapuc = (SAP_UC*)mallocU(strLen + 1);
             rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
         }
         if (rc != RFC_OK)
@@ -669,7 +669,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         // => +9
         unsigned int resultLen;
         unsigned int strLen = 2 * cLen + 10;
-        SAP_UC *sapuc = mallocU(strLen + 1);
+        SAP_UC *sapuc = (SAP_UC *)mallocU(strLen + 1);
         rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
         if (rc == 23) // Buffer too small, use returned requried result length
         {
@@ -677,7 +677,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             //printf("\nWarning: Buffer for BCD type %d to small when wrapping %s\ncLen=%u, buffer=%u, trying with %u", typ, &fieldName[0], cLen, strLen, resultLen);
             free(sapuc);
             strLen = resultLen;
-            sapuc = mallocU(strLen + 1);
+            sapuc = (SAP_UC *)mallocU(strLen + 1);
             rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
         }
         if (rc != RFC_OK)

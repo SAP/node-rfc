@@ -135,7 +135,9 @@ public:
 
     void Execute()
     {
+        client->LockMutex();
         RfcPing(client->connectionHandle, &client->errorInfo);
+        client->UnlockMutex();
     }
 
     void OnOK()
@@ -147,6 +149,7 @@ public:
             RfcIsConnectionHandleValid(client->connectionHandle, &isValid, &client->errorInfo);
         }
         argv[1] = Napi::Boolean::New(Env(), isValid && client->errorInfo.code == RFC_OK);
+
         TRY_CATCH_CALL(Env().Global(), Callback(), 2, argv);
     }
 
@@ -211,8 +214,10 @@ public:
 
     void Execute()
     {
+        client->LockMutex();
         functionDescHandle = RfcGetFunctionDesc(client->connectionHandle, funcName, &client->errorInfo);
         free(funcName);
+        client->UnlockMutex();
     }
 
     void OnOK()
@@ -225,22 +230,27 @@ public:
 
         if (argv[0].IsUndefined())
         {
-
             client->LockMutex();
 
             functionHandle = RfcCreateFunction(functionDescHandle, &client->errorInfo);
-            RFC_RC rc;
 
-            for (unsigned int i = 0; i < notRequested.Value().Length(); i++)
+            if (client->errorInfo.code != RFC_OK)
             {
-                Napi::String name = notRequested.Value().Get(i).ToString();
-                SAP_UC *paramName = client->fillString(name);
-                rc = RfcSetParameterActive(functionHandle, paramName, 0, &client->errorInfo);
-                free(const_cast<SAP_UC *>(paramName));
-                if (rc != RFC_OK)
+                argv[0] = client->wrapError(&client->errorInfo);
+            }
+            else
+            {
+                for (unsigned int i = 0; i < notRequested.Value().Length(); i++)
                 {
-                    argv[0] = client->wrapError(&client->errorInfo);
-                    break;
+                    Napi::String name = notRequested.Value().Get(i).ToString();
+                    SAP_UC *paramName = client->fillString(name);
+                    RFC_RC rc = RfcSetParameterActive(functionHandle, paramName, 0, &client->errorInfo);
+                    free(const_cast<SAP_UC *>(paramName));
+                    if (rc != RFC_OK)
+                    {
+                        argv[0] = client->wrapError(&client->errorInfo);
+                        break;
+                    }
                 }
             }
         }
@@ -441,7 +451,7 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
     {
         Napi::String name = paramNames.Get(i).ToString();
         Napi::String value = connectionParams.Get(name).ToString();
-        //printf("\n%s: %s\n", &name.Utf8Value()[0], &value.Utf8Value()[0]);
+        //printf("\n%s: %s", &name.Utf8Value()[0], &value.Utf8Value()[0]);
         this->connectionParams[i].name = fillString(name);
         this->connectionParams[i].value = fillString(value);
     }
