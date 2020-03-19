@@ -5,7 +5,7 @@ const abapSystem = require("./abapSystem")();
 const client = new rfcClient(abapSystem);
 const UNICODETEST = "ทดสอบสร้างลูกค้าจากภายนอกครั้งที่".repeat(7);
 
-const sync = function(client, done) {
+const sync = function (client, done) {
     client.ping((err, res) => {
         if (res) {
             done();
@@ -23,6 +23,6 @@ module.exports = {
     abapSystem: abapSystem,
     client: client,
     UNICODETEST: UNICODETEST,
-    CONNECTIONS: 0x80,
+    CONNECTIONS: 0x20,
     sync: sync
 };

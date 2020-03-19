@@ -397,7 +397,7 @@ it("XSTRING accepts Buffer", function (done) {
     });
 });
 
-it("BYTE and XSTRING tables", function (done) {
+xit("BYTE and XSTRING tables", function (done) {
     let IT_SXMSMGUIDT = [];
     let IT_SDOKCNTBINS = [];
 
