@@ -91,6 +91,7 @@ it("connectionInfo should return connection information when connected", functio
     let connectionInfo = client.connectionInfo;
     expect(Object.keys(connectionInfo).sort()).toEqual(
         [
+            "dest",
             "host",
             "partnerHost",
             "sysNumber",
@@ -110,7 +111,10 @@ it("connectionInfo should return connection information when connected", functio
             "kernelRel",
             "cpicConvId",
             "progName",
-            "partnerBytesPerChar"
+            "partnerBytesPerChar",
+            "partnerSystemCodepage",
+            "partnerIP",
+            "partnerIPv6",
             //'reserved'
         ].sort()
     );
