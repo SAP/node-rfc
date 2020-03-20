@@ -1,6 +1,14 @@
 Change log
 ==========
 
+1.0.6 (2020-XX-XX)
+------------------
+
+* Connection Info update for PL6 e55783f #128
+* Concurrent locking fix for ConnectionInfo() c5a443b #128
+* Concurrent locking fix for invoke() and ping() 9cebb9a #128
+* Security audit fix by dependencies update, #129
+
 1.0.5 (2020-03-09)
 ------------------
 
