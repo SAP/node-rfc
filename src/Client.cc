@@ -655,12 +655,13 @@ Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
             return wrapError(&errorInfo);
         }
 
+        infoObj.Set(Napi::String::New(env, "dest"), wrapString(connInfo.dest, 64));
         infoObj.Set(Napi::String::New(env, "host"), wrapString(connInfo.host, 100));
         infoObj.Set(Napi::String::New(env, "partnerHost"), wrapString(connInfo.partnerHost, 100));
         infoObj.Set(Napi::String::New(env, "sysNumber"), wrapString(connInfo.sysNumber, 2));
         infoObj.Set(Napi::String::New(env, "sysId"), wrapString(connInfo.sysId, 8));
         infoObj.Set(Napi::String::New(env, "client"), wrapString(connInfo.client, 3));
-        infoObj.Set(Napi::String::New(env, "user"), wrapString(connInfo.user, 8));
+        infoObj.Set(Napi::String::New(env, "user"), wrapString(connInfo.user, 12));
         infoObj.Set(Napi::String::New(env, "language"), wrapString(connInfo.language, 2));
         infoObj.Set(Napi::String::New(env, "trace"), wrapString(connInfo.trace, 1));
         infoObj.Set(Napi::String::New(env, "isoLanguage"), wrapString(connInfo.isoLanguage, 2));
@@ -675,7 +676,10 @@ Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
         infoObj.Set(Napi::String::New(env, "cpicConvId"), wrapString(connInfo.cpicConvId, 8));
         infoObj.Set(Napi::String::New(env, "progName"), wrapString(connInfo.progName, 128));
         infoObj.Set(Napi::String::New(env, "partnerBytesPerChar"), wrapString(connInfo.partnerBytesPerChar, 1));
-        // infoObj.Set(Napi::String::New(env, "reserved"), wrapString(connInfo.reserved, 84));
+        infoObj.Set(Napi::String::New(env, "partnerSystemCodepage"), wrapString(connInfo.partnerSystemCodepage, 4));
+        infoObj.Set(Napi::String::New(env, "partnerIP"), wrapString(connInfo.partnerIP, 15));
+        infoObj.Set(Napi::String::New(env, "partnerIPv6"), wrapString(connInfo.partnerIP, 45));
+        // infoObj.Set(Napi::String::New(env, "reserved"), wrapString(connInfo.reserved, 17));
     }
     client->UnlockMutex();
 
