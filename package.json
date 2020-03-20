@@ -26,7 +26,7 @@
     "upload": "prebuild -r napi -u --verbose",
     "wrapper": "tsc -p src/ts",
     "examples": "tsc -p examples/ts",
-    "test": "jest --testTimeout 30000"
+    "test": "jest --testTimeout 30000 --verbose"
   },
   "binary": {
     "napi_versions": [

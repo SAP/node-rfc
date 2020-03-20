@@ -644,7 +644,7 @@ Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
     Client *client = this;
     Napi::Env env = info.Env();
     Napi::Object infoObj = Napi::Object::New(env);
-
+    client->LockMutex();
     rc = RfcIsConnectionHandleValid(this->connectionHandle, &isValid, &errorInfo);
     if (rc == RFC_OK && isValid)
     {
@@ -677,6 +677,7 @@ Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
         infoObj.Set(Napi::String::New(env, "partnerBytesPerChar"), wrapString(connInfo.partnerBytesPerChar, 1));
         // infoObj.Set(Napi::String::New(env, "reserved"), wrapString(connInfo.reserved, 84));
     }
+    client->UnlockMutex();
 
     return infoObj;
 }
