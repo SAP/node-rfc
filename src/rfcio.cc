@@ -310,6 +310,20 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         }
         break;
     }
+    case RFCTYPE_UTCLONG:
+    {
+        if (!value.IsString())
+        {
+            char err[256];
+            std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            sprintf(err, "UTCLONG string expected when filling field %s of type %d", &fieldName[0], typ);
+            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+        }
+        cValue = fillString(value.ToString());
+        rc = RfcSetString(functionHandle, cName, cValue, strlenU((SAP_UTF16 *)cValue), &errorInfo);
+        free(cValue);
+        break;
+    }
     case RFCTYPE_DATE:
     {
         if (!__dateToABAP.IsEmpty())
@@ -629,7 +643,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             //printf("\nWarning: Buffer for BCD type %d to small when wrapping %s\ncLen=%u, buffer=%u, trying with %u", typ, &fieldName[0], cLen, strLen, resultLen);
             free(sapuc);
             strLen = resultLen;
-            sapuc = (SAP_UC*)mallocU(strLen + 1);
+            sapuc = (SAP_UC *)mallocU(strLen + 1);
             rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
         }
         if (rc != RFC_OK)
@@ -740,6 +754,20 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             break;
         }
         resultValue = Napi::Number::New(__env, (double)intValue);
+        break;
+    }
+    case RFCTYPE_UTCLONG:
+    {
+        unsigned int resultLen = 0, strLen = 27;
+        SAP_UC *stringValue = (RFC_CHAR *)mallocU(strLen + 1);
+        rc = RfcGetString(functionHandle, cName, stringValue, strLen + 1, &resultLen, &errorInfo);
+        if (rc != RFC_OK)
+        {
+            break;
+        }
+        stringValue[19] = '.';
+        resultValue = wrapString(stringValue);
+        free(stringValue);
         break;
     }
     case RFCTYPE_DATE:
