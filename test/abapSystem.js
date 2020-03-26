@@ -26,8 +26,18 @@ let abapSystem = {
         client: '620',
         lang: 'EN',
     },
+
+    QM7: {
+        user: "NWRFCTEST",
+        passwd: "Welcome1",
+        ashost: "ldciqm7.wdf.sap.corp",
+        sysnr: "20",
+        group: "PUBLIC",
+        client: "002",
+        lang: "EN",
+    },
 };
 
-module.exports = function(sid = 'MME') {
+module.exports = function (sid = 'MME') {
     return abapSystem[sid];
 };
