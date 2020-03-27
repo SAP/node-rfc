@@ -26,7 +26,5 @@
     {                                                 \
         args.assign(passed_argv, passed_argv + argc); \
     }                                                 \
-    (callback).MakeCallback(Napi::Value(context), args);
-
+    (callback).Call(context, args);
 #endif
-
