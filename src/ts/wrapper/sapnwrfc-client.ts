@@ -76,6 +76,7 @@ interface RfcClientInstance {
     id: number;
     version: RfcClientVersion;
     options: RfcClientOptions;
+    status: RfcClientStatus;
 }
 
 interface RfcClientBinding {
@@ -165,8 +166,16 @@ export type RfcParameterValue =
     | RfcTable;
 export type RfcObject = { [key: string]: RfcParameterValue };
 
+export interface RfcClientStatus {
+    created: number;
+    lastcall: number;
+    lastopen: number;
+    lastclose: number;
+}
 export class Client {
     private __client: RfcClientInstance;
+
+    private __status: RfcClientStatus;
 
     constructor(
         connectionParams: RfcConnectionParameters,
@@ -175,11 +184,18 @@ export class Client {
         this.__client = options
             ? new binding.Client(connectionParams, options)
             : new binding.Client(connectionParams);
+        this.__status = {
+            created: Date.now(),
+            lastopen: 0,
+            lastclose: 0,
+            lastcall: 0
+        };
     }
 
     open(): Promise<Client> {
         return new Promise((resolve, reject) => {
             try {
+                this.__status.lastopen = Date.now();
                 this.__client.connect((err: any) => {
                     if (err) {
                         reject(err);
@@ -229,6 +245,7 @@ export class Client {
                 );
             }
 
+            this.__status.lastcall = Date.now();
             try {
                 this.__client.invoke(
                     rfmName,
@@ -249,6 +266,7 @@ export class Client {
     }
 
     connect(callback: Function) {
+        this.__status.lastopen = Date.now();
         this.__client.connect(callback);
     }
 
@@ -297,6 +315,7 @@ export class Client {
                 return;
             }
 
+            this.__status.lastcall = Date.now();
             this.__client.invoke(rfmName, rfmParams, callback, callOptions);
         } catch (ex) {
             if (typeof callback !== "function") {
@@ -308,6 +327,7 @@ export class Client {
     }
 
     close(callback?: Function): Promise<void> | any {
+        this.__status.lastclose = Date.now();
         if (typeof callback === "function") {
             return this.__client.close(callback);
         } else {
@@ -324,6 +344,7 @@ export class Client {
     }
 
     reopen(callback?: Function): Promise<void> | any {
+        this.__status.lastopen = Date.now();
         if (typeof callback === "function") {
             return this.__client.reopen(callback);
         } else {
@@ -340,6 +361,7 @@ export class Client {
     }
 
     ping(callback?: Function): Promise<boolean> | any {
+        this.__status.lastcall = Date.now();
         if (typeof callback === "function") {
             return this.__client.ping(callback);
         } else {
@@ -365,6 +387,10 @@ export class Client {
 
     get id(): number {
         return this.__client.id;
+    }
+
+    get status(): RfcClientStatus {
+        return this.__status;
     }
 
     get version(): RfcClientVersion {
