@@ -29,13 +29,6 @@ afterEach(function (done) {
     });
 });
 
-afterAll(function (done) {
-    delete setup.client;
-    delete setup.rfcClient;
-    delete setup.rfcPool;
-    done();
-});
-
 it("Client and package versions", function () {
     expect(require("../package.json").version).toBe(client.version.binding);
 });
@@ -162,22 +155,19 @@ it("reopen() should reopen the connection", function (done) {
 });
 
 it("invoke() STFC_CONNECTION should return unicode string", function (done) {
-    client.connect(function (err) {
-        if (err) return done(err);
-        client.invoke(
-            "STFC_CONNECTION", {
-                REQUTEXT: setup.UNICODETEST
-            },
-            function (err, res) {
-                if (err) return done(err);
-                expect(res).toHaveProperty("ECHOTEXT");
-                expect(res.ECHOTEXT.indexOf(setup.UNICODETEST)).toBe(0);
-                client.close(function () {
-                    done();
-                });
-            }
-        );
-    });
+    client.invoke(
+        "STFC_CONNECTION", {
+            REQUTEXT: setup.UNICODETEST
+        },
+        function (err, res) {
+            if (err) return done(err);
+            expect(res).toHaveProperty("ECHOTEXT");
+            expect(res.ECHOTEXT.indexOf(setup.UNICODETEST)).toBe(0);
+            client.close(function () {
+                done();
+            });
+        }
+    );
 });
 
 it("invoke() STFC_STRUCTURE should return structure and table", function (done) {
@@ -207,65 +197,62 @@ it("invoke() STFC_STRUCTURE should return structure and table", function (done) 
         row.RFCINT1 = i;
         importTable.push(row);
     }
-    client.connect(function (err) {
-        if (err) return done(err);
-        client.invoke(
-            "STFC_STRUCTURE", {
-                IMPORTSTRUCT: importStruct,
-                RFCTABLE: importTable
-            },
-            function (err, res) {
-                if (err) return done(err);
-                expect(Object.keys(res)).toEqual([
-                    "ECHOSTRUCT",
-                    "RESPTEXT",
-                    "IMPORTSTRUCT",
-                    "RFCTABLE"
-                ]);
+    client.invoke(
+        "STFC_STRUCTURE", {
+            IMPORTSTRUCT: importStruct,
+            RFCTABLE: importTable
+        },
+        function (err, res) {
+            if (err) return done(err);
+            expect(Object.keys(res)).toEqual([
+                "ECHOSTRUCT",
+                "RESPTEXT",
+                "IMPORTSTRUCT",
+                "RFCTABLE"
+            ]);
 
-                // ECHOSTRUCT match IMPORTSTRUCT
-                for (let k in importStruct) {
-                    if (k === "RFCHEX3") {
-                        //console.log(importStruct[k].length, res.ECHOSTRUCT[k].length);
-                        //for (let u = 0; u < importStruct[k].length; u++) {
-                        //    console.log(importStruct[k][u], res.ECHOSTRUCT[k][u])
-                        //}
-                        expect(Buffer.compare(importStruct[k], res.ECHOSTRUCT[k])).toEqual(0)
-                    } else {
-                        expect(res.ECHOSTRUCT[k]).toEqual(importStruct[k]);
-                    }
+            // ECHOSTRUCT match IMPORTSTRUCT
+            for (let k in importStruct) {
+                if (k === "RFCHEX3") {
+                    //console.log(importStruct[k].length, res.ECHOSTRUCT[k].length);
+                    //for (let u = 0; u < importStruct[k].length; u++) {
+                    //    console.log(importStruct[k][u], res.ECHOSTRUCT[k][u])
+                    //}
+                    expect(Buffer.compare(importStruct[k], res.ECHOSTRUCT[k])).toEqual(0)
+                } else {
+                    expect(res.ECHOSTRUCT[k]).toEqual(importStruct[k]);
                 }
-
-                // added row is incremented IMPORTSTRUCT
-                expect(res.RFCTABLE.length).toEqual(INPUTROWS + 1);
-
-                // output table match import table
-                for (let i = 0; i < INPUTROWS; i++) {
-                    let rowIn = importTable[i];
-                    let rowOut = res.RFCTABLE[i];
-                    for (let k in rowIn) {
-                        if (k === "RFCHEX3") {
-                            expect(Buffer.compare(rowIn[k], rowOut[k])).toEqual(0);
-                        } else {
-                            expect(rowIn[k]).toEqual(rowOut[k]);
-                        }
-                    }
-                }
-
-                // added row match incremented IMPORTSTRUCT
-                expect(res.RFCTABLE[INPUTROWS]).toEqual(
-                    expect.objectContaining({
-                        RFCFLOAT: importStruct.RFCFLOAT + 1,
-                        RFCINT1: importStruct.RFCINT1 + 1,
-                        RFCINT2: importStruct.RFCINT2 + 1,
-                        RFCINT4: importStruct.RFCINT4 + 1
-                    })
-                );
-
-                client.close(function () {
-                    done();
-                });
             }
-        );
-    });
+
+            // added row is incremented IMPORTSTRUCT
+            expect(res.RFCTABLE.length).toEqual(INPUTROWS + 1);
+
+            // output table match import table
+            for (let i = 0; i < INPUTROWS; i++) {
+                let rowIn = importTable[i];
+                let rowOut = res.RFCTABLE[i];
+                for (let k in rowIn) {
+                    if (k === "RFCHEX3") {
+                        expect(Buffer.compare(rowIn[k], rowOut[k])).toEqual(0);
+                    } else {
+                        expect(rowIn[k]).toEqual(rowOut[k]);
+                    }
+                }
+            }
+
+            // added row match incremented IMPORTSTRUCT
+            expect(res.RFCTABLE[INPUTROWS]).toEqual(
+                expect.objectContaining({
+                    RFCFLOAT: importStruct.RFCFLOAT + 1,
+                    RFCINT1: importStruct.RFCINT1 + 1,
+                    RFCINT2: importStruct.RFCINT2 + 1,
+                    RFCINT4: importStruct.RFCINT4 + 1
+                })
+            );
+
+            client.close(function () {
+                done();
+            });
+        }
+    );
 });

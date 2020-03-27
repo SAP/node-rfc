@@ -36,13 +36,6 @@ afterEach(function (done) {
     });
 });
 
-afterAll(function (done) {
-    delete setup.client;
-    delete setup.rfcClient;
-    delete setup.rfcPool;
-    done();
-});
-
 it("Min/Max positive", function (done) {
     let isInput = {
         // Float

@@ -20,26 +20,25 @@ const sync = setup.sync;
 
 // --detectOpenHandles --runInBand
 
-beforeAll(function(done) {
-    client.connect(function(err) {
+beforeAll(function (done) {
+    client.connect(function (err) {
         done(err);
     });
 });
 
-afterAll(function(done) {
-    client.close(function(err) {
-        delete setup.client;
-        delete setup.rfcClient;
-        delete setup.rfcPool;
+afterAll(function (done) {
+    client.close(function (err) {
         done();
     });
 });
 
-it("error: invoke() AbapApplicationError E0", function(done) {
+it("error: invoke() AbapApplicationError E0", function (done) {
     client.invoke(
-        "RFC_RAISE_ERROR",
-        { METHOD: "0", MESSAGETYPE: "E" },
-        function(err) {
+        "RFC_RAISE_ERROR", {
+            METHOD: "0",
+            MESSAGETYPE: "E"
+        },
+        function (err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
@@ -58,11 +57,13 @@ it("error: invoke() AbapApplicationError E0", function(done) {
     );
 });
 
-it("error: invoke() AbapApplicationError E1", function(done) {
+it("error: invoke() AbapApplicationError E1", function (done) {
     client.invoke(
-        "RFC_RAISE_ERROR",
-        { METHOD: "1", MESSAGETYPE: "E" },
-        function(err) {
+        "RFC_RAISE_ERROR", {
+            METHOD: "1",
+            MESSAGETYPE: "E"
+        },
+        function (err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
@@ -80,15 +81,17 @@ it("error: invoke() AbapApplicationError E1", function(done) {
     );
 });
 
-it("error: invoke() AbapApplicationError E2", function(done) {
+it("error: invoke() AbapApplicationError E2", function (done) {
     client.connect((err, res) => {
         if (err) {
             done(err);
         } else {
             client.invoke(
-                "RFC_RAISE_ERROR",
-                { METHOD: "2", MESSAGETYPE: "E" },
-                function(err) {
+                "RFC_RAISE_ERROR", {
+                    METHOD: "2",
+                    MESSAGETYPE: "E"
+                },
+                function (err) {
                     expect(err).toBeDefined();
                     expect(err).toEqual(
                         expect.objectContaining({
@@ -106,11 +109,13 @@ it("error: invoke() AbapApplicationError E2", function(done) {
     });
 });
 
-it("error: invoke() AbapApplicationError E3", function(done) {
+it("error: invoke() AbapApplicationError E3", function (done) {
     client.invoke(
-        "RFC_RAISE_ERROR",
-        { METHOD: "3", MESSAGETYPE: "E" },
-        function(err) {
+        "RFC_RAISE_ERROR", {
+            METHOD: "3",
+            MESSAGETYPE: "E"
+        },
+        function (err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
@@ -126,11 +131,13 @@ it("error: invoke() AbapApplicationError E3", function(done) {
     );
 });
 
-it("error: invoke() AbapApplicationError E11", function(done) {
+it("error: invoke() AbapApplicationError E11", function (done) {
     client.invoke(
-        "RFC_RAISE_ERROR",
-        { METHOD: "11", MESSAGETYPE: "E" },
-        function(rec, err) {
+        "RFC_RAISE_ERROR", {
+            METHOD: "11",
+            MESSAGETYPE: "E"
+        },
+        function (rec, err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
@@ -148,11 +155,13 @@ it("error: invoke() AbapApplicationError E11", function(done) {
     );
 });
 
-it("error: invoke() AbapApplicationError E36", function(done) {
+it("error: invoke() AbapApplicationError E36", function (done) {
     client.invoke(
-        "RFC_RAISE_ERROR",
-        { METHOD: "36", MESSAGETYPE: "E" },
-        function(err) {
+        "RFC_RAISE_ERROR", {
+            METHOD: "36",
+            MESSAGETYPE: "E"
+        },
+        function (err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
@@ -172,11 +181,13 @@ it("error: invoke() AbapApplicationError E36", function(done) {
     );
 });
 
-it("error: invoke() AbapApplicationError E51", function(done) {
+it("error: invoke() AbapApplicationError E51", function (done) {
     client.invoke(
-        "RFC_RAISE_ERROR",
-        { METHOD: "51", MESSAGETYPE: "E" },
-        function(err) {
+        "RFC_RAISE_ERROR", {
+            METHOD: "51",
+            MESSAGETYPE: "E"
+        },
+        function (err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
@@ -192,8 +203,10 @@ it("error: invoke() AbapApplicationError E51", function(done) {
     );
 });
 
-it("error: invoke() AbapRuntimeError A", function(done) {
-    client.invoke("RFC_RAISE_ERROR", { MESSAGETYPE: "A" }, function(err, res) {
+it("error: invoke() AbapRuntimeError A", function (done) {
+    client.invoke("RFC_RAISE_ERROR", {
+        MESSAGETYPE: "A"
+    }, function (err, res) {
         expect(err).toBeDefined();
         expect(err).toEqual(
             expect.objectContaining({
@@ -211,16 +224,17 @@ it("error: invoke() AbapRuntimeError A", function(done) {
     });
 });
 
-it("error: invoke() AbapRuntimeError X", function(done) {
-    client.invoke("RFC_RAISE_ERROR", { MESSAGETYPE: "X" }, function(err) {
+it("error: invoke() AbapRuntimeError X", function (done) {
+    client.invoke("RFC_RAISE_ERROR", {
+        MESSAGETYPE: "X"
+    }, function (err) {
         expect(err).toBeDefined();
         expect(err).toEqual(
             expect.objectContaining({
                 code: 4,
                 name: "ABAPError",
                 key: "MESSAGE_TYPE_X",
-                message:
-                    "The current application has triggered a termination with a short dump.",
+                message: "The current application has triggered a termination with a short dump.",
                 abapMsgClass: "00",
                 abapMsgType: "X",
                 abapMsgNumber: "341",
@@ -232,8 +246,8 @@ it("error: invoke() AbapRuntimeError X", function(done) {
     });
 });
 
-it("error: invoke() SAP GUI in background", function(done) {
-    client.invoke("STFC_SAPGUI", {}, function(err) {
+it("error: invoke() SAP GUI in background", function (done) {
+    client.invoke("STFC_SAPGUI", {}, function (err) {
         expect(err).toBeDefined();
         expect(err).toEqual(
             expect.objectContaining({
