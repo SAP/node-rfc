@@ -31,13 +31,6 @@ afterEach(function (done) {
     });
 });
 
-afterAll(function (done) {
-    delete setup.client;
-    delete setup.rfcClient;
-    delete setup.rfcPool;
-    done();
-});
-
 it('concurrency: invoke() and invoke ()', function (done) {
     let asyncRes = 0;
     client.invoke('/COE/RBP_FE_WAIT', {

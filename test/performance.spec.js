@@ -17,28 +17,23 @@
 const setup = require("./setup");
 const client = setup.client;
 
-beforeEach(function(done) {
+beforeEach(function (done) {
     client.reopen(err => {
         done(err);
     });
 });
 
-afterEach(function(done) {
+afterEach(function (done) {
     client.close(() => {
         done();
     });
 });
 
-afterAll(function(done) {
-    delete setup.client;
-    delete setup.rfcClient;
-    delete setup.rfcPool;
-    done();
-});
-
-it("performance: invoke() BAPI_USER_GET_DETAIL", function(done) {
+it("performance: invoke() BAPI_USER_GET_DETAIL", function (done) {
     //this.timeout(15000);
-    client.invoke("BAPI_USER_GET_DETAIL", { USERNAME: "DEMO" }, function(
+    client.invoke("BAPI_USER_GET_DETAIL", {
+        USERNAME: "DEMO"
+    }, function (
         err,
         res
     ) {
@@ -61,17 +56,16 @@ it("performance: invoke() BAPI_USER_GET_DETAIL", function(done) {
     });
 });
 
-it("performance: invoke() STFC_PERFORMANCE", function(done) {
+it("performance: invoke() STFC_PERFORMANCE", function (done) {
     let COUNT = 10000;
     client.invoke(
-        "STFC_PERFORMANCE",
-        {
+        "STFC_PERFORMANCE", {
             CHECKTAB: "X",
             LGET0332: COUNT.toString(),
             LGET1000: COUNT.toString()
         },
 
-        function(err, res) {
+        function (err, res) {
             if (err) return done(err);
             expect(res.ETAB0332.length).toBe(COUNT);
             expect(res.ETAB1000.length).toBe(COUNT);
