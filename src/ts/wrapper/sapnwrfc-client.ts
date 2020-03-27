@@ -14,6 +14,7 @@ try {
     throw ex;
 }
 interface RfcConnectionInfo {
+    dest: string;
     host: string;
     partnerHost: string;
     sysNumber: string;
@@ -34,7 +35,10 @@ interface RfcConnectionInfo {
     cpicConvId: string;
     progName: string;
     partnerBytesPerChar: string;
-    reserved: string;
+    partnerSystemCodepage: string;
+    partnerIP: string;
+    partnerIPv6: string;
+    //reserved: string;
 }
 
 interface RfcClientVersion {
