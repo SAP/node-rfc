@@ -39,11 +39,11 @@ public:
         if (!client->alive)
         {
             Napi::Value argv[1] = {client->wrapError(&client->errorInfo)};
-            TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
+            CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
         }
         else
         {
-            TRY_CATCH_CALL(Env().Global(), Callback(), 0, {});
+            CALLBACK_CALL(Env().Global(), Callback(), 0, {});
         }
     }
 
@@ -80,11 +80,11 @@ public:
         if (client->errorInfo.code != RFC_OK)
         {
             Napi::Value argv[1] = {client->wrapError(&client->errorInfo)};
-            TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
+            CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
         }
         else
         {
-            TRY_CATCH_CALL(Env().Global(), Callback(), 0, {});
+            CALLBACK_CALL(Env().Global(), Callback(), 0, {});
         }
     }
 
@@ -113,12 +113,12 @@ public:
         client->alive = client->errorInfo.code == RFC_OK;
         if (client->alive)
         {
-            TRY_CATCH_CALL(Env().Global(), Callback(), 0, {});
+            CALLBACK_CALL(Env().Global(), Callback(), 0, {});
         }
         else
         {
             Napi::Value argv[1] = {client->wrapError(&client->errorInfo)};
-            TRY_CATCH_CALL(Env().Global(), Callback(), 1, argv);
+            CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
         }
     }
 
@@ -150,7 +150,7 @@ public:
         }
         argv[1] = Napi::Boolean::New(Env(), isValid && client->errorInfo.code == RFC_OK);
 
-        TRY_CATCH_CALL(Env().Global(), Callback(), 2, argv);
+        CALLBACK_CALL(Env().Global(), Callback(), 2, argv);
     }
 
 private:
@@ -188,7 +188,7 @@ public:
             argv[1] = client->wrapResult(functionDescHandle, functionHandle);
         }
         RfcDestroyFunction(functionHandle, NULL);
-        TRY_CATCH_CALL(Env().Global(), callback, 2, argv)
+        CALLBACK_CALL(Env().Global(), callback, 2, argv)
         callback.Reset();
     }
 
@@ -286,7 +286,7 @@ public:
         else
         {
             client->UnlockMutex();
-            TRY_CATCH_CALL(Env().Global(), callback, 1, argv);
+            CALLBACK_CALL(Env().Global(), callback, 1, argv);
             callback.Reset();
         }
     }
