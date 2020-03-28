@@ -563,7 +563,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             break;
         }
-        resultValue = wrapString(stringValue);
+        resultValue = wrapString(stringValue, strLen);
         free(stringValue);
         break;
     }
@@ -763,7 +763,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             break;
         }
         stringValue[19] = '.';
-        resultValue = wrapString(stringValue);
+        resultValue = wrapString(stringValue, strLen);
         free(stringValue);
         break;
     }
