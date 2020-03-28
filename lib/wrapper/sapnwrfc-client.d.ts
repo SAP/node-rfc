@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import * as Promise from "bluebird";
 interface RfcConnectionInfo {
+    dest: string;
     host: string;
     partnerHost: string;
     sysNumber: string;
@@ -21,7 +22,9 @@ interface RfcConnectionInfo {
     cpicConvId: string;
     progName: string;
     partnerBytesPerChar: string;
-    reserved: string;
+    partnerSystemCodepage: string;
+    partnerIP: string;
+    partnerIPv6: string;
 }
 interface RfcClientVersion {
     major: string;
@@ -89,8 +92,15 @@ export declare type RfcParameterValue = RfcVariable | RfcArray | RfcStructure | 
 export declare type RfcObject = {
     [key: string]: RfcParameterValue;
 };
+export interface RfcClientStatus {
+    created: number;
+    lastcall: number;
+    lastopen: number;
+    lastclose: number;
+}
 export declare class Client {
     private __client;
+    private __status;
     constructor(connectionParams: RfcConnectionParameters, options?: RfcClientOptions);
     open(): Promise<Client>;
     call(rfmName: string, rfmParams: RfcObject, callOptions?: RfcCallOptions): Promise<RfcObject>;
@@ -99,10 +109,11 @@ export declare class Client {
     close(callback?: Function): Promise<void> | any;
     reopen(callback?: Function): Promise<void> | any;
     ping(callback?: Function): Promise<boolean> | any;
-    readonly isAlive: boolean;
-    readonly connectionInfo: RfcConnectionInfo;
-    readonly id: number;
-    readonly version: RfcClientVersion;
-    readonly options: RfcClientOptions;
+    get isAlive(): boolean;
+    get connectionInfo(): RfcConnectionInfo;
+    get id(): number;
+    get status(): RfcClientStatus;
+    get version(): RfcClientVersion;
+    get options(): RfcClientOptions;
 }
 export {};

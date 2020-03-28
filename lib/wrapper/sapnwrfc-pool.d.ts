@@ -13,5 +13,5 @@ export declare class Pool {
     acquire(): Promise<Client | Error> | undefined;
     release(client: Client): void;
     releaseAll(): Promise<void>;
-    readonly status: object;
+    get status(): object;
 }
