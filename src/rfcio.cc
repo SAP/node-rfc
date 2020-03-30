@@ -1,7 +1,23 @@
+// Copyright 2014 SAP AG.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http: //www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+// either express or implied. See the License for the specific
+// language governing permissions and limitations under the License.
+
 #include "Client.h"
+#include "noderfcsdk.h"
 
 namespace node_rfc
 {
+extern Napi::Env __env;
 
 ////////////////////////////////////////////////////////////////////////////////
 // FILL FUNCTIONS (to RFC)
@@ -381,13 +397,13 @@ Napi::Value Client::fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
 
 Napi::Value Client::wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle)
 {
-    Napi::EscapableHandleScope scope(__env);
+    Napi::EscapableHandleScope scope(node_rfc::__env);
 
     RFC_PARAMETER_DESC paramDesc;
     unsigned int paramCount = 0;
 
     RfcGetParameterCount(functionDescHandle, &paramCount, NULL);
-    Napi::Object resultObj = Napi::Object::New(__env);
+    Napi::Object resultObj = Napi::Object::New(node_rfc::__env);
 
     for (unsigned int i = 0; i < paramCount; i++)
     {
@@ -402,65 +418,9 @@ Napi::Value Client::wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_
     return scope.Escape(resultObj);
 }
 
-Napi::Value Client::wrapString(SAP_UC *uc, int length)
-{
-    RFC_RC rc;
-    RFC_ERROR_INFO errorInfo;
-
-    Napi::EscapableHandleScope scope(__env);
-
-    if (length == -1)
-    {
-        length = strlenU((SAP_UTF16 *)uc);
-    }
-    if (length == 0)
-    {
-        return Napi::String::New(__env, "");
-    }
-    // try with 3 bytes per unicode character
-    unsigned int utf8Size = length * 3;
-    char *utf8 = (char *)malloc(utf8Size + 1);
-    utf8[0] = '\0';
-    unsigned int resultLen = 0;
-    rc = RfcSAPUCToUTF8(uc, length, (RFC_BYTE *)utf8, &utf8Size, &resultLen, &errorInfo);
-
-    if (rc != RFC_OK)
-    {
-        // not enough, try with 6
-        free((char *)utf8);
-        utf8Size = length * 6;
-        utf8 = (char *)malloc(utf8Size + 1);
-        utf8[0] = '\0';
-        resultLen = 0;
-        rc = RfcSAPUCToUTF8(uc, length, (RFC_BYTE *)utf8, &utf8Size, &resultLen, &errorInfo);
-        if (rc != RFC_OK)
-        {
-            free((char *)utf8);
-            char err[255];
-            sprintf(err, "wrapString fatal error: length: %d utf8Size: %u resultLen: %u", length, utf8Size, resultLen);
-            Napi::Error::Fatal(err, "node-rfc internal error");
-        }
-    }
-
-    if (__rstrip && strlen(utf8))
-    {
-        int i = strlen(utf8) - 1;
-
-        while (i >= 0 && isspace(utf8[i]))
-        {
-            i--;
-        }
-        utf8[i + 1] = '\0';
-    }
-
-    Napi::Value resultValue = Napi::String::New(__env, utf8);
-    free((char *)utf8);
-    return scope.Escape(resultValue);
-}
-
 Napi::Value Client::wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle)
 {
-    Napi::EscapableHandleScope scope(__env);
+    Napi::EscapableHandleScope scope(node_rfc::__env);
 
     RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
@@ -469,17 +429,17 @@ Napi::Value Client::wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_H
     rc = RfcGetFieldCount(typeDesc, &fieldCount, &errorInfo);
     if (rc != RFC_OK)
     {
-        Napi::Error::New(__env, wrapError(&errorInfo).ToString()).ThrowAsJavaScriptException();
+        Napi::Error::New(node_rfc::__env, wrapError(&errorInfo).ToString()).ThrowAsJavaScriptException();
     }
 
-    Napi::Object resultObj = Napi::Object::New(__env);
+    Napi::Object resultObj = Napi::Object::New(node_rfc::__env);
 
     for (unsigned int i = 0; i < fieldCount; i++)
     {
         rc = RfcGetFieldDescByIndex(typeDesc, i, &fieldDesc, &errorInfo);
         if (rc != RFC_OK)
         {
-            Napi::Error::New(__env, wrapError(&errorInfo).ToString()).ThrowAsJavaScriptException();
+            Napi::Error::New(node_rfc::__env, wrapError(&errorInfo).ToString()).ThrowAsJavaScriptException();
         }
         (resultObj).Set(wrapString(fieldDesc.name), wrapVariable(fieldDesc.type, structHandle, fieldDesc.name, fieldDesc.nucLength, fieldDesc.typeDescHandle));
     }
@@ -498,7 +458,7 @@ Napi::Value Client::wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_H
 
 Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, unsigned int cLen, RFC_TYPE_DESC_HANDLE typeDesc)
 {
-    Napi::EscapableHandleScope scope(__env);
+    Napi::EscapableHandleScope scope(node_rfc::__env);
 
     Napi::Value resultValue;
 
@@ -529,7 +489,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         unsigned int rowCount;
         rc = RfcGetRowCount(tableHandle, &rowCount, &errorInfo);
 
-        Napi::Array table = Napi::Array::New(__env);
+        Napi::Array table = Napi::Array::New(node_rfc::__env);
 
         while (rowCount-- > 0)
         {
@@ -593,7 +553,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             free(byteValue);
             break;
         }
-        resultValue = Napi::Buffer<char>::New(__env, reinterpret_cast<char *>(byteValue), cLen); // .As<Napi::Uint8Array>(); // as a buffer
+        resultValue = Napi::Buffer<char>::New(node_rfc::__env, reinterpret_cast<char *>(byteValue), cLen); // .As<Napi::Uint8Array>(); // as a buffer
         //resultValue = Napi::String::New(env, reinterpret_cast<const char *>(byteValue)); // or as a string
         // do not free byteValue - it will be freed when the buffer is garbage collected
         break;
@@ -618,8 +578,8 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
             free(byteValue);
             break;
         }
-        resultValue = Napi::Buffer<char>::New(__env, reinterpret_cast<char *>(byteValue), resultLen); // as a buffer
-        //resultValue = Napi::String::New(__env, reinterpret_cast<const char *>(byteValue)); // or as a string
+        resultValue = Napi::Buffer<char>::New(node_rfc::__env, reinterpret_cast<char *>(byteValue), resultLen); // as a buffer
+        //resultValue = Napi::String::New(node_rfc::__env, reinterpret_cast<const char *>(byteValue)); // or as a string
         // do not free byteValue - it will be freed when the buffer is garbage collected
         break;
     }
@@ -665,7 +625,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
     {
         RFC_FLOAT floatValue;
         rc = RfcGetFloat(functionHandle, cName, &floatValue, &errorInfo);
-        resultValue = Napi::Number::New(__env, floatValue);
+        resultValue = Napi::Number::New(node_rfc::__env, floatValue);
         break;
     }
     case RFCTYPE_DECF16:
@@ -717,7 +677,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             break;
         }
-        resultValue = Napi::Number::New(__env, intValue);
+        resultValue = Napi::Number::New(node_rfc::__env, intValue);
         break;
     }
     case RFCTYPE_INT1:
@@ -728,7 +688,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             break;
         }
-        resultValue = Napi::Number::New(__env, intValue);
+        resultValue = Napi::Number::New(node_rfc::__env, intValue);
         break;
     }
     case RFCTYPE_INT2:
@@ -739,7 +699,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             break;
         }
-        resultValue = Napi::Number::New(__env, intValue);
+        resultValue = Napi::Number::New(node_rfc::__env, intValue);
         break;
     }
     case RFCTYPE_INT8:
@@ -750,7 +710,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         {
             break;
         }
-        resultValue = Napi::Number::New(__env, (double)intValue);
+        resultValue = Napi::Number::New(node_rfc::__env, (double)intValue);
         break;
     }
     case RFCTYPE_UTCLONG:
@@ -801,7 +761,7 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
         char err[256];
         std::string fieldName = wrapString(cName).ToString().Utf8Value();
         sprintf(err, "Unknown RFC type %d when wrapping %s", typ, &fieldName[0]);
-        Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+        Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
 
         break;
     }

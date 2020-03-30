@@ -44,7 +44,6 @@ it("Client getters", function () {
         require("../package.json").version
     );
 
-    expect(client.options).toHaveProperty("rstrip");
     expect(client.options).toHaveProperty("bcd");
     expect(client.options).toHaveProperty("date");
     expect(client.options).toHaveProperty("time");

@@ -49,7 +49,6 @@ interface RfcClientVersion {
 }
 
 export interface RfcClientOptions {
-    rstrip: boolean;
     bcd: string | Function;
     date: Function;
     time: Function;

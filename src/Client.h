@@ -29,7 +29,7 @@ using namespace Napi;
 
 namespace node_rfc
 {
-
+extern Napi::Env __env;
 class Client : public Napi::ObjectWrap<Client>
 {
 public:
@@ -45,13 +45,11 @@ public:
 
     void init(Napi::Env env)
     {
-        __env = env;
-
+        node_rfc::__env = env;
         paramSize = 0;
         connectionParams = NULL;
         connectionHandle = NULL;
         alive = false;
-        __rstrip = true;
         __bcd = NODERFC_BCD_STRING;
 
         rc = (RFC_RC)0;
@@ -87,24 +85,14 @@ private:
     Napi::Value fillStructure(RFC_STRUCTURE_HANDLE structHandle, RFC_TYPE_DESC_HANDLE functionDescHandle, SAP_UC *cName, Napi::Value value);
     Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Napi::Value value, RFC_TYPE_DESC_HANDLE functionDescHandle);
 
-    Napi::Value wrapString(SAP_UC *uc, int length = -1);
     Napi::Value wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle);
     Napi::Value wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, unsigned int cLen, RFC_TYPE_DESC_HANDLE typeDesc);
     Napi::Value wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle);
-
-    // RFC ERRORS
-
-    Napi::Value RfcLibError(RFC_ERROR_INFO *errorInfo);
-    Napi::Value AbapError(RFC_ERROR_INFO *errorInfo);
-    Napi::Value wrapError(RFC_ERROR_INFO *errorInfo);
-
-    Napi::Env __env = NULL;
 
     unsigned int paramSize;
     RFC_CONNECTION_PARAMETER *connectionParams;
     RFC_CONNECTION_HANDLE connectionHandle;
     bool alive;
-    bool __rstrip;
     int __bcd = 0; // 0: string, 1: number, 2: function
     RFC_DIRECTION __filter_param_direction = (RFC_DIRECTION)0;
 
