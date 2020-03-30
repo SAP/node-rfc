@@ -13,12 +13,14 @@
 // language governing permissions and limitations under the License.
 
 #include "Client.h"
+#include "noderfcsdk.h"
 #include "macros.h"
 
 namespace node_rfc
 {
 
 unsigned int Client::__refCounter = 0;
+extern Napi::Env __env;
 
 class ConnectAsync : public Napi::AsyncWorker
 {
@@ -38,7 +40,7 @@ public:
 
         if (!client->alive)
         {
-            Napi::Value argv[1] = {client->wrapError(&client->errorInfo)};
+            Napi::Value argv[1] = {wrapError(&client->errorInfo)};
             CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
         }
         else
@@ -79,7 +81,7 @@ public:
     {
         if (client->errorInfo.code != RFC_OK)
         {
-            Napi::Value argv[1] = {client->wrapError(&client->errorInfo)};
+            Napi::Value argv[1] = {wrapError(&client->errorInfo)};
             CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
         }
         else
@@ -117,7 +119,7 @@ public:
         }
         else
         {
-            Napi::Value argv[1] = {client->wrapError(&client->errorInfo)};
+            Napi::Value argv[1] = {wrapError(&client->errorInfo)};
             CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
         }
     }
@@ -180,7 +182,7 @@ public:
 
         if (client->errorInfo.code != RFC_OK)
         {
-            argv[0] = client->wrapError(&client->errorInfo);
+            argv[0] = wrapError(&client->errorInfo);
         }
         else
         {
@@ -226,7 +228,7 @@ public:
         Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
 
         if (functionDescHandle == NULL || client->errorInfo.code != RFC_OK)
-            argv[0] = client->wrapError(&client->errorInfo);
+            argv[0] = wrapError(&client->errorInfo);
 
         if (argv[0].IsUndefined())
         {
@@ -236,7 +238,7 @@ public:
 
             if (client->errorInfo.code != RFC_OK)
             {
-                argv[0] = client->wrapError(&client->errorInfo);
+                argv[0] = wrapError(&client->errorInfo);
             }
             else
             {
@@ -248,7 +250,7 @@ public:
                     free(const_cast<SAP_UC *>(paramName));
                     if (rc != RFC_OK)
                     {
-                        argv[0] = client->wrapError(&client->errorInfo);
+                        argv[0] = wrapError(&client->errorInfo);
                         break;
                     }
                 }
@@ -343,11 +345,7 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
         {
             Napi::String key = props.Get(i).ToString();
             Napi::Value opt = options.Get(key).As<Napi::Value>();
-            if (key.Utf8Value().compare(std::string("rstrip")) == (int)0)
-            {
-                __rstrip = options.Get(key).As<Napi::Boolean>();
-            }
-            else if (key.Utf8Value().compare(std::string("bcd")) == (int)0)
+            if (key.Utf8Value().compare(std::string("bcd")) == (int)0)
             {
                 if (opt.IsFunction())
                 {
@@ -364,7 +362,7 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
                     else
                     {
                         sprintf(err, "Unknown bcd option, only 'number' or function allowed: %s", &bcdString[0]);
-                        Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                        Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
                     }
                 }
             }
@@ -393,7 +391,7 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
                 if (opt.IsNull())
                 {
                     sprintf(err, "Date option is not an object with toABAP and fromABAP functions");
-                    Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                    Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
                 }
             }
             else if (key.Utf8Value().compare(std::string("time")) == (int)0)
@@ -421,7 +419,7 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
                 if (opt.IsNull())
                 {
                     sprintf(err, "Date option is not an object with toABAP and fromABAP functions");
-                    Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                    Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
                 }
             }
             else if (key.Utf8Value().compare(std::string("filter")) == (int)0)
@@ -430,14 +428,14 @@ Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
                 if (((int)__filter_param_direction < 1) || ((int)__filter_param_direction) > 4)
                 {
                     sprintf(err, "Invalid key for the filter parameter direction (see RFC_DIRECTION): %u", (int)__filter_param_direction);
-                    Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                    Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
                 }
             }
             else
             {
                 std::string optionName = key.Utf8Value();
                 sprintf(err, "Unknown option: %s", &optionName[0]);
-                Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
             }
         }
     }
@@ -559,7 +557,7 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo &info)
                 char err[256];
                 std::string optionName = key.Utf8Value();
                 sprintf(err, "Unknown option: %s", &optionName[0]);
-                Napi::TypeError::New(__env, err).ThrowAsJavaScriptException();
+                Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
             }
         }
     }
@@ -702,56 +700,55 @@ Napi::Value Client::VersionGetter(const Napi::CallbackInfo &info)
 
     RfcGetVersion(&major, &minor, &patchLevel);
 
-    Napi::Object version = Napi::Object::New(__env);
-    version.Set(Napi::String::New(__env, "major"), major);
-    version.Set(Napi::String::New(__env, "minor"), minor);
-    version.Set(Napi::String::New(__env, "patchLevel"), patchLevel);
-    version.Set(Napi::String::New(__env, "binding"), Napi::String::New(__env, SAPNWRFC_BINDING_VERSION));
+    Napi::Object version = Napi::Object::New(node_rfc::__env);
+    version.Set(Napi::String::New(node_rfc::__env, "major"), major);
+    version.Set(Napi::String::New(node_rfc::__env, "minor"), minor);
+    version.Set(Napi::String::New(node_rfc::__env, "patchLevel"), patchLevel);
+    version.Set(Napi::String::New(node_rfc::__env, "binding"), Napi::String::New(node_rfc::__env, SAPNWRFC_BINDING_VERSION));
     return version;
 }
 
 Napi::Value Client::OptionsGetter(const Napi::CallbackInfo &info)
 {
-    Napi::Object options = Napi::Object::New(__env);
-    options.Set(Napi::String::New(__env, "rstrip"), Napi::Boolean::New(__env, __rstrip));
+    Napi::Object options = Napi::Object::New(node_rfc::__env);
     if (__bcd == NODERFC_BCD_STRING)
     {
-        options.Set(Napi::String::New(__env, "bcd"), Napi::String::New(__env, "string"));
+        options.Set(Napi::String::New(node_rfc::__env, "bcd"), Napi::String::New(node_rfc::__env, "string"));
     }
     else if (__bcd == NODERFC_BCD_NUMBER)
     {
-        options.Set(Napi::String::New(__env, "bcd"), Napi::String::New(__env, "number"));
+        options.Set(Napi::String::New(node_rfc::__env, "bcd"), Napi::String::New(node_rfc::__env, "number"));
     }
     else if (__bcd == NODERFC_BCD_FUNCTION)
     {
-        options.Set(Napi::String::New(__env, "bcd"), __bcdFunction.Value());
+        options.Set(Napi::String::New(node_rfc::__env, "bcd"), __bcdFunction.Value());
     }
     else
     {
-        options.Set(Napi::String::New(__env, "bcd"), Napi::String::New(__env, "?"));
+        options.Set(Napi::String::New(node_rfc::__env, "bcd"), Napi::String::New(node_rfc::__env, "?"));
     }
 
-    Napi::Object date = Napi::Object::New(__env);
+    Napi::Object date = Napi::Object::New(node_rfc::__env);
     if (!__dateToABAP.IsEmpty())
     {
-        date.Set(Napi::String::New(__env, "toABAP"), __dateToABAP.Value());
+        date.Set(Napi::String::New(node_rfc::__env, "toABAP"), __dateToABAP.Value());
     }
     if (!__dateFromABAP.IsEmpty())
     {
-        date.Set(Napi::String::New(__env, "fromABAP"), __dateFromABAP.Value());
+        date.Set(Napi::String::New(node_rfc::__env, "fromABAP"), __dateFromABAP.Value());
     }
-    options.Set(Napi::String::New(__env, "date"), date);
+    options.Set(Napi::String::New(node_rfc::__env, "date"), date);
 
-    Napi::Object time = Napi::Object::New(__env);
+    Napi::Object time = Napi::Object::New(node_rfc::__env);
     if (!__timeToABAP.IsEmpty())
     {
-        time.Set(Napi::String::New(__env, "toABAP"), __timeToABAP.Value());
+        time.Set(Napi::String::New(node_rfc::__env, "toABAP"), __timeToABAP.Value());
     }
     if (!__timeFromABAP.IsEmpty())
     {
-        time.Set(Napi::String::New(__env, "fromABAP"), __timeFromABAP.Value());
+        time.Set(Napi::String::New(node_rfc::__env, "fromABAP"), __timeFromABAP.Value());
     }
-    options.Set(Napi::String::New(__env, "time"), time);
+    options.Set(Napi::String::New(node_rfc::__env, "time"), time);
 
     return options;
 }
