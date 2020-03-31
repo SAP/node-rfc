@@ -93,6 +93,7 @@ Napi::Value Throughput::Destroy(const Napi::CallbackInfo &info)
     if (this->__handle != NULL)
     {
         RFC_RC rc = RfcDestroyThroughput(this->__handle, &errorInfo);
+        this->__handle = NULL;
         if (rc != RFC_OK)
             return scope.Escape(wrapError(&errorInfo));
     }
