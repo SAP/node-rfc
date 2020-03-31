@@ -1,0 +1,36 @@
+import { Client } from "./sapnwrfc-client";
+export interface RfcThroughputBinding {
+    new (): RfcThroughputBinding;
+    (): RfcThroughputBinding;
+    clients: Set<Client>;
+    status: RfcThroughputStatus;
+    _handle: number;
+    setOnConnection(_connectionHandle: number): any;
+    removeFromConnection(_connectionHandle: number): any;
+    getFromConnection(_connectionHandle: number): any;
+    reset(): void;
+    destroy(): void;
+}
+export interface RfcThroughputStatus {
+    numberOfCalls: number;
+    sentBytes: number;
+    receivedBytes: number;
+    applicationTime: number;
+    totalTime: number;
+    serializationTime: number;
+    deserializationTime: number;
+}
+export declare class Throughput {
+    private __throughput;
+    private __clients;
+    private static __Handles;
+    constructor(client?: Client | Array<Client>);
+    setOnConnection(client: Client | Array<Client>): void;
+    removeFromConnection(client: Client | Array<Client>): void;
+    static getFromConnection(client: Client): Throughput | void;
+    reset(): void;
+    destroy(): void;
+    get status(): RfcThroughputStatus;
+    get clients(): Set<Client>;
+    get _handle(): number;
+}

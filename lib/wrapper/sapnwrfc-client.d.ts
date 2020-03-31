@@ -1,5 +1,13 @@
 /// <reference types="node" />
 import * as Promise from "bluebird";
+import { RfcThroughputBinding } from "./sapnwrfc-throughput";
+export interface NWRfcBinding {
+    Client: RfcClientBinding;
+    Throughput: RfcThroughputBinding;
+    verbose(): this;
+}
+declare let binding: NWRfcBinding;
+export { binding };
 interface RfcConnectionInfo {
     dest: string;
     host: string;
@@ -33,10 +41,25 @@ interface RfcClientVersion {
     binding: string;
 }
 export interface RfcClientOptions {
-    rstrip: boolean;
     bcd: string | Function;
     date: Function;
     time: Function;
+}
+export interface RfcClientBinding {
+    new (connectionParameters: RfcConnectionParameters, options?: RfcClientOptions): RfcClientBinding;
+    (connectionParameters: RfcConnectionParameters): RfcClientBinding;
+    connect(callback: Function): any;
+    invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): any;
+    ping(callback: Function | undefined): void | Promise<void>;
+    close(callback: Function | undefined): void | Promise<void>;
+    reopen(callback: Function | undefined): void | Promise<void>;
+    isAlive(): boolean;
+    connectionInfo(): RfcConnectionInfo;
+    id: number;
+    _connectionHandle: number;
+    version: RfcClientVersion;
+    options: RfcClientOptions;
+    status: RfcClientStatus;
 }
 declare enum EnumSncQop {
     DigSig = "1",
@@ -112,8 +135,8 @@ export declare class Client {
     get isAlive(): boolean;
     get connectionInfo(): RfcConnectionInfo;
     get id(): number;
+    get _connectionHandle(): number;
     get status(): RfcClientStatus;
     get version(): RfcClientVersion;
     get options(): RfcClientOptions;
 }
-export {};

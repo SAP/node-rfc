@@ -68,6 +68,7 @@ private:
     Napi::Value IdGetter(const Napi::CallbackInfo &info);
     Napi::Value VersionGetter(const Napi::CallbackInfo &info);
     Napi::Value OptionsGetter(const Napi::CallbackInfo &info);
+    Napi::Value ConnectionHandleGetter(const Napi::CallbackInfo &info);
 
     Napi::Value ConnectionInfo(const Napi::CallbackInfo &info);
     Napi::Value Connect(const Napi::CallbackInfo &info);

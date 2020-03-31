@@ -2,7 +2,16 @@
 
 import * as Promise from "bluebird";
 
-let binding: RfcClientBinding;
+import { RfcThroughputBinding } from "./sapnwrfc-throughput";
+
+import { Throughput } from "./sapnwrfc-throughput";
+export interface NWRfcBinding {
+    Client: RfcClientBinding;
+    Throughput: RfcThroughputBinding;
+    verbose(): this;
+}
+
+let binding: NWRfcBinding;
 try {
     binding = require("../binding/sapnwrfc");
 } catch (ex) {
@@ -13,6 +22,9 @@ try {
                 : `\n\nPlatform not supported: ${process.platform}`;
     throw ex;
 }
+
+export { binding };
+
 interface RfcConnectionInfo {
     dest: string;
     host: string;
@@ -54,12 +66,12 @@ export interface RfcClientOptions {
     time: Function;
 }
 
-interface RfcClientInstance {
+export interface RfcClientBinding {
     new (
         connectionParameters: RfcConnectionParameters,
         options?: RfcClientOptions
-    ): RfcClientInstance;
-    (connectionParameters: RfcConnectionParameters): RfcClientInstance;
+    ): RfcClientBinding;
+    (connectionParameters: RfcConnectionParameters): RfcClientBinding;
     connect(callback: Function): any;
     invoke(
         rfmName: string,
@@ -73,14 +85,10 @@ interface RfcClientInstance {
     isAlive(): boolean;
     connectionInfo(): RfcConnectionInfo;
     id: number;
+    _connectionHandle: number;
     version: RfcClientVersion;
     options: RfcClientOptions;
     status: RfcClientStatus;
-}
-
-interface RfcClientBinding {
-    Client: RfcClientInstance;
-    verbose(): this;
 }
 
 enum EnumSncQop {
@@ -171,9 +179,9 @@ export interface RfcClientStatus {
     lastopen: number;
     lastclose: number;
 }
-export class Client {
-    private __client: RfcClientInstance;
 
+export class Client {
+    private __client: RfcClientBinding;
     private __status: RfcClientStatus;
 
     constructor(
@@ -386,6 +394,10 @@ export class Client {
 
     get id(): number {
         return this.__client.id;
+    }
+
+    get _connectionHandle(): number {
+        return this.__client._connectionHandle;
     }
 
     get status(): RfcClientStatus {

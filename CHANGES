@@ -9,6 +9,8 @@ Change log
 * Concurrent locking fix for invoke() and ping() 9cebb9a #128
 * Security audit fix by dependencies update; fixes #129
 * rstrip removed, always true
+* Throughput monitoring: number of calls, bytes sent/received, application/total time; SAP NWRFC SDK >= 7.53 required
+* UTCLONG ABAP datatype support; SAP NWRFC SDK >= 7.54 required
 
 1.0.5 (2020-03-09)
 ------------------

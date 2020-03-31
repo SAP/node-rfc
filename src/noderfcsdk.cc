@@ -20,7 +20,7 @@ namespace node_rfc
 Napi::Env __env = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
-// RFC ERRORS
+// SAP to JS String
 ////////////////////////////////////////////////////////////////////////////////
 
 Napi::Value wrapString(SAP_UC *uc, int length)
@@ -78,6 +78,13 @@ Napi::Value wrapString(SAP_UC *uc, int length)
 ////////////////////////////////////////////////////////////////////////////////
 // RFC ERRORS
 ////////////////////////////////////////////////////////////////////////////////
+
+Napi::Value NodeRfcError(Napi::Value errorObj)
+{
+    Napi::EscapableHandleScope scope(node_rfc::__env);
+    return scope.Escape(errorObj);
+}
+
 Napi::Value RfcLibError(RFC_ERROR_INFO *errorInfo)
 {
     Napi::EscapableHandleScope scope(node_rfc::__env);
