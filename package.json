@@ -1,7 +1,7 @@
 {
   "name": "node-rfc",
   "description": "nodejs bindings for SAP NW RFC SDK",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "homepage": "https://github.com/sap/node-rfc",
   "author": {
     "name": "Srdjan Boskovic",
@@ -64,11 +64,11 @@
   "devDependencies": {
     "@babel/core": "^7.9.0",
     "@types/bluebird": "^3.5.30",
-    "@types/node": "^13.9.2",
+    "@types/node": "^13.9.8",
     "async": "^3.2.0",
     "cmake-js": "^6.1.0",
     "decimal.js": "^10.2.0",
-    "jest": "^25.1.0",
+    "jest": "^25.2.4",
     "prebuild": "^10.0.0",
     "prebuild-install": "^5.3.3",
     "random-bytes": "^1.0.0",
