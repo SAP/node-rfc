@@ -17,6 +17,7 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 -   Automatic conversion between JavaScript and ABAP datatypes
 -   Buffer, Decimal and Date objects support
 -   Connection pool
+-   :new: Throughput monitoring: number of calls, bytes sent/received, application/total time; SAP NWRFC SDK >= 7.53 required
 -   Extensive unit tests
 
 ## Supported platforms
