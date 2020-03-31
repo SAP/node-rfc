@@ -500,6 +500,7 @@ Napi::Object Client::Init(Napi::Env env, Napi::Object exports)
                                                  InstanceAccessor("version", &Client::VersionGetter, nullptr),
                                                  InstanceAccessor("options", &Client::OptionsGetter, nullptr),
                                                  InstanceAccessor("id", &Client::IdGetter, nullptr),
+                                                 InstanceAccessor("_connectionHandle", &Client::ConnectionHandleGetter, nullptr),
                                                  InstanceMethod("connectionInfo", &Client::ConnectionInfo),
                                                  InstanceMethod("connect", &Client::Connect),
                                                  InstanceMethod("invoke", &Client::Invoke),
@@ -692,6 +693,13 @@ Napi::Value Client::IsAlive(const Napi::CallbackInfo &info)
 Napi::Value Client::IdGetter(const Napi::CallbackInfo &info)
 {
     return Napi::Number::New(info.Env(), this->__refId);
+}
+
+Napi::Value Client::ConnectionHandleGetter(const Napi::CallbackInfo &info)
+{
+    if (!this->alive)
+        return info.Env().Undefined();
+    return Napi::Number::New(info.Env(), (uint64_t)this->connectionHandle);
 }
 
 Napi::Value Client::VersionGetter(const Napi::CallbackInfo &info)

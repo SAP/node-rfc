@@ -13,6 +13,7 @@
 // language governing permissions and limitations under the License.
 
 #include "Client.h"
+#include "Throughput.h"
 #include "macros.h"
 
 using namespace node_rfc;
@@ -20,6 +21,7 @@ using namespace node_rfc;
 Napi::Object RegisterModule(Napi::Env env, Napi::Object exports)
 {
     Client::Init(env, exports);
+    Throughput::Init(env, exports);
 
     return exports;
 }

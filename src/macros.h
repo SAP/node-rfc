@@ -11,7 +11,6 @@
 // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
-
 #ifndef NODE_SAPNWRFC_MACROS_H
 #define NODE_SAPNWRFC_MACROS_H
 
@@ -27,4 +26,11 @@
         args.assign(passed_argv, passed_argv + argc); \
     }                                                 \
     (callback).Call(context, args);
+
+#define THROUGHPUT_CALL(Property, property)                       \
+    rc = RfcGet##Property(this->__handle, &property, &errorInfo); \
+    if (rc != RFC_OK)                                             \
+        return scope.Escape(wrapError(&errorInfo));               \
+    status.Set(Napi::String::New(info.Env(), #property), Napi::Number::New(info.Env(), property));
+
 #endif
