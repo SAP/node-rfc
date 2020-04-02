@@ -114,19 +114,18 @@ it("pool: unique client id across pools", function (done) {
         });
 });
 
-it("error: pool internal error", function (done) {
+it("error: pool internal error", function () {
     let xpool = new Pool(abapSystem, {
         min: 0,
         max: 10
     });
-    xpool.acquire().catch(err => {
-        expect(err).toBeDefined();
+    expect.assertions(1);
+    return xpool.acquire().catch(err => {
         expect(err).toEqual(
             expect.objectContaining({
                 name: "TypeError",
                 message: "Internal pool error, size = 0"
             })
         );
-        done();
     });
 });

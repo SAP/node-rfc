@@ -17,35 +17,27 @@
 const setup = require("../setup");
 const client = setup.client;
 
-//this.timeout(15000);
-
-beforeEach(function(done) {
+beforeEach(function (done) {
     client.reopen(err => {
         done(err);
     });
 });
 
-afterEach(function(done) {
+afterEach(function (done) {
     client.close(() => {
         done();
     });
 });
 
-afterAll(function(done) {
-    delete setup.client;
-    delete setup.rfcClient;
-    delete setup.rfcPool;
-    done();
-});
+const TIMEOUT = 10000;
 
-it("concurrency: invoke() should not block", function(done) {
+it("concurrency: invoke() should not block", function (done) {
     let asyncRes;
     client.invoke(
-        "BAPI_USER_GET_DETAIL",
-        {
+        "BAPI_USER_GET_DETAIL", {
             USERNAME: "DEMO"
         },
-        function(err, res) {
+        function (err, res) {
             if (err) return done(err);
             expect(res).toBeDefined();
             expect(res).toHaveProperty("RETURN");
@@ -57,18 +49,17 @@ it("concurrency: invoke() should not block", function(done) {
     expect(asyncRes).toBeUndefined();
 });
 
-it(`concurrency: ${setup.CONNECTIONS} connections invoke() in parallel`, function(done) {
+it(`concurrency: ${setup.CONNECTIONS} connections invoke() in parallel`, function (done) {
     let callbackCount = 0;
     for (let i = 0; i < setup.CONNECTIONS; i++) {
         let c = new setup.rfcClient(setup.abapSystem);
         c.connect(err => {
             if (err) return done(err);
             c.invoke(
-                "BAPI_USER_GET_DETAIL",
-                {
+                "BAPI_USER_GET_DETAIL", {
                     USERNAME: "DEMO"
                 },
-                function(err, res) {
+                function (err, res) {
                     if (err) return done(err);
                     expect(res).toBeDefined();
                     expect(res).toHaveProperty("RETURN");
@@ -80,17 +71,16 @@ it(`concurrency: ${setup.CONNECTIONS} connections invoke() in parallel`, functio
             );
         });
     }
-});
+}, TIMEOUT);
 
-it(`concurrency: ${setup.CONNECTIONS} concurrent invoke() calls using single connection`, function(done) {
+it(`concurrency: ${setup.CONNECTIONS} concurrent invoke() calls using single connection`, function (done) {
     let callbackCount = 0;
     for (let count = 0; count < setup.CONNECTIONS; count++) {
         client.invoke(
-            "BAPI_USER_GET_DETAIL",
-            {
+            "BAPI_USER_GET_DETAIL", {
                 USERNAME: "XDEMO" + client.id
             },
-            function(err, res) {
+            function (err, res) {
                 if (err) return done(err);
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty("RETURN");
@@ -110,18 +100,17 @@ it(`concurrency: ${setup.CONNECTIONS} concurrent invoke() calls using single con
             }
         );
     }
-});
+}, TIMEOUT);
 
-it(`concurrency: ${setup.CONNECTIONS} recursive invoke() calls using single connection`, function(done) {
+it(`concurrency: ${setup.CONNECTIONS} recursive invoke() calls using single connection`, function (done) {
     let callbackCount = 0;
 
     function call(count) {
         client.invoke(
-            "BAPI_USER_GET_DETAIL",
-            {
+            "BAPI_USER_GET_DETAIL", {
                 USERNAME: "XDEMO" + count
             },
-            function(err, res) {
+            function (err, res) {
                 if (err) return done(err);
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty("RETURN");
@@ -146,4 +135,4 @@ it(`concurrency: ${setup.CONNECTIONS} recursive invoke() calls using single conn
         );
     }
     call(callbackCount);
-});
+}, TIMEOUT);

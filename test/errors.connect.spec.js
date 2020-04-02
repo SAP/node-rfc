@@ -17,19 +17,11 @@
 const setup = require("./setup");
 const client = setup.client;
 
-it("error: new client requires connection parameters", function (done) {
-    try {
-        new setup.rfcClient();
-    } catch (err) {
-        expect(err).toBeDefined();
-        expect(err).toEqual(
-            expect.objectContaining({
-                name: "TypeError",
-                message: "Connection parameters must be an object"
-            })
-        );
-        done();
-    }
+it("error: new client requires connection parameters", function () {
+    return expect(() => new setup.rfcClient())
+        .toThrow(
+            new TypeError("Connection parameters must be an object")
+        )
 });
 
 it("error: connect() requires minimum of connection parameters", function (done) {
@@ -69,17 +61,23 @@ it("error: conect() rejects invalid credentials", function (done) {
     });
 });
 
-it("error: connect() requires a callback function", function (done) {
-    try {
-        client.connect();
-    } catch (err) {
-        expect(err).toBeDefined();
-        expect(err).toEqual(
-            expect.objectContaining({
-                name: "TypeError",
-                message: "First argument must be callback function"
-            })
-        );
+it("error: invoke() over closed connection", function (done) {
+    client.invoke("STFC_CONNECTION", {
+        REQUTEXT: setup.UNICODETEST
+    }, (err, res) => {
+        expect(err).toEqual({
+            name: 'RfcLibError',
+            code: 13,
+            key: 'RFC_INVALID_HANDLE',
+            message: "An invalid handle 'RFC_CONNECTION_HANDLE' was passed to the API call"
+        });
         done();
-    }
+    });
+});
+
+it("error: close() over closed connection", function (done) {
+    client.close(err => {
+        expect(err).toBeUndefined();
+        done();
+    });
 });

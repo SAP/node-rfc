@@ -17,7 +17,6 @@
 const setup = require('../setup');
 const client = setup.client;
 
-//this.timeout(15000);
 
 beforeEach(function (done) {
     client.reopen(err => {
@@ -31,10 +30,13 @@ afterEach(function (done) {
     });
 });
 
+const WAIT_SECONDS = 5;
+const TIMEOUT = 10000;
+
 it('concurrency: invoke() and invoke ()', function (done) {
     let asyncRes = 0;
     client.invoke('/COE/RBP_FE_WAIT', {
-            IV_SECONDS: 1
+            IV_SECONDS: WAIT_SECONDS
         },
         function (err, res) {
             if (err || ++asyncRes == 2) done(err);
@@ -47,12 +49,12 @@ it('concurrency: invoke() and invoke ()', function (done) {
             if (err || ++asyncRes == 2) done(err);
         });
     expect(asyncRes).toEqual(0);
-});
+}, TIMEOUT);
 
 it('concurrency: invoke() and ping ()', function (done) {
     let asyncRes;
     client.invoke('/COE/RBP_FE_WAIT', {
-            IV_SECONDS: 1
+            IV_SECONDS: WAIT_SECONDS
         },
         function (err, res) {
             asyncRes = 1;
@@ -61,8 +63,9 @@ it('concurrency: invoke() and ping ()', function (done) {
     expect(asyncRes).toBeUndefined();
     client.ping().then(res => {
         expect(res).toBeTruthy();
+        done();
     });
-});
+}, TIMEOUT);
 
 it('concurrency: ping() and ping ()', function (done) {
     let N = 5;

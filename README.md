@@ -97,7 +97,7 @@ Callback API example below shows basic principles. See also:
 ```javascript
 "use strict";
 
-const rfcClient = require("node-rfc").Client;
+const Client = require("node-rfc").Client;
 
 // ABAP system RFC connection parameters
 const abapSystem = {
@@ -110,9 +110,9 @@ const abapSystem = {
 };
 
 // create new client
-const client = new rfcClient(abapSystem);
+const client = new Client(abapSystem);
 
-// echo SAP NW RFC SDK and nodejs/RFC binding version
+// echo SAP NWRFC SDK and nodejs/RFC binding version
 console.log("Client version: ", client.version);
 
 // open connection
