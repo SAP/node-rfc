@@ -18,42 +18,45 @@ const setup = require("./setup");
 const Pool = setup.rfcPool;
 const abapSystem = setup.abapSystem;
 
-it("pool: default options", function(done) {
-    const pool = new Pool(abapSystem);
-    pool.acquire()
-        .then(client => {
-            expect(client.id).toBeGreaterThan(0);
-            // expect(client.id).toEqual(2);
-            expect(client.isAlive).toBeTruthy();
-            expect(pool.status.ready).toBe(1);
-            expect(client.options.bcd).toEqual("string");
-            pool.releaseAll().then(() => {
-                expect(pool.status.ready).toBe(0);
-                done();
-            });
-        })
-        .catch(err => {
-            if (err) return done(err);
-        });
-});
+describe('Pool Options', () => {
 
-it("pool: bcd number", function(done) {
-    const pool = new Pool(abapSystem, undefined, {
-        bcd: "number"
-    });
-    pool.acquire()
-        .then(client => {
-            expect(client.id).toBeGreaterThan(0);
-            // expect(client.id).toEqual(2);
-            expect(client.isAlive).toBeTruthy();
-            expect(pool.status.ready).toBe(1);
-            expect(client.options.bcd).toEqual("number");
-            pool.releaseAll().then(() => {
-                expect(pool.status.ready).toBe(0);
-                done();
+    it("pool: default options", function (done) {
+        const pool = new Pool(abapSystem);
+        pool.acquire()
+            .then(client => {
+                expect(client.id).toBeGreaterThan(0);
+                // expect(client.id).toEqual(2);
+                expect(client.isAlive).toBeTruthy();
+                expect(pool.status.ready).toBe(1);
+                expect(client.options.bcd).toEqual("string");
+                pool.releaseAll().then(() => {
+                    expect(pool.status.ready).toBe(0);
+                    done();
+                });
+            })
+            .catch(err => {
+                if (err) return done(err);
             });
-        })
-        .catch(err => {
-            if (err) return done(err);
+    });
+
+    it("pool: bcd number", function (done) {
+        const pool = new Pool(abapSystem, undefined, {
+            bcd: "number"
         });
-});
+        pool.acquire()
+            .then(client => {
+                expect(client.id).toBeGreaterThan(0);
+                // expect(client.id).toEqual(2);
+                expect(client.isAlive).toBeTruthy();
+                expect(pool.status.ready).toBe(1);
+                expect(client.options.bcd).toEqual("number");
+                pool.releaseAll().then(() => {
+                    expect(pool.status.ready).toBe(0);
+                    done();
+                });
+            })
+            .catch(err => {
+                if (err) return done(err);
+            });
+    });
+})
