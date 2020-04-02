@@ -17,53 +17,56 @@
 const setup = require("./setup");
 const client = setup.client;
 
-it("error: new client requires connection parameters", function () {
-    return expect(() => new setup.rfcClient())
-        .toThrow(
-            new TypeError("Connection parameters must be an object")
-        )
-});
+describe('Errors: Connect', () => {
 
-it("error: connect() requires minimum of connection parameters", function (done) {
-    let wrongParams = Object.assign({}, setup.abapSystem);
-    delete wrongParams.ashost;
-
-    let wrongClient = new setup.rfcClient(wrongParams);
-    wrongClient.connect(function (err) {
-        expect(err).toBeDefined();
-        expect(err).toEqual(
-            expect.objectContaining({
-                message: "Parameter ASHOST, GWHOST, MSHOST or PORT is missing.",
-                code: 20,
-                key: "RFC_INVALID_PARAMETER",
-                name: "RfcLibError"
-            })
-        );
-        done();
+    it("error: new client requires connection parameters", function () {
+        return expect(() => new setup.rfcClient())
+            .toThrow(
+                new TypeError("Connection parameters must be an object")
+            )
     });
-});
 
-it("error: conect() rejects invalid credentials", function (done) {
-    let wrongParams = Object.assign({}, setup.abapSystem);
-    wrongParams.user = "WRONGUSER";
+    it("error: connect() requires minimum of connection parameters", function (done) {
+        let wrongParams = Object.assign({}, setup.abapSystem);
+        delete wrongParams.ashost;
 
-    let wrongClient = new setup.rfcClient(wrongParams);
-    wrongClient.connect(function (err) {
-        expect(err).toBeDefined();
-        expect(err).toEqual(
-            expect.objectContaining({
-                message: "Name or password is incorrect (repeat logon)",
-                code: 2,
-                key: "RFC_LOGON_FAILURE"
-            })
-        );
-        done();
+        let wrongClient = new setup.rfcClient(wrongParams);
+        wrongClient.connect(function (err) {
+            expect(err).toBeDefined();
+            expect(err).toEqual(
+                expect.objectContaining({
+                    message: "Parameter ASHOST, GWHOST, MSHOST or PORT is missing.",
+                    code: 20,
+                    key: "RFC_INVALID_PARAMETER",
+                    name: "RfcLibError"
+                })
+            );
+            done();
+        });
     });
-});
 
-it("error: close() over closed connection", function (done) {
-    client.close(err => {
-        expect(err).toBeUndefined();
-        done();
+    it("error: conect() rejects invalid credentials", function (done) {
+        let wrongParams = Object.assign({}, setup.abapSystem);
+        wrongParams.user = "WRONGUSER";
+
+        let wrongClient = new setup.rfcClient(wrongParams);
+        wrongClient.connect(function (err) {
+            expect(err).toBeDefined();
+            expect(err).toEqual(
+                expect.objectContaining({
+                    message: "Name or password is incorrect (repeat logon)",
+                    code: 2,
+                    key: "RFC_LOGON_FAILURE"
+                })
+            );
+            done();
+        });
     });
-});
+
+    it("error: close() over closed connection", function (done) {
+        client.close(err => {
+            expect(err).toBeUndefined();
+            done();
+        });
+    });
+})
