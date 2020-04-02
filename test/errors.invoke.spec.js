@@ -112,3 +112,18 @@ it("error: non-existing field in input table", function (done) {
         done();
     });
 });
+
+it("error: invoke() over closed connection", function (done) {
+    (async () => {
+        try {
+            await client.close();
+            expect(client.isAlive).toEqual(false);
+            await client.call("STFC_CONNECTION", {
+                REQUTEXT: setup.UNICODETEST
+            });
+        } catch (ex) {
+            expect(ex).toEqual(new Error("Client invoked RFC call with closed connection: id=1"));
+            done();
+        }
+    })();
+})
