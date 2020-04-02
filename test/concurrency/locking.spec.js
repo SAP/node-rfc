@@ -17,63 +17,64 @@
 const setup = require('../setup');
 const client = setup.client;
 
-
-beforeEach(function (done) {
-    client.reopen(err => {
-        done(err);
-    });
+beforeAll(() => {
+    return client.open();
 });
 
-afterEach(function (done) {
-    client.close(() => {
-        done();
-    });
+afterAll(() => {
+    return client.close();
 });
 
-const WAIT_SECONDS = 5;
-const TIMEOUT = 10000;
+describe('Concurrency: Locking', () => {
 
-it('concurrency: invoke() and invoke ()', function (done) {
-    let asyncRes = 0;
-    client.invoke('/COE/RBP_FE_WAIT', {
-            IV_SECONDS: WAIT_SECONDS
-        },
-        function (err, res) {
-            if (err || ++asyncRes == 2) done(err);
-        });
-    expect(asyncRes).toEqual(0);
-    client.invoke('/COE/RBP_FE_WAIT', {
-            IV_SECONDS: 1
-        },
-        function (err, res) {
-            if (err || ++asyncRes == 2) done(err);
-        });
-    expect(asyncRes).toEqual(0);
-}, TIMEOUT);
+    const WAIT_SECONDS = 1;
+    const TIMEOUT = (WAIT_SECONDS + 2) * 1000;
 
-it('concurrency: invoke() and ping ()', function (done) {
-    let asyncRes;
-    client.invoke('/COE/RBP_FE_WAIT', {
-            IV_SECONDS: WAIT_SECONDS
-        },
-        function (err, res) {
-            asyncRes = 1;
-            done(err);
-        });
-    expect(asyncRes).toBeUndefined();
-    client.ping().then(res => {
-        expect(res).toBeTruthy();
-        done();
-    });
-}, TIMEOUT);
+    it('concurrency: invoke() and invoke ()', function (done) {
+        let asyncRes = 0;
+        expect.assertions(2);
+        client.invoke('/COE/RBP_FE_WAIT', {
+                IV_SECONDS: WAIT_SECONDS
+            },
+            function (err) {
+                if (err) return done(err);
+                if (++asyncRes == 2) return done();
+            });
+        expect(asyncRes).toEqual(0);
 
-it('concurrency: ping() and ping ()', function (done) {
-    let N = 5;
-    let count = 0;
-    for (let i = 0; i < N; i++) {
+        client.invoke('/COE/RBP_FE_WAIT', {
+                IV_SECONDS: WAIT_SECONDS
+            },
+            function (err) {
+                if (err) return done(err);
+                if (++asyncRes == 2) return done();
+            });
+        expect(asyncRes).toEqual(0);
+    }, TIMEOUT);
+
+    it('concurrency: invoke() and ping ()', function (done) {
+        let asyncRes;
+        client.invoke('/COE/RBP_FE_WAIT', {
+                IV_SECONDS: WAIT_SECONDS
+            },
+            function (err, res) {
+                asyncRes = 1;
+                done(err);
+            });
+        expect(asyncRes).toBeUndefined();
         client.ping().then(res => {
             expect(res).toBeTruthy();
-            if (++count === N) done();
         });
-    }
-});
+    }, TIMEOUT);
+
+    it('concurrency: ping() and ping ()', function (done) {
+        let N = 5;
+        let count = 0;
+        for (let i = 0; i < N; i++) {
+            client.ping().then(res => {
+                expect(res).toBeTruthy();
+                if (++count === N) done();
+            });
+        }
+    });
+})

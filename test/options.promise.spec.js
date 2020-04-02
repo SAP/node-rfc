@@ -24,62 +24,64 @@ beforeEach(function () {
 afterEach(function () {
     return client.close();
 });
+describe('RFC Call options', () => {
 
-const TIMEOUT = 10000;
+    const TIMEOUT = 10000;
 
-it("options: pass when some parameters skipped", function () {
-    let notRequested = [
-        "ET_COMPONENTS",
-        "ET_HDR_HIERARCHY",
-        "ET_MPACKAGES",
-        "ET_OPERATIONS",
-        "ET_OPR_HIERARCHY",
-        "ET_PRTS",
-        "ET_RELATIONS"
-    ];
-    return client
-        .call(
-            "EAM_TASKLIST_GET_DETAIL", {
+    it("options: pass when some parameters skipped", function () {
+        let notRequested = [
+            "ET_COMPONENTS",
+            "ET_HDR_HIERARCHY",
+            "ET_MPACKAGES",
+            "ET_OPERATIONS",
+            "ET_OPR_HIERARCHY",
+            "ET_PRTS",
+            "ET_RELATIONS"
+        ];
+        return client
+            .call(
+                "EAM_TASKLIST_GET_DETAIL", {
+                    IV_PLNTY: "A",
+                    IV_PLNNR: "00100000"
+                }, {
+                    notRequested: notRequested
+                }
+            )
+            .then(res => {
+                expect(res).toBeDefined();
+                expect(res).toHaveProperty("ET_RETURN");
+                expect(res.ET_RETURN.length).toBe(0);
+            });
+    }, TIMEOUT);
+
+    it("options: error when all requested", function () {
+        return client
+            .call("EAM_TASKLIST_GET_DETAIL", {
                 IV_PLNTY: "A",
                 IV_PLNNR: "00100000"
-            }, {
-                notRequested: notRequested
-            }
-        )
-        .then(res => {
-            expect(res).toBeDefined();
-            expect(res).toHaveProperty("ET_RETURN");
-            expect(res.ET_RETURN.length).toBe(0);
-        });
-}, TIMEOUT);
-
-it("options: error when all requested", function () {
-    return client
-        .call("EAM_TASKLIST_GET_DETAIL", {
-            IV_PLNTY: "A",
-            IV_PLNNR: "00100000"
-        })
-        .then(res => {
-            // ET_RETURN error if all params requested
-            expect(res).toBeDefined();
-            expect(res).toHaveProperty("ET_RETURN");
-            expect(res.ET_RETURN.length).toBe(1);
-            expect(res.ET_RETURN[0]).toEqual(
-                expect.objectContaining({
-                    TYPE: "E",
-                    ID: "DIWP1",
-                    NUMBER: "212",
-                    MESSAGE: "Task list A 00100000  is not hierarchical",
-                    LOG_NO: "",
-                    LOG_MSG_NO: "000000",
-                    MESSAGE_V1: "A",
-                    MESSAGE_V2: "00100000",
-                    MESSAGE_V3: "",
-                    MESSAGE_V4: "",
-                    PARAMETER: "HIERARCHY",
-                    ROW: 0,
-                    FIELD: ""
-                })
-            );
-        });
-});
+            })
+            .then(res => {
+                // ET_RETURN error if all params requested
+                expect(res).toBeDefined();
+                expect(res).toHaveProperty("ET_RETURN");
+                expect(res.ET_RETURN.length).toBe(1);
+                expect(res.ET_RETURN[0]).toEqual(
+                    expect.objectContaining({
+                        TYPE: "E",
+                        ID: "DIWP1",
+                        NUMBER: "212",
+                        MESSAGE: "Task list A 00100000  is not hierarchical",
+                        LOG_NO: "",
+                        LOG_MSG_NO: "000000",
+                        MESSAGE_V1: "A",
+                        MESSAGE_V2: "00100000",
+                        MESSAGE_V3: "",
+                        MESSAGE_V4: "",
+                        PARAMETER: "HIERARCHY",
+                        ROW: 0,
+                        FIELD: ""
+                    })
+                );
+            });
+    });
+})

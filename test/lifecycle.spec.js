@@ -16,35 +16,38 @@
 
 const client = require("./setup").client;
 
-it("Connection Lifecycle", function () {
-    return (async function () {
-        expect(client.status.created).toBeGreaterThan(0);
-        expect(client.status.lastopen).toBe(0);
-        expect(client.status.lastcall).toBe(0);
-        expect(client.status.lastclose).toBe(0);
+describe('Lifecycle', () => {
 
-        await client.open();
-        expect(client.status.created).toBeGreaterThan(0);
-        expect(client.status.lastopen).toBeGreaterThan(0);
-        expect(client.status.lastcall).toBe(0);
-        expect(client.status.lastclose).toBe(0);
+    it("Connection Lifecycle", function () {
+        return (async function () {
+            expect(client.status.created).toBeGreaterThan(0);
+            expect(client.status.lastopen).toBe(0);
+            expect(client.status.lastcall).toBe(0);
+            expect(client.status.lastclose).toBe(0);
 
-        let result = await client.call('STFC_CONNECTION', {
-            REQUTEXT: 'H€llö SAP!'
-        });
-        expect(client.status.created).toBeGreaterThan(0);
-        expect(client.status.lastopen).toBeGreaterThan(0);
-        expect(client.status.lastcall).toBeGreaterThan(0)
-        expect(client.status.lastclose).toBe(0);
+            await client.open();
+            expect(client.status.created).toBeGreaterThan(0);
+            expect(client.status.lastopen).toBeGreaterThan(0);
+            expect(client.status.lastcall).toBe(0);
+            expect(client.status.lastclose).toBe(0);
 
-        await client.close();
-        expect(client.status.created).toBeGreaterThan(0);
-        expect(client.status.lastopen).toBeGreaterThan(0);
-        expect(client.status.lastcall).toBeGreaterThan(0)
-        expect(client.status.lastclose).toBeGreaterThan(0);
+            let result = await client.call('STFC_CONNECTION', {
+                REQUTEXT: 'H€llö SAP!'
+            });
+            expect(client.status.created).toBeGreaterThan(0);
+            expect(client.status.lastopen).toBeGreaterThan(0);
+            expect(client.status.lastcall).toBeGreaterThan(0)
+            expect(client.status.lastclose).toBe(0);
 
-        expect(client.status.lastclose).toBeGreaterThan(client.status.lastcall);
-        expect(client.status.lastcall).toBeGreaterThan(client.status.lastopen);
-        expect(client.status.lastopen).toBeGreaterThan(client.status.created);
-    })()
-});
+            await client.close();
+            expect(client.status.created).toBeGreaterThan(0);
+            expect(client.status.lastopen).toBeGreaterThan(0);
+            expect(client.status.lastcall).toBeGreaterThan(0)
+            expect(client.status.lastclose).toBeGreaterThan(0);
+
+            expect(client.status.lastclose).toBeGreaterThan(client.status.lastcall);
+            expect(client.status.lastcall).toBeGreaterThan(client.status.lastopen);
+            expect(client.status.lastopen).toBeGreaterThan(client.status.created);
+        })()
+    });
+})

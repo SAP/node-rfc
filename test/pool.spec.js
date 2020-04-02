@@ -25,107 +25,108 @@ beforeAll(function (done) {
     pool = new Pool(abapSystem);
     done();
 });
-
-it("pool: acquire id", function (done) {
-    pool.acquire()
-        .then(client => {
-            expect(client.id).toBeGreaterThan(0);
-            ID = client.id;
-            //client.id.should.equal(1);
-            expect(client.isAlive).toBeTruthy();
-            expect(pool.status.ready).toBe(1);
-            pool.releaseAll().then(() => {
-                expect(pool.status.ready).toBe(0);
-                done();
-            });
-        })
-        .catch(err => {
-            if (err) return done(err);
-        });
-});
-
-it("pool: acquire id=1", function (done) {
-    pool.acquire()
-        .then(client => {
-            expect(ID).not.toBeNaN();
-            expect(client.id).toBe(ID + 2);
-            ID = client.id;
-            expect(client.isAlive).toBeTruthy();
-            expect(pool.status.ready).toBe(1);
-            pool.releaseAll().then(() => {
-                expect(pool.status.ready).toBe(0);
-                done();
-            });
-        })
-        .catch(err => {
-            if (err) return done(err);
-        });
-});
-
-it("pool: acquire id=3", function (done) {
-    pool.acquire()
-        .then(client => {
-            expect(ID).not.toBeNaN();
-            expect(client.id).toBe(ID + 2);
-            ID = client.id;
-            expect(client.isAlive).toBeTruthy();
-            expect(pool.status.ready).toBe(1);
-            done();
-        })
-        .catch(err => {
-            if (err) return done(err);
-        });
-});
-
-it("pool: acquire 10", function (done) {
-    let id = new Set();
-    for (let i = ID + 1; i < ID + 11; i++) {
-        id.add(i);
-        pool.acquire().then(client => {
-            expect(ID).not.toBeNaN();
-            if (client.id > ID) ID = client.id;
-            id.delete(client.id);
-            if (id.size === 0) {
-                done();
-            }
-        });
-    }
-});
-
-it("pool: unique client id across pools", function (done) {
-    pool.acquire()
-        .then(client => {
-            expect(ID).not.toBeNaN();
-            expect(client.id).toBe(ID + 1);
-            ID = client.id;
-            expect(client.isAlive).toBeTruthy();
-
-            let pool2 = new Pool(abapSystem);
-
-            pool2.acquire().then(c2 => {
-                expect(c2.id).toBe(ID + 2);
-                expect(c2.isAlive).toBeTruthy();
-                pool2.releaseAll();
-                done();
-            });
-        })
-        .catch(err => {
-            if (err) return done(err);
-        });
-});
-
-it("error: pool internal error", function () {
-    let xpool = new Pool(abapSystem, {
-        min: 0,
-        max: 10
-    });
-    expect.assertions(1);
-    return xpool.acquire().catch(err => {
-        expect(err).toEqual(
-            expect.objectContaining({
-                name: "TypeError",
-                message: "Internal pool error, size = 0"
+describe('Pool', () => {
+    it("pool: acquire id", function (done) {
+        pool.acquire()
+            .then(client => {
+                expect(client.id).toBeGreaterThan(0);
+                ID = client.id;
+                //client.id.should.equal(1);
+                expect(client.isAlive).toBeTruthy();
+                expect(pool.status.ready).toBe(1);
+                pool.releaseAll().then(() => {
+                    expect(pool.status.ready).toBe(0);
+                    done();
+                });
             })
-        );
+            .catch(err => {
+                if (err) return done(err);
+            });
     });
-});
+
+    it("pool: acquire id=1", function (done) {
+        pool.acquire()
+            .then(client => {
+                expect(ID).not.toBeNaN();
+                expect(client.id).toBe(ID + 2);
+                ID = client.id;
+                expect(client.isAlive).toBeTruthy();
+                expect(pool.status.ready).toBe(1);
+                pool.releaseAll().then(() => {
+                    expect(pool.status.ready).toBe(0);
+                    done();
+                });
+            })
+            .catch(err => {
+                if (err) return done(err);
+            });
+    });
+
+    it("pool: acquire id=3", function (done) {
+        pool.acquire()
+            .then(client => {
+                expect(ID).not.toBeNaN();
+                expect(client.id).toBe(ID + 2);
+                ID = client.id;
+                expect(client.isAlive).toBeTruthy();
+                expect(pool.status.ready).toBe(1);
+                done();
+            })
+            .catch(err => {
+                if (err) return done(err);
+            });
+    });
+
+    it("pool: acquire 10", function (done) {
+        let id = new Set();
+        for (let i = ID + 1; i < ID + 11; i++) {
+            id.add(i);
+            pool.acquire().then(client => {
+                expect(ID).not.toBeNaN();
+                if (client.id > ID) ID = client.id;
+                id.delete(client.id);
+                if (id.size === 0) {
+                    done();
+                }
+            });
+        }
+    });
+
+    it("pool: unique client id across pools", function (done) {
+        pool.acquire()
+            .then(client => {
+                expect(ID).not.toBeNaN();
+                expect(client.id).toBe(ID + 1);
+                ID = client.id;
+                expect(client.isAlive).toBeTruthy();
+
+                let pool2 = new Pool(abapSystem);
+
+                pool2.acquire().then(c2 => {
+                    expect(c2.id).toBe(ID + 2);
+                    expect(c2.isAlive).toBeTruthy();
+                    pool2.releaseAll();
+                    done();
+                });
+            })
+            .catch(err => {
+                if (err) return done(err);
+            });
+    });
+
+    it("error: pool internal error", function () {
+        let xpool = new Pool(abapSystem, {
+            min: 0,
+            max: 10
+        });
+        expect.assertions(1);
+        return xpool.acquire().catch(err => {
+            expect(err).toEqual(
+                expect.objectContaining({
+                    name: "TypeError",
+                    message: "Internal pool error, size = 0"
+                })
+            );
+        });
+    });
+})
