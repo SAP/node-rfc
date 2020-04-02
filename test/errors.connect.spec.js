@@ -61,20 +61,6 @@ it("error: conect() rejects invalid credentials", function (done) {
     });
 });
 
-it("error: invoke() over closed connection", function (done) {
-    client.invoke("STFC_CONNECTION", {
-        REQUTEXT: setup.UNICODETEST
-    }, (err, res) => {
-        expect(err).toEqual({
-            name: 'RfcLibError',
-            code: 13,
-            key: 'RFC_INVALID_HANDLE',
-            message: "An invalid handle 'RFC_CONNECTION_HANDLE' was passed to the API call"
-        });
-        done();
-    });
-});
-
 it("error: close() over closed connection", function (done) {
     client.close(err => {
         expect(err).toBeUndefined();

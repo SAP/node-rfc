@@ -8,6 +8,7 @@ function f(err, res) {
     console.log('res:', res);
     console.log(++A);
 }
+/*
 client.close().then(() => {
     console.log(client.isAlive)
 }).catch(err => console.error(err))
@@ -40,9 +41,19 @@ client.connect(() => {
 
 /*
 client.connect(() => {
-    client.invoke('/COE/RBP_FE_WAIT', {
-        IV_SECONDS: WAIT_SECONDS
-    }, f);
+*/
+(async () => {
+    try {
+        await client.close();
+        console.log(client.isAlive)
+        await client.call("STFC_CONNECTION", {
+            REQUTEXT: setup.UNICODETEST
+        });
+    } catch (ex) {
+        console.log(ex)
+    }
+})();
+/*
     client.invoke('/COE/RBP_FE_WAIT', {
         IV_SECONDS: 1
     }, f);
