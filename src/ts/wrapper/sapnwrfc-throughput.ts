@@ -44,7 +44,7 @@ export class Throughput {
             connections = client;
         } else
             throw new Error(
-                "Single Client instance or array of Client instances required as argument"
+                "Client instance or array of Client instances required as argument"
             );
         connections.forEach(c => {
             if (!isNumber(c._connectionHandle))

@@ -27,52 +27,54 @@ afterAll(() => {
     return client.close();
 });
 
-it("UTCLONG accepts min, max, initial", () => {
-    return (async () => {
-        let res = await client.call('ZDATATYPES', {
-            IV_UTCLONG: UTCLONG.MIN
-        });
-        expect(res.EV_UTCLONG).toEqual(UTCLONG.MIN);
+describe('Datatype: UTCLONG', () => {
+    it("UTCLONG accepts min, max, initial", () => {
+        return (async () => {
+            let res = await client.call('ZDATATYPES', {
+                IV_UTCLONG: UTCLONG.MIN
+            });
+            expect(res.EV_UTCLONG).toEqual(UTCLONG.MIN);
 
-        res = await client.call('ZDATATYPES', {
-            IV_UTCLONG: UTCLONG.MAX
-        });
-        expect(res.EV_UTCLONG).toEqual(UTCLONG.MAX);
+            res = await client.call('ZDATATYPES', {
+                IV_UTCLONG: UTCLONG.MAX
+            });
+            expect(res.EV_UTCLONG).toEqual(UTCLONG.MAX);
 
-        res = await client.call('ZDATATYPES', {
-            IV_UTCLONG: UTCLONG.INITIAL
-        });
-        expect(res.EV_UTCLONG).toEqual(UTCLONG.INITIAL);
-    })();
-});
+            res = await client.call('ZDATATYPES', {
+                IV_UTCLONG: UTCLONG.INITIAL
+            });
+            expect(res.EV_UTCLONG).toEqual(UTCLONG.INITIAL);
+        })();
+    });
 
-it("UTCLONG rejects non string", () => {
-    expect.assertions = 1;
-    return (client.call('ZDATATYPES', {
-            IV_UTCLONG: 1
-        }))
-        .catch(ex => {
+    it("UTCLONG rejects non string", () => {
+        expect.assertions = 1;
+        return (client.call('ZDATATYPES', {
+                IV_UTCLONG: 1
+            }))
+            .catch(ex => {
+                expect(ex).toEqual(
+                    expect.objectContaining({
+                        name: "TypeError",
+                        message: "UTCLONG string expected when filling field IV_UTCLONG of type 32"
+                    })
+                )
+            });
+    });
+
+    it("UTCLONG rejects invalid format", () => {
+        expect.assertions = 1;
+        return (client.call('ZDATATYPES', {
+            IV_UTCLONG: '1'
+        })).catch(ex => {
             expect(ex).toEqual(
                 expect.objectContaining({
-                    name: "TypeError",
-                    message: "UTCLONG string expected when filling field IV_UTCLONG of type 32"
+                    name: 'RfcLibError',
+                    code: 22,
+                    key: 'RFC_CONVERSION_FAILURE',
+                    message: 'Cannot convert 1 to RFCTYPE_UTCLONG : illegal format'
                 })
             )
         });
-});
-
-it("UTCLONG rejects invalid format", () => {
-    expect.assertions = 1;
-    return (client.call('ZDATATYPES', {
-        IV_UTCLONG: '1'
-    })).catch(ex => {
-        expect(ex).toEqual(
-            expect.objectContaining({
-                name: 'RfcLibError',
-                code: 22,
-                key: 'RFC_CONVERSION_FAILURE',
-                message: 'Cannot convert 1 to RFCTYPE_UTCLONG : illegal format'
-            })
-        )
     });
 });
