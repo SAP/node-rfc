@@ -63,31 +63,12 @@ public:
     void Execute()
     {
         client->alive = false;
-        RFC_INT isValid;
-        RfcIsConnectionHandleValid(client->connectionHandle, &isValid, &client->errorInfo);
-        if (client->errorInfo.code == RFC_OK)
-        {
-            // valid handle, close
-            RfcCloseConnection(client->connectionHandle, &client->errorInfo);
-        }
-        else
-        {
-            // invalid handle, assume closed
-            client->errorInfo.code = RFC_OK;
-        }
+        RfcCloseConnection(client->connectionHandle, &client->errorInfo);
     }
 
     void OnOK()
     {
-        if (client->errorInfo.code != RFC_OK)
-        {
-            Napi::Value argv[1] = {wrapError(&client->errorInfo)};
-            CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
-        }
-        else
-        {
-            CALLBACK_CALL(Env().Global(), Callback(), 0, {});
-        }
+        CALLBACK_CALL(Env().Global(), Callback(), 0, {});
     }
 
 private:
@@ -112,7 +93,7 @@ public:
 
     void OnOK()
     {
-        client->alive = client->errorInfo.code == RFC_OK;
+        client->alive = (client->errorInfo.code == RFC_OK);
         if (client->alive)
         {
             CALLBACK_CALL(Env().Global(), Callback(), 0, {});
@@ -183,6 +164,14 @@ public:
         if (client->errorInfo.code != RFC_OK)
         {
             argv[0] = wrapError(&client->errorInfo);
+            if (client->errorInfo.group == LOGON_FAILURE ||          // 3: Error message raised when logon fails
+                client->errorInfo.group == COMMUNICATION_FAILURE ||  // 4: Problems with the network connection (or backend broke down and killed the connection)
+                client->errorInfo.group == EXTERNAL_RUNTIME_FAILURE) // 5: Problems in the RFC runtime of the external program (i.e "this" library)
+            {
+                // Connection is unlikely useful any more
+                client->alive = false;
+                RfcCloseConnection(client->connectionHandle, &client->errorInfo);
+            }
         }
         else
         {
@@ -638,49 +627,46 @@ Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
     RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
     RFC_ATTRIBUTES connInfo;
-    RFC_INT isValid;
 
-    Client *client = this;
     Napi::Env env = info.Env();
     Napi::Object infoObj = Napi::Object::New(env);
-    client->LockMutex();
-    rc = RfcIsConnectionHandleValid(this->connectionHandle, &isValid, &errorInfo);
-    if (rc == RFC_OK && isValid)
+    rc = RfcGetConnectionAttributes(this->connectionHandle, &connInfo, &errorInfo);
+
+    if (!this->alive)
     {
-        rc = RfcGetConnectionAttributes(client->connectionHandle, &connInfo, &errorInfo);
-
-        if (rc != RFC_OK)
-        {
-            return wrapError(&errorInfo);
-        }
-
-        infoObj.Set(Napi::String::New(env, "dest"), wrapString(connInfo.dest, 64));
-        infoObj.Set(Napi::String::New(env, "host"), wrapString(connInfo.host, 100));
-        infoObj.Set(Napi::String::New(env, "partnerHost"), wrapString(connInfo.partnerHost, 100));
-        infoObj.Set(Napi::String::New(env, "sysNumber"), wrapString(connInfo.sysNumber, 2));
-        infoObj.Set(Napi::String::New(env, "sysId"), wrapString(connInfo.sysId, 8));
-        infoObj.Set(Napi::String::New(env, "client"), wrapString(connInfo.client, 3));
-        infoObj.Set(Napi::String::New(env, "user"), wrapString(connInfo.user, 12));
-        infoObj.Set(Napi::String::New(env, "language"), wrapString(connInfo.language, 2));
-        infoObj.Set(Napi::String::New(env, "trace"), wrapString(connInfo.trace, 1));
-        infoObj.Set(Napi::String::New(env, "isoLanguage"), wrapString(connInfo.isoLanguage, 2));
-        infoObj.Set(Napi::String::New(env, "codepage"), wrapString(connInfo.codepage, 4));
-        infoObj.Set(Napi::String::New(env, "partnerCodepage"), wrapString(connInfo.partnerCodepage, 4));
-        infoObj.Set(Napi::String::New(env, "rfcRole"), wrapString(connInfo.rfcRole, 1));
-        infoObj.Set(Napi::String::New(env, "type"), wrapString(connInfo.type, 1));
-        infoObj.Set(Napi::String::New(env, "partnerType"), wrapString(connInfo.partnerType, 1));
-        infoObj.Set(Napi::String::New(env, "rel"), wrapString(connInfo.rel, 4));
-        infoObj.Set(Napi::String::New(env, "partnerRel"), wrapString(connInfo.partnerRel, 4));
-        infoObj.Set(Napi::String::New(env, "kernelRel"), wrapString(connInfo.kernelRel, 4));
-        infoObj.Set(Napi::String::New(env, "cpicConvId"), wrapString(connInfo.cpicConvId, 8));
-        infoObj.Set(Napi::String::New(env, "progName"), wrapString(connInfo.progName, 128));
-        infoObj.Set(Napi::String::New(env, "partnerBytesPerChar"), wrapString(connInfo.partnerBytesPerChar, 1));
-        infoObj.Set(Napi::String::New(env, "partnerSystemCodepage"), wrapString(connInfo.partnerSystemCodepage, 4));
-        infoObj.Set(Napi::String::New(env, "partnerIP"), wrapString(connInfo.partnerIP, 15));
-        infoObj.Set(Napi::String::New(env, "partnerIPv6"), wrapString(connInfo.partnerIP, 45));
-        // infoObj.Set(Napi::String::New(env, "reserved"), wrapString(connInfo.reserved, 17));
+        return infoObj;
     }
-    client->UnlockMutex();
+
+    if (rc != RFC_OK || errorInfo.code != RFC_OK)
+    {
+        return wrapError(&errorInfo);
+    }
+
+    infoObj.Set(Napi::String::New(env, "dest"), wrapString(connInfo.dest, 64));
+    infoObj.Set(Napi::String::New(env, "host"), wrapString(connInfo.host, 100));
+    infoObj.Set(Napi::String::New(env, "partnerHost"), wrapString(connInfo.partnerHost, 100));
+    infoObj.Set(Napi::String::New(env, "sysNumber"), wrapString(connInfo.sysNumber, 2));
+    infoObj.Set(Napi::String::New(env, "sysId"), wrapString(connInfo.sysId, 8));
+    infoObj.Set(Napi::String::New(env, "client"), wrapString(connInfo.client, 3));
+    infoObj.Set(Napi::String::New(env, "user"), wrapString(connInfo.user, 12));
+    infoObj.Set(Napi::String::New(env, "language"), wrapString(connInfo.language, 2));
+    infoObj.Set(Napi::String::New(env, "trace"), wrapString(connInfo.trace, 1));
+    infoObj.Set(Napi::String::New(env, "isoLanguage"), wrapString(connInfo.isoLanguage, 2));
+    infoObj.Set(Napi::String::New(env, "codepage"), wrapString(connInfo.codepage, 4));
+    infoObj.Set(Napi::String::New(env, "partnerCodepage"), wrapString(connInfo.partnerCodepage, 4));
+    infoObj.Set(Napi::String::New(env, "rfcRole"), wrapString(connInfo.rfcRole, 1));
+    infoObj.Set(Napi::String::New(env, "type"), wrapString(connInfo.type, 1));
+    infoObj.Set(Napi::String::New(env, "partnerType"), wrapString(connInfo.partnerType, 1));
+    infoObj.Set(Napi::String::New(env, "rel"), wrapString(connInfo.rel, 4));
+    infoObj.Set(Napi::String::New(env, "partnerRel"), wrapString(connInfo.partnerRel, 4));
+    infoObj.Set(Napi::String::New(env, "kernelRel"), wrapString(connInfo.kernelRel, 4));
+    infoObj.Set(Napi::String::New(env, "cpicConvId"), wrapString(connInfo.cpicConvId, 8));
+    infoObj.Set(Napi::String::New(env, "progName"), wrapString(connInfo.progName, 128));
+    infoObj.Set(Napi::String::New(env, "partnerBytesPerChar"), wrapString(connInfo.partnerBytesPerChar, 1));
+    infoObj.Set(Napi::String::New(env, "partnerSystemCodepage"), wrapString(connInfo.partnerSystemCodepage, 4));
+    infoObj.Set(Napi::String::New(env, "partnerIP"), wrapString(connInfo.partnerIP, 15));
+    infoObj.Set(Napi::String::New(env, "partnerIPv6"), wrapString(connInfo.partnerIP, 45));
+    // infoObj.Set(Napi::String::New(env, "reserved"), wrapString(connInfo.reserved, 17));
 
     return infoObj;
 }

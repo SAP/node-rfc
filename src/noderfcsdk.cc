@@ -147,6 +147,5 @@ Napi::Value wrapError(RFC_ERROR_INFO *errorInfo)
     // unknown error group
     sprintf(cBuf, "Unknown error group: %u", errorInfo->group);
     Napi::Error::Fatal(cBuf, "node-rfc internal error");
-    return scope.Escape(Napi::String::New(node_rfc::__env, cBuf));
 }
 } // namespace node_rfc
