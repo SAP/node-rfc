@@ -29,8 +29,9 @@ afterEach(function (done) {
     });
 });
 
+const TIMEOUT = 10000;
+
 it("options: pass when some parameters skipped", function (done) {
-    //this.timeout(10000);
     let notRequested = [
         "ET_COMPONENTS",
         "ET_HDR_HIERARCHY",
@@ -55,7 +56,7 @@ it("options: pass when some parameters skipped", function (done) {
             notRequested: notRequested
         }
     );
-});
+}, TIMEOUT);
 
 it("options: error when all requested", function (done) {
     client.invoke(

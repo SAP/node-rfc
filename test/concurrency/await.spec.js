@@ -17,8 +17,6 @@
 const setup = require('../setup');
 const client = setup.client;
 
-//this.timeout(15000);
-
 beforeEach(function (done) {
     client.reopen(err => {
         done(err);
@@ -58,7 +56,6 @@ it(`await: ${setup.CONNECTIONS} sequential calls using single connection`, funct
     })();
 });
 
-/*
 it(`await: ${setup.CONNECTIONS} parallel connections`, function (done) {
     (async () => {
         let CLIENTS = [];
@@ -83,7 +80,6 @@ it(`await: ${setup.CONNECTIONS} parallel connections`, function (done) {
         done();
     })();
 });
-*/
 
 it(`await: ${setup.CONNECTIONS} recursive calls using single connection`, function (done) {
     let callbackCount = 0;

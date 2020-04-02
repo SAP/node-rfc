@@ -29,18 +29,11 @@ afterEach(function (done) {
     });
 });
 
-it("error: invoke() requires at least three arguments", function (done) {
-    try {
-        client.invoke("rfc", {});
-    } catch (err) {
-        expect(err).toBeDefined();
-        expect(err).toEqual(
-            expect.objectContaining({
-                message: "Callback function must be supplied"
-            })
+it("error: invoke() requires at least three arguments", function () {
+    expect(() => client.invoke("rfc", {}))
+        .toThrow(
+            new Error("Callback function must be supplied")
         );
-        done();
-    }
 });
 
 it("error: invoke() rejects non-string rfm name", function (done) {

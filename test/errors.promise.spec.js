@@ -30,13 +30,11 @@ it("error: call() promise rejects invalid credentials", function () {
     wrongParams.user = "WRONGUSER";
 
     let wrongClient = new setup.rfcClient(wrongParams);
-    wrongClient
+
+    expect.assertions(1);
+    return wrongClient
         .open()
-        .then(() => {
-            expect("Connection should not be opened").toBe('');
-        })
         .catch(err => {
-            expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     message: "Name or password is incorrect (repeat logon)",
@@ -48,15 +46,12 @@ it("error: call() promise rejects invalid credentials", function () {
 });
 
 it("error: call() promise rejects non-existing parameter", function () {
+    expect.assertions(1);
     return client
         .call("STFC_CONNECTION", {
             XXX: "wrong param"
         })
-        .then(res => {
-            expect(res).tpBeUndefined();
-        })
         .catch(err => {
-            expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     code: 20,
@@ -68,15 +63,12 @@ it("error: call() promise rejects non-existing parameter", function () {
 });
 
 it("error: promise call() RFC_RAISE_ERROR", function () {
+    expect.assertions(1);
     return client
         .call("RFC_RAISE_ERROR", {
             MESSAGETYPE: "A"
         })
-        .then(res => {
-            expect(res).tpBeUndefined();
-        })
         .catch(err => {
-            expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     code: 4,
@@ -93,15 +85,12 @@ it("error: promise call() RFC_RAISE_ERROR", function () {
 it("error: open() promise requires minimum of connection parameters", function () {
     let wrongParams = Object.assign({}, setup.abapSystem);
     delete wrongParams.ashost;
-
     let wrongClient = new setup.rfcClient(wrongParams);
+
+    expect.assertions(1);
     return wrongClient
         .open()
-        .then(res => {
-            expect("Connection should not be opened").toBe('');
-        })
         .catch(err => {
-            expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
                     message: "Parameter ASHOST, GWHOST, MSHOST or PORT is missing.",
@@ -114,8 +103,8 @@ it("error: open() promise requires minimum of connection parameters", function (
 });
 
 it("error: promise call() requires at least two arguments", function () {
+    expect.assertions(1);
     return client.call("rfc").catch(err => {
-        expect(err).toBeDefined();
         expect(err).toEqual(
             expect.objectContaining({
                 name: "TypeError",
@@ -126,8 +115,8 @@ it("error: promise call() requires at least two arguments", function () {
 });
 
 it("error: promise call() rejects non-string rfm name", function () {
+    expect.assertions(1);
     return client.call(23, {}, 2).catch(err => {
-        expect(err).toBeDefined();
         expect(err).toEqual(
             expect.objectContaining({
                 name: "TypeError",
@@ -138,8 +127,8 @@ it("error: promise call() rejects non-string rfm name", function () {
 });
 
 it("error: promise call() rejects non-object second argument (remote function module parameters)", function () {
+    expect.assertions(1);
     return client.call("rfc", 41, 2).catch(err => {
-        expect(err).toBeDefined();
         expect(err).toEqual(
             expect.objectContaining({
                 name: "TypeError",

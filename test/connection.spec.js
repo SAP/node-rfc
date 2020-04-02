@@ -29,11 +29,14 @@ afterEach(function (done) {
     });
 });
 
-it("Client and package versions", function () {
+it("Client and package versions", function (done) {
     expect(require("../package.json").version).toBe(client.version.binding);
+    done();
 });
 
 it("Client getters", function () {
+    expect.assertions(9);
+
     expect(client.id).toBeGreaterThan(0);
 
     expect(client.version).toHaveProperty("major");
@@ -48,7 +51,7 @@ it("Client getters", function () {
     expect(client.options).toHaveProperty("date");
     expect(client.options).toHaveProperty("time");
 
-    expect(() => (client.version = {
+    return expect(() => (client.version = {
         a: 1,
         b: 2
     })).toThrow(
@@ -62,6 +65,7 @@ it("isAlive ands ping() should be false when disconnected", function (done) {
     client.close(() => {
         expect(client.isAlive).toBeFalsy();
         client.ping((err, res) => {
+            if (err) return done(err);
             expect(res).toBeFalsy();
             done();
         });
@@ -73,6 +77,7 @@ it("isAlive and ping() should be true when connected", function (done) {
         if (err) return done(err);
         expect(client.isAlive).toBeTruthy();
         client.ping((err, res) => {
+            if (err) return done(err);
             expect(res).toBeTruthy();
             done();
         });
@@ -162,9 +167,7 @@ it("invoke() STFC_CONNECTION should return unicode string", function (done) {
             if (err) return done(err);
             expect(res).toHaveProperty("ECHOTEXT");
             expect(res.ECHOTEXT.indexOf(setup.UNICODETEST)).toBe(0);
-            client.close(function () {
-                done();
-            });
+            done();
         }
     );
 });
@@ -249,9 +252,7 @@ it("invoke() STFC_STRUCTURE should return structure and table", function (done) 
                 })
             );
 
-            client.close(function () {
-                done();
-            });
+            done();
         }
     );
 });
