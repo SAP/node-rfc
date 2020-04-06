@@ -14,10 +14,10 @@
 
 "use strict";
 
-const rfcClient = require("./setup").rfcClient;
+const setup = require("./setup");
 const QM7 = require('./abapSystem')('QM7');
 const UTCLONG = require('./config').RFC_MATH.UTCLONG;
-const client = new rfcClient(QM7);
+const client = setup.client(QM7);
 
 beforeAll(() => {
     return client.open();

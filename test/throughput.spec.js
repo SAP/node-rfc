@@ -13,12 +13,10 @@
 // language governing permissions and limitations under the License.
 
 "use strict";
+const setup = require('./setup');
+const Throughput = setup.rfcThroughput;
 
-const Client = require("./setup").rfcClient;
-const Throughput = require("./setup").rfcThroughput;
-const abapSystem = require("./setup").abapSystem;
-
-const client = new Client(abapSystem);
+const client = setup.client();
 const throughput = new Throughput();
 
 describe('Throughput', () => {
@@ -158,8 +156,8 @@ describe('Throughput', () => {
 
     it("Throughput multiple connection", function () {
         return (async () => {
-            const client1 = new Client(abapSystem);
-            const client2 = new Client(abapSystem);
+            const client1 = setup.client();
+            const client2 = setup.client();
 
             await client1.open();
             await client2.open();

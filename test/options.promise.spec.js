@@ -15,7 +15,7 @@
 "use strict";
 
 const setup = require("./setup");
-const client = setup.client;
+const client = setup.client()
 
 beforeEach(function () {
     return client.reopen();
@@ -24,6 +24,7 @@ beforeEach(function () {
 afterEach(function () {
     return client.close();
 });
+
 describe('RFC Call options', () => {
 
     const TIMEOUT = 10000;

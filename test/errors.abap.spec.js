@@ -15,7 +15,7 @@
 "use strict";
 
 const setup = require("./setup");
-const client = setup.client;
+const client = setup.client()
 const sync = setup.sync;
 
 beforeAll(function (done) {

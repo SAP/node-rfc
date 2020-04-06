@@ -15,7 +15,7 @@
 'use strict';
 
 const setup = require('../setup');
-const client = setup.client;
+const client = setup.client()
 
 const Promise = require('bluebird');
 
@@ -23,29 +23,33 @@ const TIMEOUT = 10000
 
 describe('Concurrency: Promises', () => {
 
-    it('concurrency: call() should not block', function (done) {
+    it('concurrency: call() should not block', function () {
         let asyncRes;
-        client
+        let P = client
             .open()
             .then(function () {
-                client.call('BAPI_USER_GET_DETAIL', {
-                        USERNAME: 'DEMO'
+                client.call('/COE/RBP_FE_WAIT', {
+                        IV_SECONDS: 1
                     })
                     .then(res => {
                         asyncRes = res;
-                        client.close(() => done());
+
                     })
                     .catch(err => {
                         console.error(err);
-                    });
+                    })
+                    .finally(() => {
+                        client.close();
+                    })
             })
         expect(asyncRes).toBeUndefined();
+        return P;
     });
 
     it(`concurrency: ${setup.CONNECTIONS} parallel call() promises`, function (done) {
         let callbackCount = 0;
         for (let i = 0; i < setup.CONNECTIONS; i++) {
-            new setup.rfcClient(setup.abapSystem)
+            setup.client(setup.abapSystem)
                 .open()
                 .then(c => {
                     c.call('BAPI_USER_GET_DETAIL', {

@@ -3,7 +3,6 @@ const rfcClient = require(nodeRfc ? "node-rfc" : "../lib").Client;
 const rfcPool = require(nodeRfc ? "node-rfc" : "../lib").Pool;
 const rfcThroughput = require(nodeRfc ? "node-rfc" : "../lib").Throughput;
 const abapSystem = require("./abapSystem")();
-const client = new rfcClient(abapSystem);
 const UNICODETEST = "ทดสอบสร้างลูกค้าจากภายนอกครั้งที่".repeat(7);
 
 const sync = function (client, done) {
@@ -23,8 +22,10 @@ module.exports = {
     rfcPool: rfcPool,
     rfcThroughput: rfcThroughput,
     abapSystem: abapSystem,
-    client: client,
     UNICODETEST: UNICODETEST,
     CONNECTIONS: 0x20,
-    sync: sync
+    sync: sync,
+    client: (system = abapSystem, options) => {
+        return new rfcClient(system, options)
+    }
 };

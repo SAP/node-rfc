@@ -15,7 +15,7 @@
 "use strict";
 
 const setup = require("../setup");
-const client = setup.client;
+const client = setup.client()
 
 const TIMEOUT = 10000;
 
@@ -54,7 +54,7 @@ describe('Concurrency: Callbacks', () => {
     it(`concurrency: ${setup.CONNECTIONS} connections invoke() in parallel`, function (done) {
         let callbackCount = 0;
         for (let i = 0; i < setup.CONNECTIONS; i++) {
-            let c = new setup.rfcClient(setup.abapSystem);
+            let c = setup.client(setup.abapSystem);
             c.connect(err => {
                 if (err) return done(err);
                 c.invoke(

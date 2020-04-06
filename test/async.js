@@ -1,5 +1,5 @@
 const setup = require("./setup");
-const client = setup.client;
+const client = setup.client();
 const WAIT_SECONDS = 3;
 let A = 0;
 
@@ -8,6 +8,25 @@ function f(err, res) {
     console.log('res:', res);
     console.log(++A);
 }
+let p = client
+    .open()
+    .then(() => {
+        console.log('call');
+        client.call('/COE/RBP_FE_WAIT', {
+                IV_SECONDS: 1
+            })
+            .then(res => {
+                console.log(`call callback`);
+                client.close(() => {
+                    console.log(`close callback`);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+            });
+    })
+console.log(p)
+/*
 try {
     let asyncRes = 0;
     console.log(client.isAlive);
@@ -45,3 +64,4 @@ try {
 } catch (ex) {
     console.error('@@', ex)
 }
+*/
