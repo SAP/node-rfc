@@ -25,13 +25,14 @@ beforeAll(function (done) {
     pool = new Pool(abapSystem);
     done();
 });
+
 describe('Pool', () => {
     it("pool: acquire id", function (done) {
         pool.acquire()
             .then(client => {
                 expect(client.id).toBeGreaterThan(0);
                 ID = client.id;
-                //client.id.should.equal(1);
+                expect(client.id).toEqual(1);
                 expect(client.isAlive).toBeTruthy();
                 expect(pool.status.ready).toBe(1);
                 pool.releaseAll().then(() => {

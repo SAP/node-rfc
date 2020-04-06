@@ -4,7 +4,6 @@ import * as Promise from "bluebird";
 
 import { RfcThroughputBinding } from "./sapnwrfc-throughput";
 
-import { Throughput } from "./sapnwrfc-throughput";
 export interface NWRfcBinding {
     Client: RfcClientBinding;
     Throughput: RfcThroughputBinding;
@@ -96,14 +95,14 @@ enum EnumSncQop {
     DigSigEnc = "2",
     DigSigEncUserAuth = "3",
     BackendDefault = "8",
-    Maximum = "9"
+    Maximum = "9",
 }
 
 enum EnumTrace {
     Off = "0",
     Brief = "1",
     Verbose = "2",
-    Full = "3"
+    Full = "3",
 }
 
 export interface RfcCallOptions {
@@ -195,7 +194,7 @@ export class Client {
             created: Date.now(),
             lastopen: 0,
             lastclose: 0,
-            lastcall: 0
+            lastcall: 0,
         };
     }
 
