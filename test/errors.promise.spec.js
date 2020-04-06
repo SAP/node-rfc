@@ -15,7 +15,7 @@
 "use strict";
 
 const setup = require("./setup");
-const client = setup.client;
+const client = setup.client()
 
 beforeEach(function () {
     return client.reopen();
@@ -24,12 +24,13 @@ beforeEach(function () {
 afterEach(function () {
     return client.close();
 });
+
 describe('Errors: Promises', () => {
     it("error: call() promise rejects invalid credentials", function () {
         let wrongParams = Object.assign({}, setup.abapSystem);
         wrongParams.user = "WRONGUSER";
 
-        let wrongClient = new setup.rfcClient(wrongParams);
+        let wrongClient = setup.client(wrongParams);
 
         expect.assertions(1);
         return wrongClient
@@ -85,7 +86,7 @@ describe('Errors: Promises', () => {
     it("error: open() promise requires minimum of connection parameters", function () {
         let wrongParams = Object.assign({}, setup.abapSystem);
         delete wrongParams.ashost;
-        let wrongClient = new setup.rfcClient(wrongParams);
+        let wrongClient = setup.client(wrongParams);
 
         expect.assertions(1);
         return wrongClient

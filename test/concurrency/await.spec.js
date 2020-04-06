@@ -15,7 +15,7 @@
 'use strict';
 
 const setup = require('../setup');
-const client = setup.client;
+const client = setup.client();
 
 const REQUTEXT = 'Hellö SÄP!';
 const TIMEOUT = 10000
@@ -55,7 +55,7 @@ describe('Concurrency: Await', () => {
         (async () => {
             let CLIENTS = [];
             for (let i = 0; i < setup.CONNECTIONS; i++) {
-                let c = await new setup.rfcClient(setup.abapSystem).open();
+                let c = await setup.client(setup.abapSystem).open();
                 CLIENTS.push(c);
             }
             for (let c of CLIENTS) {

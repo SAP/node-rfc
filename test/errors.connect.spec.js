@@ -15,7 +15,7 @@
 "use strict";
 
 const setup = require("./setup");
-const client = setup.client;
+const client = setup.client()
 
 describe('Errors: Connect', () => {
 
@@ -30,7 +30,7 @@ describe('Errors: Connect', () => {
         let wrongParams = Object.assign({}, setup.abapSystem);
         delete wrongParams.ashost;
 
-        let wrongClient = new setup.rfcClient(wrongParams);
+        let wrongClient = setup.client(wrongParams);
         wrongClient.connect(function (err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
@@ -49,7 +49,7 @@ describe('Errors: Connect', () => {
         let wrongParams = Object.assign({}, setup.abapSystem);
         wrongParams.user = "WRONGUSER";
 
-        let wrongClient = new setup.rfcClient(wrongParams);
+        let wrongClient = setup.client(wrongParams);
         wrongClient.connect(function (err) {
             expect(err).toBeDefined();
             expect(err).toEqual(

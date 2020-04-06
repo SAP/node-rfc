@@ -14,20 +14,18 @@
 
 "use strict";
 
-const client = require("./setup").client;
-
 describe('Lifecycle', () => {
+    it("Connection Lifecycle Promises", function () {
+        const client = require("./setup").client();
+        expect(client.status.created).toBeGreaterThan(0);
+        expect(client.status.lastopen).toBe(0);
+        expect(client.status.lastcall).toBe(0);
+        expect(client.status.lastclose).toBe(0);
 
-    it("Connection Lifecycle", function () {
         return (async function () {
-            expect(client.status.created).toBeGreaterThan(0);
-            expect(client.status.lastopen).toBe(0);
-            expect(client.status.lastcall).toBe(0);
-            expect(client.status.lastclose).toBe(0);
-
             await client.open();
             expect(client.status.created).toBeGreaterThan(0);
-            expect(client.status.lastopen).toBeGreaterThan(0);
+            expect(client.status.lastopen).toBeGreaterThan(client.status.created);
             expect(client.status.lastcall).toBe(0);
             expect(client.status.lastclose).toBe(0);
 
@@ -35,19 +33,50 @@ describe('Lifecycle', () => {
                 REQUTEXT: 'H€llö SAP!'
             });
             expect(client.status.created).toBeGreaterThan(0);
-            expect(client.status.lastopen).toBeGreaterThan(0);
-            expect(client.status.lastcall).toBeGreaterThan(0)
+            expect(client.status.lastopen).toBeGreaterThan(client.status.created);
+            expect(client.status.lastcall).toBeGreaterThan(client.status.lastopen);
             expect(client.status.lastclose).toBe(0);
 
             await client.close();
             expect(client.status.created).toBeGreaterThan(0);
-            expect(client.status.lastopen).toBeGreaterThan(0);
-            expect(client.status.lastcall).toBeGreaterThan(0)
-            expect(client.status.lastclose).toBeGreaterThan(0);
-
-            expect(client.status.lastclose).toBeGreaterThan(client.status.lastcall);
-            expect(client.status.lastcall).toBeGreaterThan(client.status.lastopen);
             expect(client.status.lastopen).toBeGreaterThan(client.status.created);
+            expect(client.status.lastcall).toBeGreaterThan(client.status.lastopen)
+            expect(client.status.lastclose).toBeGreaterThan(client.status.lastcall);
         })()
+    });
+
+    it("Connection Lifecycle Callbacks", function (done) {
+
+        const client = require("./setup").client();
+        expect(client.status.created).toBeGreaterThan(0);
+        expect(client.status.lastopen).toBe(0);
+        expect(client.status.lastcall).toBe(0);
+        expect(client.status.lastclose).toBe(0);
+
+        client.connect(err => {
+            if (err) done(err);
+            expect(client.status.created).toBeGreaterThan(0);
+            expect(client.status.lastopen).toBeGreaterThan(client.status.created);
+            expect(client.status.lastcall).toBe(0);
+            expect(client.status.lastclose).toBe(0);;
+
+            client.invoke('STFC_CONNECTION', {
+                REQUTEXT: 'H€llö SAP!',
+            }, (err, res) => {
+                if (err) done(err);
+                expect(client.status.created).toBeGreaterThan(0);
+                expect(client.status.lastopen).toBeGreaterThan(client.status.created);
+                expect(client.status.lastcall).toBeGreaterThan(client.status.lastopen);
+                expect(client.status.lastclose).toBe(0);
+
+                client.close(() => {
+                    expect(client.status.created).toBeGreaterThan(0);
+                    expect(client.status.lastopen).toBeGreaterThan(client.status.created);
+                    expect(client.status.lastcall).toBeGreaterThan(client.status.lastopen)
+                    expect(client.status.lastclose).toBeGreaterThan(client.status.lastcall);
+                    done();
+                })
+            });
+        });
     });
 })

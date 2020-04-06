@@ -15,7 +15,7 @@
 "use strict";
 
 const setup = require("./setup");
-const client = setup.client;
+const client = setup.client()
 
 const Decimal = require("decimal.js");
 const randomBytes = require("random-bytes");
@@ -175,7 +175,7 @@ describe('Datatypes', () => {
             ZDECF16_MIN: "number",
             ZDECF34_MIN: "number"
         };
-        let xclient = new setup.rfcClient(setup.abapSystem, {
+        let xclient = setup.client(setup.abapSystem, {
             bcd: "number"
         });
         expect(xclient.options.bcd).toEqual("number");
@@ -265,7 +265,7 @@ describe('Datatypes', () => {
             ZDECF16_MIN: "object",
             ZDECF34_MIN: "object"
         };
-        let xclient = new setup.rfcClient(setup.abapSystem, {
+        let xclient = setup.client(setup.abapSystem, {
             bcd: Decimal
         });
         expect(xclient.options.bcd).toEqual(Decimal);
@@ -433,7 +433,7 @@ describe('Datatypes', () => {
             "11",
             "12"
         ];
-        let xclient = new setup.rfcClient(setup.abapSystem, {
+        let xclient = setup.client(setup.abapSystem, {
             date: {
                 toABAP: Utils.toABAPdate,
                 fromABAP: Utils.fromABAPdate
