@@ -29,8 +29,8 @@ describe('Lifecycle', () => {
             expect(client.status.lastcall).toBe(0);
             expect(client.status.lastclose).toBe(0);
 
-            let result = await client.call('STFC_CONNECTION', {
-                REQUTEXT: 'H€llö SAP!'
+            let result = await client.call('/COE/RBP_FE_WAIT', {
+                IV_SECONDS: 1
             });
             expect(client.status.created).toBeGreaterThan(0);
             expect(client.status.lastopen).toBeGreaterThan(client.status.created);
@@ -60,8 +60,8 @@ describe('Lifecycle', () => {
             expect(client.status.lastcall).toBe(0);
             expect(client.status.lastclose).toBe(0);;
 
-            client.invoke('STFC_CONNECTION', {
-                REQUTEXT: 'H€llö SAP!',
+            client.invoke('/COE/RBP_FE_WAIT', {
+                IV_SECONDS: 1
             }, (err, res) => {
                 if (err) done(err);
                 expect(client.status.created).toBeGreaterThan(0);
