@@ -14,19 +14,19 @@
 
 "use strict";
 
-const setup = require("./setup");
+const setup = require("../setup");
 const client = setup.client()
 
 describe('Errors: Connect', () => {
 
-    it("error: new client requires connection parameters", function () {
+    test("error: new client requires connection parameters", function () {
         return expect(() => new setup.rfcClient())
             .toThrow(
                 new TypeError("Connection parameters must be an object")
             )
     });
 
-    it("error: connect() requires minimum of connection parameters", function (done) {
+    test("error: connect() requires minimum of connection parameters", function (done) {
         let wrongParams = Object.assign({}, setup.abapSystem);
         delete wrongParams.ashost;
 
@@ -45,7 +45,7 @@ describe('Errors: Connect', () => {
         });
     });
 
-    it("error: conect() rejects invalid credentials", function (done) {
+    test("error: conect() rejects invalid credentials", function (done) {
         let wrongParams = Object.assign({}, setup.abapSystem);
         wrongParams.user = "WRONGUSER";
 
@@ -63,9 +63,9 @@ describe('Errors: Connect', () => {
         });
     });
 
-    it("error: close() over closed connection", function (done) {
+    test("error: close() over closed connection", function (done) {
         client.close(err => {
-            expect(err).toBeUndefined();
+            expect(client.isAlive).toBeFalsy();
             done();
         });
     });

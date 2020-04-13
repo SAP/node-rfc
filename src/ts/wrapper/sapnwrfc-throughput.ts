@@ -1,6 +1,5 @@
 import { binding, Client } from "./sapnwrfc-client";
 import { isUndefined, isNumber } from "util";
-
 export interface RfcThroughputBinding {
     new (): RfcThroughputBinding;
     (): RfcThroughputBinding;
@@ -46,7 +45,7 @@ export class Throughput {
             throw new Error(
                 "Client instance or array of Client instances required as argument"
             );
-        connections.forEach(c => {
+        connections.forEach((c) => {
             if (!isNumber(c._connectionHandle))
                 throw new Error(
                     "Throughput can't be set on closed client: " + c.id
@@ -65,7 +64,7 @@ export class Throughput {
         } else if (client instanceof Array) {
             connections = client;
         }
-        connections.forEach(c => {
+        connections.forEach((c) => {
             this.__clients.delete(c);
             if (isNumber(c._connectionHandle)) {
                 const e = this.__throughput.removeFromConnection(

@@ -14,22 +14,26 @@
 
 "use strict";
 
-const setup = require("./setup");
+const setup = require("../setup");
 const client = setup.client()
 
-beforeEach(function () {
-    return client.reopen();
+beforeEach(function (done) {
+    client.reopen(function (err) {
+        done(err);
+    });
 });
 
-afterEach(function () {
-    return client.close();
+afterEach(function (done) {
+    client.close(function () {
+        done();
+    });
 });
+
+const TIMEOUT = 10000;
 
 describe('RFC Call options', () => {
 
-    const TIMEOUT = 10000;
-
-    it("options: pass when some parameters skipped", function () {
+    test("options: pass when some parameters skipped", function (done) {
         let notRequested = [
             "ET_COMPONENTS",
             "ET_HDR_HIERARCHY",
@@ -39,30 +43,32 @@ describe('RFC Call options', () => {
             "ET_PRTS",
             "ET_RELATIONS"
         ];
-        return client
-            .call(
-                "EAM_TASKLIST_GET_DETAIL", {
-                    IV_PLNTY: "A",
-                    IV_PLNNR: "00100000"
-                }, {
-                    notRequested: notRequested
-                }
-            )
-            .then(res => {
+        client.invoke(
+            "EAM_TASKLIST_GET_DETAIL", {
+                IV_PLNTY: "A",
+                IV_PLNNR: "00100000"
+            },
+            function (err, res) {
+                expect(err).toBeUndefined();
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty("ET_RETURN");
                 expect(res.ET_RETURN.length).toBe(0);
-            });
+                done();
+            }, {
+                notRequested: notRequested
+            }
+        );
     }, TIMEOUT);
 
-    it("options: error when all requested", function () {
-        return client
-            .call("EAM_TASKLIST_GET_DETAIL", {
+    test("options: error when all requested", function (done) {
+        client.invoke(
+            "EAM_TASKLIST_GET_DETAIL", {
                 IV_PLNTY: "A",
                 IV_PLNNR: "00100000"
-            })
-            .then(res => {
+            },
+            function (err, res) {
                 // ET_RETURN error if all params requested
+                expect(err).toBeUndefined();
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty("ET_RETURN");
                 expect(res.ET_RETURN.length).toBe(1);
@@ -83,6 +89,8 @@ describe('RFC Call options', () => {
                         FIELD: ""
                     })
                 );
-            });
+                done();
+            }
+        );
     });
 })

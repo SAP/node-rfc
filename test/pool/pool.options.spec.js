@@ -14,15 +14,16 @@
 
 "use strict";
 
-const setup = require("./setup");
+const setup = require("../setup");
 const Pool = setup.rfcPool;
 const abapSystem = setup.abapSystem;
 
 describe('Pool Options', () => {
 
-    it("pool: default options", function (done) {
+    xtest("pool: default options", function () {
+        expect.assertions(5)
         const pool = new Pool(abapSystem);
-        pool.acquire()
+        return pool.acquire()
             .then(client => {
                 expect(client.id).toBeGreaterThan(0);
                 // expect(client.id).toEqual(2);
@@ -31,19 +32,15 @@ describe('Pool Options', () => {
                 expect(client.options.bcd).toEqual("string");
                 pool.releaseAll().then(() => {
                     expect(pool.status.ready).toBe(0);
-                    done();
                 });
             })
-            .catch(err => {
-                if (err) return done(err);
-            });
     });
 
-    it("pool: bcd number", function (done) {
+    xtest("pool: bcd number", function () {
         const pool = new Pool(abapSystem, undefined, {
             bcd: "number"
         });
-        pool.acquire()
+        return pool.acquire()
             .then(client => {
                 expect(client.id).toBeGreaterThan(0);
                 // expect(client.id).toEqual(2);
@@ -52,11 +49,11 @@ describe('Pool Options', () => {
                 expect(client.options.bcd).toEqual("number");
                 pool.releaseAll().then(() => {
                     expect(pool.status.ready).toBe(0);
-                    done();
                 });
             })
-            .catch(err => {
-                if (err) return done(err);
-            });
     });
+
+    afterAll(() => {
+        return pool.releaseAll();
+    })
 })

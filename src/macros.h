@@ -33,4 +33,24 @@
         return scope.Escape(wrapError(&errorInfo));               \
     status.Set(Napi::String::New(info.Env(), #property), Napi::Number::New(info.Env(), property));
 
+#ifdef RFC_CLIENT_LOG
+#define LOG_LOCK_REQUEST(state, newstate) \
+    printf("   l %-7s -> %-7s\n", RFC_CLIENT_STATE_STRING[state], RFC_CLIENT_STATE_STRING[newstate]);
+#define LOG_LOCK_ACQUIRE(state) \
+    printf("   L %-7s\n", RFC_CLIENT_STATE_STRING[state]);
+#define LOG_UNLOCK_REQUEST(state, newstate) \
+    printf("   u %-7s -> %-7s\n", RFC_CLIENT_STATE_STRING[state], RFC_CLIENT_STATE_STRING[newstate]);
+#define LOG_UNLOCK_ACQUIRE(state) \
+    printf("   U %-7s\n", RFC_CLIENT_STATE_STRING[state]);
+#else
+#define LOG_LOCK_REQUEST(state, newstate) \
+    ;
+#define LOG_LOCK_ACQUIRE(state) \
+    ;
+#define LOG_UNLOCK_REQUEST(state, newstate) \
+    ;
+#define LOG_UNLOCK_ACQUIRE(state) \
+    ;
+#endif
+
 #endif

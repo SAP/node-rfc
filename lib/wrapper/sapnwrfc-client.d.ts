@@ -1,5 +1,4 @@
 /// <reference types="node" />
-import * as Promise from "bluebird";
 import { RfcThroughputBinding } from "./sapnwrfc-throughput";
 export interface NWRfcBinding {
     Client: RfcClientBinding;
@@ -56,6 +55,7 @@ export interface RfcClientBinding {
     isAlive(): boolean;
     connectionInfo(): RfcConnectionInfo;
     id: number;
+    runningRFCCalls: number;
     _connectionHandle: number;
     version: RfcClientVersion;
     options: RfcClientOptions;
@@ -126,15 +126,16 @@ export declare class Client {
     private __status;
     constructor(connectionParams: RfcConnectionParameters, options?: RfcClientOptions);
     open(): Promise<Client>;
+    reopen(callback?: Function): Promise<Client> | any;
+    close(callback?: Function): Promise<void> | any;
     call(rfmName: string, rfmParams: RfcObject, callOptions?: RfcCallOptions): Promise<RfcObject>;
     connect(callback: Function): void;
     invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): void;
-    close(callback?: Function): Promise<void> | any;
-    reopen(callback?: Function): Promise<void> | any;
     ping(callback?: Function): Promise<boolean> | any;
     get isAlive(): boolean;
     get connectionInfo(): RfcConnectionInfo;
     get id(): number;
+    get runningRFCCalls(): number;
     get _connectionHandle(): number;
     get status(): RfcClientStatus;
     get version(): RfcClientVersion;

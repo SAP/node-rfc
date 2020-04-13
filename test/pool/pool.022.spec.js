@@ -14,88 +14,72 @@
 
 "use strict";
 
-const setup = require("./setup");
+const setup = require("../setup");
 const Pool = setup.rfcPool;
 const abapSystem = setup.abapSystem;
+const Promise = require("bluebird");
 
 describe('Pool', () => {
+    const pool = new Pool(abapSystem);
 
-    it("lifecycle", function () {
-        expect.assertions(7);
-        const pool = new Pool(abapSystem, {
-            min: 4,
-            max: 8
-        });
+    test.only("Acquire 3, release 1", function () {
+        expect.assertions(5);
+
         return (async () => {
             expect(pool.status).toEqual({
                 active: 0,
-                ready: 0,
+                ready: 2,
                 options: {
-                    min: 4,
-                    max: 8
+                    min: 2,
+                    //max: 50
                 }
             });
 
             let c1 = await pool.acquire();
             expect(pool.status).toEqual({
                 active: 1,
-                ready: 3,
+                ready: 1,
                 options: {
-                    min: 4,
-                    max: 8
+                    min: 2,
+                    //max: 50
                 }
-
-            })
+            });
 
             let c2 = await pool.acquire();
             expect(pool.status).toEqual({
                 active: 2,
-                ready: 3,
+                ready: 1,
                 options: {
-                    min: 4,
-                    max: 8
+                    min: 2,
+                    //max: 50
                 }
-            })
+            });
 
             let c3 = await pool.acquire();
             expect(pool.status).toEqual({
                 active: 3,
-                ready: 3,
+                ready: 1,
                 options: {
-                    min: 4,
-                    max: 8
+                    min: 2,
+                    //max: 50
                 }
-            })
-
-            let c4 = await pool.acquire();
-            expect(pool.status).toEqual({
-                active: 4,
-                ready: 3,
-                options: {
-                    min: 4,
-                    max: 8
-                }
-            })
+            });
 
             await pool.release(c1);
             expect(pool.status).toEqual({
-                active: 3,
-                ready: 4,
+                active: 2,
+                ready: 2,
                 options: {
-                    min: 4,
-                    max: 8
-                }
-            })
-
-            await pool.releaseAll();
-            expect(pool.status).toEqual({
-                active: 3,
-                ready: 0,
-                options: {
-                    min: 4,
-                    max: 8
+                    min: 2,
+                    //max: 50
                 }
             });
         })()
     });
+
+    afterAll(() => {
+        return (async () => {
+            await releaseAll();
+        });
+    })
 })

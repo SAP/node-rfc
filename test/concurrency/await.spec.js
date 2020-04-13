@@ -15,86 +15,56 @@
 'use strict';
 
 const setup = require('../setup');
-const client = setup.client();
-
-const REQUTEXT = 'Hellö SÄP!';
-const TIMEOUT = 10000
 
 describe('Concurrency: Await', () => {
-    beforeEach(function (done) {
-        client.reopen(err => {
-            done(err);
-        });
-    });
+    const WAIT_SECONDS = 1
 
-    afterEach(function (done) {
-        client.close(() => {
-            done();
-        });
-    });
-
-    it(`await: ${setup.CONNECTIONS} sequential calls using single connection`, function (done) {
+    test(`${setup.CONNECTIONS} sequential calls over single connection`, function (done) {
+        expect.assertions(setup.CONNECTIONS);
+        const client = setup.client();
         (async () => {
+            await client.open();
             for (let i = 0; i < setup.CONNECTIONS; i++) {
                 try {
                     let res = await client.call('BAPI_USER_GET_DETAIL', {
                         USERNAME: 'DEMO'
                     });
                     expect(res).toBeDefined();
-                    expect(res).toHaveProperty('RETURN');
-                    expect(res.RETURN.length).toBe(0);;
                 } catch (ex) {
-                    return done(ex);
+                    done(ex);
                 }
             }
+            await client.close();
             done();
         })();
-    }, TIMEOUT);
+    }, 30000);
 
-    it(`await: ${setup.CONNECTIONS} parallel connections`, function (done) {
+    test(`${setup.CONNECTIONS} clients make concurrent call() requests`, function (done) {
+        expect.assertions(setup.CONNECTIONS);
         (async () => {
-            let CLIENTS = [];
+            const CLIENTS = [];
             for (let i = 0; i < setup.CONNECTIONS; i++) {
-                let c = await setup.client(setup.abapSystem).open();
+                const c = await setup.client().open();
                 CLIENTS.push(c);
             }
-            for (let c of CLIENTS) {
+            let callbackCount = 0;
+            for (const [i, c] of CLIENTS.entries()) {
                 try {
-                    let res = await client.call('BAPI_USER_GET_DETAIL', {
-                        USERNAME: 'DEMO'
-                    });
+                    let res = await c.call(
+                        (i % 2 === 0) ? "BAPI_USER_GET_DETAIL" : "/COE/RBP_FE_WAIT",
+                        (i % 2 === 0) ? {
+                            USERNAME: "DEMO",
+                        } : {
+                            IV_SECONDS: WAIT_SECONDS,
+                        }
+                    )
                     expect(res).toBeDefined();
-                    expect(res).toHaveProperty('RETURN');
-                    expect(res.RETURN.length).toBe(0);
                     await c.close();
-
+                    if (++callbackCount === setup.CONNECTIONS) done();
                 } catch (ex) {
-                    return done(ex);
+                    done(ex);
                 }
             }
-            done();
         })();
-    }, TIMEOUT);
-
-    it(`await: ${setup.CONNECTIONS} recursive calls using single connection`, function (done) {
-        let callbackCount = 0;
-        async function call() {
-            try {
-                let res = await client.call('BAPI_USER_GET_DETAIL', {
-                    USERNAME: 'DEMO'
-                });
-                expect(res).toBeDefined();
-                expect(res).toHaveProperty('RETURN');
-                expect(res.RETURN.length).toBe(0);
-                if (++callbackCount == setup.CONNECTIONS) {
-                    done();
-                } else {
-                    call(callbackCount);
-                }
-            } catch (ex) {
-                done(ex);
-            }
-        }
-        call();
-    }, TIMEOUT);
+    }, 36000);
 })

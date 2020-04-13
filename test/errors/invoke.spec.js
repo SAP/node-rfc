@@ -14,7 +14,7 @@
 
 "use strict";
 
-const setup = require("./setup");
+const setup = require("../setup");
 const client = setup.client()
 
 beforeEach(function (done) {
@@ -31,14 +31,14 @@ afterEach(function (done) {
 
 describe('Errors: Invoke', () => {
 
-    it("error: invoke() requires at least three arguments", function () {
+    test("error: invoke() requires at least three arguments", function () {
         expect(() => client.invoke("rfc", {}))
             .toThrow(
                 new Error("Callback function must be supplied")
             );
     });
 
-    it("error: invoke() rejects non-string rfm name", function (done) {
+    test("error: invoke() rejects non-string rfm name", function (done) {
         client.invoke(23, {}, function (err) {
             expect(err).toBeDefined();
             expect(err).toEqual(
@@ -51,7 +51,7 @@ describe('Errors: Invoke', () => {
         });
     });
 
-    it("error: invoke() rejects non-existing parameter", function (done) {
+    test("error: invoke() rejects non-existing parameter", function (done) {
         client.invoke("STFC_CONNECTION", {
             XXX: "wrong param"
         }, function (err) {
@@ -67,7 +67,7 @@ describe('Errors: Invoke', () => {
         });
     });
 
-    it("error: non-existing field in input structure", function (done) {
+    test("error: non-existing field in input structure", function (done) {
         let importStruct = {
             XRFCCHAR1: "A",
             RFCCHAR2: "BC",
@@ -92,7 +92,7 @@ describe('Errors: Invoke', () => {
         });
     });
 
-    it("error: non-existing field in input table", function (done) {
+    test("error: non-existing field in input table", function (done) {
         let importTable = [{
             XRFCCHAR1: "A",
             RFCCHAR2: "BC",
@@ -115,7 +115,7 @@ describe('Errors: Invoke', () => {
         });
     });
 
-    it("error: invoke() over closed connection", function (done) {
+    test("error: invoke() over closed connection", function (done) {
         (async () => {
             try {
                 await client.close();

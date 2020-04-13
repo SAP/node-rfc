@@ -21,7 +21,7 @@ const throughput = new Throughput();
 
 describe('Throughput', () => {
 
-    it("Throughput set on closed client", function (done) {
+    test("Throughput set on closed client", function (done) {
         expect(() => throughput.setOnConnection(client)).toThrow(
             new Error(`Throughput can't be set on closed client: ${client.id}`)
         )
@@ -29,7 +29,7 @@ describe('Throughput', () => {
         done();
     });
 
-    it("Throughput set on invalid client", function (done) {
+    test("Throughput set on invalid client", function (done) {
         expect(() => throughput.setOnConnection(1)).toThrow(
             new Error("Client instance or array of Client instances required as argument")
         )
@@ -37,17 +37,17 @@ describe('Throughput', () => {
         done();
     });
 
-    it("Throughput removal from closed client", function (done) {
+    test("Throughput removal from closed client", function (done) {
         expect(() => throughput.removeFromConnection(client)).not.toThrow();
         done();
     });
 
-    it("Throughput get from closed client", function (done) {
+    test("Throughput get from closed client", function (done) {
         expect(Throughput.getFromConnection(client)).toBeUndefined();
         done();
     });
 
-    it("Throughput initial status", function (done) {
+    test("Throughput initial status", function (done) {
         expect(throughput.status).toEqual(
             expect.objectContaining({
                 numberOfCalls: 0,
@@ -62,7 +62,7 @@ describe('Throughput', () => {
         done();
     });
 
-    it("Throughput set/remove connection", function () {
+    test("Throughput set/remove connection", function () {
         return (async () => {
             await client.open();
 
@@ -76,7 +76,7 @@ describe('Throughput', () => {
         })();
     });
 
-    it("Throughput get from connection", function () {
+    test("Throughput get from connection", function () {
         return (async () => {
             await client.open();
 
@@ -93,7 +93,7 @@ describe('Throughput', () => {
         })();
     });
 
-    it("Throughput monitoring single connection", function () {
+    test("Throughput monitoring single connection", function () {
         return (async () => {
             await client.open();
 
@@ -154,7 +154,7 @@ describe('Throughput', () => {
         })();
     });
 
-    it("Throughput multiple connection", function () {
+    test("Throughput multiple connection", function () {
         return (async () => {
             const client1 = setup.client();
             const client2 = setup.client();
