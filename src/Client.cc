@@ -740,7 +740,7 @@ Napi::Value Client::ConnectionHandleGetter(const Napi::CallbackInfo &info)
 {
     if (!this->alive)
         return info.Env().Undefined();
-    return Napi::Number::New(info.Env(), (uint64_t)this->connectionHandle);
+    return Napi::Number::New(info.Env(), static_cast<double>((uint64_t)this->connectionHandle));
 }
 
 Napi::Value Client::VersionGetter(const Napi::CallbackInfo &info)

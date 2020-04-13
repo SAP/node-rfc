@@ -31,7 +31,7 @@
     rc = RfcGet##Property(this->__handle, &property, &errorInfo); \
     if (rc != RFC_OK)                                             \
         return scope.Escape(wrapError(&errorInfo));               \
-    status.Set(Napi::String::New(info.Env(), #property), Napi::Number::New(info.Env(), property));
+    status.Set(Napi::String::New(info.Env(), #property), Napi::Number::New(info.Env(), static_cast<double>(property)));
 
 #ifdef RFC_CLIENT_LOG
 #define LOG_LOCK_REQUEST(state, newstate) \
