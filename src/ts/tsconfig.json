@@ -1,22 +1,22 @@
 {
-	"compileOnSave": false,
-	"compilerOptions": {
-		"sourceMap": true,
-		"target": "es2015",
-		"module": "commonjs",
-		"declaration": true,
-		"strict": true,
-		"moduleResolution": "node",
-		"allowJs": false,
-		"stripInternal": true,
-		"listFiles": true,
-		"removeComments": true,
-		"lib": ["es2015"],
-		"outDir": "../../lib",
-		"types": ["bluebird"]
-	},
-	"exclude": ["node_modules", "dist", "build", "doc", "lib", "test", ".vscode"],
-	"atom": {
-		"rewriteTsconfig": false
-	}
+  "compileOnSave": false,
+  "compilerOptions": {
+    "sourceMap": true,
+    "target": "ESNext",
+    "module": "commonjs",
+    "declaration": true,
+    "strict": true,
+    "moduleResolution": "node",
+    "allowJs": false,
+    "stripInternal": true,
+    "listFiles": true,
+    "removeComments": true,
+    "lib": ["es2015"],
+    "outDir": "../../lib",
+    "noImplicitAny": false
+  },
+  "exclude": ["node_modules", "dist", "build", "doc", "lib", "test", ".vscode"],
+  "atom": {
+    "rewriteTsconfig": false
+  }
 }

@@ -15,7 +15,7 @@
 "use strict";
 
 describe('Lifecycle', () => {
-    it("Connection Lifecycle Promises", function () {
+    test("Connection Lifecycle Promises", function () {
         const client = require("./setup").client();
         expect(client.status.created).toBeGreaterThan(0);
         expect(client.status.lastopen).toBe(0);
@@ -45,7 +45,7 @@ describe('Lifecycle', () => {
         })()
     });
 
-    it("Connection Lifecycle Callbacks", function (done) {
+    test("Connection Lifecycle Callbacks", function (done) {
 
         const client = require("./setup").client();
         expect(client.status.created).toBeGreaterThan(0);
@@ -56,7 +56,7 @@ describe('Lifecycle', () => {
         client.connect(err => {
             if (err) done(err);
             expect(client.status.created).toBeGreaterThan(0);
-            expect(client.status.lastopen).toBeGreaterThan(client.status.created);
+            expect(client.status.lastopen).toBeGreaterThanOrEqual(client.status.created);
             expect(client.status.lastcall).toBe(0);
             expect(client.status.lastclose).toBe(0);;
 
@@ -65,13 +65,13 @@ describe('Lifecycle', () => {
             }, (err, res) => {
                 if (err) done(err);
                 expect(client.status.created).toBeGreaterThan(0);
-                expect(client.status.lastopen).toBeGreaterThan(client.status.created);
+                expect(client.status.lastopen).toBeGreaterThanOrEqual(client.status.created);
                 expect(client.status.lastcall).toBeGreaterThan(client.status.lastopen);
                 expect(client.status.lastclose).toBe(0);
 
                 client.close(() => {
                     expect(client.status.created).toBeGreaterThan(0);
-                    expect(client.status.lastopen).toBeGreaterThan(client.status.created);
+                    expect(client.status.lastopen).toBeGreaterThanOrEqual(client.status.created);
                     expect(client.status.lastcall).toBeGreaterThan(client.status.lastopen)
                     expect(client.status.lastclose).toBeGreaterThan(client.status.lastcall);
                     done();

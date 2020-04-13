@@ -14,9 +14,9 @@
 
 "use strict";
 
-const setup = require("./setup");
-const QM7 = require('./abapSystem')('QM7');
-const UTCLONG = require('./config').RFC_MATH.UTCLONG;
+const setup = require("../setup");
+const QM7 = require('../abapSystem')('QM7');
+const UTCLONG = require('../config').RFC_MATH.UTCLONG;
 const client = setup.client(QM7);
 
 beforeAll(() => {
@@ -28,7 +28,7 @@ afterAll(() => {
 });
 
 describe('Datatype: UTCLONG', () => {
-    it("UTCLONG accepts min, max, initial", () => {
+    test("UTCLONG accepts min, max, initial", () => {
         return (async () => {
             let res = await client.call('ZDATATYPES', {
                 IV_UTCLONG: UTCLONG.MIN
@@ -47,7 +47,7 @@ describe('Datatype: UTCLONG', () => {
         })();
     });
 
-    it("UTCLONG rejects non string", () => {
+    test("UTCLONG rejects non string", () => {
         expect.assertions = 1;
         return (client.call('ZDATATYPES', {
                 IV_UTCLONG: 1
@@ -62,7 +62,7 @@ describe('Datatype: UTCLONG', () => {
             });
     });
 
-    it("UTCLONG rejects invalid format", () => {
+    test("UTCLONG rejects invalid format", () => {
         expect.assertions = 1;
         return (client.call('ZDATATYPES', {
             IV_UTCLONG: '1'

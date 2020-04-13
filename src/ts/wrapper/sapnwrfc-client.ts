@@ -1,8 +1,6 @@
-/// <reference types="node" />
-
-import * as Promise from "bluebird";
-
+var Promise = require("bluebird");
 import { RfcThroughputBinding } from "./sapnwrfc-throughput";
+import { isUndefined } from "util";
 
 export interface NWRfcBinding {
     Client: RfcClientBinding;
@@ -84,6 +82,7 @@ export interface RfcClientBinding {
     isAlive(): boolean;
     connectionInfo(): RfcConnectionInfo;
     id: number;
+    runningRFCCalls: number;
     _connectionHandle: number;
     version: RfcClientVersion;
     options: RfcClientOptions;
@@ -215,6 +214,48 @@ export class Client {
         });
     }
 
+    reopen(callback?: Function): Promise<Client> | any {
+        this.__status.lastopen = Date.now();
+        if (typeof callback === "function") {
+            return this.__client.reopen(callback);
+        } else if (!isUndefined(callback)) {
+            throw new TypeError(
+                `Reopen callback, if provided, must be a function, received: typeof ${callback}`
+            );
+        } else {
+            return new Promise((resolve, reject) => {
+                this.__client.reopen((err: any) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(this);
+                    }
+                });
+            });
+        }
+    }
+
+    close(callback?: Function): Promise<void> | any {
+        this.__status.lastclose = Date.now();
+        if (typeof callback === "function") {
+            return this.__client.close(callback);
+        } else if (!isUndefined(callback)) {
+            throw new TypeError(
+                `Close callback, if provided, must be a function, received: typeof ${callback}`
+            );
+        } else {
+            return new Promise((resolve, reject) => {
+                this.__client.close((err: any) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+        }
+    }
+
     call(
         rfmName: string,
         rfmParams: RfcObject,
@@ -256,7 +297,8 @@ export class Client {
                 if (!this.__client.isAlive()) {
                     reject(
                         new Error(
-                            `Client invoked RFC call with closed connection: id=${this.__client.id}`
+                            "Client invoked RFC call with closed connection: id=" +
+                                this.__client.id
                         )
                     );
                 }
@@ -292,7 +334,8 @@ export class Client {
         try {
             if (!this.__client.isAlive()) {
                 throw new Error(
-                    `Client invoked RFC call with closed connection: id=${this.__client.id}`
+                    "Client invoked RFC call with closed connection: id=" +
+                        this.__client.id
                 );
             }
 
@@ -345,52 +388,18 @@ export class Client {
         }
     }
 
-    close(callback?: Function): Promise<void> | any {
-        this.__status.lastclose = Date.now();
-        if (typeof callback === "function") {
-            return this.__client.close(callback);
-        } else {
-            return new Promise((resolve, reject) => {
-                this.__client.close((err: any) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve();
-                    }
-                });
-            });
-        }
-    }
-
-    reopen(callback?: Function): Promise<void> | any {
-        this.__status.lastopen = Date.now();
-        if (typeof callback === "function") {
-            return this.__client.reopen(callback);
-        } else {
-            return new Promise((resolve, reject) => {
-                this.__client.reopen((err: any) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve();
-                    }
-                });
-            });
-        }
-    }
-
     ping(callback?: Function): Promise<boolean> | any {
         this.__status.lastcall = Date.now();
         if (typeof callback === "function") {
             return this.__client.ping(callback);
+        } else if (!isUndefined(callback)) {
+            throw new TypeError(
+                `Ping callback, if provided, must be a function, received: typeof ${callback}`
+            );
         } else {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 this.__client.ping((err: any, res: boolean) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(res);
-                    }
+                    resolve(res);
                 });
             });
         }
@@ -406,6 +415,10 @@ export class Client {
 
     get id(): number {
         return this.__client.id;
+    }
+
+    get runningRFCCalls(): number {
+        return this.__client.runningRFCCalls;
     }
 
     get _connectionHandle(): number {

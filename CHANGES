@@ -1,6 +1,18 @@
 Change log
 ==========
 
+1.0.7 (2020-04-10)
+------------------
+
+* Safeguarding from closing the connection while RFC calls still running
+* Number of running RFC calls exposed as client instance attribute
+* Client logging
+* Ensure Bluebird Promises used instead of native Typescript, fix #134
+* Pool reopen() fixed, returning now the Client instance, just like Pool open(), fix #135
+* Pool max option removed, fix #136
+* Unit tests refactoring
+
+
 1.0.6 (2020-03-31)
 ------------------
 

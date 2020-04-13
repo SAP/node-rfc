@@ -33,7 +33,7 @@ const TIMEOUT = 20000;
 
 describe('Performance', () => {
 
-    it("performance: invoke() BAPI_USER_GET_DETAIL", function (done) {
+    test("performance: invoke() BAPI_USER_GET_DETAIL", function (done) {
         client.invoke("BAPI_USER_GET_DETAIL", {
             USERNAME: "DEMO"
         }, function (
@@ -59,7 +59,7 @@ describe('Performance', () => {
         });
     }, TIMEOUT);
 
-    it("performance: invoke() STFC_PERFORMANCE", function (done) {
+    test("performance: invoke() STFC_PERFORMANCE", function (done) {
         let COUNT = 10000;
         client.invoke(
             "STFC_PERFORMANCE", {
@@ -78,7 +78,7 @@ describe('Performance', () => {
     }, TIMEOUT);
 
     /*
-    it('performance: invoke() SWNC_READ_SNAPSHOT', function (done) {
+    test('performance: invoke() SWNC_READ_SNAPSHOT', function (done) {
         function toABAPdate(date) {
             let mm = date.getMonth() + 1;
             let dd = date.getDate();

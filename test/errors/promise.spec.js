@@ -14,7 +14,7 @@
 
 "use strict";
 
-const setup = require("./setup");
+const setup = require("../setup");
 const client = setup.client()
 
 beforeEach(function () {
@@ -26,7 +26,7 @@ afterEach(function () {
 });
 
 describe('Errors: Promises', () => {
-    it("error: call() promise rejects invalid credentials", function () {
+    test("error: call() promise rejects invalid credentials", function () {
         let wrongParams = Object.assign({}, setup.abapSystem);
         wrongParams.user = "WRONGUSER";
 
@@ -46,7 +46,7 @@ describe('Errors: Promises', () => {
             });
     });
 
-    it("error: call() promise rejects non-existing parameter", function () {
+    test("error: call() promise rejects non-existing parameter", function () {
         expect.assertions(1);
         return client
             .call("STFC_CONNECTION", {
@@ -63,7 +63,7 @@ describe('Errors: Promises', () => {
             });
     });
 
-    it("error: promise call() RFC_RAISE_ERROR", function () {
+    test("error: promise call() RFC_RAISE_ERROR", function () {
         expect.assertions(1);
         return client
             .call("RFC_RAISE_ERROR", {
@@ -83,7 +83,7 @@ describe('Errors: Promises', () => {
             });
     });
 
-    it("error: open() promise requires minimum of connection parameters", function () {
+    test("error: open() promise requires minimum of connection parameters", function () {
         let wrongParams = Object.assign({}, setup.abapSystem);
         delete wrongParams.ashost;
         let wrongClient = setup.client(wrongParams);
@@ -103,7 +103,7 @@ describe('Errors: Promises', () => {
             });
     });
 
-    it("error: promise call() requires at least two arguments", function () {
+    test("error: promise call() requires at least two arguments", function () {
         expect.assertions(1);
         return client.call("rfc").catch(err => {
             expect(err).toEqual(
@@ -115,7 +115,7 @@ describe('Errors: Promises', () => {
         });
     });
 
-    it("error: promise call() rejects non-string rfm name", function () {
+    test("error: promise call() rejects non-string rfm name", function () {
         expect.assertions(1);
         return client.call(23, {}, 2).catch(err => {
             expect(err).toEqual(
@@ -127,7 +127,7 @@ describe('Errors: Promises', () => {
         });
     });
 
-    it("error: promise call() rejects non-object second argument (remote function module parameters)", function () {
+    test("error: promise call() rejects non-object second argument (remote function module parameters)", function () {
         expect.assertions(1);
         return client.call("rfc", 41, 2).catch(err => {
             expect(err).toEqual(

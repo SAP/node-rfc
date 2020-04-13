@@ -14,7 +14,7 @@
 
 "use strict";
 
-const setup = require("./setup");
+const setup = require("../setup");
 const client = setup.client()
 const sync = setup.sync;
 
@@ -30,7 +30,7 @@ afterAll(function (done) {
     });
 });
 describe('Errors: ABAP', () => {
-    it("error: invoke() AbapApplicationError E0", function (done) {
+    test("error: invoke() AbapApplicationError E0", function (done) {
         client.invoke(
             "RFC_RAISE_ERROR", {
                 METHOD: "0",
@@ -55,7 +55,7 @@ describe('Errors: ABAP', () => {
         );
     });
 
-    it("error: invoke() AbapApplicationError E1", function (done) {
+    test("error: invoke() AbapApplicationError E1", function (done) {
         client.invoke(
             "RFC_RAISE_ERROR", {
                 METHOD: "1",
@@ -79,7 +79,7 @@ describe('Errors: ABAP', () => {
         );
     });
 
-    it("error: invoke() AbapApplicationError E2", function (done) {
+    test("error: invoke() AbapApplicationError E2", function (done) {
         client.connect((err, res) => {
             if (err) {
                 done(err);
@@ -107,7 +107,7 @@ describe('Errors: ABAP', () => {
         });
     });
 
-    it("error: invoke() AbapApplicationError E3", function (done) {
+    test("error: invoke() AbapApplicationError E3", function (done) {
         client.invoke(
             "RFC_RAISE_ERROR", {
                 METHOD: "3",
@@ -129,7 +129,7 @@ describe('Errors: ABAP', () => {
         );
     });
 
-    it("error: invoke() AbapApplicationError E11", function (done) {
+    test("error: invoke() AbapApplicationError E11", function (done) {
         client.invoke(
             "RFC_RAISE_ERROR", {
                 METHOD: "11",
@@ -153,7 +153,7 @@ describe('Errors: ABAP', () => {
         );
     });
 
-    it("error: invoke() AbapApplicationError E36", function (done) {
+    test("error: invoke() AbapApplicationError E36", function (done) {
         client.invoke(
             "RFC_RAISE_ERROR", {
                 METHOD: "36",
@@ -179,7 +179,7 @@ describe('Errors: ABAP', () => {
         );
     });
 
-    it("error: invoke() AbapApplicationError E51", function (done) {
+    test("error: invoke() AbapApplicationError E51", function (done) {
         client.invoke(
             "RFC_RAISE_ERROR", {
                 METHOD: "51",
@@ -201,7 +201,7 @@ describe('Errors: ABAP', () => {
         );
     });
 
-    it("error: invoke() AbapRuntimeError A", function (done) {
+    test("error: invoke() AbapRuntimeError A", function (done) {
         client.invoke("RFC_RAISE_ERROR", {
             MESSAGETYPE: "A"
         }, function (err, res) {
@@ -222,7 +222,7 @@ describe('Errors: ABAP', () => {
         });
     });
 
-    it("error: invoke() AbapRuntimeError X", function (done) {
+    test("error: invoke() AbapRuntimeError X", function (done) {
         client.invoke("RFC_RAISE_ERROR", {
             MESSAGETYPE: "X"
         }, function (err) {
@@ -244,7 +244,7 @@ describe('Errors: ABAP', () => {
         });
     });
 
-    it("error: invoke() SAP GUI in background", function (done) {
+    test("error: invoke() SAP GUI in background", function (done) {
         client.invoke("STFC_SAPGUI", {}, function (err) {
             expect(err).toBeDefined();
             expect(err).toEqual(

@@ -15,128 +15,68 @@
 'use strict';
 
 const setup = require('../setup');
-const client = setup.client()
-
-const Promise = require('bluebird');
-
-const TIMEOUT = 10000
 
 describe('Concurrency: Promises', () => {
+    const WAIT_SECONDS = 1;
 
-    it('concurrency: call() should not block', function () {
-        let asyncRes;
-        let P = client
-            .open()
-            .then(function () {
-                client.call('/COE/RBP_FE_WAIT', {
-                        IV_SECONDS: 1
-                    })
-                    .then(res => {
-                        asyncRes = res;
+    test(
+        `${setup.CONNECTIONS} clients make concurrent call() requests`,
+        function (done) {
+            expect.assertions(setup.CONNECTIONS);
+            let callbackCount = 0;
 
+            for (let i = 0; i < setup.CONNECTIONS; i++) {
+                setup.client()
+                    .open()
+                    .then(client => {
+                        client.call(
+                                (i % 2 === 0) ? "BAPI_USER_GET_DETAIL" : "/COE/RBP_FE_WAIT",
+                                (i % 2 === 0) ? {
+                                    USERNAME: "DEMO",
+                                } : {
+                                    IV_SECONDS: WAIT_SECONDS,
+                                })
+                            .then(res => {
+                                expect(res).toBeDefined();
+                                client.close(() => {
+                                    if (++callbackCount === setup.CONNECTIONS)
+                                        done();
+                                });
+                            })
+                            .catch(ex => done(ex));
                     })
-                    .catch(err => {
-                        console.error(err);
-                    })
-                    .finally(() => {
-                        client.close();
-                    })
-            })
-        expect(asyncRes).toBeUndefined();
-        return P;
-    });
+                    .catch(ex => done(ex));
+            }
+        },
+        15000
+    );
 
-    it(`concurrency: ${setup.CONNECTIONS} parallel call() promises`, function (done) {
-        let callbackCount = 0;
-        for (let i = 0; i < setup.CONNECTIONS; i++) {
-            setup.client(setup.abapSystem)
-                .open()
-                .then(c => {
-                    c.call('BAPI_USER_GET_DETAIL', {
-                            USERNAME: 'DEMO'
-                        })
+    test(
+        `8 clients make concurrent ping() requests`,
+        function (done) {
+            const CLIENTS = 8;
+            expect.assertions(CLIENTS);
+            let callbackCount = 0;
+
+            for (let i = 0; i < CLIENTS; i++) {
+                setup.client()
+                    .open()
+                    .then(client =>
+                        client.ping()
                         .then(res => {
-                            expect(res).toBeDefined();
-                            expect(res).toHaveProperty('RETURN');
-                            expect(res.RETURN.length).toBe(0);
-                            c.close(() => {
-                                if (++callbackCount === setup.CONNECTIONS) done();
+                            expect(res).toBeTruthy();
+                            client.close(() => {
+                                if (++callbackCount === CLIENTS)
+                                    done();
                             });
                         })
-                        .catch(err => {
-                            return done(err);
-                        });
-                })
-                .catch(err => {
-                    return done(err);
-                });
-        }
-    }, TIMEOUT);
+                        .catch(ex => done(ex))
+                    )
+                    .catch(ex => done(ex));
+            }
+        },
+        10000
+    );
 
-    it(`concurrency: ${setup.CONNECTIONS} concurrent call() promises, using single connection`, function () {
-        let callbackCount = 0;
-        return client
-            .open()
-            .then(function () {
-                for (let i = 0; i < setup.CONNECTIONS; i++) {
-                    client
-                        .call('BAPI_USER_GET_DETAIL', {
-                            USERNAME: 'DEMO'
-                        })
-                        .then(res => {
-                            expect(res).toBeDefined();
-                            expect(res).toHaveProperty('RETURN');
-                            expect(res.RETURN.length).toBe(0);
-                            if (++callbackCount == setup.CONNECTIONS) client.close();
-                        })
-                }
-            })
-    }, TIMEOUT);
 
-    it(`concurrency: ${setup.CONNECTIONS} concurrent call() promises, using single connection and Promise.all()`, function () {
-        let promises = [];
-        for (let counter = 0; counter < setup.CONNECTIONS; counter++) {
-            promises.push(
-                client
-                .call('BAPI_USER_GET_DETAIL', {
-                    USERNAME: 'DEMO'
-                })
-                .then(res => {
-                    expect(res).toBeDefined();
-                    expect(res).toHaveProperty('RETURN');
-                    expect(res.RETURN.length).toBe(0);
-                })
-            );
-        }
-        return Promise.all(promises);
-    }, TIMEOUT);
-
-    it(`concurrency: ${setup.CONNECTIONS} recursive call() promises, using single connection`, function () {
-        let callbackCount = 0;
-
-        function call(done) {
-            client
-                .call('BAPI_USER_GET_DETAIL', {
-                    USERNAME: 'DEMO'
-                })
-                .then(res => {
-                    expect(res).toBeDefined();
-                    expect(res).toHaveProperty('RETURN');
-                    expect(res.RETURN.length).toBe(0);
-                    if (++callbackCount == setup.CONNECTIONS) {
-                        client.close();
-                    } else {
-                        call(callbackCount);
-                    }
-                })
-        }
-
-        return client
-            .open()
-            .then(function () {
-                call();
-            });
-
-        call();
-    }, TIMEOUT);
 })

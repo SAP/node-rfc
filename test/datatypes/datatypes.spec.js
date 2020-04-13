@@ -14,15 +14,15 @@
 
 "use strict";
 
-const setup = require("./setup");
+const setup = require("../setup");
 const client = setup.client()
 
 const Decimal = require("decimal.js");
 const randomBytes = require("random-bytes");
 
-const Utils = require("./utils");
+const Utils = require("../utils");
 
-const RFC_MATH = require('./config').RFC_MATH;
+const RFC_MATH = require('../config').RFC_MATH;
 
 beforeEach(function (done) {
     client.reopen(err => {
@@ -38,7 +38,7 @@ afterEach(function (done) {
 
 describe('Datatypes', () => {
 
-    it("Min/Max positive", function (done) {
+    test("Min/Max positive", function (done) {
         let isInput = {
             // Float
             ZFLTP_MIN: RFC_MATH.FLOAT.POS.MIN,
@@ -86,7 +86,7 @@ describe('Datatypes', () => {
         });
     });
 
-    it("Min/Max negative", function (done) {
+    test("Min/Max negative", function (done) {
         let isInput = {
             // Float
             ZFLTP_MIN: RFC_MATH.FLOAT.NEG.MIN,
@@ -134,7 +134,7 @@ describe('Datatypes', () => {
         });
     });
 
-    it("error: ARRAY rejects non array", function (done) {
+    test("error: ARRAY rejects non array", function (done) {
         client.invoke(
             "RFC_READ_TABLE", {
                 QUERY_TABLE: "MARA",
@@ -153,7 +153,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("BCD and FLOAT accept numbers", function (done) {
+    test("BCD and FLOAT accept numbers", function (done) {
         let isInput = {
             // Float
             ZFLTP: 0.123456789,
@@ -202,7 +202,7 @@ describe('Datatypes', () => {
         });
     });
 
-    it("BCD and FLOAT accept strings", function (done) {
+    test("BCD and FLOAT accept strings", function (done) {
         let isInput = {
             // Float
             ZFLTP: "0.123456789",
@@ -243,7 +243,7 @@ describe('Datatypes', () => {
         });
     });
 
-    it("BCD and FLOAT accept Decimals", function (done) {
+    test("BCD and FLOAT accept Decimals", function (done) {
         let isInput = {
             ZFLTP: Decimal("0.123456789"),
 
@@ -315,7 +315,7 @@ describe('Datatypes', () => {
         });
     });
 
-    it("XSTRING accepts Buffer", function (done) {
+    test("XSTRING accepts Buffer", function (done) {
         let isInput = {
             ZRAWSTRING: Utils.XBYTES_TEST
         };
@@ -332,7 +332,7 @@ describe('Datatypes', () => {
         });
     });
 
-    xit("BYTE and XSTRING tables", function (done) {
+    xtest("BYTE and XSTRING tables", function (done) {
         let IT_SXMSMGUIDT = [];
         let IT_SDOKCNTBINS = [];
 
@@ -397,7 +397,7 @@ describe('Datatypes', () => {
         });
     });
 
-    it("DATE accepts string", function (done) {
+    test("DATE accepts string", function (done) {
         const testDate = "20180625";
         let importStruct = {
             RFCDATE: testDate
@@ -418,7 +418,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("DATE accepts Date", function (done) {
+    test("DATE accepts Date", function (done) {
         const Months = [
             "01",
             "02",
@@ -489,7 +489,7 @@ describe('Datatypes', () => {
         });
     });
 
-    it("error: INT rejects string", function (done) {
+    test("error: INT rejects string", function (done) {
         let importStruct = {
             RFCINT1: "1"
         };
@@ -512,7 +512,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("error: CHAR rejects int", function (done) {
+    test("error: CHAR rejects int", function (done) {
         let importStruct = {
             RFCCHAR4: 65
         };
@@ -535,7 +535,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("error: BCD and FLOAT reject not a number string", function (done) {
+    test("error: BCD and FLOAT reject not a number string", function (done) {
         let importStruct = {
             RFCFLOAT: "A"
         };
@@ -559,7 +559,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("error: DATE rejects number", function (done) {
+    test("error: DATE rejects number", function (done) {
         const testDate = 41;
         let importStruct = {
             RFCDATE: testDate
@@ -583,7 +583,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("error: INT1 rejects float with fractional part", function (done) {
+    test("error: INT1 rejects float with fractional part", function (done) {
         let importStruct = {
             RFCINT1: 1 + Number.EPSILON,
             RFCINT2: 1.0
@@ -607,7 +607,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("error: INT2 rejects float", function (done) {
+    test("error: INT2 rejects float", function (done) {
         let importStruct = {
             RFCINT2: 1 + Number.EPSILON,
             RFCINT1: 1.0
@@ -631,7 +631,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("error: INT4 rejects float", function (done) {
+    test("error: INT4 rejects float", function (done) {
         let importStruct = {
             RFCINT4: 1 + Number.EPSILON
         };
@@ -654,7 +654,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("error: INT1 positive infinity", function (done) {
+    test("error: INT1 positive infinity", function (done) {
         let importStruct = {
             RFCINT1: Number.POSITIVE_INFINITY
         };
@@ -677,7 +677,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("error: INT1 negative infinity", function (done) {
+    test("error: INT1 negative infinity", function (done) {
         let importStruct = {
             RFCINT1: Number.POSITIVE_INFINITY
         };
@@ -700,7 +700,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("INT max positive", function (done) {
+    test("INT max positive", function (done) {
         let importStruct = {
             RFCINT1: 254,
             RFCINT2: 32766,
@@ -733,7 +733,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("INT max negative", function (done) {
+    test("INT max negative", function (done) {
         let importStruct = {
             RFCINT1: 0,
             RFCINT2: -32768,
@@ -766,7 +766,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("INT1 positive overflow", function (done) {
+    test("INT1 positive overflow", function (done) {
         let importStruct = {
             RFCINT1: 256
             //RFCINT2: 32766,
@@ -791,7 +791,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("INT2 positive overflow", function (done) {
+    test("INT2 positive overflow", function (done) {
         let importStruct = {
             RFCINT2: RFC_MATH.RFC_INT2.POS + 1
         };
@@ -814,7 +814,7 @@ describe('Datatypes', () => {
         );
     });
 
-    it("INT2 negative overflow", function (done) {
+    test("INT2 negative overflow", function (done) {
         let importStruct = {
             RFCINT2: RFC_MATH.RFC_INT2.NEG - 1
         };

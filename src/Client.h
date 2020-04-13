@@ -15,7 +15,7 @@
 #ifndef NODE_SAPNWRFC_CLIENT_H_
 #define NODE_SAPNWRFC_CLIENT_H_
 
-#define SAPNWRFC_BINDING_VERSION "1.0.6"
+#define SAPNWRFC_BINDING_VERSION "1.0.7"
 
 #define NODERFC_BCD_STRING 0
 #define NODERFC_BCD_NUMBER 1
@@ -27,6 +27,29 @@
 
 using namespace Napi;
 
+//#define RFC_CLIENT_LOG
+typedef enum _RFC_CLIENT_STATE
+{
+    CLIENT_CREATED = 0,
+    CLIENT_READY,
+    CLIENT_CONNECT,
+    CLIENT_PREPARE,
+    CLIENT_INVOKE,
+    CLIENT_CLOSE,
+    CLIENT_PING,
+    CLIENT_REOPEN,
+} RFC_CLIENT_STATE;
+
+const static char *
+    RFC_CLIENT_STATE_STRING[] = {
+        "Created",
+        "Ready",
+        "Connect",
+        "Prepare",
+        "Invoke",
+        "Close",
+        "Ping",
+        "Reopen"};
 namespace node_rfc
 {
 extern Napi::Env __env;
@@ -63,12 +86,15 @@ private:
     static unsigned int __refCounter;
     unsigned int __refId;
 
+    RFC_CLIENT_STATE state = CLIENT_CREATED;
+
     // Client API
 
     Napi::Value IdGetter(const Napi::CallbackInfo &info);
     Napi::Value VersionGetter(const Napi::CallbackInfo &info);
     Napi::Value OptionsGetter(const Napi::CallbackInfo &info);
     Napi::Value ConnectionHandleGetter(const Napi::CallbackInfo &info);
+    Napi::Value RunningCallsGetter(const Napi::CallbackInfo &info);
 
     Napi::Value ConnectionInfo(const Napi::CallbackInfo &info);
     Napi::Value Connect(const Napi::CallbackInfo &info);
@@ -108,9 +134,10 @@ private:
     RFC_RC rc;
     RFC_ERROR_INFO errorInfo;
 
-    void LockMutex(void);
-    void UnlockMutex(void);
+    unsigned int LockMutex(RFC_CLIENT_STATE state);
+    void UnlockMutex(RFC_CLIENT_STATE state);
     uv_sem_t invocationMutex;
+    unsigned int runningCalls = 0;
 };
 
 } // namespace node_rfc
