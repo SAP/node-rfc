@@ -107,7 +107,7 @@ Napi::Value Throughput::IdGetter(const Napi::CallbackInfo &info)
 
 Napi::Value Throughput::HandleGetter(const Napi::CallbackInfo &info)
 {
-    return Napi::Number::New(info.Env(), (uint64_t)this->__handle);
+    return Napi::Number::New(info.Env(), static_cast<double>((uint64_t)this->__handle));
 }
 
 Napi::Value Throughput::StatusGetter(const Napi::CallbackInfo &info)
@@ -205,7 +205,7 @@ Napi::Value Throughput::GetFromConnection(const Napi::CallbackInfo &info)
     {
         return scope.Escape(wrapError(&errorInfo));
     }
-    return Napi::Number::New(info.Env(), (uint64_t)throughputHandle);
+    return Napi::Number::New(info.Env(), static_cast<double>((uint64_t)throughputHandle));
 }
 
 } // namespace node_rfc

@@ -13,5 +13,5 @@ export declare class Pool {
     acquire(): Promise<Client>;
     release(client: Client): Promise<void>;
     releaseAll(): Promise<void>;
-    get status(): object;
+    readonly status: object;
 }
