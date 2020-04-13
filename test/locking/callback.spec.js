@@ -20,7 +20,7 @@ describe('Concurrency: Callbacks', () => {
     const WAIT_SECONDS = 1;
 
     test('invoke() and invoke ()', function (done) {
-        expect.assertions(5);
+        expect.assertions(7);
 
         let count = 0;
         const client = setup.client();
@@ -34,8 +34,12 @@ describe('Concurrency: Callbacks', () => {
                     if (err) return done(err);
                     count++;
                 });
+
             // Invoke not blocking
             expect(count).toEqual(0);
+
+            // 1 call is running
+            expect(client.runningRFCCalls).toEqual(1);
 
             client.invoke('/COE/RBP_FE_WAIT', {
                     IV_SECONDS: WAIT_SECONDS
@@ -44,8 +48,12 @@ describe('Concurrency: Callbacks', () => {
                     if (err) return done(err);
                     count++;
                 });
+
             // Invoke not blocking
             expect(count).toEqual(0);
+
+            // 2 calls are running
+            expect(client.runningRFCCalls).toEqual(2);
 
             client.close(err => {
                 // Close rejected because of ongoing calls

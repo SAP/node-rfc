@@ -7,6 +7,7 @@ Change log
 * Safeguarding from closing the connection while RFC calls still running
 * Number of running RFC calls exposed as client instance attribute
 * Client logging
+* Warnings when compiling for Windows IA32 platform, fix  #131
 * Ensure Bluebird Promises used instead of native Typescript, fix #134
 * Pool reopen() fixed, returning now the Client instance, just like Pool open(), fix #135
 * Pool max option removed, fix #136
