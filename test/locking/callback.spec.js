@@ -52,8 +52,8 @@ describe('Concurrency: Callbacks', () => {
             // Invoke not blocking
             expect(count).toEqual(0);
 
-            // 2 calls are running
-            expect(client.runningRFCCalls).toEqual(2);
+            // 1 calls are running
+            expect(client.runningRFCCalls).toEqual(1);
 
             client.close(err => {
                 // Close rejected because of ongoing calls
