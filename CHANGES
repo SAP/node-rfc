@@ -1,7 +1,7 @@
 Change log
 ==========
 
-1.0.7 (2020-04-10)
+1.0.7 (2020-04-14)
 ------------------
 
 * Safeguarding from closing the connection while RFC calls still running
