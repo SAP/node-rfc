@@ -1,7 +1,7 @@
 {
   "name": "node-rfc",
   "description": "nodejs bindings for SAP NW RFC SDK",
-  "version": "1.0.7",
+  "version": "1.1.0",
   "homepage": "https://github.com/sap/node-rfc",
   "author": {
     "name": "Srdjan Boskovic",
@@ -23,7 +23,7 @@
     "devdeps": "npm install --save-dev @babel/core typings @types/node @types/bluebird async cmake-js decimal.js jest prebuild prebuild-install random-bytes tslint typescript segfault-handler",
     "prepublishOnly": "npm ls --depth=0",
     "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
-    "install": "prebuild-install --tag-prefix -r napi || npm run prebuild",
+    "install": "prebuild-install --tag-prefix -r napi || cmake-js rebuild",
     "prebuild": "prebuild --backend cmake-js -r napi --force --strip --verbose --tag-prefix",
     "upload": "prebuild -r napi -u --verbose",
     "wrapper": "tsc -p src/ts",
