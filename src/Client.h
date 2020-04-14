@@ -40,6 +40,7 @@ typedef enum _RFC_CLIENT_STATE
     CLIENT_REOPEN,
 } RFC_CLIENT_STATE;
 
+#ifdef RFC_CLIENT_LOG
 const static char *
     RFC_CLIENT_STATE_STRING[] = {
         "Created",
@@ -50,6 +51,8 @@ const static char *
         "Close",
         "Ping",
         "Reopen"};
+#endif
+
 namespace node_rfc
 {
 extern Napi::Env __env;
