@@ -132,12 +132,12 @@ export declare class Client {
     connect(callback: Function): void;
     invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): void;
     ping(callback?: Function): Promise<boolean> | any;
-    readonly isAlive: boolean;
-    readonly connectionInfo: RfcConnectionInfo;
-    readonly id: number;
-    readonly runningRFCCalls: number;
-    readonly _connectionHandle: number;
-    readonly status: RfcClientStatus;
-    readonly version: RfcClientVersion;
-    readonly options: RfcClientOptions;
+    get isAlive(): boolean;
+    get connectionInfo(): RfcConnectionInfo;
+    get id(): number;
+    get runningRFCCalls(): number;
+    get _connectionHandle(): number;
+    get status(): RfcClientStatus;
+    get version(): RfcClientVersion;
+    get options(): RfcClientOptions;
 }

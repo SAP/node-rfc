@@ -332,15 +332,17 @@ export class Client {
         callOptions?: object
     ) {
         try {
-            if (!this.__client.isAlive()) {
-                throw new Error(
-                    "Client invoked RFC call with closed connection: id=" +
-                        this.__client.id
-                );
-            }
-
             if (typeof callback !== "function") {
                 throw new TypeError("Callback function must be supplied");
+            }
+
+            if (!this.__client.isAlive()) {
+                callback(
+                    new Error(
+                        "Client invoked RFC call with closed connection: id=" +
+                            this.__client.id
+                    )
+                );
             }
 
             if (arguments.length < 3) {

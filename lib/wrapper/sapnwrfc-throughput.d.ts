@@ -30,7 +30,7 @@ export declare class Throughput {
     static getFromConnection(client: Client): Throughput | void;
     reset(): void;
     destroy(): void;
-    readonly status: RfcThroughputStatus;
-    readonly clients: Set<Client>;
-    readonly _handle: number;
+    get status(): RfcThroughputStatus;
+    get clients(): Set<Client>;
+    get _handle(): number;
 }
