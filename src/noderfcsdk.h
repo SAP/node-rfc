@@ -26,8 +26,8 @@ Napi::Value wrapString(SAP_UC *uc, int length = -1);
 
 // RFC ERRORS
 Napi::Value NodeRfcError(Napi::Value errorObj);
-Napi::Value RfcLibError(RFC_ERROR_INFO *errorInfo);
-Napi::Value AbapError(RFC_ERROR_INFO *errorInfo);
-Napi::Value wrapError(RFC_ERROR_INFO *errorInfo);
+Napi::Value RfcLibError(RFC_ERROR_INFO *errorInfo, bool alive);
+Napi::Value AbapError(RFC_ERROR_INFO *errorInfoi, bool alive);
+Napi::Value wrapError(RFC_ERROR_INFO *errorInfo, bool alive = true);
 } // namespace node_rfc
 #endif

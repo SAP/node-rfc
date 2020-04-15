@@ -29,6 +29,7 @@ afterAll(function (done) {
         done();
     });
 });
+
 describe('Errors: ABAP', () => {
     test("error: invoke() AbapApplicationError E0", function (done) {
         client.invoke(
@@ -37,9 +38,9 @@ describe('Errors: ABAP', () => {
                 MESSAGETYPE: "E"
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
+                        alive: true,
                         code: 4,
                         name: "ABAPError",
                         key: "Function not supported",
@@ -49,8 +50,7 @@ describe('Errors: ABAP', () => {
                         abapMsgNumber: "006"
                     })
                 );
-                // Assures that the connection handle is correctly synchronized
-                sync(client, done);
+                done();
             }
         );
     });
@@ -62,9 +62,9 @@ describe('Errors: ABAP', () => {
                 MESSAGETYPE: "E"
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
+                        alive: true,
                         code: 5,
                         name: "ABAPError",
                         key: "RAISE_EXCEPTION",
@@ -73,38 +73,31 @@ describe('Errors: ABAP', () => {
                         abapMsgNumber: "006"
                     })
                 );
-                // Assures that the connection handle is correctly synchronized
-                sync(client, done);
+                done();
             }
         );
     });
 
     test("error: invoke() AbapApplicationError E2", function (done) {
-        client.connect((err, res) => {
-            if (err) {
-                done(err);
-            } else {
-                client.invoke(
-                    "RFC_RAISE_ERROR", {
-                        METHOD: "2",
-                        MESSAGETYPE: "E"
-                    },
-                    function (err) {
-                        expect(err).toBeDefined();
-                        expect(err).toEqual(
-                            expect.objectContaining({
-                                code: 5,
-                                name: "ABAPError",
-                                key: "RAISE_EXCEPTION",
-                                abapMsgNumber: "000"
-                            })
-                        );
-                        // Assures that the connection handle is correctly synchronized
-                        sync(client, done);
-                    }
-                );
-            }
-        });
+        client.connect(err => {
+            client.invoke(
+                "RFC_RAISE_ERROR", {
+                    METHOD: "2",
+                    MESSAGETYPE: "E"
+                },
+                function (err) {
+                    expect(err).toEqual(
+                        expect.objectContaining({
+                            alive: true,
+                            code: 5,
+                            name: "ABAPError",
+                            key: "RAISE_EXCEPTION",
+                            abapMsgNumber: "000"
+                        })
+                    );
+                    done();
+                });
+        })
     });
 
     test("error: invoke() AbapApplicationError E3", function (done) {
@@ -114,17 +107,16 @@ describe('Errors: ABAP', () => {
                 MESSAGETYPE: "E"
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
+                        alive: true,
                         code: 3,
                         name: "ABAPError",
                         key: "COMPUTE_INT_ZERODIVIDE",
                         message: "Division by 0 (type I or INT8)"
                     })
                 );
-                // Assures that the connection handle is correctly synchronized
-                sync(client, done);
+                done();
             }
         );
     });
@@ -135,9 +127,8 @@ describe('Errors: ABAP', () => {
                 METHOD: "11",
                 MESSAGETYPE: "E"
             },
-            function (rec, err) {
-                expect(err).toBeDefined();
-                expect(err).toEqual(
+            function (err, res) {
+                expect(res).toEqual(
                     expect.objectContaining({
                         COUNTER: 1,
                         CSTRING: "",
@@ -147,8 +138,7 @@ describe('Errors: ABAP', () => {
                         PARAMETER: ""
                     })
                 );
-                // Assures that the connection handle is correctly synchronized
-                sync(client, done);
+                done();
             }
         );
     });
@@ -160,9 +150,9 @@ describe('Errors: ABAP', () => {
                 MESSAGETYPE: "E"
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
+                        alive: true,
                         code: 4,
                         name: "ABAPError",
                         key: "Division by 0 (type I or INT8)",
@@ -173,8 +163,7 @@ describe('Errors: ABAP', () => {
                         abapMsgV1: "Division by 0 (type I or INT8)"
                     })
                 );
-                // Assures that the connection handle is correctly synchronized
-                sync(client, done);
+                done();
             }
         );
     });
@@ -186,17 +175,16 @@ describe('Errors: ABAP', () => {
                 MESSAGETYPE: "E"
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
+                        alive: true,
                         code: 3,
                         name: "ABAPError",
                         key: "BLOCKED_COMMIT",
                         message: "A database commit was blocked by the application."
                     })
                 );
-                // Assures that the connection handle is correctly synchronized
-                sync(client, done);
+                done();
             }
         );
     });
@@ -205,9 +193,9 @@ describe('Errors: ABAP', () => {
         client.invoke("RFC_RAISE_ERROR", {
             MESSAGETYPE: "A"
         }, function (err, res) {
-            expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
+                    alive: true,
                     code: 4,
                     name: "ABAPError",
                     key: "Function not supported",
@@ -217,8 +205,7 @@ describe('Errors: ABAP', () => {
                     abapMsgNumber: "006"
                 })
             );
-            // Assures that the connection handle is correctly synchronized
-            sync(client, done);
+            done();
         });
     });
 
@@ -226,9 +213,9 @@ describe('Errors: ABAP', () => {
         client.invoke("RFC_RAISE_ERROR", {
             MESSAGETYPE: "X"
         }, function (err) {
-            expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
+                    alive: true,
                     code: 4,
                     name: "ABAPError",
                     key: "MESSAGE_TYPE_X",
@@ -239,24 +226,22 @@ describe('Errors: ABAP', () => {
                     abapMsgV1: "MESSAGE_TYPE_X"
                 })
             );
-            // Assures that the connection handle is correctly synchronized
-            sync(client, done);
+            done();
         });
     });
 
     test("error: invoke() SAP GUI in background", function (done) {
         client.invoke("STFC_SAPGUI", {}, function (err) {
-            expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
+                    alive: true,
                     code: 3,
                     name: "ABAPError",
                     key: "DYNPRO_SEND_IN_BACKGROUND",
                     message: "Screen output without connection to user."
                 })
             );
-            // Assures that the connection handle is correctly synchronized
-            sync(client, done);
+            done();
         });
     });
-})
+});

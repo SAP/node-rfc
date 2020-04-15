@@ -195,15 +195,18 @@ public:
 
         if (errorInfo.code != RFC_OK)
         {
-            argv[0] = wrapError(&errorInfo);
-            if (errorInfo.group == LOGON_FAILURE ||          // 3: Error message raised when logon fails
-                errorInfo.group == COMMUNICATION_FAILURE ||  // 4: Problems with the network connection (or backend broke down and killed the connection)
-                errorInfo.group == EXTERNAL_RUNTIME_FAILURE) // 5: Problems in the RFC runtime of the external program (i.e "this" library)
+            if (
+                errorInfo.code == RFC_COMMUNICATION_FAILURE || // Error in Network & Communication layer.
+                errorInfo.code == RFC_ABAP_RUNTIME_FAILURE ||  // SAP system runtime error (SYSTEM_FAILURE): Shortdump on the backend side.
+                errorInfo.code == RFC_ABAP_MESSAGE ||          // The called function module raised an E-, A- or X-Message.
+                errorInfo.code == RFC_EXTERNAL_FAILURE)        // Problems in the RFC runtime of the external program (i.e "this" library)
             {
-                // Connection is unlikely useful any more
-                client->alive = false;
-                RfcCloseConnection(client->connectionHandle, &errorInfo);
+                // Connection closed, reopen
+                RFC_ERROR_INFO openErrorInfo;
+                client->connectionHandle = RfcOpenConnection(client->connectionParams, client->paramSize, &openErrorInfo);
+                client->alive = (openErrorInfo.code == RFC_OK);
             }
+            argv[0] = wrapError(&errorInfo, client->alive);
         }
         else
         {
