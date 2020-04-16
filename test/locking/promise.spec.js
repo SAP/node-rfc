@@ -29,23 +29,23 @@ describe('Concurrency: Promises', () => {
             .open()
             .then(client => {
 
-                client.call('/COE/RBP_FE_WAIT', {
-                    IV_SECONDS: WAIT_SECONDS
+                client.call('RFC_PING_AND_WAIT', {
+                    SECONDS: WAIT_SECONDS
                 }).then(() => {
                     count++;
                 })
                 // Call not blocking
                 expect(count).toEqual(0);
 
-                client.call('/COE/RBP_FE_WAIT', {
-                    IV_SECONDS: WAIT_SECONDS
+                client.call('RFC_PING_AND_WAIT', {
+                    SECONDS: WAIT_SECONDS
                 }).then(() => {
                     count++;
                 })
                 expect(count).toEqual(0);
 
-                client.call('/COE/RBP_FE_WAIT', {
-                    IV_SECONDS: WAIT_SECONDS
+                client.call('RFC_PING_AND_WAIT', {
+                    SECONDS: WAIT_SECONDS
                 }).then(() => {
                     count++;
                 })
@@ -65,8 +65,8 @@ describe('Concurrency: Promises', () => {
         setup.client()
             .open()
             .then(client => {
-                client.call('/COE/RBP_FE_WAIT', {
-                    IV_SECONDS: WAIT_SECONDS
+                client.call('RFC_PING_AND_WAIT', {
+                    SECONDS: WAIT_SECONDS
                 }).then(() =>
                     count++
                 );
@@ -137,8 +137,8 @@ describe('Concurrency: Promises', () => {
             .then(client => {
 
                 client
-                    .call('/COE/RBP_FE_WAIT', {
-                        IV_SECONDS: WAIT_SECONDS
+                    .call('RFC_PING_AND_WAIT', {
+                        SECONDS: WAIT_SECONDS
                     })
                     .then(() => {
                         count++

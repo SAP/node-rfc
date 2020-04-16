@@ -1,7 +1,14 @@
 Change log
 ==========
 
-1.0.7 (2020-04-14)
+1.1.1 (2020-04-16)
+------------------
+
+* Connection re-open after critical server errors
+* Server context reset after ABAP exceptions
+* Error code string representation added to error object
+
+1.1.0 (2020-04-14)
 ------------------
 
 * Safeguarding from closing the connection while RFC calls still running

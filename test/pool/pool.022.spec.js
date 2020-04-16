@@ -17,12 +17,11 @@
 const setup = require("../setup");
 const Pool = setup.rfcPool;
 const abapSystem = setup.abapSystem;
-const Promise = require("bluebird");
 
 describe('Pool', () => {
     const pool = new Pool(abapSystem);
 
-    test.only("Acquire 3, release 1", function () {
+    test("Acquire 3, release 1", function () {
         expect.assertions(5);
 
         return (async () => {

@@ -27,8 +27,8 @@ describe('Concurrency: Callbacks', () => {
         client.connect((err) => {
             if (err) return done(err);
 
-            client.invoke('/COE/RBP_FE_WAIT', {
-                    IV_SECONDS: WAIT_SECONDS
+            client.invoke('RFC_PING_AND_WAIT', {
+                    SECONDS: WAIT_SECONDS
                 },
                 function (err) {
                     if (err) return done(err);
@@ -41,8 +41,8 @@ describe('Concurrency: Callbacks', () => {
             // 1 call is running
             expect(client.runningRFCCalls).toEqual(1);
 
-            client.invoke('/COE/RBP_FE_WAIT', {
-                    IV_SECONDS: WAIT_SECONDS
+            client.invoke('RFC_PING_AND_WAIT', {
+                    SECONDS: WAIT_SECONDS
                 },
                 function (err) {
                     if (err) return done(err);
@@ -74,8 +74,8 @@ describe('Concurrency: Callbacks', () => {
         const client = setup.client();
         client.connect((err) => {
             if (err) return done(err);
-            client.invoke('/COE/RBP_FE_WAIT', {
-                    IV_SECONDS: WAIT_SECONDS
+            client.invoke('RFC_PING_AND_WAIT', {
+                    SECONDS: WAIT_SECONDS
                 },
                 function (err, res) {
                     count++;
@@ -138,8 +138,8 @@ describe('Concurrency: Callbacks', () => {
         client.connect((err) => {
             if (err) return done(err);;
 
-            client.invoke('/COE/RBP_FE_WAIT', {
-                    IV_SECONDS: WAIT_SECONDS
+            client.invoke('RFC_PING_AND_WAIT', {
+                    SECONDS: WAIT_SECONDS
                 },
                 function (err) {
                     if (err) return done(err);
