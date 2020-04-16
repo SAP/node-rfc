@@ -51,11 +51,11 @@ describe('Concurrency: Await', () => {
             for (const [i, c] of CLIENTS.entries()) {
                 try {
                     let res = await c.call(
-                        (i % 2 === 0) ? "BAPI_USER_GET_DETAIL" : "/COE/RBP_FE_WAIT",
+                        (i % 2 === 0) ? "BAPI_USER_GET_DETAIL" : "RFC_PING_AND_WAIT",
                         (i % 2 === 0) ? {
                             USERNAME: "DEMO",
                         } : {
-                            IV_SECONDS: WAIT_SECONDS,
+                            SECONDS: WAIT_SECONDS,
                         }
                     )
                     expect(res).toBeDefined();

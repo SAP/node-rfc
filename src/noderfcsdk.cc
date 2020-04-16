@@ -93,6 +93,7 @@ Napi::Value RfcLibError(RFC_ERROR_INFO *errorInfo, bool alive)
     (errorObj).Set(Napi::String::New(node_rfc::__env, "alive"), Napi::Boolean::New(node_rfc::__env, alive));
     (errorObj).Set(Napi::String::New(node_rfc::__env, "name"), "RfcLibError");
     (errorObj).Set(Napi::String::New(node_rfc::__env, "code"), Napi::Number::New(node_rfc::__env, errorInfo->code));
+    (errorObj).Set(Napi::String::New(node_rfc::__env, "codeString"), wrapString((SAP_UC *)RfcGetRcAsString(errorInfo->code)));
     (errorObj).Set(Napi::String::New(node_rfc::__env, "key"), wrapString(errorInfo->key));
     (errorObj).Set(Napi::String::New(node_rfc::__env, "message"), wrapString(errorInfo->message));
     return scope.Escape(errorObj);
@@ -106,6 +107,7 @@ Napi::Value AbapError(RFC_ERROR_INFO *errorInfo, bool alive)
     (errorObj).Set(Napi::String::New(node_rfc::__env, "alive"), Napi::Boolean::New(node_rfc::__env, alive));
     (errorObj).Set(Napi::String::New(node_rfc::__env, "name"), "ABAPError");
     (errorObj).Set(Napi::String::New(node_rfc::__env, "code"), Napi::Number::New(node_rfc::__env, errorInfo->code));
+    (errorObj).Set(Napi::String::New(node_rfc::__env, "codeString"), wrapString((SAP_UC *)RfcGetRcAsString(errorInfo->code)));
     (errorObj).Set(Napi::String::New(node_rfc::__env, "key"), wrapString(errorInfo->key));
     (errorObj).Set(Napi::String::New(node_rfc::__env, "message"), wrapString(errorInfo->message));
     (errorObj).Set(Napi::String::New(node_rfc::__env, "abapMsgClass"), wrapString(errorInfo->abapMsgClass));

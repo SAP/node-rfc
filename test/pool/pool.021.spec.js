@@ -22,7 +22,7 @@ const Promise = require("bluebird");
 describe('Pool', () => {
     const pool = new Pool(abapSystem);
 
-    test.only("Acquire 3, release 1", function () {
+    test("Acquire 3, release 1", function () {
         expect.assertions(2);
         return Promise.all([
             pool.acquire(),
