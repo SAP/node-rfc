@@ -202,7 +202,7 @@ export class Client {
             try {
                 this.__status.lastopen = Date.now();
                 this.__client.connect((err: any) => {
-                    if (err) {
+                    if (!isUndefined(err)) {
                         reject(err);
                     } else {
                         resolve(this);
@@ -225,7 +225,7 @@ export class Client {
         } else {
             return new Promise((resolve, reject) => {
                 this.__client.reopen((err: any) => {
-                    if (err) {
+                    if (!isUndefined(err)) {
                         reject(err);
                     } else {
                         resolve(this);
@@ -246,7 +246,7 @@ export class Client {
         } else {
             return new Promise((resolve, reject) => {
                 this.__client.close((err: any) => {
-                    if (err) {
+                    if (!isUndefined(err)) {
                         reject(err);
                     } else {
                         resolve();
@@ -306,7 +306,7 @@ export class Client {
                     rfmName,
                     rfmParams,
                     (err: any, res: RfcObject) => {
-                        if (err) {
+                        if (!isUndefined(err)) {
                             reject(err);
                         } else {
                             resolve(res);

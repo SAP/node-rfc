@@ -21,9 +21,9 @@ const abapSystem = setup.abapSystem;
 describe("Pool", () => {
     const pool = new Pool(abapSystem);
 
-    test("Release without client", function () {
+    test("Release without client", function (done) {
         expect.assertions(1);
-        return pool.acquire().then(() => {
+        pool.acquire().then(() => {
             pool.release().catch((ex) => {
                 expect(ex).toEqual(
                     expect.objectContaining(
@@ -32,11 +32,17 @@ describe("Pool", () => {
                         )
                     )
                 );
+                done();
             });
         });
     });
 
-    afterAll(function () {
-        return pool.releaseAll();
+    afterAll(function (done) {
+        setTimeout(() => {
+            pool.releaseAll().then((closed) => {
+                //console.log("released", closed);
+                done();
+            });
+        }, 2000);
     });
 });

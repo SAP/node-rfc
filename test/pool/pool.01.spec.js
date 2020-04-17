@@ -22,22 +22,32 @@ const Promise = setup.Promise;
 describe("Pool", () => {
     const pool = new Pool(abapSystem);
 
-    test("Acquire 3", function () {
-        expect.assertions(1);
-        return Promise.all([
-            pool.acquire(),
-            pool.acquire(),
-            pool.acquire(),
-        ]).then(() => {
-            expect(pool.status).toEqual(
-                expect.objectContaining({
-                    ready: 1,
-                    active: 3,
-                })
-            );
+    test("Acquire 3 / Release All", function (done) {
+        expect.assertions(3);
+        const ID = new Set();
+        function test(id) {
+            ID.add(id);
+            if (ID.size === 3) {
+                expect(pool.status.active).toBeGreaterThan(2);
+                setTimeout(() => {
+                    pool.releaseAll().then((closed) => {
+                        expect(closed).toBeGreaterThan(2);
+                        expect(closed).toBeLessThan(
+                            4 + pool.status.options.min
+                        );
+                        done();
+                    });
+                }, 2000);
+            }
+        }
+        pool.acquire().then((client) => {
+            test(client.id);
         });
-    });
-    afterAll(function () {
-        return pool.releaseAll();
+        pool.acquire().then((client) => {
+            test(client.id);
+        });
+        pool.acquire().then((client) => {
+            test(client.id);
+        });
     });
 });

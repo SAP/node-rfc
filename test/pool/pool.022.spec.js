@@ -22,63 +22,36 @@ describe("Pool", () => {
     const pool = new Pool(abapSystem);
 
     test("Acquire 3, release 1", function () {
-        expect.assertions(5);
+        expect.assertions(7);
 
         return (async () => {
-            expect(pool.status).toEqual({
-                active: 0,
-                ready: 2,
-                options: {
-                    min: 2,
-                    //max: 50
-                },
-            });
+            expect(pool.status.active).toEqual(0);
 
             let c1 = await pool.acquire();
-            expect(pool.status).toEqual({
-                active: 1,
-                ready: 1,
-                options: {
-                    min: 2,
-                    //max: 50
-                },
-            });
+            expect(pool.status.active).toEqual(1);
 
             let c2 = await pool.acquire();
-            expect(pool.status).toEqual({
-                active: 2,
-                ready: 1,
-                options: {
-                    min: 2,
-                    //max: 50
-                },
-            });
+            expect(pool.status.active).toEqual(2);
 
             let c3 = await pool.acquire();
-            expect(pool.status).toEqual({
-                active: 3,
-                ready: 1,
-                options: {
-                    min: 2,
-                    //max: 50
-                },
-            });
+            expect(pool.status.active).toEqual(3);
 
             await pool.release(c1);
-            expect(pool.status).toEqual({
-                active: 3,
-                ready: 1,
-                options: {
-                    min: 2,
-                    //max: 50
-                },
-            });
+            expect(pool.status.active).toEqual(2);
+
+            await pool.release(c2);
+            expect(pool.status.active).toEqual(1);
+
+            await pool.release(c3);
+            expect(pool.status.active).toEqual(0);
         })();
     });
 
-    afterAll(() => {
-        return async () => {
-            await releaseAll();
-        };
+    afterAll((done) => {
+        setTimeout(() => {
+            pool.releaseAll().then((closed) => {
+                done();
+            });
+        }, 2000);
     });
 });
