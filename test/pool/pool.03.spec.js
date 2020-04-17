@@ -23,33 +23,38 @@ describe("Pool", () => {
     const pool = new Pool(abapSystem);
 
     test("Acquire single", function () {
-        expect.assertions(3);
+        expect.assertions(2);
         return pool.acquire().then((client) => {
             expect(client.id).toBeGreaterThan(0);
             expect(client.isAlive).toBeTruthy();
-            expect(pool.status.ready).toBe(1);
         });
     });
 
-    test("Multiple acquire/release", function () {
-        const promises = [];
-        let id = new Set();
-        const COUNT = 1;
-        expect.assertions(COUNT + 1);
-        for (let i = 0; i < COUNT; i++) {
-            promises.push(
-                pool.acquire().then((c) => {
-                    expect(c.id).toBeGreaterThan(0);
-                    id.add(c.id);
-                })
-            );
+    test("Multiple acquire/release", function (done) {
+        let ID = new Set();
+        const COUNT = 10;
+        expect.assertions(COUNT + 2);
+        function test(client) {
+            expect(client.id).toBeGreaterThan(0);
+            ID.add(client.id);
+            if (ID.size === COUNT) {
+                expect(pool.status.active).toEqual(1);
+                expect(pool.status.ready).toEqual(2);
+                //console.log("pool", pool.status);
+                done();
+            }
         }
-        return Promise.all(promises).then(() => {
-            expect(id.size).toEqual(COUNT);
-        });
+        for (let i = 0; i < COUNT; i++) {
+            pool.acquire().then((c) => pool.release(c).then(() => test(c)));
+        }
     });
 
-    afterAll(function () {
-        return pool.releaseAll();
+    afterAll(function (done) {
+        setTimeout(() => {
+            pool.releaseAll().then((closed) => {
+                //console.log("released", closed);
+                done();
+            });
+        }, 2000);
     });
 });

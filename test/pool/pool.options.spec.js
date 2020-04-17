@@ -20,34 +20,40 @@ const abapSystem = setup.abapSystem;
 
 describe("Pool Options", () => {
     test("pool: default options", function (done) {
-        expect.assertions(5);
+        expect.assertions(6);
         const pool = new Pool(abapSystem);
         pool.acquire().then((client) => {
             expect(client.id).toBeGreaterThan(0);
             expect(client.isAlive).toBeTruthy();
-            expect(pool.status.ready).toBe(1);
+            expect(pool.status.active).toBe(1);
             expect(client.options.bcd).toEqual("string");
-            pool.releaseAll().then(() => {
-                expect(pool.status.ready).toBe(0);
-                done();
-            });
+            setTimeout(() => {
+                pool.releaseAll().then((closed) => {
+                    expect(pool.status.active).toBe(0);
+                    expect(pool.status.ready).toBe(0);
+                    done();
+                });
+            }, 2000);
         });
     });
 
     test("pool: bcd number", function (done) {
-        expect.assertions(5);
+        expect.assertions(6);
         const pool = new Pool(abapSystem, undefined, {
             bcd: "number",
         });
         pool.acquire().then((client) => {
             expect(client.id).toBeGreaterThan(0);
             expect(client.isAlive).toBeTruthy();
-            expect(pool.status.ready).toBe(1);
+            expect(pool.status.active).toBe(1);
             expect(client.options.bcd).toEqual("number");
-            pool.releaseAll().then(() => {
-                expect(pool.status.ready).toBe(0);
-                done();
-            });
+            setTimeout(() => {
+                pool.releaseAll().then((closed) => {
+                    expect(pool.status.ready).toBe(0);
+                    expect(pool.status.active).toBe(0);
+                    done();
+                });
+            }, 2000);
         });
     });
 });

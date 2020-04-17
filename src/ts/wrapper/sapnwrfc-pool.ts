@@ -5,6 +5,7 @@ import {
     RfcClientOptions,
 } from "./sapnwrfc-client";
 import { isUndefined } from "util";
+import { reject } from "bluebird";
 export { Promise };
 
 export interface RfcPoolOptions {
@@ -18,8 +19,8 @@ export class Pool {
     private __clientOptions: RfcClientOptions | undefined;
 
     private __clients: {
-        ready: Map<number, Promise<Client>>;
-        active: Set<number>;
+        ready: Array<Client>;
+        active: Map<number, Client>;
     };
 
     constructor(
@@ -34,63 +35,114 @@ export class Pool {
         this.__poolOptions = poolOptions;
         this.__clientOptions = clientOptions;
         this.__clients = {
-            ready: new Map(),
-            active: new Set(),
+            ready: [],
+            active: new Map(),
         };
-        for (let i = 0; i < this.__poolOptions.min; i++) {
-            let client = this.__clientOptions
-                ? new Client(this.__connectionParams, this.__clientOptions)
-                : new Client(this.__connectionParams);
-            this.__clients.ready.set(client.id, client.open());
-        }
+    }
+
+    newClient(): Client {
+        return this.__clientOptions
+            ? new Client(this.__connectionParams, this.__clientOptions)
+            : new Client(this.__connectionParams);
+    }
+
+    fill() {
+        const client = this.newClient();
+        client.connect((err) => {
+            if (isUndefined(err)) {
+                if (this.__clients.ready.length < this.__poolOptions.min) {
+                    this.__clients.ready.unshift(client);
+                    if (this.__clients.ready.length < this.__poolOptions.min)
+                        this.fill();
+                } else {
+                    client.close(() => {});
+                }
+            } else {
+                throw new Error(err);
+            }
+        });
     }
 
     acquire(): Promise<Client> {
-        for (
-            let i = this.__clients.ready.size;
-            i < this.__poolOptions.min;
-            i++
-        ) {
-            let client = this.__clientOptions
-                ? new Client(this.__connectionParams, this.__clientOptions)
-                : new Client(this.__connectionParams);
-            this.__clients.ready.set(client.id, client.open());
-        }
-        let id = this.__clients.ready.keys().next().value;
-        let client = this.__clients.ready.get(id) as Promise<Client>;
-        this.__clients.ready.delete(id);
-        this.__clients.active.add(id);
-        return client;
+        return new Promise(
+            (resolve: (arg: Client) => void, reject: (arg: any) => void) => {
+                const client = this.__clients.ready.pop();
+                if (this.__clients.ready.length < this.__poolOptions.min)
+                    this.fill();
+                if (client instanceof Client) {
+                    this.__clients.active.set(client.id, client);
+                    resolve(client);
+                } else {
+                    const newClient: Client = this.newClient();
+                    newClient.connect((err: any) => {
+                        if (!isUndefined(err)) {
+                            reject(err);
+                        } else {
+                            this.__clients.active.set(newClient.id, newClient);
+                            resolve(newClient);
+                        }
+                    });
+                }
+            }
+        );
     }
 
     release(client: Client): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (!(client instanceof Client))
-                reject(
-                    new TypeError(
-                        "Pool release() method requires a client instance as argument"
-                    )
-                );
-            const id = client.id;
-            client.close(() => {
-                resolve(id);
-            });
-        });
+        return new Promise(
+            (
+                resolve: (arg: number) => void,
+                reject: (arg: TypeError) => void
+            ) => {
+                if (!(client instanceof Client))
+                    reject(
+                        new TypeError(
+                            "Pool release() method requires a client instance as argument"
+                        )
+                    );
+                const id = client.id;
+                client.close(() => {
+                    this.__clients.active.delete(id);
+                    if (this.__clients.ready.length < this.__poolOptions.min) {
+                        this.fill();
+                    }
+                    resolve(id);
+                });
+            }
+        );
     }
 
-    releaseAll(): Promise<void> {
-        const result = [Promise];
-        this.__clients.ready.forEach((c, id) => {
-            result.push(c.then((client) => client.close(() => {})));
+    releaseAll(): Promise<number> {
+        return new Promise((resolve: (arg: number) => void) => {
+            const toBeClosed =
+                this.__clients.ready.length + this.__clients.active.size;
+            let closed = 0;
+            for (let [id, client] of this.__clients.active.entries()) {
+                client.close(() => {
+                    closed++;
+                    if (closed === toBeClosed) {
+                        this.__clients.ready = [];
+                        this.__clients.active = new Map();
+                        resolve(closed);
+                    }
+                });
+            }
+            this.__clients.ready.forEach((client) =>
+                client.close(() => {
+                    closed++;
+                    if (closed === toBeClosed) {
+                        this.__clients.ready = [];
+                        this.__clients.active = new Map();
+                        resolve(closed);
+                    }
+                })
+            );
         });
-        this.__clients.ready = new Map();
-        return Promise.all(result);
     }
 
     get status(): object {
         return {
             active: this.__clients.active.size,
-            ready: this.__clients.ready.size,
+            ready: this.__clients.ready.length,
             options: this.__poolOptions,
         };
     }

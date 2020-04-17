@@ -19,7 +19,7 @@ const Pool = setup.rfcPool;
 const abapSystem = setup.abapSystem;
 const Promise = setup.Promise;
 
-describe("Pool", () => {
+describe.skip("Pool", () => {
     const pool = new Pool(abapSystem);
 
     test("Acquire 3, release 1", function () {
@@ -42,7 +42,12 @@ describe("Pool", () => {
         });
     });
 
-    afterAll(function () {
-        return pool.releaseAll();
+    afterAll(function (done) {
+        setTimeout(() => {
+            pool.releaseAll().then((closed) => {
+                console.log("released", closed);
+                done();
+            });
+        }, 2000);
     });
 });

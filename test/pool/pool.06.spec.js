@@ -31,7 +31,12 @@ describe("Pool", () => {
         });
     });
 
-    afterAll(function () {
-        return pool.releaseAll();
+    afterAll(function (done) {
+        setTimeout(() => {
+            pool.releaseAll().then((closed) => {
+                //console.log("released", closed);
+                done();
+            });
+        }, 2000);
     });
 });
