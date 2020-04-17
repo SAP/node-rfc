@@ -195,15 +195,11 @@ public:
 
         if (errorInfo.code != RFC_OK)
         {
-            if (errorInfo.code == RFC_ABAP_EXCEPTION)
-            {
-                RfcResetServerContext(client->connectionHandle, NULL);
-            }
-            else if (
-                //errorInfo.code == RFC_COMMUNICATION_FAILURE || // Error in Network & Communication layer.
-                errorInfo.code == RFC_ABAP_RUNTIME_FAILURE || // SAP system runtime error (SYSTEM_FAILURE): Shortdump on the backend side.
-                errorInfo.code == RFC_ABAP_MESSAGE ||         // The called function module raised an E-, A- or X-Message.
-                errorInfo.code == RFC_EXTERNAL_FAILURE)       // Problems in the RFC runtime of the external program (i.e "this" library)
+            if (
+                errorInfo.code == RFC_COMMUNICATION_FAILURE || // Error in Network & Communication layer.
+                errorInfo.code == RFC_ABAP_RUNTIME_FAILURE ||  // SAP system runtime error (SYSTEM_FAILURE): Shortdump on the backend side.
+                errorInfo.code == RFC_ABAP_MESSAGE ||          // The called function module raised an E-, A- or X-Message.
+                errorInfo.code == RFC_EXTERNAL_FAILURE)        // Problems in the RFC runtime of the external program (i.e "this" library)
             {
                 // Connection closed, reopen
                 RFC_ERROR_INFO openErrorInfo;

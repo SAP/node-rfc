@@ -26,7 +26,6 @@ beforeAll(function (done) {
 afterAll(function (done) {
     client.close(function (err) {
         done(err);
-        client.free;
     });
 });
 

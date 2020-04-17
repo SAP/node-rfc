@@ -17,9 +17,9 @@
 const setup = require("../setup");
 const Pool = setup.rfcPool;
 const abapSystem = setup.abapSystem;
-const Promise = require("bluebird");
+const Promise = setup.Promise;
 
-describe('Pool', () => {
+describe("Pool", () => {
     const pool = new Pool(abapSystem);
 
     test("Unique client id across pools", function (done) {
@@ -29,15 +29,15 @@ describe('Pool', () => {
 
         const pool2 = new Pool(abapSystem);
 
-        promises.push(pool.acquire()
-            .then(client => {
+        promises.push(
+            pool.acquire().then((client) => {
                 c1 = client;
                 expect(c1.id).toBeGreaterThan(0);
                 expect(c1.isAlive).toBeTruthy();
             })
         );
-        promises.push(pool2.acquire()
-            .then(client => {
+        promises.push(
+            pool2.acquire().then((client) => {
                 c2 = client;
                 expect(c2.id).toBeGreaterThan(c1.id);
                 expect(c2.isAlive).toBeTruthy();
@@ -48,5 +48,5 @@ describe('Pool', () => {
 
     afterAll(function () {
         return pool.releaseAll();
-    })
-})
+    });
+});

@@ -12,12 +12,12 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-'use strict';
+"use strict";
 
-const setup = require('../setup');
+const setup = require("../setup");
 
-describe('Concurrency: Await', () => {
-    const WAIT_SECONDS = 1
+describe("Concurrency: Await", () => {
+    const WAIT_SECONDS = 1;
 
     test(`${setup.CONNECTIONS} sequential calls over single connection`, function (done) {
         expect.assertions(setup.CONNECTIONS);
@@ -26,8 +26,8 @@ describe('Concurrency: Await', () => {
             await client.open();
             for (let i = 0; i < setup.CONNECTIONS; i++) {
                 try {
-                    let res = await client.call('BAPI_USER_GET_DETAIL', {
-                        USERNAME: 'DEMO'
+                    let res = await client.call("BAPI_USER_GET_DETAIL", {
+                        USERNAME: "DEMO",
                     });
                     expect(res).toBeDefined();
                 } catch (ex) {
@@ -51,13 +51,17 @@ describe('Concurrency: Await', () => {
             for (const [i, c] of CLIENTS.entries()) {
                 try {
                     let res = await c.call(
-                        (i % 2 === 0) ? "BAPI_USER_GET_DETAIL" : "RFC_PING_AND_WAIT",
-                        (i % 2 === 0) ? {
-                            USERNAME: "DEMO",
-                        } : {
-                            SECONDS: WAIT_SECONDS,
-                        }
-                    )
+                        i % 2 === 0
+                            ? "BAPI_USER_GET_DETAIL"
+                            : "RFC_PING_AND_WAIT",
+                        i % 2 === 0
+                            ? {
+                                  USERNAME: "DEMO",
+                              }
+                            : {
+                                  SECONDS: WAIT_SECONDS,
+                              }
+                    );
                     expect(res).toBeDefined();
                     await c.close();
                     if (++callbackCount === setup.CONNECTIONS) done();
@@ -67,4 +71,4 @@ describe('Concurrency: Await', () => {
             }
         })();
     }, 36000);
-})
+});

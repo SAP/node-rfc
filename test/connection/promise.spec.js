@@ -17,21 +17,18 @@
 const setup = require("../setup");
 const client = setup.client();
 
-describe('Connection: Promises', () => {
-
+describe("Connection: Promises", () => {
     test("call() STFC_CONNECTION should return unicode string", function (done) {
-        client.open().then(clnt => {
-            clnt
-                .call("STFC_CONNECTION", {
-                    REQUTEXT: setup.UNICODETEST
-                })
-                .then(res => {
-                    expect(res).toBeDefined();
-                    expect(res).toHaveProperty("ECHOTEXT");
-                    expect(res.ECHOTEXT.indexOf(setup.UNICODETEST)).toEqual(0);
-                    clnt.close(() => done());
-                });
-        })
+        client.open().then((clnt) => {
+            clnt.call("STFC_CONNECTION", {
+                REQUTEXT: setup.UNICODETEST,
+            }).then((res) => {
+                expect(res).toBeDefined();
+                expect(res).toHaveProperty("ECHOTEXT");
+                expect(res.ECHOTEXT.indexOf(setup.UNICODETEST)).toEqual(0);
+                clnt.close(() => done());
+            });
+        });
     });
 
     test("call() STFC_STRUCTURE should return structure and table", function (done) {
@@ -51,55 +48,64 @@ describe('Connection: Promises', () => {
             RFCDATE: "20140101",
 
             RFCDATA1: "1DATA1",
-            RFCDATA2: "DATA222"
+            RFCDATA2: "DATA222",
         };
         let importTable = [importStruct];
 
-        client.open().then(clnt => {
+        client.open().then((clnt) => {
+            clnt.call("STFC_STRUCTURE", {
+                IMPORTSTRUCT: importStruct,
+                RFCTABLE: importTable,
+            }).then((res) => {
+                expect(res).toBeDefined();
+                expect(res).toHaveProperty("ECHOSTRUCT");
+                expect(res).toHaveProperty("RFCTABLE");
 
-            clnt
-                .call("STFC_STRUCTURE", {
-                    IMPORTSTRUCT: importStruct,
-                    RFCTABLE: importTable
-                })
-                .then(res => {
-                    expect(res).toBeDefined();
-                    expect(res).toHaveProperty("ECHOSTRUCT");
-                    expect(res).toHaveProperty("RFCTABLE");
+                expect(res.ECHOSTRUCT.RFCCHAR1).toEqual(importStruct.RFCCHAR1);
+                expect(res.ECHOSTRUCT.RFCCHAR2).toEqual(importStruct.RFCCHAR2);
+                expect(res.ECHOSTRUCT.RFCCHAR4).toEqual(importStruct.RFCCHAR4);
+                expect(res.ECHOSTRUCT.RFCFLOAT).toEqual(importStruct.RFCFLOAT);
+                expect(res.ECHOSTRUCT.RFCINT1).toEqual(importStruct.RFCINT1);
+                expect(res.ECHOSTRUCT.RFCINT2).toEqual(importStruct.RFCINT2);
+                expect(res.ECHOSTRUCT.RFCINT4).toEqual(importStruct.RFCINT4);
+                expect(res.ECHOSTRUCT.RFCDATA1).toContain(
+                    importStruct.RFCDATA1
+                );
+                expect(res.ECHOSTRUCT.RFCDATA2).toContain(
+                    importStruct.RFCDATA2
+                );
+                expect(res.ECHOSTRUCT.RFCHEX3.toString()).toEqual(
+                    importStruct.RFCHEX3.toString()
+                );
 
-                    expect(res.ECHOSTRUCT.RFCCHAR1).toEqual(importStruct.RFCCHAR1);
-                    expect(res.ECHOSTRUCT.RFCCHAR2).toEqual(importStruct.RFCCHAR2);
-                    expect(res.ECHOSTRUCT.RFCCHAR4).toEqual(importStruct.RFCCHAR4);
-                    expect(res.ECHOSTRUCT.RFCFLOAT).toEqual(importStruct.RFCFLOAT);
-                    expect(res.ECHOSTRUCT.RFCINT1).toEqual(importStruct.RFCINT1);
-                    expect(res.ECHOSTRUCT.RFCINT2).toEqual(importStruct.RFCINT2);
-                    expect(res.ECHOSTRUCT.RFCINT4).toEqual(importStruct.RFCINT4);
-                    expect(res.ECHOSTRUCT.RFCDATA1).toContain(importStruct.RFCDATA1);
-                    expect(res.ECHOSTRUCT.RFCDATA2).toContain(importStruct.RFCDATA2);
-                    expect(res.ECHOSTRUCT.RFCHEX3.toString()).toEqual(
-                        importStruct.RFCHEX3.toString()
-                    );
+                expect(res.RFCTABLE.length).toBe(2);
+                expect(res.RFCTABLE[1].RFCFLOAT).toEqual(
+                    importStruct.RFCFLOAT + 1
+                );
+                expect(res.RFCTABLE[1].RFCINT1).toEqual(
+                    importStruct.RFCINT1 + 1
+                );
+                expect(res.RFCTABLE[1].RFCINT2).toEqual(
+                    importStruct.RFCINT2 + 1
+                );
+                expect(res.RFCTABLE[1].RFCINT4).toEqual(
+                    importStruct.RFCINT4 + 1
+                );
 
-                    expect(res.RFCTABLE.length).toBe(2);
-                    expect(res.RFCTABLE[1].RFCFLOAT).toEqual(importStruct.RFCFLOAT + 1);
-                    expect(res.RFCTABLE[1].RFCINT1).toEqual(importStruct.RFCINT1 + 1);
-                    expect(res.RFCTABLE[1].RFCINT2).toEqual(importStruct.RFCINT2 + 1);
-                    expect(res.RFCTABLE[1].RFCINT4).toEqual(importStruct.RFCINT4 + 1);
-
-                    clnt.close(() => done())
-                });
-        })
+                clnt.close(() => done());
+            });
+        });
     });
 
     test("isAlive and ping() should be true when connected", function (done) {
         expect.assertions(2);
-        client.open().then(clnt => {
+        client.open().then((clnt) => {
             expect(clnt.isAlive).toBeTruthy();
-            return clnt.ping().then(res => {
+            return clnt.ping().then((res) => {
                 expect(res).toBeTruthy();
                 clnt.close(() => done());
             });
-        })
+        });
     });
 
     test("isAlive ands ping() should be false when disconnected", function (done) {
@@ -108,11 +114,11 @@ describe('Connection: Promises', () => {
             expect(client.isAlive).toBeTruthy();
             client.close().then(() => {
                 expect(client.isAlive).toBeFalsy();
-                client.ping().then(res => {
+                client.ping().then((res) => {
                     expect(res).toBeFalsy();
                     done();
-                })
-            })
-        })
+                });
+            });
+        });
     });
-})
+});

@@ -18,19 +18,25 @@ const setup = require("../setup");
 const Pool = setup.rfcPool;
 const abapSystem = setup.abapSystem;
 
-describe('Pool', () => {
+describe("Pool", () => {
     const pool = new Pool(abapSystem);
 
     test("Release without client", function () {
         expect.assertions(1);
         return pool.acquire().then(() => {
-            pool.release().catch(ex => {
-                expect(ex).toEqual(expect.objectContaining(new TypeError("Pool release() method requires a client instance as argument")));
+            pool.release().catch((ex) => {
+                expect(ex).toEqual(
+                    expect.objectContaining(
+                        new TypeError(
+                            "Pool release() method requires a client instance as argument"
+                        )
+                    )
+                );
             });
-        })
+        });
     });
 
     afterAll(function () {
         return pool.releaseAll();
-    })
-})
+    });
+});

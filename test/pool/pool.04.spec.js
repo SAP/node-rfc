@@ -17,9 +17,9 @@
 const setup = require("../setup");
 const Pool = setup.rfcPool;
 const abapSystem = setup.abapSystem;
-const Promise = require("bluebird");
+const Promise = setup.Promise;
 
-describe('Pool', () => {
+describe("Pool", () => {
     const pool = new Pool(abapSystem);
 
     test("Multiple acquire, release all", function () {
@@ -29,11 +29,11 @@ describe('Pool', () => {
         expect.assertions(COUNT + 1);
         for (let i = 0; i < COUNT; i++) {
             promises.push(
-                pool.acquire().then(c => {
+                pool.acquire().then((c) => {
                     expect(c.id).toBeGreaterThan(0);
                     id.add(c.id);
                 })
-            )
+            );
         }
         return Promise.all(promises).then(() => {
             expect(id.size).toEqual(COUNT);
@@ -42,5 +42,5 @@ describe('Pool', () => {
 
     afterAll(function () {
         return pool.releaseAll();
-    })
-})
+    });
+});

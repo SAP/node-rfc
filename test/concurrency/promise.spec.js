@@ -12,71 +12,69 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-'use strict';
+"use strict";
 
-const setup = require('../setup');
+const setup = require("../setup");
 
-describe('Concurrency: Promises', () => {
+describe("Concurrency: Promises", () => {
     const WAIT_SECONDS = 1;
 
-    test(
-        `${setup.CONNECTIONS} clients make concurrent call() requests`,
-        function (done) {
-            expect.assertions(setup.CONNECTIONS);
-            let callbackCount = 0;
+    test(`${setup.CONNECTIONS} clients make concurrent call() requests`, function (done) {
+        expect.assertions(setup.CONNECTIONS);
+        let callbackCount = 0;
 
-            for (let i = 0; i < setup.CONNECTIONS; i++) {
-                setup.client()
-                    .open()
-                    .then(client => {
-                        client.call(
-                                (i % 2 === 0) ? "BAPI_USER_GET_DETAIL" : "RFC_PING_AND_WAIT",
-                                (i % 2 === 0) ? {
-                                    USERNAME: "DEMO",
-                                } : {
-                                    SECONDS: WAIT_SECONDS,
-                                })
-                            .then(res => {
-                                expect(res).toBeDefined();
-                                client.close(() => {
-                                    if (++callbackCount === setup.CONNECTIONS)
-                                        done();
-                                });
-                            })
-                            .catch(ex => done(ex));
-                    })
-                    .catch(ex => done(ex));
-            }
-        },
-        15000
-    );
-
-    test(
-        `8 clients make concurrent ping() requests`,
-        function (done) {
-            const CLIENTS = 8;
-            expect.assertions(CLIENTS);
-            let callbackCount = 0;
-
-            for (let i = 0; i < CLIENTS; i++) {
-                setup.client()
-                    .open()
-                    .then(client =>
-                        client.ping()
-                        .then(res => {
-                            expect(res).toBeTruthy();
+        for (let i = 0; i < setup.CONNECTIONS; i++) {
+            setup
+                .client()
+                .open()
+                .then((client) => {
+                    client
+                        .call(
+                            i % 2 === 0
+                                ? "BAPI_USER_GET_DETAIL"
+                                : "RFC_PING_AND_WAIT",
+                            i % 2 === 0
+                                ? {
+                                      USERNAME: "DEMO",
+                                  }
+                                : {
+                                      SECONDS: WAIT_SECONDS,
+                                  }
+                        )
+                        .then((res) => {
+                            expect(res).toBeDefined();
                             client.close(() => {
-                                if (++callbackCount === CLIENTS)
+                                if (++callbackCount === setup.CONNECTIONS)
                                     done();
                             });
                         })
-                        .catch(ex => done(ex))
-                    )
-                    .catch(ex => done(ex));
-            }
-        },
-        10000
-    );
+                        .catch((ex) => done(ex));
+                })
+                .catch((ex) => done(ex));
+        }
+    }, 15000);
 
+    test(`8 clients make concurrent ping() requests`, function (done) {
+        const CLIENTS = 8;
+        expect.assertions(CLIENTS);
+        let callbackCount = 0;
 
-})
+        for (let i = 0; i < CLIENTS; i++) {
+            setup
+                .client()
+                .open()
+                .then((client) =>
+                    client
+                        .ping()
+                        .then((res) => {
+                            expect(res).toBeTruthy();
+                            client.close(() => {
+                                if (++callbackCount === CLIENTS) done();
+                            });
+                        })
+                        .catch((ex) => done(ex))
+                )
+                .catch((ex) => done(ex));
+        }
+    }, 10000);
+});

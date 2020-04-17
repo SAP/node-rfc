@@ -18,7 +18,7 @@ const setup = require("../setup");
 const Pool = setup.rfcPool;
 const abapSystem = setup.abapSystem;
 
-describe('Pool', () => {
+describe("Pool", () => {
     const pool = new Pool(abapSystem);
 
     test("Acquire 3, release 1", function () {
@@ -31,7 +31,7 @@ describe('Pool', () => {
                 options: {
                     min: 2,
                     //max: 50
-                }
+                },
             });
 
             let c1 = await pool.acquire();
@@ -41,7 +41,7 @@ describe('Pool', () => {
                 options: {
                     min: 2,
                     //max: 50
-                }
+                },
             });
 
             let c2 = await pool.acquire();
@@ -51,7 +51,7 @@ describe('Pool', () => {
                 options: {
                     min: 2,
                     //max: 50
-                }
+                },
             });
 
             let c3 = await pool.acquire();
@@ -61,24 +61,24 @@ describe('Pool', () => {
                 options: {
                     min: 2,
                     //max: 50
-                }
+                },
             });
 
             await pool.release(c1);
             expect(pool.status).toEqual({
-                active: 2,
-                ready: 2,
+                active: 3,
+                ready: 1,
                 options: {
                     min: 2,
                     //max: 50
-                }
+                },
             });
-        })()
+        })();
     });
 
     afterAll(() => {
-        return (async () => {
+        return async () => {
             await releaseAll();
-        });
-    })
-})
+        };
+    });
+});
