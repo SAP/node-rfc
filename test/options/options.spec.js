@@ -15,7 +15,7 @@
 "use strict";
 
 const setup = require("../setup");
-const client = setup.client()
+const client = setup.client();
 
 beforeEach(function (done) {
     client.reopen(function (err) {
@@ -31,40 +31,46 @@ afterEach(function (done) {
 
 const TIMEOUT = 10000;
 
-describe('RFC Call options', () => {
-
-    test("options: pass when some parameters skipped", function (done) {
-        let notRequested = [
-            "ET_COMPONENTS",
-            "ET_HDR_HIERARCHY",
-            "ET_MPACKAGES",
-            "ET_OPERATIONS",
-            "ET_OPR_HIERARCHY",
-            "ET_PRTS",
-            "ET_RELATIONS"
-        ];
-        client.invoke(
-            "EAM_TASKLIST_GET_DETAIL", {
-                IV_PLNTY: "A",
-                IV_PLNNR: "00100000"
-            },
-            function (err, res) {
-                expect(err).toBeUndefined();
-                expect(res).toBeDefined();
-                expect(res).toHaveProperty("ET_RETURN");
-                expect(res.ET_RETURN.length).toBe(0);
-                done();
-            }, {
-                notRequested: notRequested
-            }
-        );
-    }, TIMEOUT);
+describe("RFC Call options", () => {
+    test(
+        "options: pass when some parameters skipped",
+        function (done) {
+            let notRequested = [
+                "ET_COMPONENTS",
+                "ET_HDR_HIERARCHY",
+                "ET_MPACKAGES",
+                "ET_OPERATIONS",
+                "ET_OPR_HIERARCHY",
+                "ET_PRTS",
+                "ET_RELATIONS",
+            ];
+            client.invoke(
+                "EAM_TASKLIST_GET_DETAIL",
+                {
+                    IV_PLNTY: "A",
+                    IV_PLNNR: "00100000",
+                },
+                function (err, res) {
+                    expect(err).toBeUndefined();
+                    expect(res).toBeDefined();
+                    expect(res).toHaveProperty("ET_RETURN");
+                    expect(res.ET_RETURN.length).toBe(0);
+                    done();
+                },
+                {
+                    notRequested: notRequested,
+                }
+            );
+        },
+        TIMEOUT
+    );
 
     test("options: error when all requested", function (done) {
         client.invoke(
-            "EAM_TASKLIST_GET_DETAIL", {
+            "EAM_TASKLIST_GET_DETAIL",
+            {
                 IV_PLNTY: "A",
-                IV_PLNNR: "00100000"
+                IV_PLNNR: "00100000",
             },
             function (err, res) {
                 // ET_RETURN error if all params requested
@@ -86,11 +92,11 @@ describe('RFC Call options', () => {
                         MESSAGE_V4: "",
                         PARAMETER: "HIERARCHY",
                         ROW: 0,
-                        FIELD: ""
+                        FIELD: "",
                     })
                 );
                 done();
             }
         );
     });
-})
+});

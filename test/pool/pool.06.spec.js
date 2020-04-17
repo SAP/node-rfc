@@ -18,21 +18,20 @@ const setup = require("../setup");
 const Pool = setup.rfcPool;
 const abapSystem = setup.abapSystem;
 
-describe('Pool', () => {
+describe("Pool", () => {
     const pool = new Pool(abapSystem);
 
-    test("Release", function () {
+    test("Release", function (done) {
         expect.assertions(1);
-        return pool.acquire().then(client => {
-            const readyClients = pool.status.ready;
-            pool.release(client)
-                .then(() => {
-                    expect(pool.status.ready).toBe(1 + readyClients);
-                })
-        })
+        pool.acquire().then((client) => {
+            pool.release(client).then(() => {
+                expect(pool.status.ready).toBe(1);
+                done();
+            });
+        });
     });
 
     afterAll(function () {
         return pool.releaseAll();
-    })
-})
+    });
+});

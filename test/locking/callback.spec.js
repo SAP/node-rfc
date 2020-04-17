@@ -12,14 +12,14 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-'use strict';
+"use strict";
 
-const setup = require('../setup');
+const setup = require("../setup");
 
-describe('Concurrency: Callbacks', () => {
+describe("Concurrency: Callbacks", () => {
     const WAIT_SECONDS = 1;
 
-    test('invoke() and invoke ()', function (done) {
+    test("invoke() and invoke ()", function (done) {
         expect.assertions(7);
 
         let count = 0;
@@ -27,13 +27,16 @@ describe('Concurrency: Callbacks', () => {
         client.connect((err) => {
             if (err) return done(err);
 
-            client.invoke('RFC_PING_AND_WAIT', {
-                    SECONDS: WAIT_SECONDS
+            client.invoke(
+                "RFC_PING_AND_WAIT",
+                {
+                    SECONDS: WAIT_SECONDS,
                 },
                 function (err) {
                     if (err) return done(err);
                     count++;
-                });
+                }
+            );
 
             // Invoke not blocking
             expect(count).toEqual(0);
@@ -41,13 +44,16 @@ describe('Concurrency: Callbacks', () => {
             // 1 call is running
             expect(client.runningRFCCalls).toEqual(1);
 
-            client.invoke('RFC_PING_AND_WAIT', {
-                    SECONDS: WAIT_SECONDS
+            client.invoke(
+                "RFC_PING_AND_WAIT",
+                {
+                    SECONDS: WAIT_SECONDS,
                 },
                 function (err) {
                     if (err) return done(err);
                     count++;
-                });
+                }
+            );
 
             // Invoke not blocking
             expect(count).toEqual(0);
@@ -55,31 +61,35 @@ describe('Concurrency: Callbacks', () => {
             // 1 calls are running
             expect(client.runningRFCCalls).toEqual(1);
 
-            client.close(err => {
+            client.close((err) => {
                 // Close rejected because of ongoing calls
-                expect(err).toEqual('Close rejected because 2 RFC calls still running');
+                expect(err).toEqual(
+                    "Close rejected because 2 RFC calls still running"
+                );
                 expect(count).toEqual(0);
                 done();
             });
             // Close not blocking
             expect(count).toEqual(0);
-        })
-
+        });
     }, 6000);
 
-    test('invoke() and ping ()', function (done) {
+    test("invoke() and ping ()", function (done) {
         expect.assertions(6);
         let count = 0;
 
         const client = setup.client();
         client.connect((err) => {
             if (err) return done(err);
-            client.invoke('RFC_PING_AND_WAIT', {
-                    SECONDS: WAIT_SECONDS
+            client.invoke(
+                "RFC_PING_AND_WAIT",
+                {
+                    SECONDS: WAIT_SECONDS,
                 },
                 function (err, res) {
                     count++;
-                });
+                }
+            );
             // Invoke not blocking
             expect(count).toEqual(0);
 
@@ -91,18 +101,20 @@ describe('Concurrency: Callbacks', () => {
             // Ping not blocking
             expect(count).toEqual(0);
 
-            client.close(err => {
+            client.close((err) => {
                 // Close rejected because of RFC call running
-                expect(err).toEqual('Close rejected because 1 RFC calls still running');
+                expect(err).toEqual(
+                    "Close rejected because 1 RFC calls still running"
+                );
                 expect(count).toEqual(0);
                 done();
-            })
+            });
             // Close not blocking
             expect(count).toEqual(0);
         });
     }, 2000);
 
-    test('ping() and ping ()', function (done) {
+    test("ping() and ping ()", function (done) {
         const COUNT = setup.CONNECTIONS;
         expect.assertions(3 + COUNT * 3);
         let count = 0;
@@ -111,7 +123,7 @@ describe('Concurrency: Callbacks', () => {
         client.connect((err) => {
             if (err) return done(err);
             for (let i = 0; i < COUNT; i++) {
-                client.ping().then(res => {
+                client.ping().then((res) => {
                     expect(res).toBeTruthy();
                     count++;
                 });
@@ -120,36 +132,41 @@ describe('Concurrency: Callbacks', () => {
                 expect(count).toEqual(0);
             }
 
-            client.close(err => {
+            client.close((err) => {
                 // Close scheduled after ping calls completed
                 expect(err).toBeUndefined();
                 expect(count).toEqual(COUNT);
                 done();
             });
             expect(count).toEqual(0);
-        })
+        });
     }, 2000);
 
-    test('invoke() and close ()', function (done) {
+    test("invoke() and close ()", function (done) {
         expect.assertions(4);
         let count = 0;
 
         const client = setup.client();
         client.connect((err) => {
-            if (err) return done(err);;
+            if (err) return done(err);
 
-            client.invoke('RFC_PING_AND_WAIT', {
-                    SECONDS: WAIT_SECONDS
+            client.invoke(
+                "RFC_PING_AND_WAIT",
+                {
+                    SECONDS: WAIT_SECONDS,
                 },
                 function (err) {
                     if (err) return done(err);
                     count++;
-                });
+                }
+            );
             expect(count).toEqual(0);
 
-            client.close(err => {
+            client.close((err) => {
                 // Close rejected because of RFC call running
-                expect(err).toEqual('Close rejected because 1 RFC calls still running');
+                expect(err).toEqual(
+                    "Close rejected because 1 RFC calls still running"
+                );
                 expect(count).toEqual(0);
                 done();
             });
@@ -158,7 +175,7 @@ describe('Concurrency: Callbacks', () => {
         });
     }, 3000);
 
-    test('ping() and close ()', function (done) {
+    test("ping() and close ()", function (done) {
         expect.assertions(5);
         let count = 0;
 
@@ -172,7 +189,7 @@ describe('Concurrency: Callbacks', () => {
             });
             expect(count).toEqual(0);
 
-            client.close(err => {
+            client.close((err) => {
                 expect(err).toBeUndefined();
                 // Close scheduled after ping()
                 expect(count).toEqual(1);
@@ -182,4 +199,4 @@ describe('Concurrency: Callbacks', () => {
             expect(count).toEqual(0);
         });
     }, 3000);
-})
+});

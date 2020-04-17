@@ -20,16 +20,16 @@ const packageJSON = require("../../package.json");
 
 describe("Connection: Callbacks", () => {
     test("Client and package versions", function (done) {
-        expect(packageJSON.version).toBe(
-            client.version.binding
-        );
+        expect(packageJSON.version).toBe(client.version.binding);
         done();
     });
 
     test("Typescript Promises replaced by Bluebird", () => {
         const promise = setup.Promise;
         expect(promise).toEqual(expect.anything());
-        expect(packageJSON.dependencies.bluebird.indexOf(promise.version)).toBeGreaterThan(-1);
+        expect(
+            packageJSON.dependencies.bluebird.indexOf(promise.version)
+        ).toBeGreaterThan(-1);
     });
 
     test("Client getters", function () {
@@ -40,10 +40,7 @@ describe("Connection: Callbacks", () => {
         expect(client.version).toHaveProperty("major");
         expect(client.version).toHaveProperty("minor");
         expect(client.version).toHaveProperty("patchLevel");
-        expect(client.version).toHaveProperty(
-            "binding",
-            packageJSON.version
-        );
+        expect(client.version).toHaveProperty("binding", packageJSON.version);
 
         expect(client.options).toHaveProperty("bcd");
         expect(client.options).toHaveProperty("date");
@@ -51,10 +48,10 @@ describe("Connection: Callbacks", () => {
 
         return expect(
             () =>
-            (client.version = {
-                a: 1,
-                b: 2,
-            })
+                (client.version = {
+                    a: 1,
+                    b: 2,
+                })
         ).toThrow(
             new TypeError(
                 "Cannot set property version of #<Client> which has only a getter"
@@ -71,7 +68,7 @@ describe("Connection: Callbacks", () => {
     });
 
     test("isAlive and ping() should be true when connected", function (done) {
-        client.connect(err => {
+        client.connect((err) => {
             if (err) return done(err);
             expect(client.isAlive).toBeTruthy();
             client.ping((err, res) => {
@@ -82,7 +79,7 @@ describe("Connection: Callbacks", () => {
     });
 
     test("connectionInfo should return connection information when connected", function (done) {
-        client.connect(err => {
+        client.connect((err) => {
             if (err) return done(err);
             let connectionInfo = client.connectionInfo;
             expect(Object.keys(connectionInfo).sort()).toEqual(
@@ -124,7 +121,7 @@ describe("Connection: Callbacks", () => {
             );
 
             client.close(() => done());
-        })
+        });
     });
 
     test("connectionInfo() should return {} when disconnected", function (done) {
@@ -135,7 +132,7 @@ describe("Connection: Callbacks", () => {
 
     test("reopen() should reopen the connection", function (done) {
         expect(client.isAlive).toBeFalsy();
-        client.connect(err => {
+        client.connect((err) => {
             if (err) return done(err);
             expect(client.isAlive).toBeTruthy();
             client.reopen(function (err) {
@@ -155,10 +152,11 @@ describe("Connection: Callbacks", () => {
     });
 
     test("invoke() STFC_CONNECTION should return unicode string", function (done) {
-        client.connect(err => {
+        client.connect((err) => {
             if (err) return done(err);
             client.invoke(
-                "STFC_CONNECTION", {
+                "STFC_CONNECTION",
+                {
                     REQUTEXT: setup.UNICODETEST,
                 },
                 function (err, res) {
@@ -200,7 +198,8 @@ describe("Connection: Callbacks", () => {
         }
         client.connect(() => {
             client.invoke(
-                "STFC_STRUCTURE", {
+                "STFC_STRUCTURE",
+                {
                     IMPORTSTRUCT: importStruct,
                     RFCTABLE: importTable,
                 },
@@ -221,7 +220,10 @@ describe("Connection: Callbacks", () => {
                             //    console.log(importStruct[k][u], res.ECHOSTRUCT[k][u])
                             //}
                             expect(
-                                Buffer.compare(importStruct[k], res.ECHOSTRUCT[k])
+                                Buffer.compare(
+                                    importStruct[k],
+                                    res.ECHOSTRUCT[k]
+                                )
                             ).toEqual(0);
                         } else {
                             expect(res.ECHOSTRUCT[k]).toEqual(importStruct[k]);
@@ -237,9 +239,9 @@ describe("Connection: Callbacks", () => {
                         let rowOut = res.RFCTABLE[i];
                         for (let k in rowIn) {
                             if (k === "RFCHEX3") {
-                                expect(Buffer.compare(rowIn[k], rowOut[k])).toEqual(
-                                    0
-                                );
+                                expect(
+                                    Buffer.compare(rowIn[k], rowOut[k])
+                                ).toEqual(0);
                             } else {
                                 expect(rowIn[k]).toEqual(rowOut[k]);
                             }
@@ -257,7 +259,8 @@ describe("Connection: Callbacks", () => {
                     );
 
                     client.close(() => done());
-                })
+                }
+            );
         });
     });
 });

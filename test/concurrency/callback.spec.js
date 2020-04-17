@@ -12,66 +12,58 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-'use strict';
+"use strict";
 
-const setup = require('../setup');
+const setup = require("../setup");
 
-describe('Concurrency: Callbacks', () => {
+describe("Concurrency: Callbacks", () => {
     const WAIT_SECONDS = 1;
 
-    test(
-        `${setup.CONNECTIONS} clients make concurrent invoke() requests`,
-        function (done) {
-            expect.assertions(setup.CONNECTIONS);
-            let callbackCount = 0;
+    test(`${setup.CONNECTIONS} clients make concurrent invoke() requests`, function (done) {
+        expect.assertions(setup.CONNECTIONS);
+        let callbackCount = 0;
 
-            for (let i = 0; i < setup.CONNECTIONS; i++) {
-                const c = setup.client();
-                c.connect((err) => {
-                    if (err) return done(err);
-                    c.invoke(
-                        (i % 2 === 0) ? "BAPI_USER_GET_DETAIL" : "RFC_PING_AND_WAIT",
-                        (i % 2 === 0) ? {
-                            USERNAME: "DEMO",
-                        } : {
-                            SECONDS: WAIT_SECONDS,
-                        },
-                        (err, res) => {
-                            if (err) return done(err);
-                            expect(res).toBeDefined();
-                            c.close(() => {
-                                if (++callbackCount === setup.CONNECTIONS)
-                                    done();
-                            });
-                        }
-                    );
-                });
-            }
-        },
-        10000
-    );
-
-    test(
-        `${setup.CONNECTIONS} clients make concurrent ping() requests`,
-        function (done) {
-            expect.assertions(setup.CONNECTIONS);
-            let callbackCount = 0;
-
-            for (let i = 0; i < setup.CONNECTIONS; i++) {
-                const c = setup.client();
-                c.connect((err) => {
-                    if (err) return done(err);
-
-                    c.ping((err, res) => {
-                        expect(res).toBeTruthy();
+        for (let i = 0; i < setup.CONNECTIONS; i++) {
+            const c = setup.client();
+            c.connect((err) => {
+                if (err) return done(err);
+                c.invoke(
+                    i % 2 === 0 ? "BAPI_USER_GET_DETAIL" : "RFC_PING_AND_WAIT",
+                    i % 2 === 0
+                        ? {
+                              USERNAME: "DEMO",
+                          }
+                        : {
+                              SECONDS: WAIT_SECONDS,
+                          },
+                    (err, res) => {
+                        if (err) return done(err);
+                        expect(res).toBeDefined();
                         c.close(() => {
-                            if (++callbackCount === setup.CONNECTIONS)
-                                done();
-                        })
+                            if (++callbackCount === setup.CONNECTIONS) done();
+                        });
+                    }
+                );
+            });
+        }
+    }, 10000);
+
+    test(`${setup.CONNECTIONS} clients make concurrent ping() requests`, function (done) {
+        expect.assertions(setup.CONNECTIONS);
+        let callbackCount = 0;
+
+        for (let i = 0; i < setup.CONNECTIONS; i++) {
+            const c = setup.client();
+            c.connect((err) => {
+                if (err) return done(err);
+
+                c.ping((err, res) => {
+                    expect(res).toBeTruthy();
+                    c.close(() => {
+                        if (++callbackCount === setup.CONNECTIONS) done();
                     });
                 });
-            }
-        },
-        10000
-    );
-})
+            });
+        }
+    }, 10000);
+});

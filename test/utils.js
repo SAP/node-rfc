@@ -1,5 +1,5 @@
 module.exports = {
-    toABAPdate: function(date) {
+    toABAPdate: function (date) {
         // Date to ABAP YYYYMMDD
         if (!(date instanceof Date))
             return new TypeError(`Date object required: ${date}`);
@@ -8,11 +8,11 @@ module.exports = {
         return [
             date.getFullYear(),
             mm > 9 ? mm : "0" + mm,
-            dd > 9 ? dd : "0" + dd
+            dd > 9 ? dd : "0" + dd,
         ].join("");
     },
 
-    fromABAPdate: function(dats) {
+    fromABAPdate: function (dats) {
         // ABAP YYYYMMDD to Date()
         return new Date(
             0 | dats.substring(0, 4),
@@ -53,5 +53,5 @@ module.exports = {
         */
     },
     // https://nodejs.org/api/buffer.html#buffer_buffers_and_character_encodings
-    XBYTES_TEST: Buffer.from("01414243444549500051fdfeff", "hex")
+    XBYTES_TEST: Buffer.from("01414243444549500051fdfeff", "hex"),
 };

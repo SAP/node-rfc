@@ -15,15 +15,13 @@
 "use strict";
 
 const setup = require("../setup");
-const client = setup.client()
+const client = setup.client();
 
-describe('Errors: Connect', () => {
-
+describe("Errors: Connect", () => {
     test("error: new client requires connection parameters", function () {
-        return expect(() => new setup.rfcClient())
-            .toThrow(
-                new TypeError("Connection parameters must be an object")
-            )
+        return expect(() => new setup.rfcClient()).toThrow(
+            new TypeError("Connection parameters must be an object")
+        );
     });
 
     test("error: connect() requires minimum of connection parameters", function (done) {
@@ -35,10 +33,11 @@ describe('Errors: Connect', () => {
             expect(err).toBeDefined();
             expect(err).toEqual(
                 expect.objectContaining({
-                    message: "Parameter ASHOST, GWHOST, MSHOST or PORT is missing.",
+                    message:
+                        "Parameter ASHOST, GWHOST, MSHOST or PORT is missing.",
                     code: 20,
                     key: "RFC_INVALID_PARAMETER",
-                    name: "RfcLibError"
+                    name: "RfcLibError",
                 })
             );
             done();
@@ -56,7 +55,7 @@ describe('Errors: Connect', () => {
                 expect.objectContaining({
                     message: "Name or password is incorrect (repeat logon)",
                     code: 2,
-                    key: "RFC_LOGON_FAILURE"
+                    key: "RFC_LOGON_FAILURE",
                 })
             );
             done();
@@ -64,9 +63,9 @@ describe('Errors: Connect', () => {
     });
 
     test("error: close() over closed connection", function (done) {
-        client.close(err => {
+        client.close((err) => {
             expect(client.isAlive).toBeFalsy();
             done();
         });
     });
-})
+});

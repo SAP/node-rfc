@@ -13,26 +13,27 @@
 // language governing permissions and limitations under the License.
 
 "use strict";
-const setup = require('./setup');
+const setup = require("./setup");
 const Throughput = setup.rfcThroughput;
 
 const client = setup.client();
 const throughput = new Throughput();
 
-describe('Throughput', () => {
-
+describe("Throughput", () => {
     test("Throughput set on closed client", function (done) {
         expect(() => throughput.setOnConnection(client)).toThrow(
             new Error(`Throughput can't be set on closed client: ${client.id}`)
-        )
+        );
         expect(throughput.clients.size).toEqual(0);
         done();
     });
 
     test("Throughput set on invalid client", function (done) {
         expect(() => throughput.setOnConnection(1)).toThrow(
-            new Error("Client instance or array of Client instances required as argument")
-        )
+            new Error(
+                "Client instance or array of Client instances required as argument"
+            )
+        );
         expect(throughput.clients.size).toEqual(0);
         done();
     });
@@ -56,7 +57,7 @@ describe('Throughput', () => {
                 applicationTime: 0,
                 totalTime: 0,
                 serializationTime: 0,
-                deserializationTime: 0
+                deserializationTime: 0,
             })
         );
         done();
@@ -106,25 +107,25 @@ describe('Throughput', () => {
                 applicationTime: 0,
                 totalTime: 0,
                 serializationTime: 0,
-                deserializationTime: 0
+                deserializationTime: 0,
             });
 
-            await client.call('STFC_CONNECTION', {
-                REQUTEXT: 'hello'
+            await client.call("STFC_CONNECTION", {
+                REQUTEXT: "hello",
             });
             expect(throughput.status).toMatchObject({
-                "numberOfCalls": 2,
-                "sentBytes": 1089,
-                "receivedBytes": 2812,
+                numberOfCalls: 2,
+                sentBytes: 1089,
+                receivedBytes: 2812,
             });
 
-            await client.call('STFC_CONNECTION', {
-                REQUTEXT: 'hello'
+            await client.call("STFC_CONNECTION", {
+                REQUTEXT: "hello",
             });
             expect(throughput.status).toMatchObject({
-                "numberOfCalls": 3,
-                "sentBytes": 1737,
-                "receivedBytes": 4022,
+                numberOfCalls: 3,
+                sentBytes: 1737,
+                receivedBytes: 4022,
             });
 
             throughput.reset();
@@ -135,16 +136,16 @@ describe('Throughput', () => {
                 applicationTime: 0,
                 totalTime: 0,
                 serializationTime: 0,
-                deserializationTime: 0
+                deserializationTime: 0,
             });
 
-            await client.call('BAPI_USER_GET_DETAIL', {
-                USERNAME: 'DEMO'
+            await client.call("BAPI_USER_GET_DETAIL", {
+                USERNAME: "DEMO",
             });
             expect(throughput.status).toMatchObject({
-                "numberOfCalls": 87,
-                "sentBytes": 64968,
-                "receivedBytes": 393716,
+                numberOfCalls: 87,
+                sentBytes: 64968,
+                receivedBytes: 393716,
             });
 
             throughput.removeFromConnection(client);

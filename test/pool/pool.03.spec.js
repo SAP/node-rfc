@@ -19,19 +19,16 @@ const Pool = setup.rfcPool;
 const abapSystem = setup.abapSystem;
 const Promise = require("bluebird");
 
-
-
-describe('Pool', () => {
+describe("Pool", () => {
     const pool = new Pool(abapSystem);
 
     test("Acquire single", function () {
         expect.assertions(3);
-        return pool.acquire()
-            .then(client => {
-                expect(client.id).toBeGreaterThan(0);
-                expect(client.isAlive).toBeTruthy();
-                expect(pool.status.ready).toBe(1);
-            })
+        return pool.acquire().then((client) => {
+            expect(client.id).toBeGreaterThan(0);
+            expect(client.isAlive).toBeTruthy();
+            expect(pool.status.ready).toBe(1);
+        });
     });
 
     test("Multiple acquire/release", function () {
@@ -41,18 +38,18 @@ describe('Pool', () => {
         expect.assertions(COUNT + 1);
         for (let i = 0; i < COUNT; i++) {
             promises.push(
-                pool.acquire().then(c => {
+                pool.acquire().then((c) => {
                     expect(c.id).toBeGreaterThan(0);
                     id.add(c.id);
                 })
-            )
+            );
         }
         return Promise.all(promises).then(() => {
-            expect(id.size).toEqual(COUNT)
+            expect(id.size).toEqual(COUNT);
         });
     });
 
     afterAll(function () {
         return pool.releaseAll();
-    })
-})
+    });
+});

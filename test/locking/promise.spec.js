@@ -12,68 +12,75 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-'use strict';
+"use strict";
 
-const setup = require('../setup');
+const setup = require("../setup");
 
-const Promise = require('bluebird');
-
-describe('Concurrency: Promises', () => {
+describe("Concurrency: Promises", () => {
     const WAIT_SECONDS = 1;
 
-    test('call() and call ()', function (done) {
+    test("call() and call ()", function (done) {
         expect.assertions(5);
 
         let count = 0;
-        return setup.client()
+        return setup
+            .client()
             .open()
-            .then(client => {
-
-                client.call('RFC_PING_AND_WAIT', {
-                    SECONDS: WAIT_SECONDS
-                }).then(() => {
-                    count++;
-                })
+            .then((client) => {
+                client
+                    .call("RFC_PING_AND_WAIT", {
+                        SECONDS: WAIT_SECONDS,
+                    })
+                    .then(() => {
+                        count++;
+                    });
                 // Call not blocking
                 expect(count).toEqual(0);
 
-                client.call('RFC_PING_AND_WAIT', {
-                    SECONDS: WAIT_SECONDS
-                }).then(() => {
-                    count++;
-                })
+                client
+                    .call("RFC_PING_AND_WAIT", {
+                        SECONDS: WAIT_SECONDS,
+                    })
+                    .then(() => {
+                        count++;
+                    });
                 expect(count).toEqual(0);
 
-                client.call('RFC_PING_AND_WAIT', {
-                    SECONDS: WAIT_SECONDS
-                }).then(() => {
-                    count++;
-                })
+                client
+                    .call("RFC_PING_AND_WAIT", {
+                        SECONDS: WAIT_SECONDS,
+                    })
+                    .then(() => {
+                        count++;
+                    });
                 expect(count).toEqual(0);
 
-                client.close().catch(ex => {
-                    expect(ex).toEqual("Close rejected because 3 RFC calls still running");
+                client.close().catch((ex) => {
+                    expect(ex).toEqual(
+                        "Close rejected because 3 RFC calls still running"
+                    );
                     done();
-                })
+                });
                 expect(count).toEqual(0);
             });
     }, 6000);
 
-    test('call() and ping ()', function (done) {
+    test("call() and ping ()", function (done) {
         expect.assertions(5);
         let count = 0;
-        setup.client()
+        setup
+            .client()
             .open()
-            .then(client => {
-                client.call('RFC_PING_AND_WAIT', {
-                    SECONDS: WAIT_SECONDS
-                }).then(() =>
-                    count++
-                );
+            .then((client) => {
+                client
+                    .call("RFC_PING_AND_WAIT", {
+                        SECONDS: WAIT_SECONDS,
+                    })
+                    .then(() => count++);
 
                 expect(count).toEqual(0);
 
-                client.ping().then(res => {
+                client.ping().then((res) => {
                     expect(res).toBeTruthy();
                     count++;
                 });
@@ -81,35 +88,38 @@ describe('Concurrency: Promises', () => {
                 // Ping not blocking
                 expect(count).toEqual(0);
 
-                client.close().catch(ex => {
-                    expect(ex).toEqual("Close rejected because 1 RFC calls still running");
+                client.close().catch((ex) => {
+                    expect(ex).toEqual(
+                        "Close rejected because 1 RFC calls still running"
+                    );
                     done();
-                })
+                });
                 expect(count).toEqual(0);
             });
     }, 2000);
 
-    test('ping() and ping ()', function (done) {
+    test("ping() and ping ()", function (done) {
         expect.assertions(8);
         let count = 0;
-        setup.client()
+        setup
+            .client()
             .open()
-            .then(client => {
-                client.ping().then(res => {
+            .then((client) => {
+                client.ping().then((res) => {
                     expect(res).toBeTruthy();
                     count++;
                 });
 
                 expect(count).toEqual(0);
 
-                client.ping().then(res => {
+                client.ping().then((res) => {
                     expect(res).toBeTruthy();
                     count++;
                 });
 
                 expect(count).toEqual(0);
 
-                client.ping().then(res => {
+                client.ping().then((res) => {
                     expect(res).toBeTruthy();
                     count++;
                 });
@@ -121,71 +131,66 @@ describe('Concurrency: Promises', () => {
                     // Close scheduled after invoke() and ping()
                     expect(count).toEqual(3);
                     done();
-                })
+                });
                 expect(count).toEqual(0);
             });
     }, 2000);
 
-
-    test('call() and close ()', function (done) {
+    test("call() and close ()", function (done) {
         expect.assertions(3);
 
         let count = 0;
 
-        setup.client()
+        setup
+            .client()
             .open()
-            .then(client => {
-
+            .then((client) => {
                 client
-                    .call('RFC_PING_AND_WAIT', {
-                        SECONDS: WAIT_SECONDS
+                    .call("RFC_PING_AND_WAIT", {
+                        SECONDS: WAIT_SECONDS,
                     })
                     .then(() => {
-                        count++
-                    });
-
-                // Call not blocking
-                expect(count).toEqual(0);
-
-                client.close().catch(ex => {
-                    expect(ex).toEqual("Close rejected because 1 RFC calls still running");
-                    done();
-                })
-                // Close not blocking
-                expect(count).toEqual(0);
-            })
-
-    }, 2000);
-
-    test('ping() and close ()', function (done) {
-        expect.assertions(4);
-
-        let count = 0;
-
-        setup.client()
-            .open()
-            .then(client => {
-
-                client
-                    .ping()
-                    .then(res => {
-                        expect(res).toBeTruthy();
                         count++;
                     });
 
                 // Call not blocking
                 expect(count).toEqual(0);
 
-                client
-                    .close()
-                    .then(() => {
-                        // Close scheduled after invokes completed
-                        expect(count).toEqual(1);
-                        done();
-                    });
+                client.close().catch((ex) => {
+                    expect(ex).toEqual(
+                        "Close rejected because 1 RFC calls still running"
+                    );
+                    done();
+                });
                 // Close not blocking
                 expect(count).toEqual(0);
-            })
-
+            });
     }, 2000);
-})
+
+    test("ping() and close ()", function (done) {
+        expect.assertions(4);
+
+        let count = 0;
+
+        setup
+            .client()
+            .open()
+            .then((client) => {
+                client.ping().then((res) => {
+                    expect(res).toBeTruthy();
+                    count++;
+                });
+
+                // Call not blocking
+                expect(count).toEqual(0);
+
+                client.close().then(() => {
+                    // Close scheduled after invokes completed
+                    expect(count).toEqual(1);
+                    done();
+                });
+                // Close not blocking
+                expect(count).toEqual(0);
+            });
+    }, 2000);
+});

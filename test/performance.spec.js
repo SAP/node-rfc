@@ -15,10 +15,10 @@
 "use strict";
 
 const setup = require("./setup");
-const client = setup.client()
+const client = setup.client();
 
 beforeEach(function (done) {
-    client.reopen(err => {
+    client.reopen((err) => {
         done(err);
     });
 });
@@ -31,51 +31,60 @@ afterEach(function (done) {
 
 const TIMEOUT = 20000;
 
-describe('Performance', () => {
-
-    test("performance: invoke() BAPI_USER_GET_DETAIL", function (done) {
-        client.invoke("BAPI_USER_GET_DETAIL", {
-            USERNAME: "DEMO"
-        }, function (
-            err,
-            res
-        ) {
-            if (err) return done(err);
-            expect(res).toBeDefined();
-            expect(Object.keys(res).sort()).toEqual(
-                expect.arrayContaining([
-                    "ADDRESS",
-                    "ACTIVITYGROUPS",
-                    "DEFAULTS",
-                    "GROUPS",
-                    "ISLOCKED",
-                    "LOGONDATA",
-                    "PARAMETER",
-                    "PROFILES",
-                    "RETURN"
-                ])
+describe("Performance", () => {
+    test(
+        "performance: invoke() BAPI_USER_GET_DETAIL",
+        function (done) {
+            client.invoke(
+                "BAPI_USER_GET_DETAIL",
+                {
+                    USERNAME: "DEMO",
+                },
+                function (err, res) {
+                    if (err) return done(err);
+                    expect(res).toBeDefined();
+                    expect(Object.keys(res).sort()).toEqual(
+                        expect.arrayContaining([
+                            "ADDRESS",
+                            "ACTIVITYGROUPS",
+                            "DEFAULTS",
+                            "GROUPS",
+                            "ISLOCKED",
+                            "LOGONDATA",
+                            "PARAMETER",
+                            "PROFILES",
+                            "RETURN",
+                        ])
+                    );
+                    client.close(() => done());
+                }
             );
-            client.close(() => done());
-        });
-    }, TIMEOUT);
+        },
+        TIMEOUT
+    );
 
-    test("performance: invoke() STFC_PERFORMANCE", function (done) {
-        let COUNT = 10000;
-        client.invoke(
-            "STFC_PERFORMANCE", {
-                CHECKTAB: "X",
-                LGET0332: COUNT.toString(),
-                LGET1000: COUNT.toString()
-            },
+    test(
+        "performance: invoke() STFC_PERFORMANCE",
+        function (done) {
+            let COUNT = 10000;
+            client.invoke(
+                "STFC_PERFORMANCE",
+                {
+                    CHECKTAB: "X",
+                    LGET0332: COUNT.toString(),
+                    LGET1000: COUNT.toString(),
+                },
 
-            function (err, res) {
-                if (err) return done(err);
-                expect(res.ETAB0332.length).toBe(COUNT);
-                expect(res.ETAB1000.length).toBe(COUNT);
-                client.close(() => done());
-            }
-        );
-    }, TIMEOUT);
+                function (err, res) {
+                    if (err) return done(err);
+                    expect(res.ETAB0332.length).toBe(COUNT);
+                    expect(res.ETAB1000.length).toBe(COUNT);
+                    client.close(() => done());
+                }
+            );
+        },
+        TIMEOUT
+    );
 
     /*
     test('performance: invoke() SWNC_READ_SNAPSHOT', function (done) {
@@ -106,4 +115,4 @@ describe('Performance', () => {
         );
     }, TIMEOUT);
     */
-})
+});

@@ -18,8 +18,7 @@ const setup = require("../setup");
 const Pool = setup.rfcPool;
 const abapSystem = setup.abapSystem;
 
-describe('Pool', () => {
-
+describe("Pool", () => {
     test("lifecycle", function () {
         expect.assertions(9);
         const pool = new Pool(abapSystem, {
@@ -34,7 +33,7 @@ describe('Pool', () => {
                 options: {
                     min: 4,
                     //max: 8
-                }
+                },
             });
 
             let c1 = await pool.acquire();
@@ -44,7 +43,7 @@ describe('Pool', () => {
                 options: {
                     min: 4,
                     //max: 8
-                }
+                },
             });
 
             let c2 = await pool.acquire();
@@ -54,7 +53,7 @@ describe('Pool', () => {
                 options: {
                     min: 4,
                     //max: 8
-                }
+                },
             });
 
             let c3 = await pool.acquire();
@@ -64,7 +63,7 @@ describe('Pool', () => {
                 options: {
                     min: 4,
                     //max: 8
-                }
+                },
             });
 
             let c4 = await pool.acquire();
@@ -74,48 +73,50 @@ describe('Pool', () => {
                 options: {
                     min: 4,
                     //max: 8
-                }
+                },
             });
 
             await pool.release(c1);
             expect(pool.status).toEqual({
-                active: 3,
-                ready: 4,
+                active: 4,
+                ready: 3,
                 options: {
                     min: 4,
                     //max: 8
-                }
+                },
             });
 
             await pool.release(c2);
             expect(pool.status).toEqual({
-                active: 3,
-                ready: 4,
+                active: 4,
+                ready: 3,
                 options: {
                     min: 4,
                     //max: 8
-                }
+                },
             });
 
             await pool.release(c3);
             expect(pool.status).toEqual({
-                active: 3,
-                ready: 4,
+                active: 4,
+                ready: 3,
                 options: {
                     min: 4,
                     //max: 8
-                }
+                },
             });
 
             await pool.release(c4);
             expect(pool.status).toEqual({
-                active: 3,
-                ready: 4,
+                active: 4,
+                ready: 3,
                 options: {
                     min: 4,
                     //max: 8
-                }
+                },
             });
-        })()
+
+            await pool.releaseAll();
+        })();
     });
-})
+});
