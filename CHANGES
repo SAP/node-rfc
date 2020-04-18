@@ -1,11 +1,12 @@
 Change log
 ==========
 
-1.2.0 (2020-04-16)
+1.2.0 (2020-04-20)
 ------------------
 
 * Connection re-open after critical server errors
 * Error code string representation added to error object
+* Pool improvements
 
 1.1.0 (2020-04-14)
 ------------------

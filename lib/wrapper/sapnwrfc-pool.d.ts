@@ -8,10 +8,11 @@ export declare class Pool {
     private __connectionParams;
     private __poolOptions;
     private __clientOptions;
+    private __fillRequests;
     private __clients;
     constructor(connectionParams: RfcConnectionParameters, poolOptions?: RfcPoolOptions, clientOptions?: RfcClientOptions);
     newClient(): Client;
-    fill(): void;
+    refill(): void;
     acquire(): Promise<Client>;
     release(client: Client): Promise<void>;
     releaseAll(): Promise<number>;
