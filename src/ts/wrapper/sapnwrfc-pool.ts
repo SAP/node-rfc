@@ -17,6 +17,7 @@ export class Pool {
     private __connectionParams: RfcConnectionParameters;
     private __poolOptions: RfcPoolOptions;
     private __clientOptions: RfcClientOptions | undefined;
+    private __fillRequests: number;
 
     private __clients: {
         ready: Array<Client>;
@@ -34,6 +35,7 @@ export class Pool {
         this.__connectionParams = connectionParams;
         this.__poolOptions = poolOptions;
         this.__clientOptions = clientOptions;
+        this.__fillRequests = 0;
         this.__clients = {
             ready: [],
             active: new Map(),
@@ -46,14 +48,23 @@ export class Pool {
             : new Client(this.__connectionParams);
     }
 
-    fill() {
+    refill() {
+        if (
+            this.__clients.ready.length + this.__fillRequests >=
+            this.__poolOptions.min
+        ) {
+            return;
+        }
+
+        this.__fillRequests++;
         const client = this.newClient();
         client.connect((err) => {
+            this.__fillRequests--;
             if (isUndefined(err)) {
                 if (this.__clients.ready.length < this.__poolOptions.min) {
                     this.__clients.ready.unshift(client);
                     if (this.__clients.ready.length < this.__poolOptions.min)
-                        this.fill();
+                        this.refill();
                 } else {
                     client.close(() => {});
                 }
@@ -68,7 +79,7 @@ export class Pool {
             (resolve: (arg: Client) => void, reject: (arg: any) => void) => {
                 const client = this.__clients.ready.pop();
                 if (this.__clients.ready.length < this.__poolOptions.min)
-                    this.fill();
+                    this.refill();
                 if (client instanceof Client) {
                     this.__clients.active.set(client.id, client);
                     resolve(client);
@@ -103,7 +114,7 @@ export class Pool {
                 client.close(() => {
                     this.__clients.active.delete(id);
                     if (this.__clients.ready.length < this.__poolOptions.min) {
-                        this.fill();
+                        this.refill();
                     }
                     resolve(id);
                 });
