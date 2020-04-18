@@ -16,7 +16,7 @@
 
 const setup = require("../setup");
 
-describe("Concurrency: Promises", () => {
+describe("Locking: Promises", () => {
     const WAIT_SECONDS = 1;
 
     test("call() and call ()", function (done) {

@@ -16,7 +16,7 @@
 
 const setup = require("../setup");
 
-describe("Concurrency: Callbacks", () => {
+describe("Locking: Callbacks", () => {
     const WAIT_SECONDS = 1;
 
     test("invoke() and invoke ()", function (done) {
@@ -67,7 +67,9 @@ describe("Concurrency: Callbacks", () => {
                     "Close rejected because 2 RFC calls still running"
                 );
                 expect(count).toEqual(0);
-                done();
+                setTimeout(() => {
+                    client.close(() => done());
+                }, 2000);
             });
             // Close not blocking
             expect(count).toEqual(0);
@@ -107,12 +109,14 @@ describe("Concurrency: Callbacks", () => {
                     "Close rejected because 1 RFC calls still running"
                 );
                 expect(count).toEqual(0);
-                done();
+                setTimeout(() => {
+                    client.close(() => done());
+                }, 2000);
             });
             // Close not blocking
             expect(count).toEqual(0);
         });
-    }, 2000);
+    }, 4000);
 
     test("ping() and ping ()", function (done) {
         const COUNT = setup.CONNECTIONS;
