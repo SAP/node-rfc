@@ -14,9 +14,9 @@
 
 "use strict";
 
-const setup = require("../setup");
+module.exports = () => {
+    const setup = require("../testutils/setup");
 
-describe("Concurrency: Callbacks", () => {
     const WAIT_SECONDS = 1;
 
     test(`${setup.CONNECTIONS} clients make concurrent invoke() requests`, function (done) {
@@ -66,4 +66,4 @@ describe("Concurrency: Callbacks", () => {
             });
         }
     }, 10000);
-});
+};

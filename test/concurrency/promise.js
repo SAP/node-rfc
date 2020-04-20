@@ -14,9 +14,9 @@
 
 "use strict";
 
-const setup = require("../setup");
+module.exports = () => {
+    const setup = require("../testutils/setup");
 
-describe("Concurrency: Promises", () => {
     const WAIT_SECONDS = 1;
 
     test(`${setup.CONNECTIONS} clients make concurrent call() requests`, function (done) {
@@ -77,4 +77,4 @@ describe("Concurrency: Promises", () => {
                 .catch((ex) => done(ex));
         }
     }, 10000);
-});
+};

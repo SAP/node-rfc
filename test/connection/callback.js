@@ -14,11 +14,11 @@
 
 "use strict";
 
-const setup = require("../setup");
-const client = setup.client();
-const packageJSON = require("../../package.json");
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const client = setup.client();
+    const packageJSON = require("../../package.json");
 
-describe("Connection: Callbacks", () => {
     test("Client and package versions", function (done) {
         expect(packageJSON.version).toBe(client.version.binding);
         done();
@@ -263,4 +263,4 @@ describe("Connection: Callbacks", () => {
             );
         });
     });
-});
+};

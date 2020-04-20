@@ -14,24 +14,23 @@
 
 "use strict";
 
-const setup = require("../setup");
-const client = setup.client();
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const client = setup.client();
 
-beforeEach(function (done) {
-    client.reopen(function (err) {
-        done(err);
+    beforeEach(function (done) {
+        client.reopen(function (err) {
+            done(err);
+        });
     });
-});
 
-afterEach(function (done) {
-    client.close(function () {
-        done();
+    afterEach(function (done) {
+        client.close(function () {
+            done();
+        });
     });
-});
 
-const TIMEOUT = 10000;
-
-describe("RFC Call options", () => {
+    const TIMEOUT = 10000;
     test(
         "options: pass when some parameters skipped",
         function (done) {
@@ -99,4 +98,4 @@ describe("RFC Call options", () => {
             }
         );
     });
-});
+};

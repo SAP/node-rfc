@@ -14,10 +14,10 @@
 
 "use strict";
 
-const setup = require("../setup");
-const client = setup.client();
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const client = setup.client();
 
-describe("Connection: Promises", () => {
     test("call() STFC_CONNECTION should return unicode string", function (done) {
         client.open().then((clnt) => {
             clnt.call("STFC_CONNECTION", {
@@ -121,4 +121,4 @@ describe("Connection: Promises", () => {
             });
         });
     });
-});
+};

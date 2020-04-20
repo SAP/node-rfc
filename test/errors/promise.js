@@ -14,18 +14,18 @@
 
 "use strict";
 
-const setup = require("../setup");
-const client = setup.client();
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const client = setup.client();
 
-beforeEach(function () {
-    return client.reopen();
-});
+    beforeEach(function () {
+        return client.reopen();
+    });
 
-afterEach(function () {
-    return client.close();
-});
+    afterEach(function () {
+        return client.close();
+    });
 
-describe("Errors: Promises", () => {
     test("error: call() promise rejects invalid credentials", function () {
         let wrongParams = Object.assign({}, setup.abapSystem);
         wrongParams.user = "WRONGUSER";
@@ -138,4 +138,4 @@ describe("Errors: Promises", () => {
             );
         });
     });
-});
+};

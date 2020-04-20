@@ -14,24 +14,23 @@
 
 "use strict";
 
-const setup = require("./setup");
-const client = setup.client();
+module.exports = () => {
+    const setup = require("./testutils/setup");
+    const client = setup.client();
 
-beforeEach(function (done) {
-    client.reopen((err) => {
-        done(err);
+    beforeEach(function (done) {
+        client.reopen((err) => {
+            done(err);
+        });
     });
-});
 
-afterEach(function (done) {
-    client.close(() => {
-        done();
+    afterEach(function (done) {
+        client.close(() => {
+            done();
+        });
     });
-});
 
-const TIMEOUT = 20000;
-
-describe("Performance", () => {
+    const TIMEOUT = 20000;
     test(
         "performance: invoke() BAPI_USER_GET_DETAIL",
         function (done) {
@@ -115,4 +114,4 @@ describe("Performance", () => {
         );
     }, TIMEOUT);
     */
-});
+};
