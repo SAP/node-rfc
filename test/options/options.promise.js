@@ -14,18 +14,18 @@
 
 "use strict";
 
-const setup = require("../setup");
-const client = setup.client();
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const client = setup.client();
 
-beforeEach(function () {
-    return client.reopen();
-});
+    beforeEach(function () {
+        return client.reopen();
+    });
 
-afterEach(function () {
-    return client.close();
-});
+    afterEach(function () {
+        return client.close();
+    });
 
-describe("RFC Call options", () => {
     const TIMEOUT = 10000;
 
     test(
@@ -90,4 +90,4 @@ describe("RFC Call options", () => {
                 );
             });
     });
-});
+};

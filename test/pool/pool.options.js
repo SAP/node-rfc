@@ -14,11 +14,11 @@
 
 "use strict";
 
-const setup = require("../setup");
-const Pool = setup.rfcPool;
-const abapSystem = setup.abapSystem;
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const Pool = setup.rfcPool;
+    const abapSystem = setup.abapSystem;
 
-describe("Pool Options", () => {
     test("pool: default options", function (done) {
         expect.assertions(6);
         const pool = new Pool(abapSystem);
@@ -56,4 +56,4 @@ describe("Pool Options", () => {
             }, 2000);
         });
     });
-});
+};

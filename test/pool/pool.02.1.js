@@ -14,35 +14,39 @@
 
 "use strict";
 
-const setup = require("../setup");
-const Pool = setup.rfcPool;
-const abapSystem = setup.abapSystem;
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const Pool = setup.rfcPool;
+    const abapSystem = setup.abapSystem;
+    const Promise = setup.Promise;
 
-describe("Pool", () => {
     const pool = new Pool(abapSystem);
 
-    test("Release without client", function (done) {
-        expect.assertions(1);
-        pool.acquire().then(() => {
-            pool.release().catch((ex) => {
-                expect(ex).toEqual(
-                    expect.objectContaining(
-                        new TypeError(
-                            "Pool release() method requires a client instance as argument"
-                        )
-                    )
-                );
-                done();
-            });
+    test("Acquire 3, release 1", function () {
+        expect.assertions(2);
+        return Promise.all([
+            pool.acquire(),
+            pool.acquire(),
+            pool.acquire().then((c) =>
+                pool.release(c).then((id) => {
+                    expect(id).toBeGreaterThan(0);
+                })
+            ),
+        ]).finally(() => {
+            expect(pool.status).toEqual(
+                expect.objectContaining({
+                    ready: 2,
+                    active: 2,
+                })
+            );
         });
     });
 
     afterAll(function (done) {
         setTimeout(() => {
             pool.releaseAll().then((closed) => {
-                //console.log("released", closed);
                 done();
             });
         }, 2000);
     });
-});
+};

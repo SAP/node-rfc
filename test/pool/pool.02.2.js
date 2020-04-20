@@ -14,14 +14,14 @@
 
 "use strict";
 
-const setup = require("../setup");
-const Pool = setup.rfcPool;
-const abapSystem = setup.abapSystem;
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const Pool = setup.rfcPool;
+    const abapSystem = setup.abapSystem;
 
-describe("Pool", () => {
     const pool = new Pool(abapSystem);
 
-    test("Acquire 3, release 1", function () {
+    test("Acquire 3, release 3", function () {
         expect.assertions(7);
 
         return (async () => {
@@ -54,4 +54,4 @@ describe("Pool", () => {
             });
         }, 2000);
     });
-});
+};

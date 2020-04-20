@@ -14,29 +14,29 @@
 
 "use strict";
 
-const setup = require("../setup");
-const client = setup.client();
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const client = setup.client();
 
-const Decimal = require("decimal.js");
-const randomBytes = require("random-bytes");
+    const Decimal = require("decimal.js");
+    const randomBytes = require("random-bytes");
 
-const Utils = require("../utils");
+    const Utils = require("../testutils/utils");
 
-const RFC_MATH = require("../config").RFC_MATH;
+    const RFC_MATH = require("../testutils/config").RFC_MATH;
 
-beforeEach(function (done) {
-    client.reopen((err) => {
-        done(err);
+    beforeEach(function (done) {
+        client.reopen((err) => {
+            done(err);
+        });
     });
-});
 
-afterEach(function (done) {
-    client.close(() => {
-        done();
+    afterEach(function (done) {
+        client.close(() => {
+            done();
+        });
     });
-});
 
-describe("Datatypes", () => {
     test("Min/Max positive", function (done) {
         let isInput = {
             // Float
@@ -300,7 +300,7 @@ describe("Datatypes", () => {
         });
     });
 
-    it.skip("RAW/BYTE accepts Buffer", function (done) {
+    test("RAW/BYTE accepts Buffer", function (done) {
         let isInput = {
             ZRAW: Utils.XBYTES_TEST,
         };
@@ -340,7 +340,7 @@ describe("Datatypes", () => {
         );
     });
 
-    xtest("BYTE and XSTRING tables", function (done) {
+    test.skip("BYTE and XSTRING tables", function (done) {
         let IT_SXMSMGUIDT = [];
         let IT_SDOKCNTBINS = [];
 
@@ -872,4 +872,4 @@ describe("Datatypes", () => {
             }
         );
     });
-});
+};

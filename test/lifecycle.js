@@ -14,9 +14,9 @@
 
 "use strict";
 
-describe("Lifecycle", () => {
+module.exports = () => {
     test("Connection Lifecycle Promises", function () {
-        const client = require("./setup").client();
+        const client = require("./testutils/setup").client();
         expect(client.status.created).toBeGreaterThan(0);
         expect(client.status.lastopen).toBe(0);
         expect(client.status.lastcall).toBe(0);
@@ -58,7 +58,7 @@ describe("Lifecycle", () => {
     });
 
     test("Connection Lifecycle Callbacks", function (done) {
-        const client = require("./setup").client();
+        const client = require("./testutils/setup").client();
         expect(client.status.created).toBeGreaterThan(0);
         expect(client.status.lastopen).toBe(0);
         expect(client.status.lastcall).toBe(0);
@@ -106,4 +106,4 @@ describe("Lifecycle", () => {
             );
         });
     });
-});
+};

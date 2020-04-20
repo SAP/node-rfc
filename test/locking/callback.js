@@ -14,13 +14,13 @@
 
 "use strict";
 
-const setup = require("../setup");
+module.exports = () => {
+    const setup = require("../testutils/setup");
 
-describe("Locking: Callbacks", () => {
     const WAIT_SECONDS = 1;
 
     test("invoke() and invoke ()", function (done) {
-        expect.assertions(7);
+        expect.assertions(9);
 
         let count = 0;
         const client = setup.client();
@@ -58,13 +58,30 @@ describe("Locking: Callbacks", () => {
             // Invoke not blocking
             expect(count).toEqual(0);
 
-            // 1 calls are running
+            // 2 calls are running
+            expect(client.runningRFCCalls).toEqual(1);
+
+            client.invoke(
+                "RFC_PING_AND_WAIT",
+                {
+                    SECONDS: WAIT_SECONDS,
+                },
+                function (err) {
+                    if (err) return done(err);
+                    count++;
+                }
+            );
+
+            // Invoke not blocking
+            expect(count).toEqual(0);
+
+            // 3 calls are running
             expect(client.runningRFCCalls).toEqual(1);
 
             client.close((err) => {
                 // Close rejected because of ongoing calls
                 expect(err).toEqual(
-                    "Close rejected because 2 RFC calls still running"
+                    "Close rejected because 3 RFC calls still running"
                 );
                 expect(count).toEqual(0);
                 setTimeout(() => {
@@ -203,4 +220,4 @@ describe("Locking: Callbacks", () => {
             expect(count).toEqual(0);
         });
     }, 3000);
-});
+};

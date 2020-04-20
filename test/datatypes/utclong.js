@@ -14,20 +14,20 @@
 
 "use strict";
 
-const setup = require("../setup");
-const QM7 = require("../abapSystem")("QM7");
-const UTCLONG = require("../config").RFC_MATH.UTCLONG;
-const client = setup.client(QM7);
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const QM7 = require("../testutils/abapSystem")("QM7");
+    const UTCLONG = require("../testutils/config").RFC_MATH.UTCLONG;
+    const client = setup.client(QM7);
 
-beforeAll(() => {
-    return client.open();
-});
+    beforeAll(() => {
+        return client.open();
+    });
 
-afterAll(() => {
-    return client.close();
-});
+    afterAll(() => {
+        return client.close();
+    });
 
-describe("Datatype: UTCLONG", () => {
     test("UTCLONG accepts min, max, initial", () => {
         return (async () => {
             let res = await client.call("ZDATATYPES", {
@@ -82,4 +82,4 @@ describe("Datatype: UTCLONG", () => {
                 );
             });
     });
-});
+};

@@ -14,22 +14,22 @@
 
 "use strict";
 
-const setup = require("../setup");
-const client = setup.client();
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const client = setup.client();
 
-beforeAll(function (done) {
-    client.connect(function (err) {
-        done(err);
+    beforeAll(function (done) {
+        client.connect(function (err) {
+            done(err);
+        });
     });
-});
 
-afterAll(function (done) {
-    client.close(function (err) {
-        done(err);
+    afterAll(function (done) {
+        client.close(function (err) {
+            done(err);
+        });
     });
-});
 
-describe("Errors: ABAP", () => {
     //
     // RFC_ABAP_RUNTIME_FAILURE ///< SAP system runtime error (SYSTEM_FAILURE): Shortdump on the backend side
     //
@@ -290,4 +290,4 @@ describe("Errors: ABAP", () => {
             );
         });
     });
-});
+};

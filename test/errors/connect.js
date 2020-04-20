@@ -14,10 +14,10 @@
 
 "use strict";
 
-const setup = require("../setup");
-const client = setup.client();
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const client = setup.client();
 
-describe("Errors: Connect", () => {
     test("error: new client requires connection parameters", function () {
         return expect(() => new setup.rfcClient()).toThrow(
             new TypeError("Connection parameters must be an object")
@@ -68,4 +68,4 @@ describe("Errors: Connect", () => {
             done();
         });
     });
-});
+};

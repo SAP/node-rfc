@@ -14,12 +14,11 @@
 
 "use strict";
 
-const setup = require("../setup");
-const Pool = setup.rfcPool;
-const abapSystem = setup.abapSystem;
-const Promise = require("bluebird");
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const Pool = setup.rfcPool;
+    const abapSystem = setup.abapSystem;
 
-describe("Pool", () => {
     const pool = new Pool(abapSystem);
 
     test("Acquire single", function () {
@@ -57,4 +56,4 @@ describe("Pool", () => {
             });
         }, 2000);
     });
-});
+};

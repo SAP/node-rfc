@@ -14,16 +14,16 @@
 
 "use strict";
 
-const setup = require("../setup");
+module.exports = () => {
+    const setup = require("../testutils/setup");
 
-describe("Locking: Promises", () => {
     const WAIT_SECONDS = 1;
 
     test("call() and call ()", function (done) {
-        expect.assertions(5);
+        expect.assertions(6);
 
         let count = 0;
-        return setup
+        setup
             .client()
             .open()
             .then((client) => {
@@ -35,7 +35,16 @@ describe("Locking: Promises", () => {
                         count++;
                     });
                 // Call not blocking
-                expect(count).toEqual(0);
+                expect(client.runningRFCCalls).toEqual(1);
+
+                client
+                    .call("RFC_PING_AND_WAIT", {
+                        SECONDS: WAIT_SECONDS,
+                    })
+                    .then(() => {
+                        count++;
+                    });
+                expect(client.runningRFCCalls).toEqual(1);
 
                 client
                     .call("RFC_PING_AND_WAIT", {
@@ -45,25 +54,21 @@ describe("Locking: Promises", () => {
                         count++;
                     });
                 expect(count).toEqual(0);
+                expect(client.runningRFCCalls).toEqual(1);
 
                 client
-                    .call("RFC_PING_AND_WAIT", {
-                        SECONDS: WAIT_SECONDS,
-                    })
-                    .then(() => {
-                        count++;
+                    .close()
+                    .then(() => done("error!"))
+                    .catch((ex) => {
+                        expect(ex).toEqual(
+                            "Close rejected because 3 RFC calls still running"
+                        );
+                        done();
                     });
-                expect(count).toEqual(0);
 
-                client.close().catch((ex) => {
-                    expect(ex).toEqual(
-                        "Close rejected because 3 RFC calls still running"
-                    );
-                    done();
-                });
                 expect(count).toEqual(0);
             });
-    }, 6000);
+    }, 8000);
 
     test("call() and ping ()", function (done) {
         expect.assertions(5);
@@ -193,4 +198,4 @@ describe("Locking: Promises", () => {
                 expect(count).toEqual(0);
             });
     }, 2000);
-});
+};

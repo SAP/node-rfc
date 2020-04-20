@@ -14,22 +14,22 @@
 
 "use strict";
 
-const setup = require("../setup");
-const client = setup.client();
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const client = setup.client();
 
-beforeEach(function (done) {
-    client.reopen(function (err) {
-        done(err);
+    beforeEach(function (done) {
+        client.reopen(function (err) {
+            done(err);
+        });
     });
-});
 
-afterEach(function (done) {
-    client.close(function () {
-        done();
+    afterEach(function (done) {
+        client.close(function () {
+            done();
+        });
     });
-});
 
-describe("Errors: Invoke", () => {
     test("error: invoke() requires at least three arguments", function () {
         expect(() => client.invoke("rfc", {})).toThrow(
             new Error("Callback function must be supplied")
@@ -144,4 +144,4 @@ describe("Errors: Invoke", () => {
             }
         })();
     });
-});
+};

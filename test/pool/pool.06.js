@@ -14,40 +14,29 @@
 
 "use strict";
 
-const setup = require("../setup");
-const Pool = setup.rfcPool;
-const abapSystem = setup.abapSystem;
-const Promise = setup.Promise;
+module.exports = () => {
+    const setup = require("../testutils/setup");
+    const Pool = setup.rfcPool;
+    const abapSystem = setup.abapSystem;
 
-describe.skip("Pool", () => {
     const pool = new Pool(abapSystem);
 
-    test("Acquire 3, release 1", function () {
-        expect.assertions(2);
-        return Promise.all([
-            pool.acquire(),
-            pool.acquire(),
-            pool.acquire().then((c) =>
-                pool.release(c).then((id) => {
-                    expect(id).toBeGreaterThan(0);
-                })
-            ),
-        ]).finally(() => {
-            expect(pool.status).toEqual(
-                expect.objectContaining({
-                    ready: 1,
-                    active: 3,
-                })
-            );
+    test("Release", function (done) {
+        expect.assertions(1);
+        pool.acquire().then((client) => {
+            pool.release(client).then(() => {
+                expect(pool.status.ready).toBe(1);
+                done();
+            });
         });
     });
 
     afterAll(function (done) {
         setTimeout(() => {
             pool.releaseAll().then((closed) => {
-                console.log("released", closed);
+                //console.log("released", closed);
                 done();
             });
         }, 2000);
     });
-});
+};

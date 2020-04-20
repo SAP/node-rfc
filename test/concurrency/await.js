@@ -14,9 +14,9 @@
 
 "use strict";
 
-const setup = require("../setup");
+module.exports = () => {
+    const setup = require("../testutils/setup");
 
-describe("Concurrency: Await", () => {
     const WAIT_SECONDS = 1;
 
     test(`${setup.CONNECTIONS} sequential calls over single connection`, function (done) {
@@ -71,4 +71,4 @@ describe("Concurrency: Await", () => {
             }
         })();
     }, 36000);
-});
+};
