@@ -720,7 +720,7 @@ Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
     infoObj.Set(Napi::String::New(env, "partnerBytesPerChar"), wrapString(connInfo.partnerBytesPerChar, 1));
     infoObj.Set(Napi::String::New(env, "partnerSystemCodepage"), wrapString(connInfo.partnerSystemCodepage, 4));
     infoObj.Set(Napi::String::New(env, "partnerIP"), wrapString(connInfo.partnerIP, 15));
-    infoObj.Set(Napi::String::New(env, "partnerIPv6"), wrapString(connInfo.partnerIP, 45));
+    infoObj.Set(Napi::String::New(env, "partnerIPv6"), wrapString(connInfo.partnerIPv6, 45));
     // infoObj.Set(Napi::String::New(env, "reserved"), wrapString(connInfo.reserved, 17));
 
     return infoObj;

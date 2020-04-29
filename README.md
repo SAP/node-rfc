@@ -54,6 +54,16 @@ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 
 -   Remote paths must be set in SAP NWRFC SDK for macOS: [documentation](http://sap.github.io/node-rfc/install.html#macos)
 
+## SPJ articles
+
+A series of three insightful articles about RFC communication and SAP NW RFC Library, published in the SAP Professional Journal (SPJ)
+
+-   [Part I RFC Client Programming](https://wiki.scn.sap.com/wiki/x/zz27Gg)
+
+-   [Part II RFC Server Programming](https://wiki.scn.sap.com/wiki/x/9z27Gg)
+
+-   [Part III Advanced Topics](https://wiki.scn.sap.com/wiki/x/FD67Gg)
+
 ## Installation
 
 After the SAP NW RFC SDK is installed on your system, you can install the _node-rfc_ package from npm:
@@ -106,7 +116,7 @@ const abapSystem = {
     ashost: "10.68.104.164",
     sysnr: "00",
     client: "620",
-    lang: "EN"
+    lang: "EN",
 };
 
 // create new client
@@ -116,7 +126,7 @@ const client = new Client(abapSystem);
 console.log("Client version: ", client.version);
 
 // open connection
-client.connect(function(err) {
+client.connect(function (err) {
     if (err) {
         // check for login/connection errors
         return console.error("could not connect to server", err);
@@ -130,7 +140,7 @@ client.connect(function(err) {
         RFCFLOAT: 1.23456789,
         // or RFCFLOAT: require('decimal.js')('1.23456789'), // as Decimal object
         RFCCHAR4: "ABCD",
-        RFCDATE: "20180625" // in ABAP date format
+        RFCDATE: "20180625", // in ABAP date format
         // or RFCDATE: new Date('2018-06-25'), // as JavaScript Date object
     };
 
@@ -140,7 +150,7 @@ client.connect(function(err) {
     client.invoke(
         "STFC_STRUCTURE",
         { IMPORTSTRUCT: structure, RFCTABLE: table },
-        function(err, res) {
+        function (err, res) {
             if (err) {
                 return console.error("Error invoking STFC_STRUCTURE:", err);
             }
