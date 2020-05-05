@@ -1,4 +1,4 @@
-Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/products/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/).
+Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/).
 
 [![NPM](https://nodei.co/npm/node-rfc.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-rfc/)
 
@@ -46,13 +46,17 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 ### macOS
 
--   The macOS firewall stealth mode must be disabled ([Can't ping a machine - why?](https://discussions.apple.com/thread/2554739)):
+-   Disable macOS firewall stealth mode ([Can't ping a machine - why?](https://discussions.apple.com/thread/2554739)):
 
 ```shell
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 ```
 
--   Remote paths must be set in SAP NWRFC SDK for macOS: [documentation](http://sap.github.io/node-rfc/install.html#macos)
+-   Add SAP NWRFC SDK libraries path to DYLD_FALLBACK_LIBRARY_PATH env variable:
+
+```shell
+$ export DYLD_FALLBACK_LIBRARY_PATH=$SAPNWRFC_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH
+```
 
 ## SPJ articles
 
