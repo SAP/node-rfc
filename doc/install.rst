@@ -80,26 +80,9 @@ must be disabled:
 1. Create the SAP NW RFC SDK home directory ``/usr/local/sap/nwrfcsdk`` (this location is fixed, more info below)
 2. Set SAPNWRFC_HOME environment variable: ``SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk``
 3. Unpack the SAP NW RFC SDK archive to it, e.g. ``/usr/local/sap/nwrfcsdk/lib`` shall exist.
-4. Set the remote paths in SAP NW RFC SDK by running `paths_fix.sh <https://github.com/SAP/PyRFC/blob/master/ci/utils/paths_fix.sh>`_ script.
+4. Add SAP NWRFC SDK libraries path to DYLD_FALLBACK_LIBRARY_PATH env variable
 5. Unzip the `unchar.zip` file attached to `SAP OSS Note 2573953 <https://launchpad.support.sap.com/#/notes/2573953>`_
    and copy the `uchar.h` file to SAP NW RFC SDK include directory:
-
-This default rpath location is ``/usr/local/sap/nwrfcsdk/lib`` is embedded into node-rfc package published on npm.
-
-After moving SAP NW RFC SDK to another location on your system, the rpaths must be adjusted,
-in SAP NW RFC SDK and in sapnwrfc.node libraries.
-
-For SAP NW RFC SDK, set the SAPNWRFC_HOME env variable to new SAP NW RFC SDK root directory and re-run the above script.
-
-For node-rfc:
-
-     .. code-block:: sh
-
-        $ npm install node-rfc@next
-        $ cd node_modules/node-rfc/lib/binding
-        $ install_name_tool -rpath /usr/local/sap/nwrfcsdk/lib <new path> sapnwrfc.node
-
-The v64 suffix is the node abi version for the node release 10 and the suffix for your node release you may find here: https://nodejs.org/en/download/releases.
 
 .. _install-node-connector:
 
