@@ -1,7 +1,11 @@
 Change log
 ==========
 
+1.x.x (2020-xx-xx)
+------------------
+
 * Connection attribute PartnerIPv6 added
+* SAP NWRFC SDK post-installation step removed
 
 1.2.0 (2020-04-20)
 ------------------
