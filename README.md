@@ -1,4 +1,4 @@
-:heavy_exclamation_mark: Don't upgrade SAP NWRFC SDK on Darwin, see #143 for details.
+:heavy_exclamation_mark: Don't upgrade SAP NWRFC SDK on Darwin, see [#143](https://github.com/SAP/node-rfc/issues/143).
 
 Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/).
 
