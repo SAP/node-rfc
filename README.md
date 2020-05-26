@@ -20,7 +20,6 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 -   Buffer, Decimal and Date objects support
 -   Connection pool
 -   :new: Throughput monitoring: number of calls, bytes sent/received, application/total time; SAP NWRFC SDK >= 7.53 required
--   Extensive unit tests
 
 ## Supported platforms
 
@@ -29,6 +28,10 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 -   The _node-rfc_ connector can be [built from source](http://sap.github.io/node-rfc/install.html#building-from-source) on all [platforms supported by SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1)
 
 -   Pre-built binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 8.1, Ubuntu 16.04 and macOS 10.14.
+
+## NodeJS platforms
+
+[Electron](https://www.electronjs.org/), [NW.js](https://nwjs.io/),
 
 ## Prerequisites
 

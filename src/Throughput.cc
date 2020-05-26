@@ -20,192 +20,192 @@
 namespace node_rfc
 {
 
-unsigned int Throughput::__refCounter = 0;
-extern Napi::Env __env;
+    unsigned int Throughput::__refCounter = 0;
+    extern Napi::Env __env;
 
-Napi::FunctionReference Throughput::constructor;
+    Napi::FunctionReference Throughput::constructor;
 
-Throughput::Throughput(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Throughput>(info)
-{
-    if (!info.IsConstructCall())
+    Throughput::Throughput(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Throughput>(info)
     {
-        Napi::Error::New(info.Env(), "Use the new operator to create instances of Rfc  Throughput.").ThrowAsJavaScriptException();
-    }
-    init(info.Env());
-    RFC_ERROR_INFO errorInfo;
-    this->__handle = RfcCreateThroughput(&errorInfo);
-    if (errorInfo.code != RFC_OK)
-        Napi::Error::New(info.Env(), "node-rfc internal error: Throughput create failed.\nCheck if SAP NWRFC SDK version >= 7.53").ThrowAsJavaScriptException();
-
-    this->__refId = ++Throughput::__refCounter;
-}
-
-Throughput::~Throughput(void)
-{
-    RFC_ERROR_INFO errorInfo;
-
-    if (this->__handle != NULL)
-    {
-        RfcDestroyThroughput(this->__handle, &errorInfo);
-        //if (errorInfo.code != RFC_OK) ...
-        this->__handle = NULL;
-    }
-}
-
-Napi::Object Throughput::Init(Napi::Env env, Napi::Object exports)
-{
-    Napi::HandleScope scope(env);
-
-    Napi::Function t = DefineClass(
-        env, "Throughput",
+        if (!info.IsConstructCall())
         {
-            InstanceAccessor("status", &Throughput::StatusGetter, nullptr),
-            InstanceAccessor("id", &Throughput::IdGetter, nullptr),
-            InstanceAccessor("_handle", &Throughput::HandleGetter, nullptr),
-            InstanceMethod("setOnConnection", &Throughput::SetOnConnection),
-            InstanceMethod("removeFromConnection", &Throughput::RemoveFromConnection),
-            StaticMethod("getFromConnection", &Throughput::GetFromConnection),
-            InstanceMethod("reset", &Throughput::Reset),
-            InstanceMethod("destroy", &Throughput::Destroy),
-        });
+            Napi::Error::New(info.Env(), "Use the new operator to create instances of Rfc  Throughput.").ThrowAsJavaScriptException();
+        }
+        init(info.Env());
+        RFC_ERROR_INFO errorInfo;
+        this->__handle = RfcCreateThroughput(&errorInfo);
+        if (errorInfo.code != RFC_OK)
+            Napi::Error::New(info.Env(), "node-rfc internal error: Throughput create failed.\nCheck if SAP NWRFC SDK version >= 7.53").ThrowAsJavaScriptException();
 
-    constructor = Napi::Persistent(t);
-    constructor.SuppressDestruct();
+        this->__refId = ++Throughput::__refCounter;
+    }
 
-    exports.Set("Throughput", t);
-    return exports;
-}
-
-Napi::Value Throughput::Reset(const Napi::CallbackInfo &info)
-{
-    Napi::EscapableHandleScope scope(info.Env());
-    RFC_ERROR_INFO errorInfo;
-    RFC_RC rc = RfcResetThroughput(this->__handle, &errorInfo);
-    if (rc != RFC_OK)
-        return scope.Escape(wrapError(&errorInfo));
-    return info.Env().Undefined();
-}
-
-Napi::Value Throughput::Destroy(const Napi::CallbackInfo &info)
-{
-    Napi::EscapableHandleScope scope(info.Env());
-    RFC_ERROR_INFO errorInfo;
-    if (this->__handle != NULL)
+    Throughput::~Throughput(void)
     {
-        RFC_RC rc = RfcDestroyThroughput(this->__handle, &errorInfo);
-        this->__handle = NULL;
+        RFC_ERROR_INFO errorInfo;
+
+        if (this->__handle != NULL)
+        {
+            RfcDestroyThroughput(this->__handle, &errorInfo);
+            //if (errorInfo.code != RFC_OK) ...
+            this->__handle = NULL;
+        }
+    }
+
+    Napi::Object Throughput::Init(Napi::Env env, Napi::Object exports)
+    {
+        Napi::HandleScope scope(env);
+
+        Napi::Function t = DefineClass(
+            env, "Throughput",
+            {
+                InstanceAccessor("status", &Throughput::StatusGetter, nullptr),
+                InstanceAccessor("id", &Throughput::IdGetter, nullptr),
+                InstanceAccessor("_handle", &Throughput::HandleGetter, nullptr),
+                InstanceMethod("setOnConnection", &Throughput::SetOnConnection),
+                InstanceMethod("removeFromConnection", &Throughput::RemoveFromConnection),
+                StaticMethod("getFromConnection", &Throughput::GetFromConnection),
+                InstanceMethod("reset", &Throughput::Reset),
+                InstanceMethod("destroy", &Throughput::Destroy),
+            });
+
+        constructor = Napi::Persistent(t);
+        constructor.SuppressDestruct();
+
+        exports.Set("Throughput", t);
+        return exports;
+    }
+
+    Napi::Value Throughput::Reset(const Napi::CallbackInfo &info)
+    {
+        Napi::EscapableHandleScope scope(info.Env());
+        RFC_ERROR_INFO errorInfo;
+        RFC_RC rc = RfcResetThroughput(this->__handle, &errorInfo);
         if (rc != RFC_OK)
             return scope.Escape(wrapError(&errorInfo));
+        return info.Env().Undefined();
     }
-    return info.Env().Undefined();
-}
 
-Napi::Value Throughput::IdGetter(const Napi::CallbackInfo &info)
-{
-    return Napi::Number::New(info.Env(), this->__refId);
-}
-
-Napi::Value Throughput::HandleGetter(const Napi::CallbackInfo &info)
-{
-    return Napi::Number::New(info.Env(), static_cast<double>((uint64_t)this->__handle));
-}
-
-Napi::Value Throughput::StatusGetter(const Napi::CallbackInfo &info)
-{
-    Napi::EscapableHandleScope scope(info.Env());
-
-    RFC_ERROR_INFO errorInfo;
-    RFC_RC rc;
-    SAP_ULLONG numberOfCalls;
-    SAP_ULLONG sentBytes;
-    SAP_ULLONG receivedBytes;
-    SAP_ULLONG applicationTime;
-    SAP_ULLONG totalTime;
-    SAP_ULLONG serializationTime;
-    SAP_ULLONG deserializationTime;
-
-    Napi::Object status = Napi::Object::New(info.Env());
-
-    if (this->__handle == NULL)
-        Napi::Error::New(info.Env(), "node-rfc internal error: Throughput without handle!").ThrowAsJavaScriptException();
-
-    THROUGHPUT_CALL(NumberOfCalls, numberOfCalls);
-    THROUGHPUT_CALL(SentBytes, sentBytes);
-    THROUGHPUT_CALL(ReceivedBytes, receivedBytes);
-    THROUGHPUT_CALL(ApplicationTime, applicationTime);
-    THROUGHPUT_CALL(TotalTime, totalTime);
-    THROUGHPUT_CALL(SerializationTime, serializationTime);
-    THROUGHPUT_CALL(DeserializationTime, deserializationTime);
-
-    return scope.Escape(status);
-}
-
-Napi::Value Throughput::SetOnConnection(const Napi::CallbackInfo &info)
-{
-    Napi::EscapableHandleScope scope(info.Env());
-
-    if (info.Length() != 1)
+    Napi::Value Throughput::Destroy(const Napi::CallbackInfo &info)
     {
-        Napi::Error::New(info.Env(), "Connection instance argument missing").ThrowAsJavaScriptException();
-    }
-    if (!info[0].IsNumber())
-    {
-        Napi::Error::New(info.Env(), "Connection handle required as argument").ThrowAsJavaScriptException();
-    }
-    const RFC_CONNECTION_HANDLE connectionHandle = (RFC_CONNECTION_HANDLE)info[0].As<Number>().Int64Value();
-    RFC_ERROR_INFO errorInfo;
-    RFC_RC rc = RfcSetThroughputOnConnection(connectionHandle, this->__handle, &errorInfo);
-    if (rc != RFC_OK)
-    {
-        return scope.Escape(wrapError(&errorInfo));
+        Napi::EscapableHandleScope scope(info.Env());
+        RFC_ERROR_INFO errorInfo;
+        if (this->__handle != NULL)
+        {
+            RFC_RC rc = RfcDestroyThroughput(this->__handle, &errorInfo);
+            this->__handle = NULL;
+            if (rc != RFC_OK)
+                return scope.Escape(wrapError(&errorInfo));
+        }
+        return info.Env().Undefined();
     }
 
-    return info.Env().Undefined();
-}
-
-Napi::Value Throughput::RemoveFromConnection(const Napi::CallbackInfo &info)
-{
-    Napi::EscapableHandleScope scope(info.Env());
-
-    if (info.Length() != 1)
+    Napi::Value Throughput::IdGetter(const Napi::CallbackInfo &info)
     {
-        Napi::Error::New(info.Env(), "Connection instance argument missing").ThrowAsJavaScriptException();
-    }
-    if (!info[0].IsNumber())
-    {
-        Napi::Error::New(info.Env(), "Connection handle required as argument").ThrowAsJavaScriptException();
-    }
-    const RFC_CONNECTION_HANDLE connectionHandle = (RFC_CONNECTION_HANDLE)info[0].As<Number>().Int64Value();
-    RFC_ERROR_INFO errorInfo;
-    RFC_RC rc = RfcRemoveThroughputFromConnection(connectionHandle, &errorInfo);
-    if (rc != RFC_OK)
-    {
-        return scope.Escape(wrapError(&errorInfo));
+        return Napi::Number::New(info.Env(), this->__refId);
     }
 
-    return info.Env().Undefined();
-}
+    Napi::Value Throughput::HandleGetter(const Napi::CallbackInfo &info)
+    {
+        return Napi::Number::New(info.Env(), static_cast<double>((uint64_t)this->__handle));
+    }
 
-Napi::Value Throughput::GetFromConnection(const Napi::CallbackInfo &info)
-{
-    Napi::EscapableHandleScope scope(info.Env());
+    Napi::Value Throughput::StatusGetter(const Napi::CallbackInfo &info)
+    {
+        Napi::EscapableHandleScope scope(info.Env());
 
-    if (info.Length() != 1)
-    {
-        Napi::Error::New(info.Env(), "Connection instance argument missing").ThrowAsJavaScriptException();
+        RFC_ERROR_INFO errorInfo;
+        RFC_RC rc;
+        SAP_ULLONG numberOfCalls;
+        SAP_ULLONG sentBytes;
+        SAP_ULLONG receivedBytes;
+        SAP_ULLONG applicationTime;
+        SAP_ULLONG totalTime;
+        SAP_ULLONG serializationTime;
+        SAP_ULLONG deserializationTime;
+
+        Napi::Object status = Napi::Object::New(info.Env());
+
+        if (this->__handle == NULL)
+            Napi::Error::New(info.Env(), "node-rfc internal error: Throughput without handle!").ThrowAsJavaScriptException();
+
+        THROUGHPUT_CALL(NumberOfCalls, numberOfCalls);
+        THROUGHPUT_CALL(SentBytes, sentBytes);
+        THROUGHPUT_CALL(ReceivedBytes, receivedBytes);
+        THROUGHPUT_CALL(ApplicationTime, applicationTime);
+        THROUGHPUT_CALL(TotalTime, totalTime);
+        THROUGHPUT_CALL(SerializationTime, serializationTime);
+        THROUGHPUT_CALL(DeserializationTime, deserializationTime);
+
+        return scope.Escape(status);
     }
-    if (!info[0].IsNumber())
+
+    Napi::Value Throughput::SetOnConnection(const Napi::CallbackInfo &info)
     {
-        Napi::Error::New(info.Env(), "Connection handle required as argument").ThrowAsJavaScriptException();
+        Napi::EscapableHandleScope scope(info.Env());
+
+        if (info.Length() != 1)
+        {
+            Napi::Error::New(info.Env(), "Connection instance argument missing").ThrowAsJavaScriptException();
+        }
+        if (!info[0].IsNumber())
+        {
+            Napi::Error::New(info.Env(), "Connection handle required as argument").ThrowAsJavaScriptException();
+        }
+        const RFC_CONNECTION_HANDLE connectionHandle = (RFC_CONNECTION_HANDLE)info[0].As<Number>().Int64Value();
+        RFC_ERROR_INFO errorInfo;
+        RFC_RC rc = RfcSetThroughputOnConnection(connectionHandle, this->__handle, &errorInfo);
+        if (rc != RFC_OK)
+        {
+            return scope.Escape(wrapError(&errorInfo));
+        }
+
+        return info.Env().Undefined();
     }
-    const RFC_CONNECTION_HANDLE connectionHandle = (RFC_CONNECTION_HANDLE)info[0].As<Number>().Int64Value();
-    RFC_ERROR_INFO errorInfo;
-    RFC_THROUGHPUT_HANDLE throughputHandle = RfcGetThroughputFromConnection(connectionHandle, &errorInfo);
-    if (errorInfo.code != RFC_OK)
+
+    Napi::Value Throughput::RemoveFromConnection(const Napi::CallbackInfo &info)
     {
-        return scope.Escape(wrapError(&errorInfo));
+        Napi::EscapableHandleScope scope(info.Env());
+
+        if (info.Length() != 1)
+        {
+            Napi::Error::New(info.Env(), "Connection instance argument missing").ThrowAsJavaScriptException();
+        }
+        if (!info[0].IsNumber())
+        {
+            Napi::Error::New(info.Env(), "Connection handle required as argument").ThrowAsJavaScriptException();
+        }
+        const RFC_CONNECTION_HANDLE connectionHandle = (RFC_CONNECTION_HANDLE)info[0].As<Number>().Int64Value();
+        RFC_ERROR_INFO errorInfo;
+        RFC_RC rc = RfcRemoveThroughputFromConnection(connectionHandle, &errorInfo);
+        if (rc != RFC_OK)
+        {
+            return scope.Escape(wrapError(&errorInfo));
+        }
+
+        return info.Env().Undefined();
     }
-    return Napi::Number::New(info.Env(), static_cast<double>((uint64_t)throughputHandle));
-}
+
+    Napi::Value Throughput::GetFromConnection(const Napi::CallbackInfo &info)
+    {
+        Napi::EscapableHandleScope scope(info.Env());
+
+        if (info.Length() != 1)
+        {
+            Napi::Error::New(info.Env(), "Connection instance argument missing").ThrowAsJavaScriptException();
+        }
+        if (!info[0].IsNumber())
+        {
+            Napi::Error::New(info.Env(), "Connection handle required as argument").ThrowAsJavaScriptException();
+        }
+        const RFC_CONNECTION_HANDLE connectionHandle = (RFC_CONNECTION_HANDLE)info[0].As<Number>().Int64Value();
+        RFC_ERROR_INFO errorInfo;
+        RFC_THROUGHPUT_HANDLE throughputHandle = RfcGetThroughputFromConnection(connectionHandle, &errorInfo);
+        if (errorInfo.code != RFC_OK)
+        {
+            return scope.Escape(wrapError(&errorInfo));
+        }
+        return Napi::Number::New(info.Env(), static_cast<double>((uint64_t)throughputHandle));
+    }
 
 } // namespace node_rfc

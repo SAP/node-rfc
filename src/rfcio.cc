@@ -15,8 +15,8 @@
 #include "Client.h"
 #include "noderfcsdk.h"
 
-namespace node_rfc
-{
+using namespace node_rfc;
+
 extern Napi::Env __env;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -772,4 +772,4 @@ Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle
 
     return scope.Escape(resultValue);
 }
-} // namespace node_rfc
+// namespace node_rfc

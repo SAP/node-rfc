@@ -21,13 +21,13 @@ using namespace Napi;
 
 namespace node_rfc
 {
-// SAP string wrapper, required for errors
-Napi::Value wrapString(SAP_UC *uc, int length = -1);
+    // SAP string wrapper, required for errors
+    Napi::Value wrapString(SAP_UC *uc, int length = -1);
 
-// RFC ERRORS
-Napi::Value NodeRfcError(Napi::Value errorObj);
-Napi::Value RfcLibError(RFC_ERROR_INFO *errorInfo, bool alive);
-Napi::Value AbapError(RFC_ERROR_INFO *errorInfoi, bool alive);
-Napi::Value wrapError(RFC_ERROR_INFO *errorInfo, bool alive = true);
+    // RFC ERRORS
+    Napi::Value NodeRfcError(Napi::Value errorObj);
+    Napi::Value RfcLibError(RFC_ERROR_INFO *errorInfo, bool alive);
+    Napi::Value AbapError(RFC_ERROR_INFO *errorInfoi, bool alive);
+    Napi::Value wrapError(RFC_ERROR_INFO *errorInfo, bool alive = true);
 } // namespace node_rfc
 #endif

@@ -16,6 +16,8 @@ let abapSystem = {
         sysnr: "00",
         client: "620",
         lang: "EN",
+        //trace: 3,
+        //USE_REPOSITORY_ROUNDTRIP_OPTIMIZATION: 1,
     },
 
     DSP: {
@@ -38,6 +40,8 @@ let abapSystem = {
     },
 };
 
-module.exports = function (sid = "MME") {
-    return abapSystem[sid];
+module.exports = function (sid = "MME", trace = false) {
+    const as = abapSystem[sid];
+    if (trace) abapSystem.trace = trace;
+    return as;
 };

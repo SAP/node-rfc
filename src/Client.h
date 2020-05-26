@@ -56,6 +56,7 @@ const static char *
 namespace node_rfc
 {
 extern Napi::Env __env;
+
 class Client : public Napi::ObjectWrap<Client>
 {
 public:

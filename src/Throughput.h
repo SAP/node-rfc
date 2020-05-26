@@ -22,40 +22,40 @@ using namespace Napi;
 
 namespace node_rfc
 {
-extern Napi::Env __env;
-class Throughput : public Napi::ObjectWrap<Throughput>
-{
-public:
-    static Napi::FunctionReference constructor;
-    static Napi::Object Init(Napi::Env env, Napi::Object exports);
-
-    void init(Napi::Env env)
+    extern Napi::Env __env;
+    class Throughput : public Napi::ObjectWrap<Throughput>
     {
-        node_rfc::__env = env;
+    public:
+        static Napi::FunctionReference constructor;
+        static Napi::Object Init(Napi::Env env, Napi::Object exports);
+
+        void init(Napi::Env env)
+        {
+            node_rfc::__env = env;
+        };
+
+        Throughput(const Napi::CallbackInfo &info);
+        ~Throughput(void);
+
+    private:
+        static unsigned int __refCounter;
+        unsigned int __refId;
+        Napi::Object __statusObj;
+
+        // Throughput API
+
+        Napi::Value IdGetter(const Napi::CallbackInfo &info);
+        Napi::Value StatusGetter(const Napi::CallbackInfo &info);
+        Napi::Value HandleGetter(const Napi::CallbackInfo &info);
+        Napi::Value SetOnConnection(const Napi::CallbackInfo &info);
+        Napi::Value RemoveFromConnection(const Napi::CallbackInfo &info);
+        static Napi::Value GetFromConnection(const Napi::CallbackInfo &info);
+        Napi::Value Reset(const Napi::CallbackInfo &info);
+        Napi::Value Destroy(const Napi::CallbackInfo &info);
+
+        // SAP NW RFC SDK
+        RFC_THROUGHPUT_HANDLE __handle;
     };
-
-    Throughput(const Napi::CallbackInfo &info);
-    ~Throughput(void);
-
-private:
-    static unsigned int __refCounter;
-    unsigned int __refId;
-    Napi::Object __statusObj;
-
-    // Throughput API
-
-    Napi::Value IdGetter(const Napi::CallbackInfo &info);
-    Napi::Value StatusGetter(const Napi::CallbackInfo &info);
-    Napi::Value HandleGetter(const Napi::CallbackInfo &info);
-    Napi::Value SetOnConnection(const Napi::CallbackInfo &info);
-    Napi::Value RemoveFromConnection(const Napi::CallbackInfo &info);
-    static Napi::Value GetFromConnection(const Napi::CallbackInfo &info);
-    Napi::Value Reset(const Napi::CallbackInfo &info);
-    Napi::Value Destroy(const Napi::CallbackInfo &info);
-
-    // SAP NW RFC SDK
-    RFC_THROUGHPUT_HANDLE __handle;
-};
 
 } // namespace node_rfc
 

@@ -165,12 +165,13 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
         _ATL_ALLOW_CHAR_UNSIGNED
     )
 
+    # https://docs.microsoft.com/en-us/cpp/build/reference/linker-options?view=vs-2019
     target_link_options(${PROJECT_NAME} PUBLIC
-        -NXCOMPAT
-		-SWAPRUN:NET
-		-OPT:REF
-		-nologo
-        -LTCG
+        /NXCOMPAT
+		/SWAPRUN:NET
+		/OPT:REF
+		/NOLOGO
+        /LTCG
     )
 
     if (${NODE_ARCH} STREQUAL "ia32")
