@@ -5,7 +5,7 @@ Change log
 ------------------
 
 * Connection attribute PartnerIPv6 added
-* SAP NWRFC SDK post-installation step removed
+* SAP NWRFC SDK post-installation fix for macOS removed
 
 1.2.0 (2020-04-20)
 ------------------

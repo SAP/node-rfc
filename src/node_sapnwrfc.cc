@@ -22,7 +22,6 @@ Napi::Object RegisterModule(Napi::Env env, Napi::Object exports)
 {
     Client::Init(env, exports);
     Throughput::Init(env, exports);
-
     return exports;
 }
 

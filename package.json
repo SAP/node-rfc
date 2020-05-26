@@ -61,20 +61,20 @@
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@types/bluebird": "^3.5.30",
-    "@types/node": "^13.13.0",
+    "@babel/core": "^7.9.6",
+    "@types/bluebird": "^3.5.32",
+    "@types/node": "^13.13.9",
     "async": "^3.2.0",
     "cmake-js": "^6.1.0",
     "decimal.js": "^10.2.0",
-    "jest": "^25.3.0",
+    "jest": "^25.5.4",
     "node-inspect": "^1.11.6",
     "prebuild": "^10.0.0",
-    "prebuild-install": "^5.3.3",
+    "prebuild-install": "^5.3.4",
     "random-bytes": "^1.0.0",
     "segfault-handler": "^1.3.0",
-    "tslint": "^6.1.1",
-    "typescript": "^3.8.3"
+    "tslint": "^6.1.2",
+    "typescript": "^3.9.3"
   },
   "dependencies": {
     "bluebird": "^3.7.2",
