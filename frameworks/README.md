@@ -1,1 +1,1 @@
-Examples of using node-rfc from in other frameworks.
+Examples of using node-rfc in other frameworks.

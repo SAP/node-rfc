@@ -1,8 +1,6 @@
-## node-rfc and electron-quick-start
+## NW.js with node-rfc
 
 Minimal NW.js example, based on the [NW.js Quick Start](https://github.com/nwjs/nw.js/).
-
-Changes: be2240e
 
 ```bash
 # Go into the repository
@@ -13,4 +11,4 @@ npm install
 npm start
 ```
 
-![](electron.png)
+![](NWjs.png)
