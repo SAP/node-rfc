@@ -31,10 +31,15 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 ## NodeJS platforms
 
+Usage from other platforms:
+
 -   [Electron](https://www.electronjs.org/), see [example](frameworks/electron-quick-start)
 
 -   [NW.js](https://nwjs.io/)
 
+-   [Node-RED](https://github.com/PaulWieland/node-red-contrib-saprfc)
+
+-   [CloudFoundry, AWS Lambdas, heroku ...](https://github.com/SAP/node-rfc/issues/121)
 
 ## Prerequisites
 

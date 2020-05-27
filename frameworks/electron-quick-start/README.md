@@ -1,4 +1,4 @@
-## node-rfc and electron-quick-start
+## electron with node-rfc
 
 Minimal Electron example, based on the [electron-quick-start](https://github.com/electron/electron-quick-start) app.
 
