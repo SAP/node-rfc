@@ -2,7 +2,7 @@
 
 Minimal Electron example, based on the [electron-quick-start](https://github.com/electron/electron-quick-start) app.
 
-### To Use
+Changes: be2240e
 
 ```bash
 # Go into the repository
@@ -12,3 +12,5 @@ npm install
 # Run the app
 npm start
 ```
+
+![](electron.png)
