@@ -1,4 +1,5 @@
 var Promise = require("bluebird");
+
 import {
     Client,
     RfcConnectionParameters,
@@ -18,11 +19,8 @@ export class Pool {
     private __poolOptions: RfcPoolOptions;
     private __clientOptions: RfcClientOptions | undefined;
     private __fillRequests: number;
-
-    private __clients: {
-        ready: Array<Client>;
-        active: Map<number, Client>;
-    };
+    private static Ready: Array<Client> = [];
+    private static Active: Map<number, Client> = new Map();
 
     constructor(
         connectionParams: RfcConnectionParameters,
@@ -36,10 +34,6 @@ export class Pool {
         this.__poolOptions = poolOptions;
         this.__clientOptions = clientOptions;
         this.__fillRequests = 0;
-        this.__clients = {
-            ready: [],
-            active: new Map(),
-        };
     }
 
     newClient(): Client {
@@ -49,10 +43,7 @@ export class Pool {
     }
 
     refill() {
-        if (
-            this.__clients.ready.length + this.__fillRequests >=
-            this.__poolOptions.min
-        ) {
+        if (Pool.Ready.length + this.__fillRequests >= this.__poolOptions.min) {
             return;
         }
 
@@ -61,9 +52,9 @@ export class Pool {
         client.connect((err) => {
             this.__fillRequests--;
             if (isUndefined(err)) {
-                if (this.__clients.ready.length < this.__poolOptions.min) {
-                    this.__clients.ready.unshift(client);
-                    if (this.__clients.ready.length < this.__poolOptions.min)
+                if (Pool.Ready.length < this.__poolOptions.min) {
+                    Pool.Ready.unshift(client);
+                    if (Pool.Ready.length < this.__poolOptions.min)
                         this.refill();
                 } else {
                     client.close(() => {});
@@ -74,14 +65,19 @@ export class Pool {
         });
     }
 
-    acquire(): Promise<Client> {
+    acquire(reqId?: Number): Promise<Client> {
+        console.log(
+            `    pool acquire req: ${reqId} ready: ${Pool.Ready.length} ${this.READY}`
+        );
         return new Promise(
             (resolve: (arg: Client) => void, reject: (arg: any) => void) => {
-                const client = this.__clients.ready.pop();
-                if (this.__clients.ready.length < this.__poolOptions.min)
-                    this.refill();
+                const client = Pool.Ready.pop();
+                if (Pool.Ready.length < this.__poolOptions.min) this.refill();
                 if (client instanceof Client) {
-                    this.__clients.active.set(client.id, client);
+                    Pool.Active.set(client.id, client);
+                    console.log(
+                        `    pool acquire req: ${reqId} client: ${client.id}:${client._connectionHandle} ready: ${Pool.Ready.length} ${this.READY}`
+                    );
                     resolve(client);
                 } else {
                     const newClient: Client = this.newClient();
@@ -89,7 +85,11 @@ export class Pool {
                         if (!isUndefined(err)) {
                             reject(err);
                         } else {
-                            this.__clients.active.set(newClient.id, newClient);
+                            Pool.Active.set(newClient.id, newClient);
+                            console.log(
+                                `    pool acquire req: ${reqId} client: ${newClient.id}:${newClient._connectionHandle} ready: ${Pool.Ready.length} ${this.READY}`
+                            );
+                            console.log(this.READY);
                             resolve(newClient);
                         }
                     });
@@ -98,7 +98,7 @@ export class Pool {
         );
     }
 
-    release(client: Client): Promise<void> {
+    release(client: Client, reqId?: Number): Promise<void> {
         return new Promise(
             (
                 resolve: (arg: number) => void,
@@ -111,38 +111,40 @@ export class Pool {
                         )
                     );
                 const id = client.id;
-                client.close(() => {
-                    this.__clients.active.delete(id);
-                    if (this.__clients.ready.length < this.__poolOptions.min) {
-                        this.refill();
-                    }
-                    resolve(id);
-                });
+                Pool.Active.delete(id);
+                if (Pool.Ready.length < this.__poolOptions.min) {
+                    Pool.Ready.push(client);
+                } else {
+                    client.close(() => {});
+                }
+                console.log(
+                    `    pool release req: ${reqId} client: ${client.id}:${client._connectionHandle} ready: ${Pool.Ready.length} ${this.READY}`
+                );
+                resolve(id);
             }
         );
     }
 
     releaseAll(): Promise<number> {
         return new Promise((resolve: (arg: number) => void) => {
-            const toBeClosed =
-                this.__clients.ready.length + this.__clients.active.size;
+            const toBeClosed = Pool.Ready.length + Pool.Active.size;
             let closed = 0;
-            for (let [id, client] of this.__clients.active.entries()) {
+            for (let [id, client] of Pool.Active.entries()) {
                 client.close(() => {
                     closed++;
                     if (closed === toBeClosed) {
-                        this.__clients.ready = [];
-                        this.__clients.active = new Map();
+                        Pool.Ready = [];
+                        Pool.Active = new Map();
                         resolve(closed);
                     }
                 });
             }
-            this.__clients.ready.forEach((client) =>
+            Pool.Ready.forEach((client) =>
                 client.close(() => {
                     closed++;
                     if (closed === toBeClosed) {
-                        this.__clients.ready = [];
-                        this.__clients.active = new Map();
+                        Pool.Ready = [];
+                        Pool.Active = new Map();
                         resolve(closed);
                     }
                 })
@@ -152,9 +154,15 @@ export class Pool {
 
     get status(): object {
         return {
-            active: this.__clients.active.size,
-            ready: this.__clients.ready.length,
+            active: Pool.Active.size,
+            ready: Pool.Ready.length,
             options: this.__poolOptions,
         };
+    }
+
+    get READY(): Array<Number> {
+        const ready = new Array<Number>();
+        for (let c of Pool.Ready) ready.push(c._connectionHandle);
+        return ready;
     }
 }
