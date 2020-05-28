@@ -55,7 +55,6 @@ export interface RfcClientBinding {
     isAlive(): boolean;
     connectionInfo(): RfcConnectionInfo;
     id: number;
-    runningRFCCalls: number;
     _connectionHandle: number;
     version: RfcClientVersion;
     options: RfcClientOptions;
@@ -135,7 +134,6 @@ export declare class Client {
     get isAlive(): boolean;
     get connectionInfo(): RfcConnectionInfo;
     get id(): number;
-    get runningRFCCalls(): number;
     get _connectionHandle(): number;
     get status(): RfcClientStatus;
     get version(): RfcClientVersion;

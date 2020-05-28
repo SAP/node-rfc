@@ -82,7 +82,6 @@ export interface RfcClientBinding {
     isAlive(): boolean;
     connectionInfo(): RfcConnectionInfo;
     id: number;
-    runningRFCCalls: number;
     _connectionHandle: number;
     version: RfcClientVersion;
     options: RfcClientOptions;
@@ -417,10 +416,6 @@ export class Client {
 
     get id(): number {
         return this.__client.id;
-    }
-
-    get runningRFCCalls(): number {
-        return this.__client.runningRFCCalls;
     }
 
     get _connectionHandle(): number {
