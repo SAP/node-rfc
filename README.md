@@ -35,7 +35,7 @@ Usage from other platforms:
 
 -   [Electron](https://www.electronjs.org/), see [example](frameworks/electron-quick-start)
 
--   [NW.js](https://nwjs.io/)
+-   [NW.js](https://nwjs.io/), see [example](https://github.com/SAP/node-rfc/tree/master/frameworks/nwjs-quick-start)
 
 -   [Node-RED](https://github.com/PaulWieland/node-red-contrib-saprfc)
 
