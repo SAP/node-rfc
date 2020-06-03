@@ -67,7 +67,7 @@ if (NOT DEFINED ENV{NODE_HEADERS_INCLUDE_DIR})
         message("Downloading ${NODE_HEADERS_FILENAME} to ${NODE_HEADERS_DOWNLD_PATH} ...")
         file(DOWNLOAD "https://nodejs.org/download/release/${NODE_VERSION}/${NODE_HEADERS_FILENAME}" "${NODE_HEADERS_DOWNLD_PATH}" ) # SHOW_PROGRESS)
 
-        execute_process(COMMAND tar -xzf ${NODE_HEADERS_DOWNLD_PATH})
+        execute_process(COMMAND tar -xzf ${NODE_HEADERS_DOWNLD_PATH} --force-local)
         file(REMOVE ${NODE_HEADERS_DOWNLD_PATH})
         file(RENAME "${CMAKE_CURRENT_BINARY_DIR}/node-${NODE_VERSION}/include" "${NODE_HEADERS_INCLUDE_DIR}")
         file(REMOVE_RECURSE "${CMAKE_CURRENT_BINARY_DIR}/node-${NODE_VERSION}")
