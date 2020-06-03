@@ -33,14 +33,15 @@ public:
     {
         client->LockMutex(CLIENT_CONNECT);
         client->connectionHandle = RfcOpenConnection(client->connectionParams, client->paramSize, &errorInfo);
+        client->alive = (errorInfo.code == RFC_OK);
     }
 
     void OnOK()
     {
-        client->alive = (errorInfo.code == RFC_OK);
+        bool resultOK = client->alive;
         client->UnlockMutex(CLIENT_CONNECT);
 
-        if (!client->alive)
+        if (!resultOK)
         {
             Napi::Value argv[1] = {wrapError(&errorInfo)};
             CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
@@ -68,8 +69,15 @@ public:
         ongoing_calls = client->LockMutex(CLIENT_CLOSE);
         if (ongoing_calls == 0)
         {
-            client->alive = false;
-            RfcCloseConnection(client->connectionHandle, &errorInfo);
+            if (client->alive) 
+            {
+                client->alive = false;
+                RfcCloseConnection(client->connectionHandle, &errorInfo);
+            }
+            else
+            {
+                errorInfo.code = RFC_OK; // TODO: trying to close a closed handle isn't really ok
+            }
         }
     }
 
@@ -113,18 +121,21 @@ public:
     void Execute()
     {
         client->LockMutex(CLIENT_REOPEN);
-        client->alive = false;
-
-        RfcCloseConnection(client->connectionHandle, &errorInfo);
+        if (client->alive)
+        {
+            client->alive = false;
+            RfcCloseConnection(client->connectionHandle, &errorInfo);
+        }
         client->connectionHandle = RfcOpenConnection(client->connectionParams, client->paramSize, &errorInfo);
+        client->alive = (errorInfo.code == RFC_OK);
     }
 
     void OnOK()
     {
+        bool resultOK = client->alive;
         client->UnlockMutex(CLIENT_REOPEN);
 
-        client->alive = (errorInfo.code == RFC_OK);
-        if (client->alive)
+        if (resultOK)
         {
             CALLBACK_CALL(Env().Global(), Callback(), 0, {});
         }
@@ -187,6 +198,12 @@ public:
     {
         client->LockMutex(CLIENT_INVOKE);
         RfcInvoke(client->connectionHandle, functionHandle, &errorInfo);
+        client->alive = !(
+                errorInfo.code == RFC_COMMUNICATION_FAILURE || // Error in Network & Communication layer.
+                errorInfo.code == RFC_ABAP_RUNTIME_FAILURE ||  // SAP system runtime error (SYSTEM_FAILURE): Shortdump on the backend side.
+                errorInfo.code == RFC_ABAP_MESSAGE ||          // The called function module raised an E-, A- or X-Message.
+                errorInfo.code == RFC_EXTERNAL_FAILURE         // Problems in the RFC runtime of the external program (i.e "this" library)
+                );
     }
 
     void OnOK()
@@ -492,17 +509,20 @@ Client::~Client(void)
     RFC_INT isValid;
     RFC_ERROR_INFO errorInfo;
 
-    this->alive = false;
 
     RFC_RC rc = RfcIsConnectionHandleValid(this->connectionHandle, &isValid, &errorInfo);
-    if (rc == RFC_OK && isValid)
+    if (this->alive)
     {
-        rc = RfcCloseConnection(this->connectionHandle, &errorInfo);
-        if (rc != RFC_OK)
+        this->alive = false;
+        if (rc == RFC_OK && isValid)
         {
-            printf("Error closing connection: %d", rc);
-        }
-    }
+            fprintf(stderr, "client %d deconstructor closes handle %p", this->__refId, this->connectionHandle);
+            rc = RfcCloseConnection(this->connectionHandle, &errorInfo);
+            if (rc != RFC_OK)
+            {
+                fprintf(stderr, "Error closing connection: %d", rc);
+            }
+    }}
 
     for (unsigned int i = 0; i < this->paramSize; i++)
     {
