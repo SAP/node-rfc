@@ -31,16 +31,17 @@ namespace node_rfc
 
         void Execute()
         {
-            client->LockMutex();
+            client->LockMutex(CLIENT_CONNECT);
             client->connectionHandle = RfcOpenConnection(client->connectionParams, client->paramSize, &errorInfo);
+            client->alive = (errorInfo.code == RFC_OK);
         }
 
         void OnOK()
         {
-            client->alive = (errorInfo.code == RFC_OK);
-            client->UnlockMutex();
+            bool resultOK = client->alive;
+            client->UnlockMutex(CLIENT_CONNECT);
 
-            if (!client->alive)
+            if (!resultOK)
             {
                 Napi::Value argv[1] = {wrapError(&errorInfo)};
                 CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
@@ -65,20 +66,49 @@ namespace node_rfc
 
         void Execute()
         {
-            client->LockMutex();
-            client->alive = false;
-            RfcCloseConnection(client->connectionHandle, &errorInfo);
+            ongoing_calls = client->LockMutex(CLIENT_CLOSE);
+            if (ongoing_calls == 0)
+            {
+                if (client->alive)
+                {
+                    client->alive = false;
+                    RfcCloseConnection(client->connectionHandle, &errorInfo);
+                }
+                else
+                {
+                    errorInfo.code = RFC_OK; // TODO: trying to close a closed handle isn't really ok
+                }
+            }
         }
 
         void OnOK()
         {
-            client->UnlockMutex();
-            CALLBACK_CALL(Env().Global(), Callback(), 0, {});
+            client->UnlockMutex(CLIENT_CLOSE);
+            if (ongoing_calls == 0)
+            {
+                if (errorInfo.code == RFC_OK)
+                {
+                    CALLBACK_CALL(Env().Global(), Callback(), 0, {});
+                }
+                else
+                {
+                    Napi::Value argv[1] = {wrapError(&errorInfo)};
+                    CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
+                }
+            }
+            else
+            {
+                char err[256];
+                sprintf(err, "Close rejected because %u RFC calls still running", ongoing_calls);
+                Napi::Value argv[1] = {Napi::String::New(Env(), err)};
+                CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
+            }
         }
 
     private:
         Client *client;
         RFC_ERROR_INFO errorInfo;
+        unsigned int ongoing_calls;
     };
 
     class ReopenAsync : public Napi::AsyncWorker
@@ -90,19 +120,22 @@ namespace node_rfc
 
         void Execute()
         {
-            client->LockMutex();
-            client->alive = false;
-
-            RfcCloseConnection(client->connectionHandle, &errorInfo);
+            client->LockMutex(CLIENT_REOPEN);
+            if (client->alive)
+            {
+                client->alive = false;
+                RfcCloseConnection(client->connectionHandle, &errorInfo);
+            }
             client->connectionHandle = RfcOpenConnection(client->connectionParams, client->paramSize, &errorInfo);
+            client->alive = (errorInfo.code == RFC_OK);
         }
 
         void OnOK()
         {
-            client->UnlockMutex();
+            bool resultOK = client->alive;
+            client->UnlockMutex(CLIENT_REOPEN);
 
-            client->alive = (errorInfo.code == RFC_OK);
-            if (client->alive)
+            if (resultOK)
             {
                 CALLBACK_CALL(Env().Global(), Callback(), 0, {});
             }
@@ -127,7 +160,7 @@ namespace node_rfc
 
         void Execute()
         {
-            client->LockMutex();
+            client->LockMutex(CLIENT_PING);
             RfcPing(client->connectionHandle, &errorInfo);
         }
 
@@ -138,7 +171,7 @@ namespace node_rfc
             {
                 RfcIsConnectionHandleValid(client->connectionHandle, &isValid, &errorInfo);
             }
-            client->UnlockMutex();
+            client->UnlockMutex(CLIENT_PING);
             Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
             if (errorInfo.code != RFC_OK)
                 argv[0] = wrapError(&errorInfo);
@@ -163,8 +196,14 @@ namespace node_rfc
 
         void Execute()
         {
-            client->LockMutex();
+            client->LockMutex(CLIENT_INVOKE);
             RfcInvoke(client->connectionHandle, functionHandle, &errorInfo);
+            client->alive = !(
+                errorInfo.code == RFC_COMMUNICATION_FAILURE || // Error in Network & Communication layer.
+                errorInfo.code == RFC_ABAP_RUNTIME_FAILURE ||  // SAP system runtime error (SYSTEM_FAILURE): Shortdump on the backend side.
+                errorInfo.code == RFC_ABAP_MESSAGE ||          // The called function module raised an E-, A- or X-Message.
+                errorInfo.code == RFC_EXTERNAL_FAILURE         // Problems in the RFC runtime of the external program (i.e "this" library)
+            );
         }
 
         void OnOK()
@@ -192,7 +231,8 @@ namespace node_rfc
             {
                 argv[1] = client->wrapResult(functionDescHandle, functionHandle);
             }
-            client->UnlockMutex();
+            client->runningCalls--;
+            client->UnlockMutex(CLIENT_INVOKE);
             RfcDestroyFunction(functionHandle, NULL);
             CALLBACK_CALL(Env().Global(), callback, 2, argv)
             callback.Reset();
@@ -221,14 +261,15 @@ namespace node_rfc
 
         void Execute()
         {
-            client->LockMutex();
+            client->LockMutex(CLIENT_PREPARE);
+            client->runningCalls++;
             functionDescHandle = RfcGetFunctionDesc(client->connectionHandle, funcName, &errorInfo);
             free(funcName);
         }
 
         void OnOK()
         {
-            client->UnlockMutex();
+            client->UnlockMutex(CLIENT_PREPARE);
             RFC_FUNCTION_HANDLE functionHandle = NULL;
             Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
 
@@ -290,6 +331,7 @@ namespace node_rfc
             }
             else
             {
+                client->runningCalls--;
                 CALLBACK_CALL(Env().Global(), callback, 1, argv);
                 callback.Reset();
             }
@@ -467,15 +509,19 @@ namespace node_rfc
         RFC_INT isValid;
         RFC_ERROR_INFO errorInfo;
 
-        this->alive = false;
-
         RFC_RC rc = RfcIsConnectionHandleValid(this->connectionHandle, &isValid, &errorInfo);
-        if (rc == RFC_OK && isValid)
+
+        if (this->alive)
         {
-            rc = RfcCloseConnection(this->connectionHandle, &errorInfo);
-            if (rc != RFC_OK)
+            this->alive = false;
+            if (rc == RFC_OK && isValid)
             {
-                printf("Error closing connection: %d", rc);
+                fprintf(stderr, "client %u deconstructor closes handle %lu\n", this->__refId, (uintptr_t)this->connectionHandle);
+                rc = RfcCloseConnection(this->connectionHandle, &errorInfo);
+                if (rc != RFC_OK)
+                {
+                    fprintf(stderr, "Error rc=%u closing client %u handle %lu\n", rc, this->__refId, (uintptr_t)this->connectionHandle);
+                }
             }
         }
 
@@ -504,6 +550,7 @@ namespace node_rfc
                                                      InstanceAccessor("options", &Client::OptionsGetter, nullptr),
                                                      InstanceAccessor("id", &Client::IdGetter, nullptr),
                                                      InstanceAccessor("_connectionHandle", &Client::ConnectionHandleGetter, nullptr),
+                                                     InstanceAccessor("runningRFCCalls", &Client::RunningCallsGetter, nullptr),
                                                      InstanceMethod("connectionInfo", &Client::ConnectionInfo),
                                                      InstanceMethod("connect", &Client::Connect),
                                                      InstanceMethod("invoke", &Client::Invoke),
@@ -574,14 +621,29 @@ namespace node_rfc
         return info.Env().Undefined();
     }
 
-    void Client::LockMutex(void)
+    unsigned int Client::LockMutex(RFC_CLIENT_STATE newstate)
     {
         uv_sem_wait(&this->invocationMutex);
+
+        LOG_LOCK_REQUEST(this->state, newstate);
+        if (newstate == CLIENT_CLOSE && this->runningCalls > 0)
+        {
+            ; // Reject Close request during ongoing call
+        }
+        else
+        {
+            this->state = newstate;
+        }
+        LOG_LOCK_ACQUIRE(this->state);
+        return this->runningCalls;
     }
 
-    void Client::UnlockMutex(void)
+    void Client::UnlockMutex(RFC_CLIENT_STATE newstate)
     {
+        LOG_UNLOCK_REQUEST(this->state, newstate);
         uv_sem_post(&this->invocationMutex);
+        this->state = CLIENT_READY;
+        LOG_UNLOCK_ACQUIRE(this->state);
     }
 
     Napi::Value Client::Close(const Napi::CallbackInfo &info)
@@ -596,7 +658,6 @@ namespace node_rfc
         }
         Napi::Function callback = info[0].As<Napi::Function>();
 
-        // Close async
         (new CloseAsync(callback, this))->Queue();
 
         return info.Env().Undefined();
@@ -694,6 +755,11 @@ namespace node_rfc
     Napi::Value Client::IdGetter(const Napi::CallbackInfo &info)
     {
         return Napi::Number::New(info.Env(), this->__refId);
+    }
+
+    Napi::Value Client::RunningCallsGetter(const Napi::CallbackInfo &info)
+    {
+        return Napi::Number::New(info.Env(), this->runningCalls);
     }
 
     Napi::Value Client::ConnectionHandleGetter(const Napi::CallbackInfo &info)
