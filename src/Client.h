@@ -27,12 +27,35 @@
 
 using namespace Napi;
 
-#define RFC_CLIENT_LOG
+//#define RFC_CLIENT_LOG
+typedef enum _RFC_CLIENT_STATE
+{
+    CLIENT_CREATED = 0,
+    CLIENT_READY,
+    CLIENT_CONNECT,
+    CLIENT_PREPARE,
+    CLIENT_INVOKE,
+    CLIENT_CLOSE,
+    CLIENT_PING,
+    CLIENT_REOPEN,
+} RFC_CLIENT_STATE;
+
+#ifdef RFC_CLIENT_LOG
+const static char *
+    RFC_CLIENT_STATE_STRING[] = {
+        "Created",
+        "Ready",
+        "Connect",
+        "Prepare",
+        "Invoke",
+        "Close",
+        "Ping",
+        "Reopen"};
+#endif
 
 namespace node_rfc
 {
     extern Napi::Env __env;
-
     class Client : public Napi::ObjectWrap<Client>
     {
     public:
@@ -65,6 +88,8 @@ namespace node_rfc
     private:
         static unsigned int __refCounter;
         unsigned int __refId;
+
+        RFC_CLIENT_STATE state = CLIENT_CREATED;
 
         // Client API
 
@@ -112,9 +137,10 @@ namespace node_rfc
         RFC_RC rc;
         RFC_ERROR_INFO errorInfo;
 
-        void LockMutex(void);
-        void UnlockMutex(void);
+        unsigned int LockMutex(RFC_CLIENT_STATE state);
+        void UnlockMutex(RFC_CLIENT_STATE state);
         uv_sem_t invocationMutex;
+        unsigned int runningCalls = 0;
     };
 
 } // namespace node_rfc

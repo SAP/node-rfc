@@ -1,2 +1,2 @@
-describe("Locking: Promise", require("./promise")) &&
-    describe("Locking: Callbacks", require("./callback"));
+//describe("Locking: Promise", require("./promise")) &&
+describe("Locking: Callbacks", require("./callback"));

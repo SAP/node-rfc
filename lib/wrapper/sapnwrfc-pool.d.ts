@@ -9,14 +9,12 @@ export declare class Pool {
     private __poolOptions;
     private __clientOptions;
     private __fillRequests;
-    private static Ready;
-    private static Active;
+    private __clients;
     constructor(connectionParams: RfcConnectionParameters, poolOptions?: RfcPoolOptions, clientOptions?: RfcClientOptions);
     newClient(): Client;
     refill(): void;
-    acquire(reqId?: Number): Promise<Client>;
-    release(client: Client, reqId?: Number): Promise<void>;
+    acquire(): Promise<Client>;
+    release(client: Client): Promise<void>;
     releaseAll(): Promise<number>;
     get status(): object;
-    get READY(): Array<Number>;
 }
