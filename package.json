@@ -26,7 +26,7 @@
     "install": "prebuild-install --tag-prefix -r napi || cmake-js rebuild",
     "prebuild": "prebuild --backend cmake-js -r napi --force --strip --verbose --tag-prefix",
     "upload": "prebuild -r napi -u --verbose",
-    "wrapper": "tsc -p src/ts",
+    "ts": "tsc -p src/ts",
     "examples": "tsc -p examples/ts",
     "test": "jest test"
   },
@@ -70,7 +70,7 @@
     "jest": "^25.5.4",
     "node-inspect": "^1.11.6",
     "prebuild": "^10.0.0",
-    "prebuild-install": "^5.3.4",
+    "prebuild-install": "^5.3.5",
     "random-bytes": "^1.0.0",
     "segfault-handler": "^1.3.0",
     "tslint": "^6.1.2",
@@ -78,6 +78,6 @@
   },
   "dependencies": {
     "bluebird": "^3.7.2",
-    "node-addon-api": "^2.0.1"
+    "node-addon-api": "^2.0.2"
   }
 }
