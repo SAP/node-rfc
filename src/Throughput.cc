@@ -1,3 +1,4 @@
+
 // Copyright 2014 SAP AG.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +15,12 @@
 
 #include "Throughput.h"
 #include "Client.h"
-#include "macros.h"
-#include "noderfcsdk.h"
+#include "nwrfcsdk.h"
 
 namespace node_rfc
 {
 
-    unsigned int Throughput::__refCounter = 0;
+    uint_t Throughput::_id = 0;
     extern Napi::Env __env;
 
     Napi::FunctionReference Throughput::constructor;
@@ -29,26 +29,26 @@ namespace node_rfc
     {
         if (!info.IsConstructCall())
         {
-            Napi::Error::New(info.Env(), "Use the new operator to create instances of Rfc  Throughput.").ThrowAsJavaScriptException();
+            Napi::Error::New(info.Env(), "Use the new operator to create instances of Rfc Throughput.").ThrowAsJavaScriptException();
         }
         init(info.Env());
         RFC_ERROR_INFO errorInfo;
-        this->__handle = RfcCreateThroughput(&errorInfo);
+        this->throughput_handle = RfcCreateThroughput(&errorInfo);
         if (errorInfo.code != RFC_OK)
             Napi::Error::New(info.Env(), "node-rfc internal error: Throughput create failed.\nCheck if SAP NWRFC SDK version >= 7.53").ThrowAsJavaScriptException();
 
-        this->__refId = ++Throughput::__refCounter;
+        this->id = ++Throughput::_id;
     }
 
     Throughput::~Throughput(void)
     {
         RFC_ERROR_INFO errorInfo;
 
-        if (this->__handle != NULL)
+        if (this->throughput_handle != NULL)
         {
-            RfcDestroyThroughput(this->__handle, &errorInfo);
+            RfcDestroyThroughput(this->throughput_handle, &errorInfo);
             //if (errorInfo.code != RFC_OK) ...
-            this->__handle = NULL;
+            this->throughput_handle = NULL;
         }
     }
 
@@ -80,7 +80,7 @@ namespace node_rfc
     {
         Napi::EscapableHandleScope scope(info.Env());
         RFC_ERROR_INFO errorInfo;
-        RFC_RC rc = RfcResetThroughput(this->__handle, &errorInfo);
+        RFC_RC rc = RfcResetThroughput(this->throughput_handle, &errorInfo);
         if (rc != RFC_OK)
             return scope.Escape(wrapError(&errorInfo));
         return info.Env().Undefined();
@@ -90,10 +90,10 @@ namespace node_rfc
     {
         Napi::EscapableHandleScope scope(info.Env());
         RFC_ERROR_INFO errorInfo;
-        if (this->__handle != NULL)
+        if (this->throughput_handle != NULL)
         {
-            RFC_RC rc = RfcDestroyThroughput(this->__handle, &errorInfo);
-            this->__handle = NULL;
+            RFC_RC rc = RfcDestroyThroughput(this->throughput_handle, &errorInfo);
+            this->throughput_handle = NULL;
             if (rc != RFC_OK)
                 return scope.Escape(wrapError(&errorInfo));
         }
@@ -102,12 +102,12 @@ namespace node_rfc
 
     Napi::Value Throughput::IdGetter(const Napi::CallbackInfo &info)
     {
-        return Napi::Number::New(info.Env(), this->__refId);
+        return Napi::Number::New(info.Env(), this->id);
     }
 
     Napi::Value Throughput::HandleGetter(const Napi::CallbackInfo &info)
     {
-        return Napi::Number::New(info.Env(), static_cast<double>((uint64_t)this->__handle));
+        return Napi::Number::New(info.Env(), static_cast<double>((uint64_t)this->throughput_handle));
     }
 
     Napi::Value Throughput::StatusGetter(const Napi::CallbackInfo &info)
@@ -126,7 +126,7 @@ namespace node_rfc
 
         Napi::Object status = Napi::Object::New(info.Env());
 
-        if (this->__handle == NULL)
+        if (this->throughput_handle == NULL)
             Napi::Error::New(info.Env(), "node-rfc internal error: Throughput without handle!").ThrowAsJavaScriptException();
 
         THROUGHPUT_CALL(NumberOfCalls, numberOfCalls);
@@ -154,7 +154,7 @@ namespace node_rfc
         }
         const RFC_CONNECTION_HANDLE connectionHandle = (RFC_CONNECTION_HANDLE)info[0].As<Number>().Int64Value();
         RFC_ERROR_INFO errorInfo;
-        RFC_RC rc = RfcSetThroughputOnConnection(connectionHandle, this->__handle, &errorInfo);
+        RFC_RC rc = RfcSetThroughputOnConnection(connectionHandle, this->throughput_handle, &errorInfo);
         if (rc != RFC_OK)
         {
             return scope.Escape(wrapError(&errorInfo));

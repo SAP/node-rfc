@@ -12,11 +12,10 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-#ifndef NODE_SAPNWRFC_THROUGHPUT_H_
-#define NODE_SAPNWRFC_THROUGHPUT_H_
+#ifndef NodeRfc_Throughput_H_
+#define NodeRfc_Throughput_H_
 
-#include <napi.h>
-#include <sapnwrfc.h>
+#include "nwrfcsdk.h"
 
 using namespace Napi;
 
@@ -38,9 +37,9 @@ namespace node_rfc
         ~Throughput(void);
 
     private:
-        static unsigned int __refCounter;
-        unsigned int __refId;
-        Napi::Object __statusObj;
+        static uint_t _id;
+        uint_t id;
+        Napi::Object _statusObj;
 
         // Throughput API
 
@@ -54,9 +53,15 @@ namespace node_rfc
         Napi::Value Destroy(const Napi::CallbackInfo &info);
 
         // SAP NW RFC SDK
-        RFC_THROUGHPUT_HANDLE __handle;
+        RFC_THROUGHPUT_HANDLE throughput_handle;
     };
 
 } // namespace node_rfc
+
+#define THROUGHPUT_CALL(Property, property)                                \
+    rc = RfcGet##Property(this->throughput_handle, &property, &errorInfo); \
+    if (rc != RFC_OK)                                                      \
+        return scope.Escape(wrapError(&errorInfo));                        \
+    status.Set(Napi::String::New(info.Env(), #property), Napi::Number::New(info.Env(), static_cast<double>(property)));
 
 #endif // NODE_SAPNWRFC_Throughput_H_

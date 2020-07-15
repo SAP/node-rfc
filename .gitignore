@@ -30,4 +30,5 @@ cmake_install.cmake
 CMakeCache.txt
 CMakeFiles
 ci/test
+sapnwrfc.ini
 

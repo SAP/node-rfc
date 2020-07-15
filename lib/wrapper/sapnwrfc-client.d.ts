@@ -1,66 +1,5 @@
 /// <reference types="node" />
-import { RfcThroughputBinding } from "./sapnwrfc-throughput";
-export interface NWRfcBinding {
-    Client: RfcClientBinding;
-    Throughput: RfcThroughputBinding;
-    verbose(): this;
-}
-declare let binding: NWRfcBinding;
-export { binding };
-interface RfcConnectionInfo {
-    dest: string;
-    host: string;
-    partnerHost: string;
-    sysNumber: string;
-    sysId: string;
-    client: string;
-    user: string;
-    language: string;
-    trace: string;
-    isoLanguage: string;
-    codepage: string;
-    partnerCodepage: string;
-    rfcRole: string;
-    type: string;
-    partnerType: string;
-    rel: string;
-    partnerRel: string;
-    kernelRel: string;
-    cpicConvId: string;
-    progName: string;
-    partnerBytesPerChar: string;
-    partnerSystemCodepage: string;
-    partnerIP: string;
-    partnerIPv6: string;
-}
-interface RfcClientVersion {
-    major: string;
-    minor: string;
-    patch: string;
-    binding: string;
-}
-export interface RfcClientOptions {
-    bcd: string | Function;
-    date: Function;
-    time: Function;
-}
-export interface RfcClientBinding {
-    new (connectionParameters: RfcConnectionParameters, options?: RfcClientOptions): RfcClientBinding;
-    (connectionParameters: RfcConnectionParameters): RfcClientBinding;
-    connect(callback: Function): any;
-    invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): any;
-    ping(callback: Function | undefined): void | Promise<void>;
-    close(callback: Function | undefined): void | Promise<void>;
-    reopen(callback: Function | undefined): void | Promise<void>;
-    isAlive(): boolean;
-    connectionInfo(): RfcConnectionInfo;
-    id: number;
-    runningRFCCalls: number;
-    _connectionHandle: number;
-    version: RfcClientVersion;
-    options: RfcClientOptions;
-    status: RfcClientStatus;
-}
+import { NodeRfcEnvironment } from "./noderfc-bindings";
 declare enum EnumSncQop {
     DigSig = "1",
     DigSigEnc = "2",
@@ -73,10 +12,6 @@ declare enum EnumTrace {
     Brief = "1",
     Verbose = "2",
     Full = "3"
-}
-export interface RfcCallOptions {
-    notRequested?: Array<String>;
-    timeout?: number;
 }
 export interface RfcConnectionParameters {
     saprouter?: string;
@@ -105,6 +40,44 @@ export interface RfcConnectionParameters {
     tpname?: string;
     program_id?: string;
 }
+declare enum RfcParameterDirection {
+    RFC_IMPORT = 1,
+    RFC_EXPORT = 2,
+    RFC_CHANGING = 3,
+    RFC_TABLES = 7
+}
+export interface RfcClientOptions {
+    bcd?: string | Function;
+    date?: Function;
+    time?: Function;
+    filter?: RfcParameterDirection;
+}
+interface RfcConnectionInfo {
+    dest: string;
+    host: string;
+    partnerHost: string;
+    sysNumber: string;
+    sysId: string;
+    client: string;
+    user: string;
+    language: string;
+    trace: string;
+    isoLanguage: string;
+    codepage: string;
+    partnerCodepage: string;
+    rfcRole: string;
+    type: string;
+    partnerType: string;
+    rel: string;
+    partnerRel: string;
+    kernelRel: string;
+    cpicConvId: string;
+    progName: string;
+    partnerBytesPerChar: string;
+    partnerSystemCodepage: string;
+    partnerIP: string;
+    partnerIPv6: string;
+}
 export declare type RfcVariable = string | number | Buffer;
 export declare type RfcArray = Array<RfcVariable>;
 export declare type RfcStructure = {
@@ -115,29 +88,46 @@ export declare type RfcParameterValue = RfcVariable | RfcArray | RfcStructure | 
 export declare type RfcObject = {
     [key: string]: RfcParameterValue;
 };
-export interface RfcClientStatus {
-    created: number;
-    lastcall: number;
-    lastopen: number;
-    lastclose: number;
+export interface RfcClientBinding {
+    new (connectionParameters: RfcConnectionParameters, clientOptions?: RfcClientOptions): RfcClientBinding;
+    (connectionParameters: RfcConnectionParameters, options?: RfcClientOptions): RfcClientBinding;
+    _id: number;
+    _alive: boolean;
+    _connectionHandle: number;
+    _pool_id: number;
+    _config: {
+        connectionParameters: object;
+        clientOptions?: object;
+    };
+    connectionInfo(): RfcConnectionInfo;
+    open(callback: Function): void;
+    close(callback: Function): void;
+    resetServerContext(callback: Function): void;
+    ping(callback: Function): void;
+    invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): void;
+    release(oneClientBinding: [RfcClientBinding], callback: Function): void;
 }
 export declare class Client {
     private __client;
-    private __status;
-    constructor(connectionParams: RfcConnectionParameters, options?: RfcClientOptions);
-    open(): Promise<Client>;
-    reopen(callback?: Function): Promise<Client> | any;
-    close(callback?: Function): Promise<void> | any;
-    call(rfmName: string, rfmParams: RfcObject, callOptions?: RfcCallOptions): Promise<RfcObject>;
-    connect(callback: Function): void;
-    invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): void;
-    ping(callback?: Function): Promise<boolean> | any;
-    get isAlive(): boolean;
-    get connectionInfo(): RfcConnectionInfo;
+    constructor(arg1: RfcClientBinding | RfcConnectionParameters, clientOptions?: RfcClientOptions);
+    static get environment(): NodeRfcEnvironment;
+    get environment(): NodeRfcEnvironment;
+    get binding(): RfcClientBinding;
     get id(): number;
-    get runningRFCCalls(): number;
-    get _connectionHandle(): number;
-    get status(): RfcClientStatus;
-    get version(): RfcClientVersion;
-    get options(): RfcClientOptions;
+    get alive(): boolean;
+    get connectionHandle(): number;
+    get pool_id(): number;
+    get config(): Object;
+    get _id(): string;
+    get connectionInfo(): RfcConnectionInfo;
+    checkCallbackArg(method: string, callback?: Function): void;
+    connect(callback?: Function): void | Promise<Client>;
+    open(callback?: Function): void | Promise<Client>;
+    ping(callback?: Function): void | Promise<boolean>;
+    close(callback?: Function): void | Promise<void>;
+    resetServerContext(callback?: Function): void | Promise<void>;
+    release(callback?: Function): void | Promise<void>;
+    call(rfmName: string, rfmParams: RfcObject, callOptions?: RfcClientOptions): Promise<RfcObject>;
+    invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: RfcClientOptions): void;
 }
+export {};

@@ -1,3 +1,4 @@
+import { NodeRfcEnvironment } from "./noderfc-bindings";
 import { Client } from "./sapnwrfc-client";
 export interface RfcThroughputBinding {
     new (): RfcThroughputBinding;
@@ -23,7 +24,7 @@ export interface RfcThroughputStatus {
 export declare class Throughput {
     private __throughput;
     private __clients;
-    private static __Handles;
+    private static _handles;
     constructor(client?: Client | Array<Client>);
     setOnConnection(client: Client | Array<Client>): void;
     removeFromConnection(client: Client | Array<Client>): void;
@@ -32,5 +33,7 @@ export declare class Throughput {
     destroy(): void;
     get status(): RfcThroughputStatus;
     get clients(): Set<Client>;
-    get _handle(): number;
+    get handle(): number;
+    static get environment(): NodeRfcEnvironment;
+    get environment(): NodeRfcEnvironment;
 }

@@ -12,137 +12,86 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-#ifndef NODE_SAPNWRFC_CLIENT_H_
-#define NODE_SAPNWRFC_CLIENT_H_
-
-#define SAPNWRFC_BINDING_VERSION "1.2.0"
-
-#define NODERFC_BCD_STRING 0
-#define NODERFC_BCD_NUMBER 1
-#define NODERFC_BCD_FUNCTION 2
+#ifndef NodeRfc_Client_H
+#define NodeRfc_Client_H
 
 #include <uv.h>
-#include <napi.h>
-#include <sapnwrfc.h>
-
-using namespace Napi;
-
-//#define RFC_CLIENT_LOG
-typedef enum _RFC_CLIENT_STATE
-{
-    CLIENT_CREATED = 0,
-    CLIENT_READY,
-    CLIENT_CONNECT,
-    CLIENT_PREPARE,
-    CLIENT_INVOKE,
-    CLIENT_CLOSE,
-    CLIENT_PING,
-    CLIENT_REOPEN,
-} RFC_CLIENT_STATE;
-
-#ifdef RFC_CLIENT_LOG
-const static char *
-    RFC_CLIENT_STATE_STRING[] = {
-        "Created",
-        "Ready",
-        "Connect",
-        "Prepare",
-        "Invoke",
-        "Close",
-        "Ping",
-        "Reopen"};
-#endif
-
 namespace node_rfc
 {
     extern Napi::Env __env;
+
+    class Pool;
+    void checkConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams);
+    void checkClientOptions(Napi::Object clientOptionsObject, ClientOptionsStruct *clientOptions);
     class Client : public Napi::ObjectWrap<Client>
     {
     public:
-        friend class ConnectAsync;
+        friend class Pool;
+        friend class AcquireAsync;
+        friend class ReleaseAsync;
+        friend class OpenAsync;
         friend class CloseAsync;
-        friend class ReopenAsync;
+        friend class ResetServerAsync;
         friend class PingAsync;
         friend class PrepareAsync;
         friend class InvokeAsync;
-
-        static Napi::FunctionReference constructor;
         static Napi::Object Init(Napi::Env env, Napi::Object exports);
-
-        void init(Napi::Env env)
-        {
-            node_rfc::__env = env;
-            paramSize = 0;
-            connectionParams = NULL;
-            connectionHandle = NULL;
-            alive = false;
-            __bcd = NODERFC_BCD_STRING;
-
-            rc = (RFC_RC)0;
-            errorInfo.code = rc;
-        };
-
         Client(const Napi::CallbackInfo &info);
         ~Client(void);
 
     private:
-        static unsigned int __refCounter;
-        unsigned int __refId;
-
-        RFC_CLIENT_STATE state = CLIENT_CREATED;
-
-        // Client API
-
+        static Napi::Object NewInstance(Napi::Env env);
         Napi::Value IdGetter(const Napi::CallbackInfo &info);
-        Napi::Value VersionGetter(const Napi::CallbackInfo &info);
-        Napi::Value OptionsGetter(const Napi::CallbackInfo &info);
+        Napi::Value AliveGetter(const Napi::CallbackInfo &info);
+        Napi::Value ConfigGetter(const Napi::CallbackInfo &info);
         Napi::Value ConnectionHandleGetter(const Napi::CallbackInfo &info);
-        Napi::Value RunningCallsGetter(const Napi::CallbackInfo &info);
+        Napi::Value PoolIdGetter(const Napi::CallbackInfo &info);
+        Napi::ObjectReference clientParamsRef;
+        Napi::ObjectReference clientOptionsRef;
+        Napi::Error connectionClosedError(std::string msgprefix);
 
+        bool connectionCloseOnError(RFC_ERROR_INFO *errorInfo);
         Napi::Value ConnectionInfo(const Napi::CallbackInfo &info);
-        Napi::Value Connect(const Napi::CallbackInfo &info);
-        Napi::Value Invoke(const Napi::CallbackInfo &info);
-        Napi::Value Ping(const Napi::CallbackInfo &info);
+        Napi::Value Release(const Napi::CallbackInfo &info);
+        Napi::Value Open(const Napi::CallbackInfo &info);
         Napi::Value Close(const Napi::CallbackInfo &info);
-        Napi::Value Reopen(const Napi::CallbackInfo &info);
-        Napi::Value IsAlive(const Napi::CallbackInfo &info);
+        Napi::Value ResetServerContext(const Napi::CallbackInfo &info);
+        Napi::Value Ping(const Napi::CallbackInfo &info);
+        Napi::Value Invoke(const Napi::CallbackInfo &info);
 
-        // SAP NW RFC SDK
-
-        SAP_UC *fillString(const Napi::String napistr);
         SAP_UC *fillString(std::string str);
         Napi::Value fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, Napi::String name, Napi::Value value);
         Napi::Value fillStructure(RFC_STRUCTURE_HANDLE structHandle, RFC_TYPE_DESC_HANDLE functionDescHandle, SAP_UC *cName, Napi::Value value);
         Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Napi::Value value, RFC_TYPE_DESC_HANDLE functionDescHandle);
 
         Napi::Value wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle);
-        Napi::Value wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, unsigned int cLen, RFC_TYPE_DESC_HANDLE typeDesc);
+        Napi::Value wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc);
         Napi::Value wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle);
 
-        unsigned int paramSize;
-        RFC_CONNECTION_PARAMETER *connectionParams;
+        void init(Napi::Env env)
+        {
+            node_rfc::__env = env;
+            id = Client::_id++;
+
+            pool = NULL;
+            connectionHandle = NULL;
+
+            uv_sem_init(&invocationMutex, 1);
+        };
+
+        static uint_t _id;
+        uint_t id;
+        Pool *pool;
         RFC_CONNECTION_HANDLE connectionHandle;
-        bool alive;
-        int __bcd = 0; // 0: string, 1: number, 2: function
-        RFC_DIRECTION __filter_param_direction = (RFC_DIRECTION)0;
 
-        Napi::FunctionReference __bcdFunction;
-        // date
-        Napi::FunctionReference __dateToABAP;
-        Napi::FunctionReference __dateFromABAP;
-        // time
-        Napi::FunctionReference __timeToABAP;
-        Napi::FunctionReference __timeFromABAP;
+        ConnectionParamsStruct client_params;
+        ClientOptionsStruct client_options;
 
-        RFC_RC rc;
-        RFC_ERROR_INFO errorInfo;
-
-        unsigned int LockMutex(RFC_CLIENT_STATE state);
-        void UnlockMutex(RFC_CLIENT_STATE state);
+        void LockMutex();
+        void UnlockMutex();
         uv_sem_t invocationMutex;
-        unsigned int runningCalls = 0;
     };
 
 } // namespace node_rfc
 
-#endif // NODE_SAPNWRFC_CLIENT_H_
+#endif

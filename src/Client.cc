@@ -1,3 +1,4 @@
+
 // Copyright 2014 SAP AG.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,44 +13,395 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
+#include "nwrfcsdk.h"
 #include "Client.h"
-#include "noderfcsdk.h"
-#include "macros.h"
+#include "Pool.h"
 
 namespace node_rfc
 {
-
-    unsigned int Client::__refCounter = 0;
     extern Napi::Env __env;
 
-    class ConnectAsync : public Napi::AsyncWorker
+    uint_t Client::_id = 1;
+
+    void checkConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams)
+    {
+        Napi::Array paramNames = clientParamsObject.GetPropertyNames();
+        clientParams->paramSize = paramNames.Length();
+        DEBUG("checkConnectionParams %u", clientParams->paramSize);
+        clientParams->connectionParams = static_cast<RFC_CONNECTION_PARAMETER *>(malloc(clientParams->paramSize * sizeof(RFC_CONNECTION_PARAMETER)));
+        for (uint_t ii = 0; ii < clientParams->paramSize; ii++)
+        {
+            Napi::String name = paramNames.Get(ii).ToString();
+            DEBUG("checkConnectionParams %s", name.Utf8Value().c_str());
+            Napi::String value = clientParamsObject.Get(name).ToString();
+            clientParams->connectionParams[ii].name = fillString(name);
+            clientParams->connectionParams[ii].value = fillString(value);
+        }
+    }
+
+    void checkClientOptions(Napi::Object clientOptionsObject, ClientOptionsStruct *client_options)
+    {
+        char errmsg[254];
+        Napi::Array props = clientOptionsObject.GetPropertyNames();
+        for (uint_t ii = 0; ii < props.Length(); ii++)
+        {
+            std::string key = props.Get(ii).ToString().Utf8Value();
+            Napi::Value opt = clientOptionsObject.Get(key).As<Napi::Value>();
+
+            // Client option: "bcd"
+            if (key.compare(std::string(CLIENT_OPTION_KEY_BCD)) == 0)
+            {
+                if (opt.IsFunction())
+                {
+                    client_options->bcd = CLIENT_OPTION_BCD_FUNCTION;
+                    client_options->bcdFunction = Napi::Persistent(opt.As<Napi::Function>());
+                }
+                else if (opt.IsString())
+                {
+                    std::string bcdString = opt.ToString().Utf8Value();
+                    if (bcdString.compare(std::string("number")) == 0)
+                    {
+                        client_options->bcd = CLIENT_OPTION_BCD_NUMBER;
+                    }
+                    else
+                    {
+                        sprintf(errmsg, "Client option \"%s\" value not allowed: \"%s\"; see %s", CLIENT_OPTION_KEY_BCD, &bcdString[0], USAGE_URL);
+                        Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+                    }
+                }
+            }
+
+            // Client option: "date"
+            else if (key.compare(std::string(CLIENT_OPTION_KEY_DATE)) == 0)
+            {
+                if (!opt.IsObject())
+                {
+                    opt = node_rfc::__env.Null();
+                }
+                else
+                {
+                    Napi::Value toABAP = opt.As<Napi::Object>().Get("toABAP");
+                    Napi::Value fromABAP = opt.As<Napi::Object>().Get("fromABAP");
+                    if (!toABAP.IsFunction() || !fromABAP.IsFunction())
+                    {
+                        sprintf(errmsg, "Client option \"%s\" is not an object with toABAP() and fromABAP() functions; see %s", CLIENT_OPTION_KEY_DATE, USAGE_URL);
+                        Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+                    }
+                    else
+                    {
+                        client_options->dateToABAP = Napi::Persistent(toABAP.As<Napi::Function>());
+                        client_options->dateFromABAP = Napi::Persistent(fromABAP.As<Napi::Function>());
+                    }
+                }
+            }
+
+            // Client option: "time"
+            else if (key.compare(std::string(CLIENT_OPTION_KEY_TIME)) == 0)
+            {
+                if (!opt.IsObject())
+                {
+                    opt = node_rfc::__env.Null();
+                }
+                else
+                {
+                    Napi::Value toABAP = opt.As<Napi::Object>().Get("toABAP");
+                    Napi::Value fromABAP = opt.As<Napi::Object>().Get("fromABAP");
+                    if (!toABAP.IsFunction() || !fromABAP.IsFunction())
+                    {
+                        sprintf(errmsg, "Client option \"%s\" is not an object with toABAP() and fromABAP() functions; see %s", CLIENT_OPTION_KEY_TIME, USAGE_URL);
+                        Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+                        ;
+                    }
+                    else
+                    {
+                        client_options->timeToABAP = Napi::Persistent(toABAP.As<Napi::Function>());
+                        client_options->timeFromABAP = Napi::Persistent(fromABAP.As<Napi::Function>());
+                    }
+                }
+            }
+
+            // Client option: "filter"
+            else if (key.compare(std::string(CLIENT_OPTION_KEY_FILTER)) == 0)
+            {
+                client_options->filter_param_type = (RFC_DIRECTION)clientOptionsObject.Get(key).As<Napi::Number>().Uint32Value();
+                if (((int)client_options->filter_param_type < 1) || ((int)client_options->filter_param_type) > 4)
+                {
+                    sprintf(errmsg, "Client option \"%s\" value allowed: \"%u\"; see %s", CLIENT_OPTION_KEY_FILTER, (uint_t)client_options->filter_param_type, USAGE_URL);
+                    Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+                }
+            }
+
+            // Client option: "stateless"
+            else if (key.compare(std::string(CLIENT_OPTION_KEY_STATELESS)) == 0)
+            {
+                if (!clientOptionsObject.Get(key).IsBoolean())
+                {
+                    sprintf(errmsg, "Client option \"%s\" requires a boolean value; see %s", CLIENT_OPTION_KEY_STATELESS, USAGE_URL);
+                    Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+                }
+                client_options->stateless = clientOptionsObject.Get(key).As<Napi::Boolean>();
+            }
+
+            // Client option: unknown
+            else
+            {
+                sprintf(errmsg, "Client option not allowed: \"%s\"; see %s", key.c_str(), USAGE_URL);
+                Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+            }
+        }
+    }
+
+    Napi::Object Client::Init(Napi::Env env, Napi::Object exports)
+    {
+        DEBUG("Client::Init");
+        Napi::HandleScope scope(env);
+
+        Napi::Function func = DefineClass(
+            env, "Client", {
+                               InstanceAccessor("_id", &Client::IdGetter, nullptr),
+                               InstanceAccessor("_alive", &Client::AliveGetter, nullptr),
+                               InstanceAccessor("_connectionHandle", &Client::ConnectionHandleGetter, nullptr),
+                               InstanceAccessor("_pool_id", &Client::PoolIdGetter, nullptr),
+                               InstanceAccessor("_config", &Client::ConfigGetter, nullptr),
+                               InstanceMethod("connectionInfo", &Client::ConnectionInfo),
+                               InstanceMethod("open", &Client::Open),
+                               InstanceMethod("close", &Client::Close),
+                               InstanceMethod("release", &Client::Release),
+                               InstanceMethod("resetServerContext", &Client::ResetServerContext),
+                               InstanceMethod("ping", &Client::Ping),
+                               InstanceMethod("invoke", &Client::Invoke),
+                           });
+
+        Napi::FunctionReference *constructor = new Napi::FunctionReference();
+        *constructor = Napi::Persistent(func);
+        constructor->SuppressDestruct();
+        env.SetInstanceData(constructor);
+
+        exports.Set("Client", func);
+        return exports;
+    }
+
+    Napi::Value Client::IdGetter(const Napi::CallbackInfo &info)
+    {
+        return Napi::Number::New(Env(), id);
+    }
+
+    Napi::Value Client::AliveGetter(const Napi::CallbackInfo &info)
+    {
+        return Napi::Boolean::New(Env(), connectionHandle != NULL);
+    }
+
+    Napi::Value Client::ConfigGetter(const Napi::CallbackInfo &info)
+    {
+        DEBUG("Client::ConfigGetter");
+        Napi::Env env = info.Env();
+        Napi::EscapableHandleScope scope(env);
+        Napi::Object config = Napi::Object::New(env);
+        if (pool != NULL)
+        {
+            if (!pool->connectionParameters.IsEmpty())
+            {
+                DEBUG("Client::ConfigGetter from Pool %s", POOL_KEY_CONNECTION_PARAMS);
+                config.Set(POOL_KEY_CONNECTION_PARAMS, pool->connectionParameters.Value());
+            }
+
+            DEBUG("Client::ConfigGetter from Pool %s", POOL_KEY_CLIENT_OPTIONS);
+            config.Set(POOL_KEY_CLIENT_OPTIONS, pool->client_options._Value(info.Env()));
+        }
+        else
+        {
+            if (!clientParamsRef.IsEmpty())
+            {
+                config.Set(POOL_KEY_CONNECTION_PARAMS, clientParamsRef.Value());
+            }
+            config.Set(POOL_KEY_CLIENT_OPTIONS, client_options._Value(info.Env()));
+        }
+
+        return scope.Escape(config);
+    }
+
+    Napi::Value Client::ConnectionHandleGetter(const Napi::CallbackInfo &info)
+    {
+        return Napi::Number::New(info.Env(), (double)(unsigned long long)this->connectionHandle);
+    }
+
+    Napi::Value Client::PoolIdGetter(const Napi::CallbackInfo &info)
+    {
+        if (pool == NULL)
+        {
+            return Number::New(info.Env(), 0);
+        }
+        return Napi::Number::New(info.Env(), pool->id);
+    }
+
+    Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
+    {
+        if (connectionHandle == NULL)
+        {
+            return connectionClosedError("connectionInfo:").Value();
+        }
+
+        Napi::Object infoObj = Napi::Object::New(info.Env());
+        RFC_ERROR_INFO errorInfo;
+        RFC_ATTRIBUTES connInfo;
+        RFC_RC rc = RfcGetConnectionAttributes(connectionHandle, &connInfo, &errorInfo);
+
+        if (rc != RFC_OK || errorInfo.code != RFC_OK)
+        {
+            return wrapError(&errorInfo);
+        }
+
+        infoObj.Set("dest", wrapString(connInfo.dest, 64));
+        infoObj.Set("host", wrapString(connInfo.host, 100));
+        infoObj.Set("partnerHost", wrapString(connInfo.partnerHost, 100));
+        infoObj.Set("sysNumber", wrapString(connInfo.sysNumber, 2));
+        infoObj.Set("sysId", wrapString(connInfo.sysId, 8));
+        infoObj.Set("client", wrapString(connInfo.client, 3));
+        infoObj.Set("user", wrapString(connInfo.user, 12));
+        infoObj.Set("language", wrapString(connInfo.language, 2));
+        infoObj.Set("trace", wrapString(connInfo.trace, 1));
+        infoObj.Set("isoLanguage", wrapString(connInfo.isoLanguage, 2));
+        infoObj.Set("codepage", wrapString(connInfo.codepage, 4));
+        infoObj.Set("partnerCodepage", wrapString(connInfo.partnerCodepage, 4));
+        infoObj.Set("rfcRole", wrapString(connInfo.rfcRole, 1));
+        infoObj.Set("type", wrapString(connInfo.type, 1));
+        infoObj.Set("partnerType", wrapString(connInfo.partnerType, 1));
+        infoObj.Set("rel", wrapString(connInfo.rel, 4));
+        infoObj.Set("partnerRel", wrapString(connInfo.partnerRel, 4));
+        infoObj.Set("kernelRel", wrapString(connInfo.kernelRel, 4));
+        infoObj.Set("cpicConvId", wrapString(connInfo.cpicConvId, 8));
+        infoObj.Set("progName", wrapString(connInfo.progName, 128));
+        infoObj.Set("partnerBytesPerChar", wrapString(connInfo.partnerBytesPerChar, 1));
+        infoObj.Set("partnerSystemCodepage", wrapString(connInfo.partnerSystemCodepage, 4));
+        infoObj.Set("partnerIP", wrapString(connInfo.partnerIP, 15));
+        infoObj.Set("partnerIPv6", wrapString(connInfo.partnerIPv6, 45));
+        // infoObj.Set("reserved", wrapString(connInfo.reserved, 17));
+
+        return infoObj;
+    }
+
+    Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
+    {
+
+        init(info.Env());
+
+        DEBUG("Client::Client %u", id);
+
+        if (!info[0].IsUndefined() && (info[0].IsFunction() || !info[0].IsObject()))
+        {
+            Napi::TypeError::New(Env(), "Client constructor requires connection parameters").ThrowAsJavaScriptException();
+            return;
+        }
+
+        if (info.Length() > 0)
+        {
+            clientParamsRef = Napi::Persistent(info[0].As<Napi::Object>());
+            checkConnectionParams(clientParamsRef.Value(), &client_params);
+        }
+
+        if (info.Length() > 1)
+        {
+            clientOptionsRef = Napi::Persistent(info[1].As<Napi::Object>());
+            checkClientOptions(clientOptionsRef.Value(), &client_options);
+        }
+
+        if (info.Length() > 2)
+        {
+            char errmsg[254];
+            sprintf(errmsg, "Client constructor requires max. two arguments, received %zu; see: %s", info.Length(), USAGE_URL);
+            Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+        }
+    };
+
+    Client::~Client(void)
+    {
+        DEBUG("~ Client %u", id);
+
+        if (pool == NULL)
+        {
+            // Close own connection
+            if (connectionHandle != NULL)
+            {
+                RFC_ERROR_INFO errorInfo;
+                DEBUG("Closing direct connection %lu", (pointer_t)connectionHandle);
+                RFC_RC rc = RfcCloseConnection(connectionHandle, &errorInfo);
+                if (rc != RFC_OK)
+                {
+                    // todo: error log
+                }
+            }
+            else
+            {
+                DEBUG("Handle already closed");
+            }
+
+            // Unref client config
+            if (!clientParamsRef.IsEmpty())
+            {
+                clientParamsRef.Reset();
+            }
+            if (!clientOptionsRef.IsEmpty())
+            {
+                clientOptionsRef.Reset();
+            }
+        }
+        else
+        {
+            if (connectionHandle != NULL)
+            {
+                pool->releaseClient(connectionHandle);
+            }
+        }
+
+        uv_sem_destroy(&invocationMutex);
+    }
+
+    Napi::Error Client::connectionClosedError(std::string msgprefix)
+    {
+        char errmsg[254];
+        sprintf(errmsg, "%s over closed connection", msgprefix.c_str());
+        return Napi::Error::New(Env(), errmsg);
+    }
+
+    Napi::Object Client::NewInstance(Napi::Env env)
+    {
+        DEBUG("Client::NewInstance");
+        Napi::EscapableHandleScope scope(env);
+        Napi::Object obj = env.GetInstanceData<Napi::FunctionReference>()->New({});
+        return scope.Escape(napi_value(obj)).ToObject();
+    }
+
+    class OpenAsync : public Napi::AsyncWorker
     {
     public:
-        ConnectAsync(Napi::Function &callback, Client *client)
+        OpenAsync(Napi::Function &callback, Client *client)
             : Napi::AsyncWorker(callback), client(client) {}
-        ~ConnectAsync() {}
+        ~OpenAsync() {}
 
         void Execute()
         {
-            client->LockMutex(CLIENT_CONNECT);
-            client->connectionHandle = RfcOpenConnection(client->connectionParams, client->paramSize, &errorInfo);
-            client->alive = (errorInfo.code == RFC_OK);
+            client->LockMutex();
+            client->connectionHandle = RfcOpenConnection(client->client_params.connectionParams, client->client_params.paramSize, &errorInfo);
+            if (errorInfo.code != RFC_OK)
+            {
+                client->connectionHandle = NULL;
+            }
+            client->UnlockMutex();
         }
 
         void OnOK()
         {
-            bool resultOK = client->alive;
-            client->UnlockMutex(CLIENT_CONNECT);
-
-            if (!resultOK)
+            if (errorInfo.code != RFC_OK)
             {
-                Napi::Value argv[1] = {wrapError(&errorInfo)};
-                CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
+                DEBUG("OpenAsync %u error", client->id);
+                Callback().Call({wrapError(&errorInfo)});
             }
             else
             {
-                CALLBACK_CALL(Env().Global(), Callback(), 0, {});
+                DEBUG("OpenAsync %u handle: %lu", client->id, (uintptr_t)client->connectionHandle);
+                Callback().Call({});
             }
+            Callback().Reset();
         }
 
     private:
@@ -66,84 +418,61 @@ namespace node_rfc
 
         void Execute()
         {
-            ongoing_calls = client->LockMutex(CLIENT_CLOSE);
-            if (ongoing_calls == 0)
-            {
-                if (client->alive)
-                {
-                    client->alive = false;
-                    RfcCloseConnection(client->connectionHandle, &errorInfo);
-                }
-                else
-                {
-                    errorInfo.code = RFC_OK; // TODO: trying to close a closed handle isn't really ok
-                }
-            }
+            client->LockMutex();
+            DEBUG("CloseAsync client: %u handle: %lu", client->id, (pointer_t)client->connectionHandle);
+            RfcCloseConnection(client->connectionHandle, &errorInfo);
+            client->connectionHandle = NULL;
+            client->UnlockMutex();
         }
 
         void OnOK()
         {
-            client->UnlockMutex(CLIENT_CLOSE);
-            if (ongoing_calls == 0)
+            if (errorInfo.code != RFC_OK)
             {
-                if (errorInfo.code == RFC_OK)
-                {
-                    CALLBACK_CALL(Env().Global(), Callback(), 0, {});
-                }
-                else
-                {
-                    Napi::Value argv[1] = {wrapError(&errorInfo)};
-                    CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
-                }
+                Callback().Call({wrapError(&errorInfo)});
             }
             else
             {
-                char err[256];
-                sprintf(err, "Close rejected because %u RFC calls still running", ongoing_calls);
-                Napi::Value argv[1] = {Napi::String::New(Env(), err)};
-                CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
+                Callback().Call({});
             }
+            Callback().Reset();
         }
 
     private:
         Client *client;
         RFC_ERROR_INFO errorInfo;
-        unsigned int ongoing_calls;
     };
 
-    class ReopenAsync : public Napi::AsyncWorker
+    class ResetServerAsync : public Napi::AsyncWorker
     {
     public:
-        ReopenAsync(Napi::Function &callback, Client *client)
+        ResetServerAsync(Napi::Function &callback, Client *client)
             : Napi::AsyncWorker(callback), client(client) {}
-        ~ReopenAsync() {}
+        ~ResetServerAsync() {}
 
         void Execute()
         {
-            client->LockMutex(CLIENT_REOPEN);
-            if (client->alive)
+            client->LockMutex();
+            DEBUG("ResetServerAsync client: %u handle: %lu", client->id, (pointer_t)client->connectionHandle);
+            RfcResetServerContext(client->connectionHandle, &errorInfo);
+            if (errorInfo.code != RFC_OK)
             {
-                client->alive = false;
-                RfcCloseConnection(client->connectionHandle, &errorInfo);
+                client->connectionCloseOnError(&errorInfo);
             }
-            client->connectionHandle = RfcOpenConnection(client->connectionParams, client->paramSize, &errorInfo);
-            client->alive = (errorInfo.code == RFC_OK);
+            client->UnlockMutex();
         }
 
         void OnOK()
         {
-            bool resultOK = client->alive;
-            client->UnlockMutex(CLIENT_REOPEN);
-
-            if (resultOK)
+            if (errorInfo.code != RFC_OK)
             {
-                CALLBACK_CALL(Env().Global(), Callback(), 0, {});
+                Callback().Call({wrapError(&errorInfo)});
             }
             else
             {
-                Napi::Value argv[1] = {wrapError(&errorInfo)};
-                CALLBACK_CALL(Env().Global(), Callback(), 1, argv);
+                Callback().Call({});
             }
+            Callback().Reset();
         }
 
     private:
@@ -160,27 +489,42 @@ namespace node_rfc
 
         void Execute()
         {
-            client->LockMutex(CLIENT_PING);
-            RfcPing(client->connectionHandle, &errorInfo);
+            client->LockMutex();
+            conn_closed = (client->connectionHandle == NULL);
+            if (!conn_closed)
+            {
+                RfcPing(client->connectionHandle, &errorInfo);
+                if (errorInfo.code != RFC_OK)
+                {
+                    client->connectionCloseOnError(&errorInfo);
+                }
+            }
+            client->UnlockMutex();
         }
 
         void OnOK()
         {
-            RFC_INT isValid = 0;
-            if (errorInfo.code == RFC_OK)
+            if (conn_closed)
             {
-                RfcIsConnectionHandleValid(client->connectionHandle, &isValid, &errorInfo);
+                // connection was closed
+                Callback().Call({client->connectionClosedError("Client ping():").Value(), Napi::Boolean::New(Env(), false)});
             }
-            client->UnlockMutex(CLIENT_PING);
-            Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
-            if (errorInfo.code != RFC_OK)
-                argv[0] = wrapError(&errorInfo);
-            argv[1] = Napi::Boolean::New(Env(), isValid && errorInfo.code == RFC_OK);
-            CALLBACK_CALL(Env().Global(), Callback(), 2, argv);
+            else if (errorInfo.code != RFC_OK)
+            {
+                // connection was open, ping() ended with error
+                Callback().Call({wrapError(&errorInfo), Napi::Boolean::New(Env(), false)});
+            }
+            else
+            {
+                // connection was open, ping() success
+                Callback().Call({Env().Undefined(), Napi::Boolean::New(Env(), true)});
+            }
+            Callback().Reset();
         }
 
     private:
         Client *client;
+        bool conn_closed;
         RFC_ERROR_INFO errorInfo;
     };
 
@@ -188,71 +532,62 @@ namespace node_rfc
     {
     public:
         InvokeAsync(Napi::Function &callback, Client *client, RFC_FUNCTION_HANDLE functionHandle, RFC_FUNCTION_DESC_HANDLE functionDescHandle)
-            : Napi::AsyncWorker(callback), callback(Napi::Persistent(callback)),
-              client(client), functionHandle(functionHandle), functionDescHandle(functionDescHandle)
+            : Napi::AsyncWorker(callback), client(client), functionHandle(functionHandle), functionDescHandle(functionDescHandle)
         {
         }
         ~InvokeAsync() {}
 
         void Execute()
         {
-            client->LockMutex(CLIENT_INVOKE);
-            RfcInvoke(client->connectionHandle, functionHandle, &errorInfo);
-            client->alive = !(
-                errorInfo.code == RFC_COMMUNICATION_FAILURE || // Error in Network & Communication layer.
-                errorInfo.code == RFC_ABAP_RUNTIME_FAILURE ||  // SAP system runtime error (SYSTEM_FAILURE): Shortdump on the backend side.
-                errorInfo.code == RFC_ABAP_MESSAGE ||          // The called function module raised an E-, A- or X-Message.
-                errorInfo.code == RFC_EXTERNAL_FAILURE         // Problems in the RFC runtime of the external program (i.e "this" library)
-            );
+            client->LockMutex();
+            conn_closed = (client->connectionHandle == NULL);
+            if (!conn_closed)
+            {
+                RfcInvoke(client->connectionHandle, functionHandle, &errorInfo);
+                if (errorInfo.code != RFC_OK)
+                {
+                    client->connectionCloseOnError(&errorInfo);
+                }
+            }
         }
 
         void OnOK()
         {
             Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
-
-            if (errorInfo.code != RFC_OK)
+            if (conn_closed)
             {
-                if (
-                    errorInfo.code == RFC_COMMUNICATION_FAILURE || // Error in Network & Communication layer.
-                    errorInfo.code == RFC_ABAP_RUNTIME_FAILURE ||  // SAP system runtime error (SYSTEM_FAILURE): Shortdump on the backend side.
-                    errorInfo.code == RFC_ABAP_MESSAGE ||          // The called function module raised an E-, A- or X-Message.
-                    errorInfo.code == RFC_EXTERNAL_FAILURE)        // Problems in the RFC runtime of the external program (i.e "this" library)
-                {
-                    // Connection closed, reopen
-                    RFC_ERROR_INFO openErrorInfo;
-                    client->connectionHandle = RfcOpenConnection(client->connectionParams, client->paramSize, &openErrorInfo);
-                    client->alive = (openErrorInfo.code == RFC_OK);
-                    if (!client->alive)
-                        errorInfo = openErrorInfo;
-                }
-                argv[0] = wrapError(&errorInfo, client->alive);
+                // connection was closed
+                argv[0] = client->connectionClosedError("Client invoke()").Value();
+            }
+            else if (errorInfo.code != RFC_OK)
+            {
+                // connection was open, invoke() ended with error
+                argv[0] = wrapError(&errorInfo);
             }
             else
             {
+                // connection was open, invoke() success
                 argv[1] = client->wrapResult(functionDescHandle, functionHandle);
             }
-            client->runningCalls--;
-            client->UnlockMutex(CLIENT_INVOKE);
             RfcDestroyFunction(functionHandle, NULL);
-            CALLBACK_CALL(Env().Global(), callback, 2, argv)
-            callback.Reset();
+            client->UnlockMutex();
+            Callback().Call({argv[0], argv[1]});
+            Callback().Reset();
         }
 
     private:
-        Napi::FunctionReference callback;
         Client *client;
         RFC_FUNCTION_HANDLE functionHandle;
         RFC_FUNCTION_DESC_HANDLE functionDescHandle;
         RFC_ERROR_INFO errorInfo;
+        bool conn_closed;
     };
-
     class PrepareAsync : public Napi::AsyncWorker
     {
     public:
         PrepareAsync(Napi::Function &callback, Client *client,
                      Napi::String rfmName, Napi::Array &notRequestedParameters, Napi::Object &rfmParams)
-            : Napi::AsyncWorker(callback),
-              callback(Napi::Persistent(callback)), client(client),
+            : Napi::AsyncWorker(callback), client(client),
               notRequested(Napi::Persistent(notRequestedParameters)), rfmParams(Napi::Persistent(rfmParams))
         {
             funcName = client->fillString(rfmName);
@@ -261,23 +596,34 @@ namespace node_rfc
 
         void Execute()
         {
-            client->LockMutex(CLIENT_PREPARE);
-            client->runningCalls++;
-            functionDescHandle = RfcGetFunctionDesc(client->connectionHandle, funcName, &errorInfo);
+            client->LockMutex();
+            conn_closed = (client->connectionHandle == NULL);
+            if (!conn_closed)
+            {
+                functionDescHandle = RfcGetFunctionDesc(client->connectionHandle, funcName, &errorInfo);
+            }
             free(funcName);
         }
 
         void OnOK()
         {
-            client->UnlockMutex(CLIENT_PREPARE);
+            client->UnlockMutex();
             RFC_FUNCTION_HANDLE functionHandle = NULL;
             Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
 
-            if (functionDescHandle == NULL || errorInfo.code != RFC_OK)
-                argv[0] = wrapError(&errorInfo);
-
-            if (argv[0].IsUndefined())
+            if (conn_closed)
             {
+                // connection was closed
+                argv[0] = client->connectionClosedError("Client invoke()").Value();
+            }
+            else if (functionDescHandle == NULL || errorInfo.code != RFC_OK)
+            {
+                // connection was open, invoke() ended with error
+                argv[0] = wrapError(&errorInfo);
+            }
+            else
+            {
+                // function descriptor handle created, proceed with function handle
                 functionHandle = RfcCreateFunction(functionDescHandle, &errorInfo);
 
                 if (errorInfo.code != RFC_OK)
@@ -286,7 +632,7 @@ namespace node_rfc
                 }
                 else
                 {
-                    for (unsigned int i = 0; i < notRequested.Value().Length(); i++)
+                    for (uint_t i = 0; i < notRequested.Value().Length(); i++)
                     {
                         Napi::String name = notRequested.Value().Get(i).ToString();
                         SAP_UC *paramName = client->fillString(name);
@@ -307,9 +653,9 @@ namespace node_rfc
             {
                 Napi::Object params = rfmParams.Value();
                 Napi::Array paramNames = params.GetPropertyNames();
-                unsigned int paramSize = paramNames.Length();
+                uint_t paramSize = paramNames.Length();
 
-                for (unsigned int i = 0; i < paramSize; i++)
+                for (uint_t i = 0; i < paramSize; i++)
                 {
                     Napi::String name = paramNames.Get(i).ToString();
                     Napi::Value value = params.Get(name);
@@ -326,19 +672,17 @@ namespace node_rfc
 
             if (argv[0].IsUndefined())
             {
-                Napi::Function callbackFunction = callback.Value();
+                Napi::Function callbackFunction = Callback().Value().As<Napi::Function>();
                 (new InvokeAsync(callbackFunction, client, functionHandle, functionDescHandle))->Queue();
             }
             else
             {
-                client->runningCalls--;
-                CALLBACK_CALL(Env().Global(), callback, 1, argv);
-                callback.Reset();
+                Callback().Call({argv[0], argv[1]});
+                Callback().Reset();
             }
         }
 
     private:
-        Napi::FunctionReference callback;
         Client *client;
         SAP_UC *funcName;
 
@@ -347,240 +691,145 @@ namespace node_rfc
 
         RFC_FUNCTION_DESC_HANDLE functionDescHandle;
         RFC_ERROR_INFO errorInfo;
+        bool conn_closed;
     };
 
-    Napi::FunctionReference Client::constructor;
-
-    Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
+    bool Client::connectionCloseOnError(RFC_ERROR_INFO *errorInfo)
     {
-        char err[256];
-
-        init(info.Env());
-
-        if (!info.IsConstructCall())
+        bool alive = !(
+            // error code check
+            errorInfo->code == RFC_COMMUNICATION_FAILURE || // Error in Network & Communication layer.
+            errorInfo->code == RFC_ABAP_RUNTIME_FAILURE ||  // SAP system runtime error (SYSTEM_FAILURE): Shortdump on the backend side.
+            errorInfo->code == RFC_ABAP_MESSAGE ||          // The called function module raised an E-, A- or X-Message.
+            errorInfo->code == RFC_EXTERNAL_FAILURE ||      // Problems in the RFC runtime of the external program (i.e "this" library)
+            // error group, for more robustness here
+            errorInfo->group == ABAP_RUNTIME_FAILURE ||  // ABAP Message raised in ABAP function modules or in ABAP runtime of the backend (e.g Kernel)
+            errorInfo->group == LOGON_FAILURE ||         // Error message raised when logon fails
+            errorInfo->group == COMMUNICATION_FAILURE || // Problems with the network connection (or backend broke down and killed the connection)
+            errorInfo->group == EXTERNAL_RUNTIME_FAILURE // Problems in the RFC runtime of the external program (i.e "this" library)
+        );
+        if (!alive)
         {
-            Napi::Error::New(info.Env(), "Use the new operator to create instances of Rfc connection.").ThrowAsJavaScriptException();
-        }
-
-        if (info.Length() < 1)
-        {
-            Napi::Error::New(info.Env(), "Please provide connection parameters as argument").ThrowAsJavaScriptException();
-        }
-
-        if (!info[0].IsObject())
-        {
-            Napi::TypeError::New(info.Env(), "Connection parameters must be an object").ThrowAsJavaScriptException();
-        }
-
-        if (info.Length() > 2)
-        {
-            Napi::TypeError::New(info.Env(), "Too many parameters, only connection parameters object and options object expected").ThrowAsJavaScriptException();
-        }
-
-        if (info.Length() == 2)
-        {
-            if (!info[1].IsUndefined() && !info[1].IsObject())
+            DEBUG("connectionCloseOnError %lu: closed !", (pointer_t)this->connectionHandle);
+            RFC_CONNECTION_HANDLE connection = this->connectionHandle;
+            this->connectionHandle = NULL;
+            if (pool != NULL)
             {
-                Napi::TypeError::New(info.Env(), "Options must be an object").ThrowAsJavaScriptException();
-            }
-
-            Napi::Object options = info[1].ToObject();
-            Napi::Array props = options.GetPropertyNames();
-            for (unsigned int i = 0; i < props.Length(); i++)
-            {
-                Napi::String key = props.Get(i).ToString();
-                Napi::Value opt = options.Get(key).As<Napi::Value>();
-                if (key.Utf8Value().compare(std::string("bcd")) == (int)0)
-                {
-                    if (opt.IsFunction())
-                    {
-                        __bcd = NODERFC_BCD_FUNCTION;
-                        __bcdFunction = Napi::Persistent(opt.As<Napi::Function>());
-                    }
-                    else if (opt.IsString())
-                    {
-                        std::string bcdString = opt.ToString().Utf8Value();
-                        if (bcdString.compare(std::string("number")) == (int)0)
-                        {
-                            __bcd = NODERFC_BCD_NUMBER;
-                        }
-                        else
-                        {
-                            sprintf(err, "Unknown bcd option, only 'number' or function allowed: %s", &bcdString[0]);
-                            Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
-                        }
-                    }
-                }
-                else if (key.Utf8Value().compare(std::string("date")) == (int)0)
-                {
-                    if (!opt.IsObject())
-                    {
-                        opt = info.Env().Null();
-                    }
-                    else
-                    {
-                        Napi::String fn = Napi::String::New(info.Env(), "toABAP");
-                        Napi::Value toABAP = opt.As<Napi::Object>().Get(fn);
-                        fn = Napi::String::New(info.Env(), "fromABAP");
-                        Napi::Value fromABAP = opt.As<Napi::Object>().Get(fn);
-                        if (!toABAP.IsFunction() || !fromABAP.IsFunction())
-                        {
-                            opt = info.Env().Null();
-                        }
-                        else
-                        {
-                            __dateToABAP = Napi::Persistent(toABAP.As<Napi::Function>());
-                            __dateFromABAP = Napi::Persistent(fromABAP.As<Napi::Function>());
-                        }
-                    }
-                    if (opt.IsNull())
-                    {
-                        sprintf(err, "Date option is not an object with toABAP and fromABAP functions");
-                        Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
-                    }
-                }
-                else if (key.Utf8Value().compare(std::string("time")) == (int)0)
-                {
-                    if (!opt.IsObject())
-                    {
-                        opt = info.Env().Null();
-                    }
-                    else
-                    {
-                        Napi::String fn = Napi::String::New(info.Env(), "toABAP");
-                        Napi::Value toABAP = opt.As<Napi::Object>().Get(fn);
-                        fn = Napi::String::New(info.Env(), "fromABAP");
-                        Napi::Value fromABAP = opt.As<Napi::Object>().Get(fn);
-                        if (!toABAP.IsFunction() || !fromABAP.IsFunction())
-                        {
-                            opt = info.Env().Null();
-                        }
-                        else
-                        {
-                            __timeToABAP = Napi::Persistent(toABAP.As<Napi::Function>());
-                            __timeFromABAP = Napi::Persistent(fromABAP.As<Napi::Function>());
-                        }
-                    }
-                    if (opt.IsNull())
-                    {
-                        sprintf(err, "Date option is not an object with toABAP and fromABAP functions");
-                        Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
-                    }
-                }
-                else if (key.Utf8Value().compare(std::string("filter")) == (int)0)
-                {
-                    __filter_param_direction = (RFC_DIRECTION)options.Get(key).As<Napi::Number>().Int32Value();
-                    if (((int)__filter_param_direction < 1) || ((int)__filter_param_direction) > 4)
-                    {
-                        sprintf(err, "Invalid key for the filter parameter direction (see RFC_DIRECTION): %u", (int)__filter_param_direction);
-                        Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
-                    }
-                }
-                else
-                {
-                    std::string optionName = key.Utf8Value();
-                    sprintf(err, "Unknown option: %s", &optionName[0]);
-                    Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
-                }
+                pool->releaseClient(connection);
             }
         }
-
-        this->alive = false;
-        Napi::Object connectionParams = info[0].ToObject();
-        Napi::Array paramNames = connectionParams.GetPropertyNames();
-        this->paramSize = paramNames.Length();
-        this->connectionParams = static_cast<RFC_CONNECTION_PARAMETER *>(malloc(this->paramSize * sizeof(RFC_CONNECTION_PARAMETER)));
-        for (unsigned int i = 0; i < this->paramSize; i++)
+        else
         {
-            Napi::String name = paramNames.Get(i).ToString();
-            Napi::String value = connectionParams.Get(name).ToString();
-            //printf("\n%s: %s", &name.Utf8Value()[0], &value.Utf8Value()[0]);
-            this->connectionParams[i].name = fillString(name);
-            this->connectionParams[i].value = fillString(value);
+            DEBUG("connectionCloseOnError ok: %lu", (pointer_t)this->connectionHandle);
         }
 
-        this->__refId = ++Client::__refCounter;
-
-        uv_sem_init(&this->invocationMutex, 1);
+        return alive;
     }
 
-    Client::~Client(void)
+    Napi::Value Client::Release(const Napi::CallbackInfo &info)
     {
-        RFC_INT isValid;
-        RFC_ERROR_INFO errorInfo;
 
-        RFC_RC rc = RfcIsConnectionHandleValid(this->connectionHandle, &isValid, &errorInfo);
-
-        if (this->alive)
+        if (pool == NULL)
         {
-            this->alive = false;
-            if (rc == RFC_OK && isValid)
-            {
-                fprintf(stderr, "client %u deconstructor closes handle %lu\n", this->__refId, (uintptr_t)this->connectionHandle);
-                rc = RfcCloseConnection(this->connectionHandle, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    fprintf(stderr, "Error rc=%u closing client %u handle %lu\n", rc, this->__refId, (uintptr_t)this->connectionHandle);
-                }
-            }
+            char errmsg[245];
+            sprintf(errmsg, "Client release() method is for managed connections only; see %s", USAGE_URL);
+            Napi::TypeError::New(info.Env(), errmsg).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
         }
 
-        for (unsigned int i = 0; i < this->paramSize; i++)
-        {
-            free(const_cast<SAP_UC *>(connectionParams[i].name));
-            free(const_cast<SAP_UC *>(connectionParams[i].value));
-        }
-        free(connectionParams);
-        uv_sem_destroy(&this->invocationMutex);
+        // the rest of arguments check done in Pool::Release
+        pool->Release(info);
 
-        __bcdFunction.Reset();
-        __dateToABAP.Reset();
-        __dateFromABAP.Reset();
-        __timeToABAP.Reset();
-        __timeFromABAP.Reset();
+        return info.Env().Undefined();
     }
 
-    Napi::Object Client::Init(Napi::Env env, Napi::Object exports)
+    Napi::Value Client::Open(const Napi::CallbackInfo &info)
     {
-        Napi::HandleScope scope(env);
-
-        Napi::Function t = DefineClass(env,
-                                       "Client", {
-                                                     InstanceAccessor("version", &Client::VersionGetter, nullptr),
-                                                     InstanceAccessor("options", &Client::OptionsGetter, nullptr),
-                                                     InstanceAccessor("id", &Client::IdGetter, nullptr),
-                                                     InstanceAccessor("_connectionHandle", &Client::ConnectionHandleGetter, nullptr),
-                                                     InstanceAccessor("runningRFCCalls", &Client::RunningCallsGetter, nullptr),
-                                                     InstanceMethod("connectionInfo", &Client::ConnectionInfo),
-                                                     InstanceMethod("connect", &Client::Connect),
-                                                     InstanceMethod("invoke", &Client::Invoke),
-                                                     InstanceMethod("ping", &Client::Ping),
-                                                     InstanceMethod("close", &Client::Close),
-                                                     InstanceMethod("reopen", &Client::Reopen),
-                                                     InstanceMethod("isAlive", &Client::IsAlive),
-                                                 });
-
-        constructor = Napi::Persistent(t);
-        constructor.SuppressDestruct();
-
-        exports.Set("Client", t);
-        return exports;
-    }
-
-    Napi::Value Client::Connect(const Napi::CallbackInfo &info)
-    {
-        if (info[0].IsUndefined())
+        if (pool != NULL)
         {
-            Napi::TypeError::New(info.Env(), "First argument must be callback function").ThrowAsJavaScriptException();
+            char errmsg[245];
+            sprintf(errmsg, "Client open() not allowed for managed client %u; see %s", id, USAGE_URL);
+            Napi::TypeError::New(info.Env(), errmsg).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
         }
-        if (!info[0].IsFunction())
+
+        if (info[0].IsUndefined() || !info[0].IsFunction())
         {
-            Napi::TypeError::New(info.Env(), "First argument must be callback function").ThrowAsJavaScriptException();
+            char errmsg[245];
+            sprintf(errmsg, "Client open() requires a callback function; see %s", USAGE_URL);
+            Napi::TypeError::New(info.Env(), errmsg).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
         }
 
         Napi::Function callback = info[0].As<Napi::Function>();
 
-        (new ConnectAsync(callback, this))->Queue();
+        (new OpenAsync(callback, this))->Queue();
+
+        return info.Env().Undefined();
+    }
+
+    Napi::Value Client::Close(const Napi::CallbackInfo &info)
+    {
+        char errmsg[254];
+
+        if (pool != NULL)
+        {
+            // Managed connection error
+            sprintf(errmsg, "Client \"close()\" method not allowed for managed connections, use the \"release()\" instead; see %s", USAGE_URL);
+            Napi::TypeError::New(info.Env(), errmsg).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
+        }
+
+        if (info[0].IsUndefined() || !info[0].IsFunction())
+        {
+            sprintf(errmsg, "Client close() requires a callback function; see %s", USAGE_URL);
+            Napi::TypeError::New(info.Env(), errmsg).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
+        }
+
+        if (connectionHandle == NULL)
+        {
+            sprintf(errmsg, "Client %u is already closed; see %s", id, USAGE_URL);
+            Napi::Error::New(info.Env(), errmsg).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
+        }
+
+        Napi::Function callback = info[0].As<Napi::Function>();
+
+        (new CloseAsync(callback, this))->Queue();
+
+        return info.Env().Undefined();
+    }
+
+    Napi::Value Client::ResetServerContext(const Napi::CallbackInfo &info)
+    {
+        char errmsg[254];
+        if (info[0].IsUndefined() || !info[0].IsFunction())
+        {
+            sprintf(errmsg, "Client resetServerContext() requires a callback function; see %s", USAGE_URL);
+            Napi::TypeError::New(info.Env(), errmsg).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
+        }
+        Napi::Function callback = info[0].As<Napi::Function>();
+
+        (new ResetServerAsync(callback, this))->Queue();
+
+        return info.Env().Undefined();
+    }
+
+    Napi::Value Client::Ping(const Napi::CallbackInfo &info)
+    {
+        if (info[0].IsUndefined() || !info[0].IsFunction())
+        {
+            char errmsg[254];
+            sprintf(errmsg, "Client Ping() requires a callback function; see %s", USAGE_URL);
+            Napi::TypeError::New(info.Env(), errmsg).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
+        }
+
+        Napi::Function callback = info[0].As<Napi::Function>();
+
+        (new PingAsync(callback, this))->Queue();
 
         return info.Env().Undefined();
     }
@@ -596,7 +845,7 @@ namespace node_rfc
         {
             Napi::Object options = info[3].ToObject();
             Napi::Array props = options.GetPropertyNames();
-            for (unsigned int i = 0; i < props.Length(); i++)
+            for (uint_t i = 0; i < props.Length(); i++)
             {
                 Napi::String key = props.Get(i).ToString();
                 if (key.Utf8Value().compare(std::string("notRequested")) == (int)0)
@@ -621,211 +870,14 @@ namespace node_rfc
         return info.Env().Undefined();
     }
 
-    unsigned int Client::LockMutex(RFC_CLIENT_STATE newstate)
+    void Client::LockMutex()
     {
-        uv_sem_wait(&this->invocationMutex);
-
-        LOG_LOCK_REQUEST(this->state, newstate);
-        if (newstate == CLIENT_CLOSE && this->runningCalls > 0)
-        {
-            ; // Reject Close request during ongoing call
-        }
-        else
-        {
-            this->state = newstate;
-        }
-        LOG_LOCK_ACQUIRE(this->state);
-        return this->runningCalls;
+        uv_sem_wait(&invocationMutex);
     }
 
-    void Client::UnlockMutex(RFC_CLIENT_STATE newstate)
+    void Client::UnlockMutex()
     {
-        LOG_UNLOCK_REQUEST(this->state, newstate);
-        uv_sem_post(&this->invocationMutex);
-        this->state = CLIENT_READY;
-        LOG_UNLOCK_ACQUIRE(this->state);
-    }
-
-    Napi::Value Client::Close(const Napi::CallbackInfo &info)
-    {
-        if (info[0].IsUndefined())
-        {
-            Napi::TypeError::New(info.Env(), "First argument must be callback function").ThrowAsJavaScriptException();
-        }
-        if (!info[0].IsFunction())
-        {
-            Napi::TypeError::New(info.Env(), "Callback function argument missing").ThrowAsJavaScriptException();
-        }
-        Napi::Function callback = info[0].As<Napi::Function>();
-
-        (new CloseAsync(callback, this))->Queue();
-
-        return info.Env().Undefined();
-    }
-
-    Napi::Value Client::Ping(const Napi::CallbackInfo &info)
-    {
-
-        if (info[0].IsUndefined())
-        {
-            Napi::TypeError::New(info.Env(), "First argument must be callback function").ThrowAsJavaScriptException();
-        }
-        if (!info[0].IsFunction())
-        {
-            Napi::TypeError::New(info.Env(), "Callback function argument missing").ThrowAsJavaScriptException();
-        }
-        Napi::Function callback = info[0].As<Napi::Function>();
-
-        (new PingAsync(callback, this))->Queue();
-
-        return info.Env().Undefined();
-    }
-
-    Napi::Value Client::Reopen(const Napi::CallbackInfo &info)
-    {
-        if (info[0].IsUndefined())
-        {
-            Napi::TypeError::New(info.Env(), "First argument must be callback function").ThrowAsJavaScriptException();
-        }
-        if (!info[0].IsFunction())
-        {
-            Napi::TypeError::New(info.Env(), "Callback function argument missing").ThrowAsJavaScriptException();
-        }
-        Napi::Function callback = info[0].As<Napi::Function>();
-
-        (new ReopenAsync(callback, this))->Queue();
-
-        return info.Env().Undefined();
-    }
-
-    Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
-    {
-        RFC_RC rc;
-        RFC_ERROR_INFO errorInfo;
-        RFC_ATTRIBUTES connInfo;
-
-        Napi::Env env = info.Env();
-        Napi::Object infoObj = Napi::Object::New(env);
-        rc = RfcGetConnectionAttributes(this->connectionHandle, &connInfo, &errorInfo);
-
-        if (!this->alive)
-        {
-            return infoObj;
-        }
-
-        if (rc != RFC_OK || errorInfo.code != RFC_OK)
-        {
-            return wrapError(&errorInfo);
-        }
-
-        infoObj.Set(Napi::String::New(env, "dest"), wrapString(connInfo.dest, 64));
-        infoObj.Set(Napi::String::New(env, "host"), wrapString(connInfo.host, 100));
-        infoObj.Set(Napi::String::New(env, "partnerHost"), wrapString(connInfo.partnerHost, 100));
-        infoObj.Set(Napi::String::New(env, "sysNumber"), wrapString(connInfo.sysNumber, 2));
-        infoObj.Set(Napi::String::New(env, "sysId"), wrapString(connInfo.sysId, 8));
-        infoObj.Set(Napi::String::New(env, "client"), wrapString(connInfo.client, 3));
-        infoObj.Set(Napi::String::New(env, "user"), wrapString(connInfo.user, 12));
-        infoObj.Set(Napi::String::New(env, "language"), wrapString(connInfo.language, 2));
-        infoObj.Set(Napi::String::New(env, "trace"), wrapString(connInfo.trace, 1));
-        infoObj.Set(Napi::String::New(env, "isoLanguage"), wrapString(connInfo.isoLanguage, 2));
-        infoObj.Set(Napi::String::New(env, "codepage"), wrapString(connInfo.codepage, 4));
-        infoObj.Set(Napi::String::New(env, "partnerCodepage"), wrapString(connInfo.partnerCodepage, 4));
-        infoObj.Set(Napi::String::New(env, "rfcRole"), wrapString(connInfo.rfcRole, 1));
-        infoObj.Set(Napi::String::New(env, "type"), wrapString(connInfo.type, 1));
-        infoObj.Set(Napi::String::New(env, "partnerType"), wrapString(connInfo.partnerType, 1));
-        infoObj.Set(Napi::String::New(env, "rel"), wrapString(connInfo.rel, 4));
-        infoObj.Set(Napi::String::New(env, "partnerRel"), wrapString(connInfo.partnerRel, 4));
-        infoObj.Set(Napi::String::New(env, "kernelRel"), wrapString(connInfo.kernelRel, 4));
-        infoObj.Set(Napi::String::New(env, "cpicConvId"), wrapString(connInfo.cpicConvId, 8));
-        infoObj.Set(Napi::String::New(env, "progName"), wrapString(connInfo.progName, 128));
-        infoObj.Set(Napi::String::New(env, "partnerBytesPerChar"), wrapString(connInfo.partnerBytesPerChar, 1));
-        infoObj.Set(Napi::String::New(env, "partnerSystemCodepage"), wrapString(connInfo.partnerSystemCodepage, 4));
-        infoObj.Set(Napi::String::New(env, "partnerIP"), wrapString(connInfo.partnerIP, 15));
-        infoObj.Set(Napi::String::New(env, "partnerIPv6"), wrapString(connInfo.partnerIPv6, 45));
-        // infoObj.Set(Napi::String::New(env, "reserved"), wrapString(connInfo.reserved, 17));
-
-        return infoObj;
-    }
-
-    Napi::Value Client::IsAlive(const Napi::CallbackInfo &info)
-    {
-        return Napi::Boolean::New(info.Env(), this->alive);
-    }
-
-    Napi::Value Client::IdGetter(const Napi::CallbackInfo &info)
-    {
-        return Napi::Number::New(info.Env(), this->__refId);
-    }
-
-    Napi::Value Client::RunningCallsGetter(const Napi::CallbackInfo &info)
-    {
-        return Napi::Number::New(info.Env(), this->runningCalls);
-    }
-
-    Napi::Value Client::ConnectionHandleGetter(const Napi::CallbackInfo &info)
-    {
-        if (!this->alive)
-            return info.Env().Undefined();
-        return Napi::Number::New(info.Env(), static_cast<double>((uint64_t)this->connectionHandle));
-    }
-
-    Napi::Value Client::VersionGetter(const Napi::CallbackInfo &info)
-    {
-        unsigned major, minor, patchLevel;
-
-        RfcGetVersion(&major, &minor, &patchLevel);
-
-        Napi::Object version = Napi::Object::New(node_rfc::__env);
-        version.Set(Napi::String::New(node_rfc::__env, "major"), major);
-        version.Set(Napi::String::New(node_rfc::__env, "minor"), minor);
-        version.Set(Napi::String::New(node_rfc::__env, "patchLevel"), patchLevel);
-        version.Set(Napi::String::New(node_rfc::__env, "binding"), Napi::String::New(node_rfc::__env, SAPNWRFC_BINDING_VERSION));
-        return version;
-    }
-
-    Napi::Value Client::OptionsGetter(const Napi::CallbackInfo &info)
-    {
-        Napi::Object options = Napi::Object::New(node_rfc::__env);
-        if (__bcd == NODERFC_BCD_STRING)
-        {
-            options.Set(Napi::String::New(node_rfc::__env, "bcd"), Napi::String::New(node_rfc::__env, "string"));
-        }
-        else if (__bcd == NODERFC_BCD_NUMBER)
-        {
-            options.Set(Napi::String::New(node_rfc::__env, "bcd"), Napi::String::New(node_rfc::__env, "number"));
-        }
-        else if (__bcd == NODERFC_BCD_FUNCTION)
-        {
-            options.Set(Napi::String::New(node_rfc::__env, "bcd"), __bcdFunction.Value());
-        }
-        else
-        {
-            options.Set(Napi::String::New(node_rfc::__env, "bcd"), Napi::String::New(node_rfc::__env, "?"));
-        }
-
-        Napi::Object date = Napi::Object::New(node_rfc::__env);
-        if (!__dateToABAP.IsEmpty())
-        {
-            date.Set(Napi::String::New(node_rfc::__env, "toABAP"), __dateToABAP.Value());
-        }
-        if (!__dateFromABAP.IsEmpty())
-        {
-            date.Set(Napi::String::New(node_rfc::__env, "fromABAP"), __dateFromABAP.Value());
-        }
-        options.Set(Napi::String::New(node_rfc::__env, "date"), date);
-
-        Napi::Object time = Napi::Object::New(node_rfc::__env);
-        if (!__timeToABAP.IsEmpty())
-        {
-            time.Set(Napi::String::New(node_rfc::__env, "toABAP"), __timeToABAP.Value());
-        }
-        if (!__timeFromABAP.IsEmpty())
-        {
-            time.Set(Napi::String::New(node_rfc::__env, "fromABAP"), __timeFromABAP.Value());
-        }
-        options.Set(Napi::String::New(node_rfc::__env, "time"), time);
-
-        return options;
+        uv_sem_post(&invocationMutex);
     }
 
 } // namespace node_rfc
