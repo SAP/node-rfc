@@ -27,8 +27,8 @@ very convenient ABAP business logic consumption from NodeJS.
 -   **[Setup](#setup)**
 -   **[Getting started](#usage)**
 -   **[Usage](doc/usage.md#direct-and-managed-clients)**
--   API
-    -   **[Pool](doc/api.md/#pool)**
+-   **[API](doc/api.md)**
+    -   **[Connection Pool](doc/api.md/#connection-pool)**
     -   **[Client](doc/api.md/#client)**
     -   **[Throughput](doc/api.md/#throughput)**
 -   **[Troubleshooting](doc/troubleshooting.md)**
