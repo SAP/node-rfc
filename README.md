@@ -1,3 +1,5 @@
+# node-rfc v2
+
 Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/), providing
 very convenient ABAP business logic consumption from NodeJS.
 
@@ -26,7 +28,10 @@ very convenient ABAP business logic consumption from NodeJS.
 -   **[Prerequisites](#prerequisites)**
 -   **[Setup](#setup)**
 -   **[Getting started](#usage)**
--   **[Usage](doc/usage.md#direct-and-managed-clients)**
+-   **[Usage](doc/usage.md)**
+    -   **[Connection Pool](doc/usage.md/#connection-pool)**
+    -   **[Client](doc/usage.md/#client)**
+    -   **[Throughput](doc/usage.md/#throughput)**
 -   **[API](doc/api.md)**
     -   **[Connection Pool](doc/api.md/#connection-pool)**
     -   **[Client](doc/api.md/#client)**
@@ -167,7 +172,7 @@ More info:
     -   [Date/Time](doc/usage.md#datetime-types)
     -   [UTCLONG](doc/usage.md#utclong)
 -   **[API Documentation](doc/api.md)**
-    -   [Pool](doc/api.md/#pool)
+    -   [Connection Pool](doc/api.md/#connection-pool)
     -   [Client](doc/api.md/#client)
     -   [Throughput](doc/api.md/#throughput)
 -   **[Connection Parameters](doc/usage.md#connection-parameters)**

@@ -133,10 +133,10 @@ export class Pool {
                                     | RfcClientBinding
                                     | Array<RfcClientBinding>
                             ) => {
-                                //this.__pool.ready(
-                                //    this.__poolOptions.low,
-                                //    () => {}
-                                //);
+                                this.__pool.ready(
+                                    this.__poolOptions.low,
+                                    () => {}
+                                );
                                 if (!isUndefined(err)) {
                                     reject(err);
                                 }
@@ -167,6 +167,8 @@ export class Pool {
                     err: any,
                     clientBindings: RfcClientBinding | Array<RfcClientBinding>
                 ) => {
+                    this.__pool.ready(this.__poolOptions.low, () => {});
+
                     if (!isUndefined(err)) {
                         (callback as Function)(err);
                     }

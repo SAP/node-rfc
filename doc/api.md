@@ -1,8 +1,23 @@
-# Client
+-   **[Client](#client)**
+    -   [Properties](#client-properties)
+    -   [Constructor](#client-constructor)
+    -   [API](#client-api)
+-   **[Connection Pool](#connection-pool)**
+    -   [Properties](#pool-properties)
+    -   [Constructor](#pool-constructor)
+    -   [API](#pool-api)
+-   **[Throughput](#throughput)**
+    -   [Properties](#throughput-properties)
+    -   [Constructor](#throughput-constructor)
+    -   [API](#throughput-api)
 
-Usage: [usage/connection-pool](https://github.wdf.sap.corp/D037732/noderfc2/blob/master/doc/usage.md#direct-and-managed-clients)
+## Client
 
-## Getters
+Usage: [usage/client](usage.md#client)
+
+<a name="client-properties"></a>
+
+### Properties
 
 [`environment`](./usage.md#environment) : Object, exposed at instance and class level
 
@@ -22,17 +37,25 @@ Usage: [usage/connection-pool](https://github.wdf.sap.corp/D037732/noderfc2/blob
 
 `connectionInfo`: Object exposing RFC Connection attributes, or Error object if the connection is closed
 
-## Constructor
+<a name="client-constructor"></a>
 
-### Direct connection
+### Constructor
+
+The direct client is instantiated using connection parameters and optional client options:
 
 ```ts
+constructor(
+    connectionParameters: RfcConnectionParameters,
+    clientOptions?: RfcClientOptions )
+```
 
-interface RfcClientBinding {
-    new (
-        connectionParameters: RfcConnectionParameters,
-        clientOptions?: RfcClientOptions
-    ): RfcClientBinding;
+Another constructor is used by the Connection Pool only. The client instance is already created by Connection Pool
+and passed to NodeJS for NodeJS Client instance creation:
+
+```ts
+constructor(
+    clientBinding: RfcClientBinding,
+    clientOptions?: RfcClientOptions )
 ```
 
 Example:
@@ -40,38 +63,16 @@ Example:
 ```node
 const Client = require("node-rfc").Client;
 
-const client = new Client({ dest: "QI3" }, { stateless: true });
+const direct_client = new Client({ dest: "QI3" }, { stateless: true });
 ```
 
-### Managed connection
+The managed client is instantiated using the Connection Pool [`acquire()`](#acquire) method.
 
-```ts
-interface RfcPoolConfiguration {
-    connectionParameters: RfcConnectionParameters;
-    clientOptions?: RfcClientOptions;
-    poolOptions?: RfcPoolOptions;
-}
-
-interface RfcPoolBinding {
-    new (poolConfiguration: RfcPoolConfiguration): RfcPoolBinding;
-```
-
-Example:
-
-```node
-const Pool = require("node-rfc").Pool;
-const pool = new Pool({
-        connectionParameters: { dest: "QI3},
-        clientOptions: {stateless: true},   // optional
-        poolOptions: {low: 0, high: 1}  // optional
-    });
-```
-
-## Client API
+### Client API
 
 Client API methods accept optional callback argument, for callback invocation pattern. When callback not provided, the Promise is returned.
 
-### open
+#### open
 
 Open connection (direct client only):
 
@@ -80,7 +81,7 @@ connect(callback?: Function): void | Promise<Client> // for backwards compatibil
 open(callback?: Function): void | Promise<Client>
 ```
 
-### close
+#### close
 
 Close connection (direct client only):
 
@@ -88,7 +89,7 @@ Close connection (direct client only):
 close(callback?: Function): void | Promise<void>
 ```
 
-### ping
+#### ping
 
 RFC ping the ABAP backend system, returning:
 
@@ -100,7 +101,7 @@ RFC ping the ABAP backend system, returning:
 ping(callback?: Function): void | Promise<boolean>
 ```
 
-### resetServerContext
+#### resetServerContext
 
 Reset server context, making the next call ABAP stateless, like after opening new connection:
 
@@ -108,7 +109,7 @@ Reset server context, making the next call ABAP stateless, like after opening ne
 resetServerContext(callback?: Function): void | Promise<void>
 ```
 
-### release
+#### release
 
 Release the client connection back to Pool (managed client only). No arguments required:
 
@@ -116,7 +117,7 @@ Release the client connection back to Pool (managed client only). No arguments r
 release(callback?: Function): void | Promise<void>
 ```
 
-### call
+#### call
 
 Invoke the ABAP RFM `rfmName`, providing RFM parameters `rfmParams` and optional callOptions:
 
@@ -128,7 +129,7 @@ call(
 ): Promise<RfcObject>
 ```
 
-### invoke
+#### invoke
 
 The same as call, used in callback pattern:
 
@@ -141,11 +142,13 @@ invoke(
 )
 ```
 
-# Pool
+## Connection Pool
 
-Usage: [usage/connection-pool](https://github.wdf.sap.corp/D037732/noderfc2/blob/master/doc/usage.md#connection-pool)
+Usage: [usage/connection-pool](usage.md#connection-pool)
 
-## Getters
+<a name="pool-properties"></a>
+
+### Properties
 
 [`environment`](./usage.md#environment) : Object, exposed at instance and class level
 
@@ -157,7 +160,9 @@ Usage: [usage/connection-pool](https://github.wdf.sap.corp/D037732/noderfc2/blob
 
 `status` : Object, exposing the number of `ready` and `leased` connections
 
-## Constructor
+<a name="pool-constructor"></a>
+
+### Constructor
 
 ```ts
 export interface RfcPoolConfiguration {
@@ -165,8 +170,8 @@ export interface RfcPoolConfiguration {
     clientOptions?: RfcClientOptions;
     poolOptions?: RfcPoolOptions;
 }
-export interface RfcPoolBinding {
-    new (poolConfiguration: RfcPoolConfiguration): RfcPoolBinding;
+
+constructor(poolConfiguration: RfcPoolConfiguration)
 ```
 
 Example:
@@ -180,11 +185,11 @@ const pool = new Pool({
 });
 ```
 
-## API
+### Pool API
 
 The result is returned as a promise, unless the optional callback argument provided.
 
-### acquire
+#### acquire
 
 Acquire one or more managed clients, each with own open connection.
 
@@ -194,7 +199,22 @@ acquire(1, callback?:Function) // Acquire 1 client
 acquire(3, callback?:Function) // Acquire Array of 3 clients
 ```
 
-### release
+Managed client:
+
+```node
+const Pool = require("node-rfc").Pool;
+const pool = new Pool({
+        connectionParameters: { dest: "QI3},
+        clientOptions: {stateless: true},   // optional
+        poolOptions: {low: 0, high: 1}  // optional
+    });
+
+pool.acquire().then(managed_client => {
+    console.log(managed_client.alive); // true
+});
+```
+
+#### release
 
 Release connections of one or more managed clients.
 
@@ -204,7 +224,7 @@ acquire([client1], callback?:Function) // Release 1 client
 acquire([client1, client2], callback?:Function) // Release Array of 2 clients
 ```
 
-### ready
+#### ready
 
 Check if the number of ready connections is below the pool `ready_low` and open new connections if needed.
 
@@ -223,7 +243,7 @@ acquire([client1], callback?:Function) // Release 1 client
 acquire([client1, client2], callback?:Function) // Release Array of 2 clients
 ```
 
-### closeAll
+#### closeAll
 
 :exclamation_mark: Internal use only.
 
@@ -235,6 +255,76 @@ All open connections are anyway closed when Pool destructor called.
 closeAll(callback?: Function) // close all ready and leased connections
 ```
 
-# Throughput
+## Throughput
 
-Usage: [usage/connection-pool](https://github.wdf.sap.corp/D037732/noderfc2/blob/master/doc/usage.md#throughput)
+Usage: [usage/throughput](usage.md#throughput)
+
+<a name="throughput-properties"></a
+
+### Properties
+
+`status` providing the monitoring statistics:
+
+```ts
+export interface RfcThroughputStatus {
+    numberOfCalls: number;
+    sentBytes: number;
+    receivedBytes: number;
+    applicationTime: number;
+    totalTime: number;
+    serializationTime: number;
+    deserializationTime: number;
+}
+```
+
+`clients` exposing a Set of monitored clients
+
+`handle` exposing the internal Throughput object handle, assigned by SAP NWRFC SDK
+
+<a name="throughput-constructor"></a>
+
+### Constructor
+
+```ts
+constructor(client?: Client | Array<Client>)
+```
+
+### Throughput API
+
+#### setOnConnection
+
+Assign one or more clients to Throughput instance:
+
+```ts
+setOnConnection(client: Client | Array<Client>)
+```
+
+Example:
+
+```node
+throughput.setOnConnection([client1, client2]);
+```
+
+#### removeFromConnection
+
+The opposite of `setOnConnection`:
+
+```ts
+removeFromConnection(client: Client | Array<Client>)
+```
+
+#### reset
+
+Reset Throughput counters:
+
+```ts
+reset();
+```
+
+#### destroy
+
+Free the Throughput object, normally not needed becuse called in a destructor:
+
+```ts
+destroy();
+```

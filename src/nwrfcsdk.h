@@ -16,20 +16,18 @@
 #define NodeRfc_SDK_H_
 
 #include "noderfc.h"
+#include <sstream>
 
 using namespace Napi;
 
+#define ERROR_PATH_NAME_LEN 48
 namespace node_rfc
 {
-    // Basic string operations
-    SAP_UC *fillString(const Napi::String napistr);
-    Napi::Value wrapString(SAP_UC *uc, int length = -1);
+    extern Napi::Env __env;
 
-    // RFC ERRORS
-    Napi::Value NodeRfcError(Napi::Value errorObj);
-    Napi::Value RfcLibError(RFC_ERROR_INFO *errorInfo);
-    Napi::Value AbapError(RFC_ERROR_INFO *errorInfo);
-    Napi::Value wrapError(RFC_ERROR_INFO *errorInfo);
+    // Basic string operations
+    Napi::Value wrapString(SAP_UC *uc, int length = -1);
+    SAP_UC *fillString(const Napi::String napistr);
 
     //
     // Client connection parameters internal representation
@@ -205,6 +203,88 @@ namespace node_rfc
             }
         }
     } ClientOptionsStruct;
+
+    typedef struct _RfmErrorPath
+    {
+        SAP_UC functionName[ERROR_PATH_NAME_LEN];
+        SAP_UC parameterName[ERROR_PATH_NAME_LEN];
+        SAP_UC tableName[ERROR_PATH_NAME_LEN];
+        int64_t table_line = -1;
+        SAP_UC structureName[ERROR_PATH_NAME_LEN];
+        SAP_UC fieldName[ERROR_PATH_NAME_LEN];
+
+        void clear()
+        {
+            functionName[0] = 0;
+            parameterName[0] = 0;
+            resetPath();
+        }
+
+        void resetPath()
+        {
+            table_line = -1;
+            tableName[0] = 0;
+            structureName[0] = 0;
+            fieldName[0] = 0;
+        }
+
+        void setName(RFCTYPE typ, SAP_UC *cName)
+        {
+            if (typ == RFCTYPE_STRUCTURE)
+            {
+                strcpyU(structureName, cName);
+            }
+            else if (typ == RFCTYPE_TABLE)
+            {
+                strcpyU(tableName, cName);
+            }
+            else
+            {
+                strcpyU(fieldName, cName);
+            }
+        }
+
+        void setFunctionName(SAP_UC *funcName)
+        {
+            clear();
+            strcpyU(functionName, funcName);
+        }
+
+        void setParameterName(SAP_UC *pName)
+        {
+            resetPath();
+            strcpyU(parameterName, pName);
+        }
+
+        Napi::Object getpath()
+        {
+            Napi::Object path = Napi::Object::New(node_rfc::__env);
+            path.Set("rfm", wrapString(functionName));
+            path.Set("parameter", wrapString(parameterName));
+            if (*tableName)
+            {
+                path.Set("table", wrapString(tableName));
+                path.Set("table_line", table_line);
+            }
+            if (*structureName)
+            {
+                path.Set("structure", wrapString(structureName));
+            }
+            if (*fieldName)
+            {
+                path.Set("field", wrapString(fieldName));
+            }
+            return path;
+        }
+
+    } RfmErrorPath;
+
+    // RFC ERRORS
+    Napi::Value NodeRfcError(Napi::Value errorObj);
+    Napi::Value RfcLibError(RFC_ERROR_INFO *errorInfo);
+    Napi::Value AbapError(RFC_ERROR_INFO *errorInfo);
+    Napi::Value wrapError(RFC_ERROR_INFO *errorInfo);
+    Napi::Value fillError(std::string message, RfmErrorPath errorPath);
 
 } // namespace node_rfc
 #endif

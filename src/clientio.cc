@@ -14,7 +14,6 @@
 
 #include "nwrfcsdk.h"
 #include "Client.h"
-
 namespace node_rfc
 {
     extern Napi::Env __env;
@@ -52,6 +51,7 @@ namespace node_rfc
         RFC_ERROR_INFO errorInfo;
         RFC_PARAMETER_DESC paramDesc;
         SAP_UC *cName = fillString(name);
+        errorPath.setParameterName(cName);
         rc = RfcGetParameterDescByName(functionDescHandle, cName, &paramDesc, &errorInfo);
         free(cName);
         if (rc != RFC_OK)
@@ -68,7 +68,7 @@ namespace node_rfc
 
         Napi::EscapableHandleScope scope(value.Env());
 
-        Napi::Object structObj = value.ToObject(); // ->ToObject();
+        Napi::Object structObj = value.ToObject();
         Napi::Array structNames = structObj.GetPropertyNames();
         uint_t structSize = structNames.Length();
 
@@ -104,6 +104,9 @@ namespace node_rfc
         RFC_RC rc = RFC_OK;
         RFC_ERROR_INFO errorInfo;
         SAP_UC *cValue;
+
+        errorPath.setName(typ, cName);
+
         switch (typ)
         {
         case RFCTYPE_STRUCTURE:
@@ -132,16 +135,16 @@ namespace node_rfc
             }
             if (!value.IsArray())
             {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "Array expected when filling field %s of type %d", &fieldName[0], typ);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+                std::stringstream err;
+                err << "Array expected from NodeJS, for RFM table of type " << typ;
+                return fillError(err.str(), errorPath);
             }
             Napi::Array array = value.As<Napi::Array>();
             uint_t rowCount = array.Length();
 
             for (uint_t i = 0; i < rowCount; i++)
             {
+                errorPath.table_line = i;
                 RFC_STRUCTURE_HANDLE structHandle = RfcAppendNewRow(tableHandle, &errorInfo);
                 Napi::Value line = array.Get(i);
                 if (line.IsBuffer() || line.IsString() || line.IsNumber())
@@ -162,10 +165,9 @@ namespace node_rfc
         {
             if (!value.IsString())
             {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+                std::stringstream err;
+                err << "Char expected from NodeJS for the field of type " << typ;
+                return fillError(err.str(), errorPath);
             }
             cValue = fillString(value.As<Napi::String>());
             rc = RfcSetChars(functionHandle, cName, cValue, strlenU((SAP_UTF16 *)cValue), &errorInfo);
@@ -176,10 +178,9 @@ namespace node_rfc
         {
             if (!value.IsBuffer())
             {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "Buffer expected when filling field '%s' of type %d", &fieldName[0], typ);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+                std::stringstream err;
+                err << "Buffer expected from NodeJS for the field of type " << typ;
+                return fillError(err.str(), errorPath);
             }
 
             Napi::Buffer<char> buf = value.As<Napi::Buffer<char>>();
@@ -195,10 +196,9 @@ namespace node_rfc
         {
             if (!value.IsBuffer())
             {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "Buffer expected when filling field '%s' of type %d", &fieldName[0], typ);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+                std::stringstream err;
+                err << "Buffer expected from NodeJS for the field of type " << typ;
+                return fillError(err.str(), errorPath);
             }
 
             Napi::Buffer<char> buf = value.As<Napi::Buffer<char>>();
@@ -214,10 +214,9 @@ namespace node_rfc
         {
             if (!value.IsString())
             {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+                std::stringstream err;
+                err << "Char expected from NodeJS for the field of type " << typ;
+                return fillError(err.str(), errorPath);
             }
             cValue = fillString(value.ToString());
             rc = RfcSetString(functionHandle, cName, cValue, strlenU((SAP_UTF16 *)cValue), &errorInfo);
@@ -228,10 +227,9 @@ namespace node_rfc
         {
             if (!value.IsString())
             {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "Char expected when filling field %s of type %d", &fieldName[0], typ);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+                std::stringstream err;
+                err << "Char expected from NodeJS for the field of type " << typ;
+                return fillError(err.str(), errorPath);
             }
             cValue = fillString(value.ToString());
             rc = RfcSetNum(functionHandle, cName, cValue, strlenU((SAP_UTF16 *)cValue), &errorInfo);
@@ -245,13 +243,12 @@ namespace node_rfc
         {
             if (!value.IsNumber() && !value.IsObject() && !value.IsString())
             {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "Number, number object or string expected when filling field %s of type %d", &fieldName[0], typ);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+                std::stringstream err;
+                err << "Number, number object or string expected from NodeJS for the field of type " << typ;
+                return fillError(err.str(), errorPath);
             }
             cValue = fillString(value.ToString());
-            rc = RfcSetString(functionHandle, cName, cValue, strlenU((SAP_UTF16 *)cValue), &errorInfo);
+            rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
             free(cValue);
             break;
         }
@@ -262,20 +259,18 @@ namespace node_rfc
         {
             if (!value.IsNumber())
             {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "Integer number expected when filling field %s of type %d", &fieldName[0], typ);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+                std::stringstream err;
+                err << "Integer number expected from NodeJS for the field of type " << typ;
+                return fillError(err.str(), errorPath);
             }
 
             // https://github.com/mhdawson/node-sqlite3/pull/3
             double numDouble = value.ToNumber().DoubleValue();
             if ((int64_t)numDouble != numDouble) // or std::trunc(numDouble) == numDouble;
             {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "Integer number expected when filling field %s of type %d, got %a", &fieldName[0], typ, numDouble);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+                std::stringstream err;
+                err << "Integer number expected from NodeJS for the field of type " << typ << ", got " << numDouble;
+                return fillError(err.str(), errorPath);
             }
             RFC_INT rfcInt = (RFC_INT)value.As<Napi::Number>().Int64Value();
             //int64_t rfcInt = value.As<Napi::Number>().Int64Value();
@@ -290,10 +285,9 @@ namespace node_rfc
                     (typ == RFCTYPE_INT1 && rfcInt > UINT8_MAX) ||
                     (typ == RFCTYPE_INT2 && ((rfcInt > INT16_MAX) || (rfcInt < INT16_MIN))))
                 {
-                    char err[256];
-                    std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                    sprintf(err, "Overflow or other error when filling integer field %s of type %d, value: %d", &fieldName[0], typ, rfcInt);
-                    return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+                    std::stringstream err;
+                    err << "Overflow or other error when putting NodeJS value " << rfcInt << " into integer field of type " << typ;
+                    return fillError(err.str(), errorPath);
                 }
 
                 rc = RfcSetInt(functionHandle, cName, rfcInt, &errorInfo);
@@ -304,10 +298,9 @@ namespace node_rfc
         {
             if (!value.IsString())
             {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "UTCLONG string expected when filling field %s of type %d", &fieldName[0], typ);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+                std::stringstream err;
+                err << "UTCLONG string expected from NodeJS for the field of type " << typ;
+                return fillError(err.str(), errorPath);
             }
             cValue = fillString(value.ToString());
             rc = RfcSetString(functionHandle, cName, cValue, strlenU((SAP_UTF16 *)cValue), &errorInfo);
@@ -323,10 +316,9 @@ namespace node_rfc
             }
             if (!value.IsString())
             {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "ABAP date format YYYYMMDD expected when filling field %s of type %d", &fieldName[0], typ);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+                std::stringstream err;
+                err << "ABAP date format YYYYMMDD expected from NodeJS for the field of type " << typ;
+                return fillError(err.str(), errorPath);
             }
             cValue = fillString(value.ToString());
             rc = RfcSetDate(functionHandle, cName, cValue, &errorInfo);
@@ -342,10 +334,9 @@ namespace node_rfc
             }
             if (!value.IsString())
             {
-                char err[256];
-                std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                sprintf(err, "ABAP time format HHMMSS expected when filling field %s of type %d", &fieldName[0], typ);
-                return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
+                std::stringstream err;
+                err << "ABAP time format HHMMSS expected from NodeJS for the field of type " << typ;
+                return fillError(err.str(), errorPath);
             }
             cValue = fillString(value.ToString());
             rc = RfcSetTime(functionHandle, cName, cValue, &errorInfo);
@@ -354,11 +345,10 @@ namespace node_rfc
         }
         default:
         {
-            char err[256];
-            std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Unknown RFC type %u when filling %s", typ, &fieldName[0]);
-            return scope.Escape(Napi::TypeError::New(value.Env(), err).Value());
-            break;
+            std::stringstream err;
+
+            err << "Unknown RFC type from NodeJS " << typ;
+            return fillError(err.str(), errorPath);
         }
         }
         if (rc != RFC_OK)
@@ -372,7 +362,7 @@ namespace node_rfc
     // WRAP FUNCTIONS (from RFC)
     ////////////////////////////////////////////////////////////////////////////////
 
-    Napi::Value Client::wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle)
+    WrapResultType Client::wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle)
     {
         DEBUG("wrapResult");
         Napi::EscapableHandleScope scope(node_rfc::__env);
@@ -387,20 +377,31 @@ namespace node_rfc
         for (uint_t i = 0; i < paramCount; i++)
         {
             RfcGetParameterDescByIndex(functionDescHandle, i, &paramDesc, NULL);
-            DEBUG("paramDesc %u %u %u", paramDesc.direction, client_options.filter_param_type, paramDesc.direction & client_options.filter_param_type);
             if ((paramDesc.direction & client_options.filter_param_type) == 0)
             {
                 Napi::String name = wrapString(paramDesc.name).As<Napi::String>();
-                Napi::Value value = wrapVariable(paramDesc.type, functionHandle, paramDesc.name, paramDesc.nucLength, paramDesc.typeDescHandle);
-                (resultObj).Set(name, value);
+                errorPath.setParameterName(paramDesc.name);
+                DEBUG("type %u param set %s %u %u %u", paramDesc.type, &wrapString(paramDesc.name).As<Napi::String>().Utf8Value()[0], paramDesc.direction, client_options.filter_param_type, paramDesc.direction & client_options.filter_param_type);
+                WrapResultType result = wrapVariable(paramDesc.type, functionHandle, paramDesc.name, paramDesc.nucLength, paramDesc.typeDescHandle);
+                if (!result.first.IsUndefined())
+                {
+                    return result;
+                }
+                if (paramDesc.type == 17)
+                {
+                    DEBUG("paramStruct %u", result.second.As<Napi::Object>().GetPropertyNames().Length());
+                }
+                (resultObj).Set(name, result.second);
             }
         }
-        return scope.Escape(resultObj);
+        return WrapResultType(ENV_UNDEFINED, scope.Escape(resultObj));
     }
 
-    Napi::Value Client::wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle)
+    WrapResultType Client::wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle)
     {
         Napi::EscapableHandleScope scope(node_rfc::__env);
+
+        Napi::Object resultObj = Napi::Object::New(node_rfc::__env);
 
         RFC_RC rc;
         RFC_ERROR_INFO errorInfo;
@@ -409,42 +410,48 @@ namespace node_rfc
         rc = RfcGetFieldCount(typeDesc, &fieldCount, &errorInfo);
         if (rc != RFC_OK)
         {
-            Napi::Error::New(node_rfc::__env, wrapError(&errorInfo).ToString()).ThrowAsJavaScriptException();
+            return WrapResultType(wrapError(&errorInfo), ENV_UNDEFINED);
         }
-
-        Napi::Object resultObj = Napi::Object::New(node_rfc::__env);
 
         for (uint_t i = 0; i < fieldCount; i++)
         {
             rc = RfcGetFieldDescByIndex(typeDesc, i, &fieldDesc, &errorInfo);
             if (rc != RFC_OK)
             {
-                Napi::Error::New(node_rfc::__env, wrapError(&errorInfo).ToString()).ThrowAsJavaScriptException();
+                return WrapResultType(wrapError(&errorInfo), ENV_UNDEFINED);
             }
-            (resultObj).Set(wrapString(fieldDesc.name), wrapVariable(fieldDesc.type, structHandle, fieldDesc.name, fieldDesc.nucLength, fieldDesc.typeDescHandle));
+            WrapResultType result = wrapVariable(fieldDesc.type, structHandle, fieldDesc.name, fieldDesc.nucLength, fieldDesc.typeDescHandle);
+            if (!result.first.IsUndefined())
+            {
+                return result;
+            }
+            (resultObj).Set(wrapString(fieldDesc.name), result.second);
         }
 
         if (fieldCount == 1)
         {
-            Napi::String fieldName = resultObj.GetPropertyNames().Get((uint32_t)0).As<Napi::String>();
+            Napi::String fieldName = resultObj.GetPropertyNames().Get((uint_t)0).As<Napi::String>();
             if (fieldName.Utf8Value().size() == 0)
             {
-                return scope.Escape(resultObj.Get(fieldName));
+                return WrapResultType(ENV_UNDEFINED, scope.Escape(resultObj.Get(fieldName)));
             }
         }
 
-        return scope.Escape(resultObj);
+        DEBUG("wrapStructure ok %u", resultObj.GetPropertyNames().Length());
+
+        return WrapResultType(ENV_UNDEFINED, scope.Escape(resultObj));
     }
 
-    Napi::Value Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc)
+    WrapResultType Client::wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc)
     {
         Napi::EscapableHandleScope scope(node_rfc::__env);
-
-        Napi::Value resultValue;
+        Napi::Value resultValue = ENV_UNDEFINED;
 
         RFC_RC rc = RFC_OK;
         RFC_ERROR_INFO errorInfo;
         RFC_STRUCTURE_HANDLE structHandle;
+
+        errorPath.setName(typ, cName);
 
         switch (typ)
         {
@@ -455,7 +462,13 @@ namespace node_rfc
             {
                 break;
             }
-            resultValue = wrapStructure(typeDesc, structHandle);
+
+            WrapResultType result = wrapStructure(typeDesc, structHandle);
+            if (!result.first.IsUndefined())
+            {
+                return result;
+            }
+            resultValue = result.second;
             break;
         }
         case RFCTYPE_TABLE:
@@ -473,10 +486,15 @@ namespace node_rfc
 
             while (rowCount-- > 0)
             {
+                errorPath.table_line = rowCount;
                 RfcMoveTo(tableHandle, rowCount, NULL);
-                Napi::Value row = wrapStructure(typeDesc, tableHandle);
+                WrapResultType result = wrapStructure(typeDesc, tableHandle);
+                if (!result.first.IsUndefined())
+                {
+                    return result;
+                }
                 RfcDeleteCurrentRow(tableHandle, &errorInfo);
-                (table).Set(rowCount, row);
+                (table).Set(rowCount, result.second);
             }
             resultValue = table;
             break;
@@ -738,18 +756,16 @@ namespace node_rfc
             break;
         }
         default:
-            char err[256];
-            std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            sprintf(err, "Unknown RFC type %d when wrapping %s", typ, &fieldName[0]);
-            Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
-
+            std::stringstream err;
+            err << "RFC type from ABAP not supported" << typ;
+            return WrapResultType(ENV_UNDEFINED, fillError(err.str(), errorPath));
             break;
         }
         if (rc != RFC_OK)
         {
-            return scope.Escape(wrapError(&errorInfo));
+            return WrapResultType(scope.Escape(wrapError(&errorInfo)), ENV_UNDEFINED);
         }
 
-        return scope.Escape(resultValue);
+        return WrapResultType(ENV_UNDEFINED, scope.Escape(resultValue));
     }
 } // namespace node_rfc

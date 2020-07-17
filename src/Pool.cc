@@ -93,68 +93,9 @@ namespace node_rfc
         RFC_ERROR_INFO errorInfo;
         uint_t ready_low;
     };
-    class CheckPoolAsync : public Napi::AsyncWorker
-    {
-    public:
-        CheckPoolAsync(Napi::Function &callback, Pool *pool)
-            : Napi::AsyncWorker(callback), pool(pool) {}
-        ~CheckPoolAsync() {}
-
-        void Execute()
-        {
-            pool->lockMutex();
-            DEBUG("CheckPoolAsync %u", pool->ready_low);
-            uint_t ready = pool->connReady.size();
-            errorInfo.code = RFC_OK;
-
-            if (ready < pool->ready_low)
-            {
-                DEBUG("Pool up: %u up to %u", ready, pool->ready_low);
-                for (uint_t ii = ready; ii < pool->ready_low; ii++)
-                {
-                    connectionHandle = RfcOpenConnection(pool->client_params.connectionParams, pool->client_params.paramSize, &errorInfo);
-                    if (errorInfo.code == RFC_OK)
-                    {
-                        pool->connReady.insert(connectionHandle);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-            }
-
-            if (errorInfo.code == RFC_OK)
-            {
-                ready = pool->connReady.size();
-                if (ready > pool->ready_high)
-                {
-                    DEBUG("Pool down: %u to %u", ready, pool->ready_high);
-                    ConnectionSetType::iterator it = pool->connReady.begin();
-                    while (pool->connReady.size() > pool->ready_high)
-                    {
-                        pool->connReady.erase(it);
-                        connectionHandle = *it++;
-                        RfcCloseConnection(connectionHandle, &errorInfo);
-                    }
-                }
-            }
-            pool->unlockMutex();
-        }
-        void OnOK()
-        {
-        }
-
-    private:
-        Pool *pool;
-        RFC_CONNECTION_HANDLE connectionHandle;
-        RFC_ERROR_INFO errorInfo;
-    };
-
     class AcquireAsync : public Napi::AsyncWorker
     {
     public:
-        friend class CheckPoolAsync;
         AcquireAsync(Napi::Function &callback, const uint_t clients_requested, Pool *pool)
             : Napi::AsyncWorker(callback), clients_requested(clients_requested), pool(pool) {}
         ~AcquireAsync() {}
@@ -230,8 +171,6 @@ namespace node_rfc
                 }
             }
             pool->unlockMutex();
-            Napi::Function fn = Callback().Value();
-            (new CheckPoolAsync(fn, pool))->Queue();
         }
 
     private:

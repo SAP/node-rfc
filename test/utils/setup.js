@@ -22,7 +22,7 @@ const _environment = {
     noderfc: {
         //version: "Deactivate logging: LOG_RFC_CLIENT",
         version: require("../../package.json").version,
-        nwrfcsdk: { major: 7500, minor: 0, patchLevel: 5 },
+        nwrfcsdk: { major: 7500, minor: 0, patchLevel: expect.any(Number) },
     },
     versions: process.versions,
 };

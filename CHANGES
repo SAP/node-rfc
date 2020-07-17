@@ -6,6 +6,8 @@ Change log
 
 * Connection Pool ported to C++, guarded by Pool mutex
 * Connection attribute PartnerIPv6 added
+* Exceptions from NodeJS/ABAP and ABAP/NodeJS conversions replaced by error objects
+* Error location path `rfmPath` attached to error objects
 * SAP NWRFC SDK post-installation fix for macOS removed
 * Cmake version 3.17
 * N-API version 6
@@ -40,7 +42,7 @@ Breaking changes:
    invoke() or call() calback invoked.
 
 
-
+6. Exceptions from NodeJS/ABAP and ABAP/NodeJS conversions replaced by error objects
 
 
 

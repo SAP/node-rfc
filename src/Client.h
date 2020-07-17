@@ -15,6 +15,7 @@
 #ifndef NodeRfc_Client_H
 #define NodeRfc_Client_H
 
+#include <tuple>
 #include <uv.h>
 namespace node_rfc
 {
@@ -23,6 +24,9 @@ namespace node_rfc
     class Pool;
     void checkConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams);
     void checkClientOptions(Napi::Object clientOptionsObject, ClientOptionsStruct *clientOptions);
+
+    typedef std::pair<Napi::Value, Napi::Value> WrapResultType;
+
     class Client : public Napi::ObjectWrap<Client>
     {
     public:
@@ -48,7 +52,7 @@ namespace node_rfc
         Napi::Value PoolIdGetter(const Napi::CallbackInfo &info);
         Napi::ObjectReference clientParamsRef;
         Napi::ObjectReference clientOptionsRef;
-        Napi::Error connectionClosedError(std::string msgprefix);
+        Napi::Error connectionClosedError(std::string suffix);
 
         bool connectionCloseOnError(RFC_ERROR_INFO *errorInfo);
         Napi::Value ConnectionInfo(const Napi::CallbackInfo &info);
@@ -64,9 +68,11 @@ namespace node_rfc
         Napi::Value fillStructure(RFC_STRUCTURE_HANDLE structHandle, RFC_TYPE_DESC_HANDLE functionDescHandle, SAP_UC *cName, Napi::Value value);
         Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Napi::Value value, RFC_TYPE_DESC_HANDLE functionDescHandle);
 
-        Napi::Value wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle);
-        Napi::Value wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc);
-        Napi::Value wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle);
+        WrapResultType wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle);
+        WrapResultType wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc);
+        WrapResultType wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle);
+
+        RfmErrorPath errorPath;
 
         void init(Napi::Env env)
         {

@@ -27,12 +27,12 @@ namespace node_rfc
     {
         Napi::Array paramNames = clientParamsObject.GetPropertyNames();
         clientParams->paramSize = paramNames.Length();
-        DEBUG("checkConnectionParams %u", clientParams->paramSize);
+        //DEBUG("checkConnectionParams %u", clientParams->paramSize);
         clientParams->connectionParams = static_cast<RFC_CONNECTION_PARAMETER *>(malloc(clientParams->paramSize * sizeof(RFC_CONNECTION_PARAMETER)));
         for (uint_t ii = 0; ii < clientParams->paramSize; ii++)
         {
             Napi::String name = paramNames.Get(ii).ToString();
-            DEBUG("checkConnectionParams %s", name.Utf8Value().c_str());
+            //DEBUG("checkConnectionParams %s", name.Utf8Value().c_str());
             Napi::String value = clientParamsObject.Get(name).ToString();
             clientParams->connectionParams[ii].name = fillString(name);
             clientParams->connectionParams[ii].value = fillString(value);
@@ -153,7 +153,6 @@ namespace node_rfc
 
     Napi::Object Client::Init(Napi::Env env, Napi::Object exports)
     {
-        DEBUG("Client::Init");
         Napi::HandleScope scope(env);
 
         Napi::Function func = DefineClass(
@@ -193,7 +192,6 @@ namespace node_rfc
 
     Napi::Value Client::ConfigGetter(const Napi::CallbackInfo &info)
     {
-        DEBUG("Client::ConfigGetter");
         Napi::Env env = info.Env();
         Napi::EscapableHandleScope scope(env);
         Napi::Object config = Napi::Object::New(env);
@@ -201,11 +199,8 @@ namespace node_rfc
         {
             if (!pool->connectionParameters.IsEmpty())
             {
-                DEBUG("Client::ConfigGetter from Pool %s", POOL_KEY_CONNECTION_PARAMS);
                 config.Set(POOL_KEY_CONNECTION_PARAMS, pool->connectionParameters.Value());
             }
-
-            DEBUG("Client::ConfigGetter from Pool %s", POOL_KEY_CLIENT_OPTIONS);
             config.Set(POOL_KEY_CLIENT_OPTIONS, pool->client_options._Value(info.Env()));
         }
         else
@@ -238,7 +233,7 @@ namespace node_rfc
     {
         if (connectionHandle == NULL)
         {
-            return connectionClosedError("connectionInfo:").Value();
+            return connectionClosedError("connectionInfo").Value();
         }
 
         Napi::Object infoObj = Napi::Object::New(info.Env());
@@ -282,7 +277,6 @@ namespace node_rfc
 
     Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
     {
-
         init(info.Env());
 
         DEBUG("Client::Client %u", id);
@@ -332,7 +326,7 @@ namespace node_rfc
             }
             else
             {
-                DEBUG("Handle already closed");
+                DEBUG("Client %u: handle already closed", id);
             }
 
             // Unref client config
@@ -356,11 +350,11 @@ namespace node_rfc
         uv_sem_destroy(&invocationMutex);
     }
 
-    Napi::Error Client::connectionClosedError(std::string msgprefix)
+    Napi::Error Client::connectionClosedError(std::string suffix)
     {
-        char errmsg[254];
-        sprintf(errmsg, "%s over closed connection", msgprefix.c_str());
-        return Napi::Error::New(Env(), errmsg);
+        std::stringstream err;
+        err << "RFM client request over closed connection: " << suffix;
+        return Napi::Error::New(Env(), err.str());
     }
 
     Napi::Object Client::NewInstance(Napi::Env env)
@@ -381,12 +375,14 @@ namespace node_rfc
         void Execute()
         {
             client->LockMutex();
+            DEBUG("OpenAsync %u lock", client->id);
             client->connectionHandle = RfcOpenConnection(client->client_params.connectionParams, client->client_params.paramSize, &errorInfo);
             if (errorInfo.code != RFC_OK)
             {
                 client->connectionHandle = NULL;
             }
             client->UnlockMutex();
+            DEBUG("OpenAsync %u unlock", client->id);
         }
 
         void OnOK()
@@ -419,10 +415,11 @@ namespace node_rfc
         void Execute()
         {
             client->LockMutex();
-            DEBUG("CloseAsync client: %u handle: %lu", client->id, (pointer_t)client->connectionHandle);
+            DEBUG("CloseAsync lock client: %u handle: %lu", client->id, (pointer_t)client->connectionHandle);
             RfcCloseConnection(client->connectionHandle, &errorInfo);
             client->connectionHandle = NULL;
             client->UnlockMutex();
+            DEBUG("CloseAsync unlock client: %u handle: %lu", client->id, (pointer_t)client->connectionHandle);
         }
 
         void OnOK()
@@ -507,7 +504,7 @@ namespace node_rfc
             if (conn_closed)
             {
                 // connection was closed
-                Callback().Call({client->connectionClosedError("Client ping():").Value(), Napi::Boolean::New(Env(), false)});
+                Callback().Call({client->connectionClosedError("ping()").Value(), Napi::Boolean::New(Env(), false)});
             }
             else if (errorInfo.code != RFC_OK)
             {
@@ -540,6 +537,7 @@ namespace node_rfc
         void Execute()
         {
             client->LockMutex();
+            //DEBUG("InvokeAsync lock client: %u handle: %lu", client->id, (pointer_t)client->connectionHandle);
             conn_closed = (client->connectionHandle == NULL);
             if (!conn_closed)
             {
@@ -553,25 +551,27 @@ namespace node_rfc
 
         void OnOK()
         {
-            Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
+            WrapResultType result = WrapResultType(Env().Undefined(), Env().Undefined());
             if (conn_closed)
             {
                 // connection was closed
-                argv[0] = client->connectionClosedError("Client invoke()").Value();
+                std::string errmsg = "invoke() " + wrapString(client->errorPath.functionName).As<Napi::String>().Utf8Value();
+                result.first = client->connectionClosedError(errmsg).Value();
             }
             else if (errorInfo.code != RFC_OK)
             {
                 // connection was open, invoke() ended with error
-                argv[0] = wrapError(&errorInfo);
+                result.first = wrapError(&errorInfo);
             }
             else
             {
                 // connection was open, invoke() success
-                argv[1] = client->wrapResult(functionDescHandle, functionHandle);
+                result = client->wrapResult(functionDescHandle, functionHandle);
             }
             RfcDestroyFunction(functionHandle, NULL);
             client->UnlockMutex();
-            Callback().Call({argv[0], argv[1]});
+            //DEBUG("InvokeAsync unlock client: %u handle: %lu", client->id, (pointer_t)client->connectionHandle);
+            Callback().Call({result.first, result.second});
             Callback().Reset();
         }
 
@@ -591,30 +591,36 @@ namespace node_rfc
               notRequested(Napi::Persistent(notRequestedParameters)), rfmParams(Napi::Persistent(rfmParams))
         {
             funcName = client->fillString(rfmName);
+            client->errorPath.setFunctionName(funcName);
         }
-        ~PrepareAsync() {}
+        ~PrepareAsync()
+        {
+            free(funcName);
+        }
 
         void Execute()
         {
             client->LockMutex();
+            //DEBUG("PrepareAsync lock client: %u handle: %lu", client->id, (pointer_t)client->connectionHandle);
             conn_closed = (client->connectionHandle == NULL);
             if (!conn_closed)
             {
                 functionDescHandle = RfcGetFunctionDesc(client->connectionHandle, funcName, &errorInfo);
             }
-            free(funcName);
         }
 
         void OnOK()
         {
             client->UnlockMutex();
+            //DEBUG("PrepareAsync unlock client: %u handle: %lu", client->id, (pointer_t)client->connectionHandle);
             RFC_FUNCTION_HANDLE functionHandle = NULL;
             Napi::Value argv[2] = {Env().Undefined(), Env().Undefined()};
 
             if (conn_closed)
             {
                 // connection was closed
-                argv[0] = client->connectionClosedError("Client invoke()").Value();
+                std::string errmsg = "invoke() " + wrapString(client->errorPath.functionName).As<Napi::String>().Utf8Value();
+                argv[0] = client->connectionClosedError(errmsg).Value();
             }
             else if (functionDescHandle == NULL || errorInfo.code != RFC_OK)
             {

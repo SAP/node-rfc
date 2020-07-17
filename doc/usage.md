@@ -1,3 +1,28 @@
+-   **[Data Types](#data-types)**
+    -   [Numeric types](#numeric-types)
+    -   [Binary types](#binary-types)
+    -   [Date/Time types](#datetime-types)
+    -   [UTCLONG](#utclong)
+-   **[ABAP Function Module](#abap-function-module)**
+-   **[Client](#client)**
+    -   [Connection Parameters](#connection-parameters)
+    -   [Direct and Managed Clients](#direct-and-managed-clients)
+    -   [Client options](#client-options)
+        -   [Stateless communication option "stateless"](#stateless-communication-option-stateless)
+        -   [Decimal data conversion option "bcd"](#decimal-data-conversion-option-bcd)
+        -   [Date and time conversion options "date" and "time"](#date-and-time-conversion-options-date-and-time)
+        -   [Parameter type filter option "filter"](#parameter-type-filter-option-filter)
+    -   [Error handling](#error-handling)
+    -   [Invoction patterns](#invoction-patterns)
+        -   [Async/await](#asyncawait)
+        -   [Promise](#promise)
+        -   [Callback](#callback)
+-   **[Connection Pool](#connection-pool)**
+    -   [Pool Options](#pool-options)
+-   **[Closing connections](#closing-connections)**
+-   **[Throughput](#throughput)**
+-   **[Environment](#environment)**
+
 ## Data Types
 
 NodeJS data types are automatically converted to ABAP data types and vice versa:
@@ -83,7 +108,14 @@ Using ABAP transaction SE37 in ABAP backend system, you can enter the input data
 
 To consume this function module from NodeJS, first the node-rfc client connection shall be instantiated, using ABAP backend system connection parameters.
 
-## Connection Parameters
+## Client
+
+API: [api/client](api.md#client)
+
+Using the client instance, ABAP RFMs can be consumed from NodeJS. The client constructor requires
+[connection parameters](#connection-parameters) to ABAP backend system and, optionally, [client options](#client-options).
+
+### Connection Parameters
 
 Connection parameters are provided as simple NodeJS object. The complete list of supported parameters is given in `sapnwrfc.ini` file, located in SAP NWRFC SDK `demo` folder.
 
@@ -124,7 +156,7 @@ $ echo $RFC_INI
 ./sapnwrfc.ini
 ```
 
-## Direct and Managed Clients
+### Direct and Managed Clients
 
 The type of client connection can be managed (by the Connection Pool) or direct, without using Connection Pool.
 
@@ -149,60 +181,13 @@ pool.acquire((client) => {
 
 An open connection is represented by unique `RFC_CONNECTION_HANDLE` pointer, assigned by SAP NWRFC SDK and exposed as a client [`connectionHandle`](api.md#getters) getter. The value of this property is zero, when the connection is closed. The client getter [`alive`](api.md#getters) is set to true, if the value is non-zero, representing an open connection.
 
-Direct clients have access to connection [`open()`](api.md#open) and [`close()`](api.md#open) methods and each call to[`open()`](api.md#open) method will set the new [`connectionHandle`](api.md#getters)value. After the connection is closed, the[`connectionHandle`](api.md#getters) is set to zero but new opened connection can get the same [`connectionHandle`](api.md#getters) value, as the previously closed connection. The handle is just the pointer to the C ++ object, and after a free / delete operation the C-Runtime can re-use the same address again in a subsequent malloc / new. It happens very often (especially on Windows), that memory management system “notices” the block of memory is just the right size and the block is re-used, instead of allocating a new one, causing unnecessary fragmentation. The [`connectionHandle`](api.md#getters) can therefore change during the direct client instance lifecycle and more client instances may get the same[`connectionHandle`](api.md#getters), not at the same time. If not synchronized properly, the delayed direct client [`close()`](api.md#close) call, can close the handle already assigned to another client instance, typically causing the `RFC_INVALID_HANDLE` errors when that client tries to make the RFC call.
+Direct clients have access to connection [`open()`](api.md#open) and [`close()`](api.md#close) methods and each call to[`open()`](api.md#open) method will set the new [`connectionHandle`](api.md#getters)value. After the connection is closed, the[`connectionHandle`](api.md#getters) is set to zero but new opened connection can get the same [`connectionHandle`](api.md#getters) value, as the previously closed connection. The handle is just the pointer to the C ++ object and after a free / delete operation the C-Runtime can re-use the same address again in a subsequent malloc / new. It happens very often (especially on Windows), that memory management system “notices” the block of memory is just the right size and the block is re-used, instead of allocating a new one, causing unnecessary fragmentation. The [`connectionHandle`](api.md#getters) can therefore change during the direct client instance lifecycle and more client instances may get the same[`connectionHandle`](api.md#getters), not at the same time. If not synchronized properly, the delayed direct client [`close()`](api.md#close) call, can close the handle already assigned to another client instance, typically causing the `RFC_INVALID_HANDLE` errors when that client tries to make the RFC call.
 
-This situation may happen when the `node-rfc` is consumed by multi-threaded nodejs modules, like `express` for example, in which case your application typically can't influence the sequence of concurrent requests` execution.
+This situation may happen when the `node-rfc` is consumed by multi-threaded nodejs modules, like `express` for example, when application typically can't influence the sequence of concurrent requests` execution.
 
-### Connection Pool
+Using [Connection Pool](#connection-pool) is reccomended in such scenarios.
 
-Using Connection Pool helps here because managed clients can't close or open own connections, their access to [`close()`](api.md#close) and [`open()`](api.md#open) methods is disabled. The [`connectionHandle`](api.md#getters) of the managed client is therefore constant. The managed client acquires an open connection from the Connnection Pool, using [`acquire()`](api.md#acquire) method and after no more needed, returns it back to pool, using [`release()`](api.md#release-1) method. After getting the connection back, the Connection Pool can reset the context and keep it open, ready for the next client, or close the connection. If the number of ready connections is less than pool `high` threshold parameter, the returned connection is added to ready connections, otherwise closed. The `low` threshold parameters defines a minimum number of connections, the Pool should keep open, ready for clients:
-
-```node
-const pool = new Pool({
-    connectionParameters: connParams,
-    clientOptions: {}, // optional
-    poolOptions: { low: 2, high: 4 }, // optional
-});
-```
-
-Using [ready()](api.md#ready) method, the number of ready connections can be increased, ignoring the `ready_high`:
-
-```node
-pool.ready(5).then(() => {
-    // 5 ready connections
-});
-```
-
-### Closing connections
-
-The direct connection is closed by calling the client `close()` method or automatically, by client destructor.
-
-The managed connection is returned to Connection Pool, using `release()` method and can be closed or reused by Connection Pool.
-
-Connection Pool ready and leased connections are closed by Pool destructor.
-
-The direct and managed connection can be automatically closed, if critical error occurs during the communication with ABAP backend system. The client [`connectionHandle`](api.md#getters) property is set to NULL and `alive` to `false`. Critical error conditions, leading to connection close, are exposed in `errorInfo` object.
-The connection is closed if any of following conditions is true:
-
-| errorInfo | Value                     | Description                                                                                                 |
-| --------- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| code      | RFC_COMMUNICATION_FAILURE | Error in Network & Communication layer.                                                                     |
-| code      | RFC_ABAP_RUNTIME_FAILURE  | SAP system runtime error (SYSTEM_FAILURE): Shortdump on the backend side.                                   |
-| code      | RFC_ABAP_MESSAGE          | The called function module raised an E-, A- or X-Message.                                                   |
-| code      | RFC_EXTERNAL_FAILURE      | Error in external custom code. (E.g. in the function handlers or tRFC handlers.) Results in SYSTEM_FAILURE. |
-|           |                           |                                                                                                             |
-| group     | ABAP_RUNTIME_FAILURE      | ABAP Message raised in ABAP function modules or in ABAP runtime of the backend (e.g Kernel)                 |
-| group     | LOGON_FAILURE             | Error message raised when logon fails                                                                       |
-| group     | COMMUNICATION_FAILURE     | Problems with the network connection (or backend broke down and killed the connection)                      |
-| group     | EXTERNAL_RUNTIME_FAILURE  | Problems in the RFC runtime of the external program (i.e "this" library)                                    |
-
-## Pool Options
-
-`low` is the minimum number of connections to keep open, accelerating client `acquire()` requests. **Default**: `2`.
-
-`high` is the maximum number of connections to keep open, "recycling" returned client connections. **Default**: `4`.
-
-## Client options
+### Client options
 
 Using client options, passed to Client or Pool constructor, the default client behaviour can be modified:
 
@@ -214,9 +199,11 @@ Using client options, passed to Client or Pool constructor, the default client b
 | `time`      | Times of day conversion: [Date/Time types](#datetime-types) |
 | `filter`    | Result parameter types' filtering                           |
 
-### Stateless communication option "stateless"
+#### Stateless communication option "stateless"
 
-from [SAP NetWeaver RFC SDK ProgrammingGuide](https://support.sap.com/en/product/connectors/nwrfcsdk.html):
+When set to `true`, the `RfcResetServerContext()` is automatically executed after each RFM call from `node-rfc`. It can be also executed any time, by calling the client `resetServerContext()` method.
+
+[SAP NetWeaver RFC SDK ProgrammingGuide](https://support.sap.com/en/product/connectors/nwrfcsdk.html):
 
 SAP Java Connector (JCo 3.1) and SAP .NET Connector (NCo 3.0) are stateless by default and you have to put some effort into it, if you need a stateful connection.
 
@@ -227,9 +214,7 @@ However, there are also situations, where the business logic needs a stateless c
 
 Of course, the application could simply close the connection and open a fresh one, which also creates a fresh ABAP user session, but this could be a bit time and resource consuming, especially when an SNC handshake must be performed during login. In this case it is easier to just use the API function `RfcResetServerContext()`. This function cleans up any user session state in the backend, but keeps the connection and the user session alive.
 
-When this option set to `true`, the `RfcResetServerContext()` is automatically executed after each RFM call from `node-rfc`. It can be also executed any time, by calling the client `resetServerContext()` method.
-
-### Decimal data conversion option "bcd"
+#### Decimal data conversion option "bcd"
 
 With `bcd`, set to `number`, or to conversion function like [Decimal](https://github.com/MikeMcl/decimal.js/), decimal ABAP float types, BCD, DECF16 and DECF34 are represented as Number object or custom decimal number object.
 
@@ -242,7 +227,7 @@ let clientOptions = {
 };
 ```
 
-### Date and time conversion options "date" and "time"
+#### Date and time conversion options "date" and "time"
 
 The client option `date` shall provide `fromABAP()` function, for ABAP date string (YYYYMMDD) conversion to NodeJS date object and the `toABAP()` function, for the other way around.
 
@@ -276,7 +261,7 @@ const clientOptions = {
 };
 ```
 
-### Parameter type filter option "filter"
+#### Parameter type filter option "filter"
 
 Using the `filter` options, certan ABAP parameter types can be removed from RFM call result JavaScript object, reducing the data volume.
 
@@ -294,15 +279,72 @@ typedef enum _RFC_DIRECTION
 
 ```javaScript
 clientOptions = {
-    direction: 1 // Import parameters not copied to result object
+    filter: 1 // Import parameters not copied to result object
 }
 ```
 
-## Invoction patterns
+### Error Handling
+
+If something goes wrong during Client operations, e.g. invoking a function module that does not exist in ABAP backend,
+the error object is returned as Promise rejection, or as first callback parameter (callback pattern).
+
+The exceptions are raised during when wrong parameters are provided to `Client`, `Pool` or `Throughput` constructor.
+
+An error can occur during NodeJS to ABAP data conversion ("fill" phase), or the other way around ("wrap" phase), when for example
+an string is sent from NodeJS to ABAP field expecting an integer. In such cases an `rfmPath` object is attached to error object,
+providing the names of the RFM, parameter and field, where the error occured:
+
+```node
+const good = { RFCINT1: 1 };
+const BAD = { RFCINT1: "1" };
+
+client.invoke(
+    "STFC_STRUCTURE",
+    {
+        RFCTABLE: [good, good, good, BAD, good],
+    },
+    (err, res) => {
+        if (err) console.error("error:", err);
+        //error: {
+        //  message: 'Integer number expected from NodeJS for the field of type 10',
+        //  rfmPath: {
+        //    rfm: 'STFC_STRUCTURE',
+        //    parameter: 'RFCTABLE',
+        //    table: 'RFCTABLE',
+        //    table_line: 3,
+        //    field: 'RFCINT1'
+        //  }
+        //}
+    }
+);
+```
+
+#### Error types, codes, groups, and classes
+
+[Schmidt and Li (2009a)[http://sap.github.io/PyRFC/bibliography.html#c09a] describe four possible error types on the basis of the return code (i.e. error code) of a RFM invocation:
+
+-   Communication failure
+-   System failure
+-   ABAP exception and
+-   ABAP messages
+
+There are in total roughly 30 possible return codes that indicate some kind of error. Error information returned from NWRFC SDK provides an `error group`, taken as the basis for the exception classes.
+
+The following table should facilitate the matching between the different error representations.
+
+| type (SPJ)            | code [numeric](C)             | group (C)                | class (NodeJS) |
+| --------------------- | ----------------------------- | ------------------------ | -------------- |
+| Communication failure | [1] RFC_COMMUNICATION_FAILURE | COMMUNICATION_FAILURE    | RfcLibError    |
+|                       | [2] RFC_LOGON_FAILURE         | LOGON_FAILURE            | RfcLibError    |
+| System failure        | [3] RFC_ABAP_RUNTIME_FAILURE  | ABAP_RUNTIME_FAILURE     | AbapError      |
+| ABAP message          | [4] RFC_ABAP_MESSAGE          | ABAP_RUNTIME_FAILURE     | AbapError      |
+| ABAP exception        | [5] RFC_ABAP_EXCEPTION        | ABAP_APPLICATION_FAILURE | AbapError      |
+
+### Invoction patterns
 
 After getting a direct or managed client instance, the ABAP function module can be consumed from NodeJS using Async/await, Promise or callback pattern.
 
-### Async/await
+#### Async/await
 
 ```javascript
 (async function () {
@@ -327,7 +369,7 @@ After getting a direct or managed client instance, the ABAP function module can 
 })();
 ```
 
-### Promise
+#### Promise
 
 ```javascript
 client
@@ -353,7 +395,7 @@ client
     });
 ```
 
-### Callback
+#### Callback
 
 ```javascript
 // open connection
@@ -386,6 +428,71 @@ client.connect(function (err) {
     );
 });
 ```
+
+## Connection Pool
+
+API: [api/pool](api.md#connection-pool)
+
+Connection Pool provides managed clients, which can't close or open their own connections. Their access to [`close()`](api.md#close) and [`open()`](api.md#open) methods is disabled and only the pool can open and close connections, in operation guarded by mutex. The [`connectionHandle`](api.md#getters) of the managed client is therefore constant. The managed client acquires an open connection from the Connnection Pool, using [`acquire()`](api.md#acquire) method and after no more needed, returns it back to pool, using [`release()`](api.md#release-1) method. After getting the connection back, the Connection Pool can reset the context and keep it open, ready for the next client, or close the connection. If the number of ready connections is less than pool `high` threshold parameter, the returned connection is added to ready connections, otherwise closed. The `low` threshold parameters defines a minimum number of connections, the Pool should keep open, ready for clients:
+
+```node
+const pool = new Pool({
+    connectionParameters: connParams,
+    clientOptions: {}, // optional
+    poolOptions: { low: 2, high: 4 }, // optional
+});
+```
+
+Using [ready()](api.md#ready) method, the number of ready connections can be increased, ignoring the `ready_high`:
+
+```node
+pool.ready(5).then(() => {
+    // 5 ready connections
+});
+```
+
+### Pool Options
+
+`low` is the minimum number of connections to keep open, accelerating client `acquire()` requests. **Default**: `2`.
+
+`high` is the maximum number of connections to keep open, "recycling" returned client connections. **Default**: `4`.
+
+## Closing connections
+
+The direct connection is closed by calling the client [`close()`](api.md#close) method or automatically, by client destructor.
+
+The managed connection is returned to Connection Pool, using [`release()`](api.md#release-1) method and can be closed or reused by Connection Pool.
+
+Connection Pool ready and leased connections are closed by Pool destructor.
+
+The direct and managed connection can be automatically closed, if critical error occurs during the communication with ABAP backend system. The client [`connectionHandle`](api.md#getters) property is set to NULL and `alive` to `false`. Critical error conditions, leading to connection close, are exposed in `errorInfo` object.
+The connection is closed if any of following conditions is true:
+
+| errorInfo | Value                     | Description                                                                                                 |
+| --------- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| code      | RFC_COMMUNICATION_FAILURE | Error in Network & Communication layer.                                                                     |
+| code      | RFC_ABAP_RUNTIME_FAILURE  | SAP system runtime error (SYSTEM_FAILURE): Shortdump on the backend side.                                   |
+| code      | RFC_ABAP_MESSAGE          | The called function module raised an E-, A- or X-Message.                                                   |
+| code      | RFC_EXTERNAL_FAILURE      | Error in external custom code. (E.g. in the function handlers or tRFC handlers.) Results in SYSTEM_FAILURE. |
+|           |                           |                                                                                                             |
+| group     | ABAP_RUNTIME_FAILURE      | ABAP Message raised in ABAP function modules or in ABAP runtime of the backend (e.g Kernel)                 |
+| group     | LOGON_FAILURE             | Error message raised when logon fails                                                                       |
+| group     | COMMUNICATION_FAILURE     | Problems with the network connection (or backend broke down and killed the connection)                      |
+| group     | EXTERNAL_RUNTIME_FAILURE  | Problems in the RFC runtime of the external program (i.e "this" library)                                    |
+
+## Throughput
+
+API: [api/throughput](api.md#throughput)
+
+The Throughput object can be attached to one or more clients, providing the RFM communication monitoring:
+
+-   number of calls
+-   sent bytes
+-   received bytes
+-   application time
+-   total time
+-   serialization time
+-   deserialization time
 
 ## Environment
 

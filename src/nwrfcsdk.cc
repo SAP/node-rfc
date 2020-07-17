@@ -56,7 +56,7 @@ namespace node_rfc
 
         if (length == -1)
         {
-            length = strlenU((SAP_UTF16 *)uc);
+            length = strlenU(uc);
         }
         if (length == 0)
         {
@@ -148,7 +148,6 @@ namespace node_rfc
     Napi::Value wrapError(RFC_ERROR_INFO *errorInfo)
     {
         Napi::EscapableHandleScope scope(node_rfc::__env);
-        DEBUG("wrapError group: %u", errorInfo->group);
 
         char cBuf[256];
 
@@ -175,6 +174,15 @@ namespace node_rfc
         // unknown error group
         sprintf(cBuf, "wrapError invoked with an unknown error group: %u", errorInfo->group);
         Napi::Error::Fatal(cBuf, "node-rfc internal error");
+    }
+
+    Napi::Value fillError(std::string message, RfmErrorPath errorPath)
+    {
+        Napi::EscapableHandleScope scope(node_rfc::__env);
+        Napi::Object errorObj = Napi::Object::New(node_rfc::__env);
+        errorObj.Set("message", message);
+        errorObj.Set("rfmPath", errorPath.getpath());
+        return scope.Escape(errorObj);
     }
 
 } // namespace node_rfc

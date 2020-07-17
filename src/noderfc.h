@@ -78,4 +78,6 @@
 #define POOL_READY_LOW 2
 #define POOL_READY_HIGH 4
 
+#define ENV_UNDEFINED node_rfc::__env.Undefined()
+
 #endif
