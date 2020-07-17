@@ -321,7 +321,7 @@ client.invoke(
 
 #### Error types, codes, groups, and classes
 
-[Schmidt and Li (2009a)[http://sap.github.io/PyRFC/bibliography.html#c09a] describe four possible error types on the basis of the return code (i.e. error code) of a RFM invocation:
+[Schmidt and Li (2009a)](https://wiki.scn.sap.com/wiki/x/zz27Gg) describe four possible error types on the basis of the return code (i.e. error code) of a RFM invocation:
 
 -   Communication failure
 -   System failure
