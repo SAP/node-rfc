@@ -1,160 +1,341 @@
-var Promise = require("bluebird");
+// Copyright 2014 SAP AG.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http: //www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+// either express or implied. See the License for the specific
+// language governing permissions and limitations under the License.
+
+import { isUndefined } from "util";
+import {
+    Promise,
+    noderfc_binding,
+    environment,
+    NodeRfcEnvironment,
+} from "./noderfc-bindings";
 import {
     Client,
+    RfcClientBinding,
     RfcConnectionParameters,
     RfcClientOptions,
 } from "./sapnwrfc-client";
-import { isUndefined } from "util";
-import { reject } from "bluebird";
-export { Promise };
+
+//
+// RfcPool
+//
 
 export interface RfcPoolOptions {
-    min: number;
-    //max: number;
+    low: number;
+    high: number;
 }
 
+export interface RfcPoolStatus {
+    ready: number;
+    leased: number;
+}
+
+export interface RfcPoolConfiguration {
+    connectionParameters: RfcConnectionParameters;
+    clientOptions?: RfcClientOptions;
+    poolOptions?: RfcPoolOptions;
+}
+export interface RfcPoolBinding {
+    new (poolConfiguration: RfcPoolConfiguration): RfcPoolBinding;
+    (poolConfiguration: RfcPoolConfiguration): RfcPoolBinding;
+    acquire(
+        clients_requested: number,
+        callback: Function
+    ): RfcClientBinding | Array<RfcClientBinding>;
+    release(
+        clients: RfcClientBinding | Array<RfcClientBinding>,
+        callback: Function
+    ): void;
+    ready(new_ready?: number, callback?: Function): void;
+    closeAll(callback?: Function): void | Promise<void>;
+    _config: {
+        connectionParameters: object;
+        clientOptions?: object;
+        poolOptions: RfcPoolOptions;
+    };
+    _id: number;
+    _status: RfcPoolStatus;
+}
 export class Pool {
     private __connectionParams: RfcConnectionParameters;
-    private __poolOptions: RfcPoolOptions;
-    private __clientOptions: RfcClientOptions | undefined;
-    private __fillRequests: number;
+    private __clientOptions?: RfcClientOptions;
+    public __poolOptions: RfcPoolOptions;
 
-    private __clients: {
-        ready: Array<Client>;
-        active: Map<number, Client>;
-    };
+    private __pool: RfcPoolBinding;
 
-    constructor(
-        connectionParams: RfcConnectionParameters,
-        poolOptions: RfcPoolOptions = {
-            min: 2,
-            //max: 50,
-        },
-        clientOptions?: RfcClientOptions
-    ) {
-        this.__connectionParams = connectionParams;
-        this.__poolOptions = poolOptions;
-        this.__clientOptions = clientOptions;
-        this.__fillRequests = 0;
-        this.__clients = {
-            ready: [],
-            active: new Map(),
+    constructor(poolConfiguration: RfcPoolConfiguration) {
+        this.__connectionParams = poolConfiguration.connectionParameters;
+        this.__clientOptions = poolConfiguration.clientOptions;
+        this.__poolOptions = poolConfiguration.poolOptions || {
+            low: 2,
+            high: 4,
         };
+        this.__pool = new noderfc_binding.Pool(poolConfiguration);
     }
 
-    newClient(): Client {
-        return this.__clientOptions
-            ? new Client(this.__connectionParams, this.__clientOptions)
-            : new Client(this.__connectionParams);
-    }
+    acquire(
+        arg1?: number | Function,
+        arg2?: number | Function
+    ): void | Promise<Client> {
+        let clients_requested = 1;
+        let callback: Function | undefined;
+        if (typeof arg1 === "number") {
+            clients_requested = arg1;
+            if (!isUndefined(arg2)) {
+                if (typeof arg2 !== "function") {
+                    throw new TypeError(
+                        `Pool acquire() argument must be a function, received: ${typeof arg2}`
+                    );
+                } else {
+                    callback = arg2;
+                }
+            }
+        } else if (typeof arg1 === "function") {
+            callback = arg1;
 
-    refill() {
-        if (
-            this.__clients.ready.length + this.__fillRequests >=
-            this.__poolOptions.min
-        ) {
-            return;
+            if (!isUndefined(arg2)) {
+                if (typeof arg2 !== "number") {
+                    throw new TypeError(
+                        `Pool acquire() argument must be a number, received: ${typeof arg2}`
+                    );
+                } else {
+                    clients_requested = arg2;
+                }
+            }
+        } else if (!isUndefined(arg1)) {
+            throw new TypeError(
+                `Pool acquire() argument must ne a number or function, received: ${typeof arg1}`
+            );
         }
 
-        this.__fillRequests++;
-        const client = this.newClient();
-        client.connect((err) => {
-            this.__fillRequests--;
-            if (isUndefined(err)) {
-                if (this.__clients.ready.length < this.__poolOptions.min) {
-                    this.__clients.ready.unshift(client);
-                    if (this.__clients.ready.length < this.__poolOptions.min)
-                        this.refill();
-                } else {
-                    client.close(() => {});
+        if (isUndefined(callback)) {
+            return new Promise(
+                (
+                    resolve: (arg0: Client | Client[]) => void,
+                    reject: (arg0: any) => void
+                ) => {
+                    try {
+                        this.__pool.acquire(
+                            clients_requested,
+                            (
+                                err: any,
+                                clientBindings:
+                                    | RfcClientBinding
+                                    | Array<RfcClientBinding>
+                            ) => {
+                                if (!isUndefined(err)) {
+                                    reject(err);
+                                }
+
+                                if (Array.isArray(clientBindings)) {
+                                    let clients: Array<Client> = [];
+                                    clientBindings.forEach((cb) => {
+                                        clients.push(new Client(cb));
+                                    });
+                                    resolve(clients);
+                                } else {
+                                    let c = new Client(clientBindings);
+                                    resolve(c);
+                                }
+                            }
+                        );
+                    } catch (ex) {
+                        reject(ex);
+                    }
                 }
-            } else {
-                throw new Error(err);
-            }
-        });
+            );
+        }
+
+        try {
+            this.__pool.acquire(
+                clients_requested,
+                (
+                    err: any,
+                    clientBindings: RfcClientBinding | Array<RfcClientBinding>
+                ) => {
+                    if (!isUndefined(err)) {
+                        (callback as Function)(err);
+                    }
+
+                    if (Array.isArray(clientBindings)) {
+                        let clients: Array<Client> = [];
+                        clientBindings.forEach((cb) => {
+                            clients.push(new Client(cb));
+                        });
+                        (callback as Function)(err, clients);
+                    } else {
+                        let c = new Client(clientBindings);
+                        (callback as Function)(err, c);
+                    }
+                }
+            );
+        } catch (ex) {
+            (callback as Function)(ex);
+        }
     }
 
-    acquire(): Promise<Client> {
-        return new Promise(
-            (resolve: (arg: Client) => void, reject: (arg: any) => void) => {
-                const client = this.__clients.ready.pop();
-                if (this.__clients.ready.length < this.__poolOptions.min)
-                    this.refill();
-                if (client instanceof Client) {
-                    this.__clients.active.set(client.id, client);
-                    resolve(client);
-                } else {
-                    const newClient: Client = this.newClient();
-                    newClient.connect((err: any) => {
-                        if (!isUndefined(err)) {
-                            reject(err);
+    release(
+        tsClient: Client | Array<Client>,
+        callback?: Function
+    ): void | Promise<any> {
+        if (!isUndefined(callback) && typeof callback !== "function") {
+            throw new TypeError(
+                `Pool release() 2nd argument, if provided, must be a function, received: ${typeof callback}`
+            );
+        }
+
+        let client_bindings: Array<RfcClientBinding> = [];
+        if (Array.isArray(tsClient)) {
+            tsClient.forEach((tsc) => {
+                client_bindings.push(tsc.binding);
+            });
+        } else if (tsClient instanceof Client) {
+            client_bindings.push(tsClient.binding);
+        } else {
+            throw new TypeError(
+                `Pool release() 1st argument must be a single client or array of clients, received: ${typeof tsClient}`
+            );
+        }
+
+        if (isUndefined(callback)) {
+            return new Promise((resolve, reject) => {
+                try {
+                    this.__pool.release(client_bindings, (err: any) => {
+                        if (isUndefined(err)) {
+                            resolve();
                         } else {
-                            this.__clients.active.set(newClient.id, newClient);
-                            resolve(newClient);
+                            reject(err);
                         }
                     });
+                } catch (ex) {
+                    reject(ex);
+                }
+            });
+        }
+
+        try {
+            this.__pool.release(client_bindings, callback);
+        } catch (ex) {
+            callback(ex);
+        }
+    }
+
+    closeAll(callback?: Function): void | Promise<void> {
+        if (isUndefined(callback)) {
+            return new Promise((resolve) => {
+                this.__pool.closeAll(() => {
+                    resolve();
+                });
+            });
+        }
+
+        this.__pool.closeAll(callback);
+    }
+
+    ready(
+        arg1?: number | Function,
+        arg2?: number | Function
+    ): void | Promise<void> {
+        let new_ready: number = this.__poolOptions.low;
+        let callback: Function | undefined;
+        if (typeof arg1 === "number") {
+            new_ready = arg1;
+            if (!isUndefined(arg2)) {
+                if (typeof arg2 !== "function") {
+                    throw new TypeError(
+                        `Pool ready() argument must be a function, received: ${typeof arg2}`
+                    );
+                } else {
+                    callback = arg2;
                 }
             }
-        );
-    }
-
-    release(client: Client): Promise<void> {
-        return new Promise(
-            (
-                resolve: (arg: number) => void,
-                reject: (arg: TypeError) => void
-            ) => {
-                if (!(client instanceof Client))
-                    reject(
-                        new TypeError(
-                            "Pool release() method requires a client instance as argument"
-                        )
+        } else if (typeof arg1 === "function") {
+            callback = arg1;
+            if (!isUndefined(arg2)) {
+                if (typeof arg2 !== "number") {
+                    throw new TypeError(
+                        `Pool ready() argument must be a number, received: ${typeof arg2}`
                     );
-                const id = client.id;
-                client.close(() => {
-                    this.__clients.active.delete(id);
-                    if (this.__clients.ready.length < this.__poolOptions.min) {
-                        this.refill();
-                    }
-                    resolve(id);
-                });
+                } else {
+                    new_ready = arg2;
+                }
             }
-        );
-    }
-
-    releaseAll(): Promise<number> {
-        return new Promise((resolve: (arg: number) => void) => {
-            const toBeClosed =
-                this.__clients.ready.length + this.__clients.active.size;
-            let closed = 0;
-            for (let [id, client] of this.__clients.active.entries()) {
-                client.close(() => {
-                    closed++;
-                    if (closed === toBeClosed) {
-                        this.__clients.ready = [];
-                        this.__clients.active = new Map();
-                        resolve(closed);
-                    }
-                });
-            }
-            this.__clients.ready.forEach((client) =>
-                client.close(() => {
-                    closed++;
-                    if (closed === toBeClosed) {
-                        this.__clients.ready = [];
-                        this.__clients.active = new Map();
-                        resolve(closed);
-                    }
-                })
+        } else if (!isUndefined(arg1)) {
+            throw new TypeError(
+                `Pool ready() argument must ne a number or function, received: ${typeof arg1}`
             );
-        });
+        }
+
+        if (isUndefined(callback)) {
+            return new Promise((resolve, reject) => {
+                this.__pool.ready(new_ready, (err: any) => {
+                    if (isUndefined(err)) {
+                        resolve();
+                    } else {
+                        reject(err);
+                    }
+                });
+            });
+        }
+
+        try {
+            this.__pool.ready(new_ready, callback);
+        } catch (ex) {
+            callback(ex);
+        }
     }
 
-    get status(): object {
+    get id(): Object {
+        return this.__pool._id;
+    }
+
+    get binding(): RfcPoolBinding {
+        return this.__pool;
+    }
+
+    get config(): Object {
+        return this.__pool._config;
+    }
+
+    get status(): RfcPoolStatus {
+        return this.__pool._status;
+    }
+
+    get connectionParameters(): RfcConnectionParameters {
+        return this.__connectionParams;
+    }
+
+    get clientOptions(): RfcClientOptions | undefined {
+        return this.__clientOptions;
+    }
+
+    get poolOptions(): RfcPoolOptions | undefined {
+        return this.__poolOptions;
+    }
+
+    get poolConfiguration(): RfcPoolConfiguration {
         return {
-            active: this.__clients.active.size,
-            ready: this.__clients.ready.length,
-            options: this.__poolOptions,
+            connectionParameters: this.__connectionParams,
+            clientOptions: this.__clientOptions,
+            poolOptions: this.__poolOptions,
         };
+    }
+
+    static get environment(): NodeRfcEnvironment {
+        return environment;
+    }
+
+    get environment(): NodeRfcEnvironment {
+        return environment;
     }
 }

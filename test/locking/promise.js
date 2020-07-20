@@ -15,7 +15,7 @@
 "use strict";
 
 module.exports = () => {
-    const setup = require("../testutils/setup");
+    const setup = require("../utils/setup");
 
     const WAIT_SECONDS = 1;
 

@@ -1,4 +1,23 @@
-import { binding, Client } from "./sapnwrfc-client";
+// Copyright 2014 SAP AG.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http: //www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+// either express or implied. See the License for the specific
+// language governing permissions and limitations under the License.
+
+import {
+    noderfc_binding,
+    environment,
+    NodeRfcEnvironment,
+} from "./noderfc-bindings";
+import { Client } from "./sapnwrfc-client";
 import { isUndefined, isNumber } from "util";
 export interface RfcThroughputBinding {
     new (): RfcThroughputBinding;
@@ -27,11 +46,11 @@ export class Throughput {
     private __throughput: RfcThroughputBinding;
     private __clients: Set<Client> = new Set();
 
-    private static __Handles: Map<number, Throughput> = new Map();
+    private static _handles: Map<number, Throughput> = new Map();
 
     constructor(client?: Client | Array<Client>) {
-        this.__throughput = new binding.Throughput();
-        Throughput.__Handles.set(this.__throughput._handle, this);
+        this.__throughput = new noderfc_binding.Throughput();
+        Throughput._handles.set(this.__throughput._handle, this);
         if (client) this.setOnConnection(client);
     }
 
@@ -46,11 +65,11 @@ export class Throughput {
                 "Client instance or array of Client instances required as argument"
             );
         connections.forEach((c) => {
-            if (!isNumber(c._connectionHandle))
+            if (c.connectionHandle === 0)
                 throw new Error(
                     "Throughput can't be set on closed client: " + c.id
                 );
-            const e = this.__throughput.setOnConnection(c._connectionHandle);
+            const e = this.__throughput.setOnConnection(c.connectionHandle);
             if (isUndefined(e)) {
                 this.__clients.add(c);
             } else throw new Error(JSON.stringify(e));
@@ -66,9 +85,9 @@ export class Throughput {
         }
         connections.forEach((c) => {
             this.__clients.delete(c);
-            if (isNumber(c._connectionHandle)) {
+            if (c.connectionHandle > 0) {
                 const e = this.__throughput.removeFromConnection(
-                    c._connectionHandle
+                    c.connectionHandle
                 );
                 if (!isUndefined(e)) throw new Error(JSON.stringify(e));
             }
@@ -76,12 +95,12 @@ export class Throughput {
     }
 
     static getFromConnection(client: Client): Throughput | void {
-        if (!isNumber(client._connectionHandle)) return;
-        const e = binding.Throughput.getFromConnection(
-            client._connectionHandle
+        if (client.connectionHandle === 0) return;
+        const e = noderfc_binding.Throughput.getFromConnection(
+            client.connectionHandle
         );
         if (isNumber(e)) {
-            return Throughput.__Handles.get(e);
+            return Throughput._handles.get(e);
         } else throw new Error(JSON.stringify(e));
     }
 
@@ -90,7 +109,7 @@ export class Throughput {
     }
 
     destroy() {
-        Throughput.__Handles.delete(this.__throughput._handle);
+        Throughput._handles.delete(this.__throughput._handle);
         this.__throughput.destroy();
     }
 
@@ -102,7 +121,15 @@ export class Throughput {
         return this.__clients;
     }
 
-    get _handle(): number {
+    get handle(): number {
         return this.__throughput._handle;
+    }
+
+    static get environment(): NodeRfcEnvironment {
+        return environment;
+    }
+
+    get environment(): NodeRfcEnvironment {
+        return environment;
     }
 }
