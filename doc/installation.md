@@ -93,7 +93,7 @@ After moving SAP NWRFC SDK to different location on your system, the rpaths must
 
 ## node-rfc installation
 
-The `node-rfc` package can be installed from npm, or built from source: [Installation](./README.md/#installation).
+The `node-rfc` package can be installed from npm, or built from source: [Installation](README.md#installation).
 
 ## Troubleshooting
 
