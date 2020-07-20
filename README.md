@@ -27,7 +27,7 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 -   **[Supported Platforms](#supported-platforms)**
 -   **[Prerequisites](#prerequisites)**
--   **[Setup](#setup)**
+-   **[Installation](#installation)**
 -   **[Getting started](#usage)**
 -   **[Usage](doc/usage.md)**
     -   **[Connection Pool](doc/usage.md/#connection-pool)**
@@ -86,7 +86,9 @@ Other platforms and frameworks:
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 ```
 
-## Setup
+## Installation
+
+Check **[Installation](doc/installation.md)** for more details.
 
 After the SAP NW RFC SDK is installed on your system, the `node-rfc` can be installed from npm:
 
@@ -103,8 +105,6 @@ npm install
 npm run addon # rebuild native addon
 npm run ts    # rebuild typescript wrapper
 ```
-
-Check **[Installation](doc/installation.md)** for more details.
 
 ## Usage
 
