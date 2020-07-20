@@ -33,7 +33,7 @@
 // Version unit test will fail, preventing the release with activated logging
 #define NODERFC_VERSION "Deactivate logging: LOG_RFC_CLIENT"
 #else
-#define NODERFC_VERSION "2.0.0"
+#define NODERFC_VERSION "2.0.1"
 #endif
 
 // conditional logging
