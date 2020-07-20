@@ -1,54 +1,52 @@
 Change log
 ==========
 
-2.0.0 (2020-xx-xx)
+2.0.0 (2020-07-20)
 ------------------
 
-* Connection Pool ported to C++
-* Error handling improvements
-* Connection attribute PartnerIPv6 added
-* SAP NWRFC SDK post-installation fix for macOS removed
-* Cmake version 3.17
-* N-API version 6
-* node 6 and 8 support expired
-* N-API version from package.json used in CMakeLists.txt, instead of separately (double) maintained one
-* tslint replaced by eslint
-* Documentation at github.io removed (http://sap.github.io/node-rfc/install.html), replaced by Markdown, with the latest updates
+- Connection Pool ported to C++
+- Error handling improvements, rfmPath
+- New documentation content and format ported from reStructuredText to markdown
+- environment object
+- node 6 and 8 support expired
+- Connection attribute PartnerIPv6 added
+- SAP NWRFC SDK post-installation fix for macOS removed
+- Cmake version 3.17
+- N-API version 6
+- N-API version from package.json used in CMakeLists.txt, instead of separately (double) maintained one
+- tslint replaced by eslint
 
-Breaking changes:
+Breaking changes
 
-1. Managed clients' can't open and close own connections any more. Instead of "open()" and "close()",
-   managed clients shall call pool "acquire() and "release()" methods. Delegation of these tasks to Pool,
-   ensures the constant connection handle during the Client instance lifecycle.
+1. Managed clients' can't open and close own connections any more. Instead of open() and close(),
+managed clients use pool acquire() and release() methods. Delegation of these tasks to Pool,
+ensures the connection handle stability during the Client instance lifecycle (less or not at all RFC_INVALID_HANDLE errors)
+and more intuitive error messages, like RFM call() over closed connection instead of generic RFC_INVALID_HANDLE error.
 
-2. The client connection handle is set to NULL when critical errors detected,
-   immediatelly reflecting on "alive" property. The "alive" property now exposes
-   the connection handle != NULL condition, thus always in sync.
+2. After critical errors, the client connection handle is set to NULL, consequently setting the alive property to false.
+The alive property now exposes the connection handle != NULL condition, thus always in sync. The automatic re-open should
+assign the new connection handle to client, setting the alive to true: see Closing connections.
 
-3. Client "reopen()" method removed
+3. Client reopen() method removed
 
-4. Client "ping()" method result returned as a second callback parameter (callback pattern),
-   error is the first
+4. Client ping() method result returned as a second callback parameter (callback pattern), error is the first
 
 5. Client getters:
-    - "status" and "runningRFCCalls"removed
-    - "isAlive" replaced with "alive"
-    - "_connectionHandle" replaced with "connectionHandle"
-    - "version" replaced with more generic "environment" object, exposing:
+    - status and runningRFCCalls removed
+    - isAlive replaced with alive
+    - _connectionHandle replaced with connectionHandle
+    - version replaced with more generic environment object, exposing:
         - os platform name, architecture, release
         - node, napi, modules etc. versions (process.versions)
         - SAPNWRFC_HOME and RFC_INI environment variables
 
 6. The ongoing RFC call is not any more protected from connection close() by direct client.
    The direct clients should not call the close() method before the RFM call completed and
-   invoke() or call() calback invoked.
+   invoke() or call() callback invoked.
 
 7. Error handling improvements:
-    - all error objects have now a `name` property, defining the error type
-    - error location path (rfm/parameter/field) attached to error objects, property `rfmPath`
-
-
-
+    - All error objects have now a name property, defining the error type
+    - Error location path (rfm/parameter/field) attached to error objects, property rfmPath
 
 1.2.0 (2020-04-20)
 ------------------
