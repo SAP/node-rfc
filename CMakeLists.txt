@@ -1,13 +1,11 @@
 # cmake standard
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.17)
 cmake_policy(SET CMP0042 NEW)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # verbose
 set(CMAKE_VERBOSE_MAKEFILE ON)
-
-# C++ standard
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # project
 execute_process(COMMAND node -p "require('./package.json').version"
@@ -34,10 +32,14 @@ execute_process(COMMAND node -p "process.versions.modules"
 string(REPLACE "\n" "" NODE_ABI_VERSION ${NODE_ABI_VERSION})
 string(REPLACE "\"" "" NODE_ABI_VERSION ${NODE_ABI_VERSION})
 
-# N-API
-set (NAPI_BUILD_VERSION 3)
-add_compile_definitions(NAPI_VERSION=${NAPI_BUILD_VERSION})
+# N-API version
+execute_process(COMMAND node -p "require('./package.json').binary.napi_versions[0]"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE NAPI_VERSION)
+string(REPLACE "\n" "" NAPI_VERSION ${NAPI_VERSION})
+add_compile_definitions(NAPI_VERSION=${NAPI_VERSION})
 
+# N-API headers
 execute_process(COMMAND node -p "require('node-addon-api').include"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE NAPI_INCLUDE_DIR
@@ -45,7 +47,7 @@ execute_process(COMMAND node -p "require('node-addon-api').include"
 string(REPLACE "\n" "" NAPI_INCLUDE_DIR ${NAPI_INCLUDE_DIR})
 string(REPLACE "\"" "" NAPI_INCLUDE_DIR ${NAPI_INCLUDE_DIR})
 
-# NodeJS headers download, if needed
+# NodeJS headers
 if (NOT DEFINED ENV{NODE_HEADERS_INCLUDE_DIR})
 	if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 		execute_process(COMMAND cmd /c "npm -g prefix"
@@ -88,7 +90,8 @@ else()
 endif()
 
 # source files and target library
-add_library(${PROJECT_NAME} SHARED src/node_sapnwrfc.cc src/Client.cc src/rfcio.cc src/noderfcsdk.cc src/Throughput.cc)
+#add_library(${PROJECT_NAME} SHARED src/node_sapnwrfc.cc src/Client.cc src/rfcio.cc src/noderfcsdk.cc src/Throughput.cc)
+add_library(${PROJECT_NAME} SHARED src/Client.cc src/clientio.cc src/Pool.cc  src/Throughput.cc src/nwrfcsdk.cc)
 
 # build path ignored on Windows, copy after build
 if ( MSVC )

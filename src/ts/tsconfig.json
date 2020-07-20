@@ -1,9 +1,9 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "module": "commonjs",
     "sourceMap": true,
     "target": "ESNext",
-    "module": "commonjs",
     "declaration": true,
     "strict": true,
     "moduleResolution": "node",
@@ -13,10 +13,8 @@
     "removeComments": true,
     "lib": ["es2015"],
     "outDir": "../../lib",
-    "noImplicitAny": false
-  },
-  "exclude": ["node_modules", "dist", "build", "doc", "lib", "test", ".vscode"],
-  "atom": {
-    "rewriteTsconfig": false
+    "noImplicitAny": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   }
 }

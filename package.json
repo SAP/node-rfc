@@ -1,14 +1,14 @@
 {
   "name": "node-rfc",
   "description": "nodejs bindings for SAP NW RFC SDK",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "homepage": "https://github.com/sap/node-rfc",
   "author": {
     "name": "Srdjan Boskovic",
     "email": "srdjan.boskovic@sap.com"
   },
   "engines": {
-    "node": ">=8.11.2",
+    "node": "~10 >=10.20 || >=12.17",
     "npm": "^6.11.3"
   },
   "cpu": [
@@ -20,19 +20,19 @@
   },
   "scripts": {
     "deps": "npm install --save bluebird node-addon-api",
-    "devdeps": "npm install --save-dev @babel/core typings @types/node @types/bluebird async cmake-js decimal.js jest prebuild prebuild-install random-bytes tslint typescript",
+    "devdeps": "npm install --save-dev @babel/core typings @types/node @types/bluebird async cmake-js decimal.js jest prebuild prebuild-install random-bytes eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin typescript",
     "prepublishOnly": "npm ls --depth=0",
     "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
     "install": "prebuild-install --tag-prefix -r napi || cmake-js rebuild",
-    "prebuild": "prebuild --backend cmake-js -r napi --force --strip --verbose --tag-prefix",
-    "upload": "prebuild -r napi -u --verbose",
+    "addon": "prebuild --backend cmake-js -r napi --force --strip --verbose --tag-prefix",
     "ts": "tsc -p src/ts",
+    "upload": "prebuild -r napi -u --verbose",
     "examples": "tsc -p examples/ts",
     "test": "jest test"
   },
   "binary": {
     "napi_versions": [
-      3
+      6
     ],
     "module_name": "sapnwrfc",
     "module_path": "./lib/binding/",
@@ -61,23 +61,25 @@
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "devDependencies": {
-    "@babel/core": "^7.10.2",
+    "@babel/core": "^7.10.5",
     "@types/bluebird": "^3.5.32",
-    "@types/node": "^13.13.12",
+    "@types/node": "^14.0.23",
+    "@typescript-eslint/eslint-plugin": "^3.6.1",
+    "@typescript-eslint/parser": "^3.6.1",
     "async": "^3.2.0",
     "cmake-js": "^6.1.0",
     "decimal.js": "^10.2.0",
-    "jest": "^25.5.4",
-    "node-inspect": "^1.11.6",
+    "eslint": "^7.5.0",
+    "jest": "^26.1.0",
     "prebuild": "^10.0.0",
     "prebuild-install": "^5.3.5",
     "random-bytes": "^1.0.0",
-    "segfault-handler": "^1.3.0",
-    "tslint": "^6.1.2",
-    "typescript": "^3.9.5"
+    "typescript": "^3.9.7",
+    "typings": "^2.1.1"
   },
   "dependencies": {
     "bluebird": "^3.7.2",
-    "node-addon-api": "^2.0.2"
+    "node-addon-api": "^3.0.1",
+    "p-queue": "^6.6.0"
   }
 }
