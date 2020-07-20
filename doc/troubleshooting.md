@@ -1,3 +1,4 @@
+-   **[Installation issues](installation.md#troubleshooting)**
 -   **[RFM call results differ from expected](#rfm-call-results-differ-from-expected)**
 -   **[Remote ABAP debugging](#remote-abap-debugging)**
 
