@@ -539,9 +539,7 @@ namespace node_rfc
         void OnOK()
         {
             Napi::HandleScope scope(Env());
-
             Napi::Value error = client->getOperationError(conn_closed, "ping()", connectionCheckError, &errorInfo, Env());
-
             Callback().Call({error, Napi::Boolean::New(Env(), error.IsUndefined())});
             Callback().Reset();
         }
@@ -590,8 +588,6 @@ namespace node_rfc
 
             RfcDestroyFunction(functionHandle, NULL);
             client->UnlockMutex();
-
-            DEBUG("InvokeAsync unlock client: ", client->id, " handle: ", (pointer_t)client->connectionHandle);
 
             Callback().Call({result.first, result.second});
             Callback().Reset();
@@ -752,7 +748,7 @@ namespace node_rfc
             }
             if (errorInfoOpen.code != RFC_OK)
             {
-                DEBUG("// error getting a new handle");
+                // error getting a new handle
                 return ErrorPair(errorInfoOpen, "");
             }
 
@@ -761,7 +757,7 @@ namespace node_rfc
                 std::string updateError = pool->updateLeasedHandle(old_handle, new_handle);
                 if (updateError.length() > 0)
                 {
-                    DEBUG("// pool update failed");
+                    // pool update failed
                     return ErrorPair(errorInfoOpen, updateError);
                 }
 
