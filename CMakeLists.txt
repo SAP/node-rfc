@@ -1,5 +1,5 @@
 # cmake standard
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.18)
 cmake_policy(SET CMP0042 NEW)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -213,7 +213,10 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 endif()
 
 # set .node extension without any "lib" prefix
-set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    CXX_STANDARD 17
+    PREFIX ""
+    SUFFIX ".node")
 
 set (${PROJECT_NAME}_USE_STATIC_LIBS OFF)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
