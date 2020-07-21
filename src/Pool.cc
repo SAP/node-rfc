@@ -34,18 +34,18 @@ namespace node_rfc
 
             uint_t ready = pool->connReady.size();
 
-            DEBUG("CheckPoolAsync ready_low: %u, ready: %u", pool->ready_low, ready);
+            //DEBUG("CheckPoolAsync ready_low: ", pool->ready_low, "ready: ", ready);
 
             if (ready < pool->ready_low)
             {
-                DEBUG("Pool up: %u up to %u", ready, pool->ready_low);
+                //DEBUG("  Pool up: ", ready, " to ", pool->ready_low);
                 for (uint_t ii = ready; ii < pool->ready_low; ii++)
                 {
                     RFC_ERROR_INFO errorInfo;
                     RFC_CONNECTION_HANDLE connectionHandle = RfcOpenConnection(pool->client_params.connectionParams, pool->client_params.paramSize, &errorInfo);
                     if (errorInfo.code == RFC_OK)
                     {
-                        DEBUG("SetAsync: %lu", (pointer_t)(connectionHandle));
+                        //DEBUG("    new handle: ", (pointer_t)(connectionHandle));
                         pool->connReady.insert(connectionHandle);
                     }
                     else
@@ -73,20 +73,19 @@ namespace node_rfc
         void Execute()
         {
             pool->lockMutex();
-            DEBUG("SetPoolAsync %u", ready_low);
             uint_t ready = pool->connReady.size();
-            DEBUG("SetPoolAsync ready_low: %u, ready: %u", ready_low, ready);
+            //DEBUG("SetPoolAsync new ready_low: ", ready_low, " ready: ", ready);
             errorInfo.code = RFC_OK;
 
             if (ready < ready_low)
             {
-                DEBUG("Pool up: %u up to %u", ready, ready_low);
+                //DEBUG("Pool up: ", ready, " to ", ready_low);
                 for (uint_t ii = ready; ii < ready_low; ii++)
                 {
                     connectionHandle = RfcOpenConnection(pool->client_params.connectionParams, pool->client_params.paramSize, &errorInfo);
                     if (errorInfo.code == RFC_OK)
                     {
-                        DEBUG("SetAsync: %lu", (pointer_t)(connectionHandle));
+                        //DEBUG("    new handle: ", (pointer_t)(connectionHandle));
                         pool->connReady.insert(connectionHandle);
                     }
                     else
@@ -365,7 +364,7 @@ namespace node_rfc
     {
         uint_t clients_requested = checkArgsAcquire(info);
 
-        DEBUG("Pool::Acquire: %u", clients_requested);
+        DEBUG("Pool::Acquire: ", clients_requested);
 
         Napi::Function callback = info[1].As<Napi::Function>();
 
@@ -436,11 +435,11 @@ namespace node_rfc
         // synchronous because called with locked client mutex or from client destructor
         if (connLeased.erase(connectionHandle) == 0)
         {
-            DEBUG("Pool %u did not find the connection %lu in leased set", id, (pointer_t)connectionHandle);
+            ERROR("Connection ", (pointer_t)connectionHandle, " not found in Pool ", id, " leased set");
         }
         else
         {
-            DEBUG("Pool %u released connection %lu", id, (pointer_t)connectionHandle);
+            DEBUG("Connection ", (pointer_t)connectionHandle, " released from Pool ", id);
         }
     }
 
@@ -496,7 +495,7 @@ namespace node_rfc
     {
         uint_t new_ready = ready_low;
         Napi::Function callback;
-        DEBUG("Pool::Ready: %u", new_ready);
+        DEBUG("Pool::Ready: ", new_ready);
 
         if (argsCheckReady(info, &new_ready, &callback))
         {
@@ -507,7 +506,7 @@ namespace node_rfc
 
     Napi::Value Pool::CloseAll(const Napi::CallbackInfo &info)
     {
-        DEBUG("Pool::CloseAll %u", id);
+        DEBUG("Pool::CloseAll ", id);
 
         closeConnections();
 
@@ -566,7 +565,7 @@ namespace node_rfc
 
         std::ostringstream errmsg;
 
-        DEBUG("Pool::Pool %u %u", ready_low, ready_high);
+        DEBUG("Pool::Pool ", ready_low, ready_high);
         if (info.Length() < 1)
         {
             errmsg << "Pool initialization argument missing; see: " << USAGE_URL;
@@ -704,7 +703,7 @@ namespace node_rfc
             }
         }
 
-        DEBUG("Pool::Pool %u %u", ready_low, ready_high);
+        DEBUG("Pool::Pool ", ready_low, ready_high);
     };
 
     void Pool::closeConnections()
@@ -712,7 +711,7 @@ namespace node_rfc
         // Close connections
         if (connReady.size() > 0)
         {
-            DEBUG("~ Pool %u closing ready connections: %lu", id, connReady.size());
+            DEBUG("~ Pool ", id, " closing ready connections: ", connReady.size());
             ConnectionSetType::iterator it = connReady.begin();
             while (it != connReady.end())
             {
@@ -721,11 +720,11 @@ namespace node_rfc
                 RfcCloseConnection(connectionHandle, &errorInfo);
                 if (errorInfo.code == RFC_OK)
                 {
-                    DEBUG("    closed %lu", (pointer_t)connectionHandle);
+                    DEBUG("    closed ", (pointer_t)connectionHandle);
                 }
                 else
                 {
-                    DEBUG("    error closing %lu: group: %u code: %u", (pointer_t)connectionHandle, errorInfo.group, errorInfo.code);
+                    ERROR("    error closing ", (pointer_t)connectionHandle, " group: ", errorInfo.group, "code: ", errorInfo.code);
                 }
                 connReady.erase(it++);
             }
@@ -733,7 +732,7 @@ namespace node_rfc
 
         if (connLeased.size() > 0)
         {
-            DEBUG("~ Pool %u closing leased connections: %lu", id, connLeased.size());
+            DEBUG("~ Pool ", id, " closing leased connections: ", connLeased.size());
             ConnectionSetType::iterator it = connLeased.begin();
             while (it != connLeased.end())
             {
@@ -742,11 +741,11 @@ namespace node_rfc
                 RfcCloseConnection(connectionHandle, &errorInfo);
                 if (errorInfo.code == RFC_OK)
                 {
-                    DEBUG("    closed %lu", (pointer_t)connectionHandle);
+                    DEBUG("    closed ", (pointer_t)connectionHandle);
                 }
                 else
                 {
-                    DEBUG("    error closing %lu: group: %u code: %u", (pointer_t)connectionHandle, errorInfo.group, errorInfo.code);
+                    ERROR("    error closing ", (pointer_t)connectionHandle, " group: ", errorInfo.group, "code: ", errorInfo.code);
                 }
                 connReady.erase(it++);
             }
@@ -755,7 +754,7 @@ namespace node_rfc
 
     Pool::~Pool(void)
     {
-        DEBUG("~Pool %u", id);
+        DEBUG("~Pool ", id);
 
         closeConnections();
 

@@ -44,7 +44,7 @@ namespace node_rfc
 
         ~_ConnectionParamsStruct()
         {
-            DEBUG("~ConnectionParamsStruct %u", paramSize);
+            //DEBUG("~ConnectionParamsStruct ", paramSize);
             if (connectionParams != NULL)
             {
                 for (uint_t i = 0; i < this->paramSize; i++)
@@ -177,7 +177,7 @@ namespace node_rfc
 
         ~_ClientOptionsStruct()
         {
-            DEBUG("~ClientOptionsStruct");
+            //DEBUG("~ClientOptionsStruct");
             // bcd
             if (!bcdFunction.IsEmpty())
             {

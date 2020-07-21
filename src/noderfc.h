@@ -17,6 +17,7 @@
 
 #include <napi.h>
 #include <sapnwrfc.h>
+#include <iostream>
 
 #define USAGE_URL ": https://github.com/SAP/node-rfc#usage"
 
@@ -33,24 +34,28 @@
 // Version unit test will fail, preventing the release with activated logging
 #define NODERFC_VERSION "Deactivate logging: LOG_RFC_CLIENT"
 #else
-#define NODERFC_VERSION "2.0.1"
+// client binding version
+#define NODERFC_VERSION "2.0.2"
 #endif
 
-// conditional logging
+template <typename... Args>
+void log(Args &&... args)
+{
+    (std::cerr << ... << args);
+    std::cerr << std::endl;
+}
 
 #ifdef LOG_RFC_CLIENT
-#define DEBUG(...)                \
-    fprintf(stderr, __VA_ARGS__); \
-    fprintf(stderr, "\n");
+#define DEBUG(...) \
+    log(__VA_ARGS__);
 #else
 #define DEBUG(...) ;
 #endif
 
 // always active logging
 
-#define EDEBUG(...)               \
-    fprintf(stderr, __VA_ARGS__); \
-    fprintf(stderr, "\n");
+#define ERROR(...) \
+    log(__VA_ARGS__);
 
 //
 // Client constants

@@ -64,7 +64,7 @@ namespace node_rfc
             node_rfc::__env = env;
             id = Pool::_id++;
 
-            DEBUG("Pool init: %u", id);
+            DEBUG("Pool init: ", id);
 
             // Pool options
             ready_low = POOL_READY_LOW;
