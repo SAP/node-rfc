@@ -70,9 +70,9 @@ namespace node_rfc
 
         if (errorInfo.code != RFC_OK)
         {
-            // not enough, try with 6
+            // not enough, try with 5
             free(utf8);
-            utf8Size = length * 6;
+            utf8Size = length * 5;
             utf8 = (char *)malloc(utf8Size + 1);
             utf8[0] = '\0';
             resultLen = 0;
@@ -80,7 +80,7 @@ namespace node_rfc
             if (errorInfo.code != RFC_OK)
             {
                 free(utf8);
-                Napi::Error::Fatal("wrapString", "ABAP string could not be parsed to unicode");
+                return node_rfc::__env.Undefined();
             }
         }
 

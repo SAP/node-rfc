@@ -446,326 +446,323 @@ namespace node_rfc
 
         errorPath.setName(typ, cName);
 
-        try
+        switch (typ)
         {
-            switch (typ)
+        case RFCTYPE_STRUCTURE:
+        {
+            rc = RfcGetStructure(functionHandle, cName, &structHandle, &errorInfo);
+            if (rc != RFC_OK)
             {
-            case RFCTYPE_STRUCTURE:
-            {
-                rc = RfcGetStructure(functionHandle, cName, &structHandle, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    break;
-                }
+                break;
+            }
 
-                ValuePair result = wrapStructure(typeDesc, structHandle);
+            ValuePair result = wrapStructure(typeDesc, structHandle);
+            if (!result.first.IsUndefined())
+            {
+                return result;
+            }
+            resultValue = result.second;
+            break;
+        }
+        case RFCTYPE_TABLE:
+        {
+            RFC_TABLE_HANDLE tableHandle;
+            rc = RfcGetTable(functionHandle, cName, &tableHandle, &errorInfo);
+            if (rc != RFC_OK)
+            {
+                break;
+            }
+            uint_t rowCount;
+            rc = RfcGetRowCount(tableHandle, &rowCount, &errorInfo);
+
+            Napi::Array table = Napi::Array::New(node_rfc::__env);
+
+            while (rowCount-- > 0)
+            {
+                errorPath.table_line = rowCount;
+                RfcMoveTo(tableHandle, rowCount, NULL);
+                ValuePair result = wrapStructure(typeDesc, tableHandle);
                 if (!result.first.IsUndefined())
                 {
                     return result;
                 }
-                resultValue = result.second;
+                RfcDeleteCurrentRow(tableHandle, &errorInfo);
+                (table).Set(rowCount, result.second);
+            }
+            resultValue = table;
+            break;
+        }
+        case RFCTYPE_CHAR:
+        {
+            RFC_CHAR *charValue = (RFC_CHAR *)mallocU(cLen);
+            rc = RfcGetChars(functionHandle, cName, charValue, cLen, &errorInfo);
+            if (rc != RFC_OK)
+            {
                 break;
             }
-            case RFCTYPE_TABLE:
+            resultValue = wrapString(charValue, cLen);
+            free(charValue);
+            break;
+        }
+        case RFCTYPE_STRING:
+        {
+            uint_t resultLen = 0, strLen = 0;
+            RfcGetStringLength(functionHandle, cName, &strLen, &errorInfo);
+            SAP_UC *stringValue = (RFC_CHAR *)mallocU(strLen + 1);
+            rc = RfcGetString(functionHandle, cName, stringValue, strLen + 1, &resultLen, &errorInfo);
+            if (rc != RFC_OK)
             {
-                RFC_TABLE_HANDLE tableHandle;
-                rc = RfcGetTable(functionHandle, cName, &tableHandle, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    break;
-                }
-                uint_t rowCount;
-                rc = RfcGetRowCount(tableHandle, &rowCount, &errorInfo);
-
-                Napi::Array table = Napi::Array::New(node_rfc::__env);
-
-                while (rowCount-- > 0)
-                {
-                    errorPath.table_line = rowCount;
-                    RfcMoveTo(tableHandle, rowCount, NULL);
-                    ValuePair result = wrapStructure(typeDesc, tableHandle);
-                    if (!result.first.IsUndefined())
-                    {
-                        return result;
-                    }
-                    RfcDeleteCurrentRow(tableHandle, &errorInfo);
-                    (table).Set(rowCount, result.second);
-                }
-                resultValue = table;
                 break;
             }
-            case RFCTYPE_CHAR:
+            resultValue = wrapString(stringValue, strLen);
+            free(stringValue);
+            break;
+        }
+        case RFCTYPE_NUM:
+        {
+            RFC_NUM *numValue = (RFC_CHAR *)mallocU(cLen);
+            rc = RfcGetNum(functionHandle, cName, numValue, cLen, &errorInfo);
+            if (rc != RFC_OK)
             {
-                RFC_CHAR *charValue = (RFC_CHAR *)mallocU(cLen);
-                rc = RfcGetChars(functionHandle, cName, charValue, cLen, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    break;
-                }
-                resultValue = wrapString(charValue, cLen);
-                free(charValue);
-                break;
-            }
-            case RFCTYPE_STRING:
-            {
-                uint_t resultLen = 0, strLen = 0;
-                RfcGetStringLength(functionHandle, cName, &strLen, &errorInfo);
-                SAP_UC *stringValue = (RFC_CHAR *)mallocU(strLen + 1);
-                rc = RfcGetString(functionHandle, cName, stringValue, strLen + 1, &resultLen, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    break;
-                }
-                resultValue = wrapString(stringValue, strLen);
-                free(stringValue);
-                break;
-            }
-            case RFCTYPE_NUM:
-            {
-                RFC_NUM *numValue = (RFC_CHAR *)mallocU(cLen);
-                rc = RfcGetNum(functionHandle, cName, numValue, cLen, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    free(numValue);
-                    break;
-                }
-                resultValue = wrapString(numValue, cLen);
                 free(numValue);
                 break;
             }
-            case RFCTYPE_BYTE:
-            {
-                SAP_RAW *byteValue = (SAP_RAW *)malloc(cLen);
-
-                //std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                //printf("\nbout %d %s cLen: %u", rc, &fieldName[0], cLen);
-
-                rc = RfcGetBytes(functionHandle, cName, byteValue, cLen, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    free(byteValue);
-                    break;
-                }
-                resultValue = Napi::Buffer<char>::New(node_rfc::__env, reinterpret_cast<char *>(byteValue), cLen); // .As<Napi::Uint8Array>(); // as a buffer
-                //resultValue = Napi::String::New(env, reinterpret_cast<const char *>(byteValue)); // or as a string
-                // do not free byteValue - it will be freed when the buffer is garbage collected
-                break;
-            }
-
-            case RFCTYPE_XSTRING:
-            {
-                SAP_RAW *byteValue;
-                uint_t strLen, resultLen;
-                rc = RfcGetStringLength(functionHandle, cName, &strLen, &errorInfo);
-
-                byteValue = (SAP_RAW *)malloc(strLen + 1);
-                byteValue[strLen] = '\0';
-
-                rc = RfcGetXString(functionHandle, cName, byteValue, strLen, &resultLen, &errorInfo);
-
-                //std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                //printf("\nxout %d %s cLen: %u strLen %u resultLen %u", rc, &fieldName[0], cLen, strLen, resultLen);
-
-                if (rc != RFC_OK)
-                {
-                    free(byteValue);
-                    break;
-                }
-                resultValue = Napi::Buffer<char>::New(node_rfc::__env, reinterpret_cast<char *>(byteValue), resultLen); // as a buffer
-                //resultValue = Napi::String::New(node_rfc::__env, reinterpret_cast<const char *>(byteValue)); // or as a string
-                // do not free byteValue - it will be freed when the buffer is garbage collected
-                break;
-            }
-            case RFCTYPE_BCD:
-            {
-                // An upper bound for the length of the _string representation_
-                // of the BCD is given by (2*cLen)-1 (each digit is encoded in 4bit,
-                // the first 4 bit are reserved for the sign)
-                // Furthermore, a sign char, a decimal separator char may be present
-                // => (2*cLen)+1
-                uint_t resultLen;
-                uint_t strLen = 2 * cLen + 1;
-                SAP_UC *sapuc = (SAP_UC *)mallocU(strLen + 1);
-                rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
-                if (rc == 23) // Buffer too small, use returned requried result length
-                {
-                    //std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                    //printf("\nWarning: Buffer for BCD type %d to small when wrapping %s\ncLen=%u, buffer=%u, trying with %u", typ, &fieldName[0], cLen, strLen, resultLen);
-                    free(sapuc);
-                    strLen = resultLen;
-                    sapuc = (SAP_UC *)mallocU(strLen + 1);
-                    rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
-                }
-                if (rc != RFC_OK)
-                {
-                    free(sapuc);
-                    break;
-                }
-                resultValue = wrapString(sapuc, resultLen).ToString();
-                free(sapuc);
-
-                if (client_options.bcd == CLIENT_OPTION_BCD_FUNCTION)
-                {
-                    resultValue = client_options.bcdFunction.Call({resultValue});
-                }
-                else if (client_options.bcd == CLIENT_OPTION_BCD_NUMBER)
-                {
-                    resultValue = resultValue.ToNumber();
-                }
-                break;
-            }
-            case RFCTYPE_FLOAT:
-            {
-                RFC_FLOAT floatValue;
-                rc = RfcGetFloat(functionHandle, cName, &floatValue, &errorInfo);
-                resultValue = Napi::Number::New(node_rfc::__env, floatValue);
-                break;
-            }
-            case RFCTYPE_DECF16:
-            case RFCTYPE_DECF34:
-            {
-                // An upper bound for the length of the _string representation_
-                // of the BCD is given by (2*cLen)-1 (each digit is encoded in 4bit,
-                // the first 4 bit are reserved for the sign)
-                // Furthermore, a sign char, a decimal separator char may be present
-                // => (2*cLen)+1
-                // and exponent char, sign and exponent
-                // => +9
-                uint_t resultLen;
-                uint_t strLen = 2 * cLen + 10;
-                SAP_UC *sapuc = (SAP_UC *)mallocU(strLen + 1);
-                rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
-                if (rc == 23) // Buffer too small, use returned requried result length
-                {
-                    //std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                    //printf("\nWarning: Buffer for BCD type %d to small when wrapping %s\ncLen=%u, buffer=%u, trying with %u", typ, &fieldName[0], cLen, strLen, resultLen);
-                    free(sapuc);
-                    strLen = resultLen;
-                    sapuc = (SAP_UC *)mallocU(strLen + 1);
-                    rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
-                }
-                if (rc != RFC_OK)
-                {
-                    free(sapuc);
-                    break;
-                }
-                resultValue = wrapString(sapuc, resultLen).ToString();
-                free(sapuc);
-
-                if (client_options.bcd == CLIENT_OPTION_BCD_FUNCTION)
-                {
-                    resultValue = client_options.bcdFunction.Call({resultValue});
-                }
-                else if (client_options.bcd == CLIENT_OPTION_BCD_NUMBER)
-                {
-                    resultValue = resultValue.ToNumber();
-                }
-                break;
-            }
-            case RFCTYPE_INT:
-            {
-                RFC_INT intValue;
-                rc = RfcGetInt(functionHandle, cName, &intValue, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    break;
-                }
-                resultValue = Napi::Number::New(node_rfc::__env, intValue);
-                break;
-            }
-            case RFCTYPE_INT1:
-            {
-                RFC_INT1 intValue;
-                rc = RfcGetInt1(functionHandle, cName, &intValue, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    break;
-                }
-                resultValue = Napi::Number::New(node_rfc::__env, intValue);
-                break;
-            }
-            case RFCTYPE_INT2:
-            {
-                RFC_INT2 intValue;
-                rc = RfcGetInt2(functionHandle, cName, &intValue, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    break;
-                }
-                resultValue = Napi::Number::New(node_rfc::__env, intValue);
-                break;
-            }
-            case RFCTYPE_INT8:
-            {
-                RFC_INT8 intValue;
-                rc = RfcGetInt8(functionHandle, cName, &intValue, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    break;
-                }
-                resultValue = Napi::Number::New(node_rfc::__env, (double)intValue);
-                break;
-            }
-            case RFCTYPE_UTCLONG:
-            {
-                uint_t resultLen = 0, strLen = 27;
-                SAP_UC *stringValue = (RFC_CHAR *)mallocU(strLen + 1);
-                rc = RfcGetString(functionHandle, cName, stringValue, strLen + 1, &resultLen, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    break;
-                }
-                stringValue[19] = '.';
-                resultValue = wrapString(stringValue, strLen);
-                free(stringValue);
-                break;
-            }
-            case RFCTYPE_DATE:
-            {
-                RFC_DATE dateValue;
-                rc = RfcGetDate(functionHandle, cName, dateValue, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    break;
-                }
-                resultValue = wrapString(dateValue, 8);
-                if (!client_options.dateFromABAP.IsEmpty())
-                {
-                    resultValue = client_options.dateFromABAP.Call({resultValue});
-                }
-                break;
-            }
-            case RFCTYPE_TIME:
-            {
-                RFC_TIME timeValue;
-                rc = RfcGetTime(functionHandle, cName, timeValue, &errorInfo);
-                if (rc != RFC_OK)
-                {
-                    break;
-                }
-                resultValue = wrapString(timeValue, 6);
-                if (!client_options.timeFromABAP.IsEmpty())
-                {
-                    resultValue = client_options.timeFromABAP.Call({resultValue});
-                }
-                break;
-            }
-            default:
-                std::ostringstream err;
-                err << "RFC type from ABAP not supported" << typ;
-                return ValuePair(ENV_UNDEFINED, nodeRfcError(err.str(), &errorPath));
-                break;
-            }
+            resultValue = wrapString(numValue, cLen);
+            free(numValue);
+            break;
         }
-        catch (const Napi::Error &ex)
+        case RFCTYPE_BYTE:
         {
-            ERROR("Catched ", ex.what());
-            return ValuePair(scope.Escape(nodeRfcError(ex.what(), &errorPath)), ENV_UNDEFINED);
+            SAP_RAW *byteValue = (SAP_RAW *)malloc(cLen);
+
+            //std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            //printf("\nbout %d %s cLen: %u", rc, &fieldName[0], cLen);
+
+            rc = RfcGetBytes(functionHandle, cName, byteValue, cLen, &errorInfo);
+            if (rc != RFC_OK)
+            {
+                free(byteValue);
+                break;
+            }
+            resultValue = Napi::Buffer<char>::New(node_rfc::__env, reinterpret_cast<char *>(byteValue), cLen); // .As<Napi::Uint8Array>(); // as a buffer
+            //resultValue = Napi::String::New(env, reinterpret_cast<const char *>(byteValue)); // or as a string
+            // do not free byteValue - it will be freed when the buffer is garbage collected
+            break;
+        }
+
+        case RFCTYPE_XSTRING:
+        {
+            SAP_RAW *byteValue;
+            uint_t strLen, resultLen;
+            rc = RfcGetStringLength(functionHandle, cName, &strLen, &errorInfo);
+
+            byteValue = (SAP_RAW *)malloc(strLen + 1);
+            byteValue[strLen] = '\0';
+
+            rc = RfcGetXString(functionHandle, cName, byteValue, strLen, &resultLen, &errorInfo);
+
+            //std::string fieldName = wrapString(cName).ToString().Utf8Value();
+            //printf("\nxout %d %s cLen: %u strLen %u resultLen %u", rc, &fieldName[0], cLen, strLen, resultLen);
+
+            if (rc != RFC_OK)
+            {
+                free(byteValue);
+                break;
+            }
+            resultValue = Napi::Buffer<char>::New(node_rfc::__env, reinterpret_cast<char *>(byteValue), resultLen); // as a buffer
+            //resultValue = Napi::String::New(node_rfc::__env, reinterpret_cast<const char *>(byteValue)); // or as a string
+            // do not free byteValue - it will be freed when the buffer is garbage collected
+            break;
+        }
+        case RFCTYPE_BCD:
+        {
+            // An upper bound for the length of the _string representation_
+            // of the BCD is given by (2*cLen)-1 (each digit is encoded in 4bit,
+            // the first 4 bit are reserved for the sign)
+            // Furthermore, a sign char, a decimal separator char may be present
+            // => (2*cLen)+1
+            uint_t resultLen;
+            uint_t strLen = 2 * cLen + 1;
+            SAP_UC *sapuc = (SAP_UC *)mallocU(strLen + 1);
+            rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
+            if (rc == 23) // Buffer too small, use returned requried result length
+            {
+                //std::string fieldName = wrapString(cName).ToString().Utf8Value();
+                //printf("\nWarning: Buffer for BCD type %d to small when wrapping %s\ncLen=%u, buffer=%u, trying with %u", typ, &fieldName[0], cLen, strLen, resultLen);
+                free(sapuc);
+                strLen = resultLen;
+                sapuc = (SAP_UC *)mallocU(strLen + 1);
+                rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
+            }
+            if (rc != RFC_OK)
+            {
+                free(sapuc);
+                break;
+            }
+            resultValue = wrapString(sapuc, resultLen).ToString();
+            free(sapuc);
+
+            if (client_options.bcd == CLIENT_OPTION_BCD_FUNCTION)
+            {
+                resultValue = client_options.bcdFunction.Call({resultValue});
+            }
+            else if (client_options.bcd == CLIENT_OPTION_BCD_NUMBER)
+            {
+                resultValue = resultValue.ToNumber();
+            }
+            break;
+        }
+        case RFCTYPE_FLOAT:
+        {
+            RFC_FLOAT floatValue;
+            rc = RfcGetFloat(functionHandle, cName, &floatValue, &errorInfo);
+            resultValue = Napi::Number::New(node_rfc::__env, floatValue);
+            break;
+        }
+        case RFCTYPE_DECF16:
+        case RFCTYPE_DECF34:
+        {
+            // An upper bound for the length of the _string representation_
+            // of the BCD is given by (2*cLen)-1 (each digit is encoded in 4bit,
+            // the first 4 bit are reserved for the sign)
+            // Furthermore, a sign char, a decimal separator char may be present
+            // => (2*cLen)+1
+            // and exponent char, sign and exponent
+            // => +9
+            uint_t resultLen;
+            uint_t strLen = 2 * cLen + 10;
+            SAP_UC *sapuc = (SAP_UC *)mallocU(strLen + 1);
+            rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
+            if (rc == 23) // Buffer too small, use returned requried result length
+            {
+                //std::string fieldName = wrapString(cName).ToString().Utf8Value();
+                //printf("\nWarning: Buffer for BCD type %d to small when wrapping %s\ncLen=%u, buffer=%u, trying with %u", typ, &fieldName[0], cLen, strLen, resultLen);
+                free(sapuc);
+                strLen = resultLen;
+                sapuc = (SAP_UC *)mallocU(strLen + 1);
+                rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
+            }
+            if (rc != RFC_OK)
+            {
+                free(sapuc);
+                break;
+            }
+            resultValue = wrapString(sapuc, resultLen).ToString();
+            free(sapuc);
+
+            if (client_options.bcd == CLIENT_OPTION_BCD_FUNCTION)
+            {
+                resultValue = client_options.bcdFunction.Call({resultValue});
+            }
+            else if (client_options.bcd == CLIENT_OPTION_BCD_NUMBER)
+            {
+                resultValue = resultValue.ToNumber();
+            }
+            break;
+        }
+        case RFCTYPE_INT:
+        {
+            RFC_INT intValue;
+            rc = RfcGetInt(functionHandle, cName, &intValue, &errorInfo);
+            if (rc != RFC_OK)
+            {
+                break;
+            }
+            resultValue = Napi::Number::New(node_rfc::__env, intValue);
+            break;
+        }
+        case RFCTYPE_INT1:
+        {
+            RFC_INT1 intValue;
+            rc = RfcGetInt1(functionHandle, cName, &intValue, &errorInfo);
+            if (rc != RFC_OK)
+            {
+                break;
+            }
+            resultValue = Napi::Number::New(node_rfc::__env, intValue);
+            break;
+        }
+        case RFCTYPE_INT2:
+        {
+            RFC_INT2 intValue;
+            rc = RfcGetInt2(functionHandle, cName, &intValue, &errorInfo);
+            if (rc != RFC_OK)
+            {
+                break;
+            }
+            resultValue = Napi::Number::New(node_rfc::__env, intValue);
+            break;
+        }
+        case RFCTYPE_INT8:
+        {
+            RFC_INT8 intValue;
+            rc = RfcGetInt8(functionHandle, cName, &intValue, &errorInfo);
+            if (rc != RFC_OK)
+            {
+                break;
+            }
+            resultValue = Napi::Number::New(node_rfc::__env, (double)intValue);
+            break;
+        }
+        case RFCTYPE_UTCLONG:
+        {
+            uint_t resultLen = 0, strLen = 27;
+            SAP_UC *stringValue = (RFC_CHAR *)mallocU(strLen + 1);
+            rc = RfcGetString(functionHandle, cName, stringValue, strLen + 1, &resultLen, &errorInfo);
+            if (rc != RFC_OK)
+            {
+                break;
+            }
+            stringValue[19] = '.';
+            resultValue = wrapString(stringValue, strLen);
+            free(stringValue);
+            break;
+        }
+        case RFCTYPE_DATE:
+        {
+            RFC_DATE dateValue;
+            rc = RfcGetDate(functionHandle, cName, dateValue, &errorInfo);
+            if (rc != RFC_OK)
+            {
+                break;
+            }
+            resultValue = wrapString(dateValue, 8);
+            if (!client_options.dateFromABAP.IsEmpty())
+            {
+                resultValue = client_options.dateFromABAP.Call({resultValue});
+            }
+            break;
+        }
+        case RFCTYPE_TIME:
+        {
+            RFC_TIME timeValue;
+            rc = RfcGetTime(functionHandle, cName, timeValue, &errorInfo);
+            if (rc != RFC_OK)
+            {
+                break;
+            }
+            resultValue = wrapString(timeValue, 6);
+            if (!client_options.timeFromABAP.IsEmpty())
+            {
+                resultValue = client_options.timeFromABAP.Call({resultValue});
+            }
+            break;
+        }
+        default:
+            std::ostringstream err;
+            err << "RFC type from ABAP not supported" << typ;
+            return ValuePair(ENV_UNDEFINED, nodeRfcError(err.str(), &errorPath));
+            break;
         }
 
         if (rc != RFC_OK)
         {
             return ValuePair(scope.Escape(rfcSdkError(&errorInfo, &errorPath)), ENV_UNDEFINED);
+        }
+
+        if (resultValue.IsUndefined())
+        {
+            return ValuePair(scope.Escape(nodeRfcError("Non-unicode ABAP string", &errorPath)), ENV_UNDEFINED);
         }
 
         return ValuePair(ENV_UNDEFINED, scope.Escape(resultValue));
