@@ -443,19 +443,19 @@ namespace node_rfc
         }
     }
 
-    Napi::Value Pool::updateLeasedHandle(RFC_CONNECTION_HANDLE old_handle, RFC_CONNECTION_HANDLE new_handle)
+    std::string Pool::updateLeasedHandle(RFC_CONNECTION_HANDLE old_handle, RFC_CONNECTION_HANDLE new_handle)
     {
         lockMutex();
         if (connLeased.erase(old_handle) != 0)
         {
             connLeased.insert(new_handle);
             unlockMutex();
-            return Env().Undefined();
+            return "";
         }
         unlockMutex();
         std::ostringstream errmsg;
         errmsg << "The connection handle " << (pointer_t)old_handle << " not found in Pool leased connections, to be replaced by " << (uintptr_t)new_handle;
-        return nodeRfcError(errmsg.str());
+        return errmsg.str();
     }
 
     bool argsCheckReady(const Napi::CallbackInfo &info, uint_t *new_ready, Napi::Function *callback)

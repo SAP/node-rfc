@@ -74,7 +74,7 @@ describe("Errors: ABAP", () => {
         );
     });
 
-    test("error: invoke() AbapApplicationError E51", function (done) {
+    test("error: invoke() AbapApplicationError E51 (direct)", function (done) {
         expect.assertions(3);
         const old_handle = client.connectionHandle;
         client.invoke(
@@ -98,6 +98,43 @@ describe("Errors: ABAP", () => {
                 done();
             }
         );
+    });
+
+    test("error: invoke() AbapApplicationError E51 (pool)", function (done) {
+        expect.assertions(3);
+        const Pool = setup.Pool;
+        const poolConfiguration = {
+            connectionParameters: setup.abapSystem(),
+        };
+        const pool = new Pool(poolConfiguration);
+        try {
+            pool.acquire().then((client) => {
+                const old_handle = client.connectionHandle;
+                client.invoke(
+                    "RFC_RAISE_ERROR",
+                    {
+                        METHOD: "51",
+                        MESSAGETYPE: "E",
+                    },
+                    function (err) {
+                        expect(client.alive).toBe(true);
+                        expect(client.connectionHandle).not.toBe(old_handle);
+                        expect(err).toMatchObject({
+                            code: 3,
+                            codeString: "RFC_ABAP_RUNTIME_FAILURE",
+                            group: 2,
+                            key: "BLOCKED_COMMIT",
+                            message:
+                                "A database commit was blocked by the application.",
+                            name: "ABAPError",
+                        });
+                        pool.release(client, (err) => done(err));
+                    }
+                );
+            });
+        } catch (ex) {
+            done(ex);
+        }
     });
 
     test("error: invoke() SAP GUI in background", function (done) {
