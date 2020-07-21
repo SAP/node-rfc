@@ -1,11 +1,12 @@
 Change log
 ==========
 
-2.0.2 (2020-07-22)
+2.0.2 (2020-07-21)
 ------------------
 
 - CMake 3.18
 - CXX standard 17
+- Fix #151 wrapString fatal error (core dumped)
 - Fix #158 Fatal error: Error getting v8 handle scope
 
 2.0.1 (2020-07-20)
