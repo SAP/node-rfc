@@ -108,8 +108,6 @@ endif ( MSVC )
 
 # All platforms
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions")
-#target_compile_options(${PROJECT_NAME} PUBLIC -fno-exceptions)
 
 # https://launchpad.support.sap.com/#/notes/2573953
 target_compile_definitions(${PROJECT_NAME} PUBLIC
@@ -119,7 +117,9 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
     _LARGEFILE_SOURCE
     NDEBUG
     SAPwithTHREADS
-    NAPI_CPP_EXCEPTION)
+    NAPI_CPP_EXCEPTIONS)
+
+target_compile_options(${PROJECT_NAME} PUBLIC -fexceptions)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 
@@ -204,7 +204,7 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ci/utils/nwrfcsdk-version-darwin.sh OUTPUT_VARIABLE SAPNWRFCSDK_VERSION)
     message("SAP NWRFC SDK: " ${SAPNWRFCSDK_VERSION})
 
-    target_compile_options(${PROJECT_NAME} PUBLIC -stdlib=libc++ -std=c++0x -Wall -mmacosx-version-min=10.10)
+    target_compile_options(${PROJECT_NAME} PUBLIC -stdlib=libc++ -std=c++0x -Wall -mmacosx-version-min=10.10 -fvisibility=hidden)
 
     add_compile_definitions(
         SAPonDARW

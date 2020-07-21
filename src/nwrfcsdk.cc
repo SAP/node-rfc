@@ -38,7 +38,7 @@ namespace node_rfc
         rc = RfcUTF8ToSAPUC((RFC_BYTE *)&str[0], str.length(), sapuc, &sapucSize, &resultLen, &errorInfo);
 
         if (rc != RFC_OK)
-            Napi::Error::Fatal("fillString", "node-rfc internal error");
+            Napi::Error::Fatal("fillString", "NodeJS string could not be parsed to ABAP unicode");
 
         return sapuc;
     }
@@ -49,7 +49,6 @@ namespace node_rfc
 
     Napi::Value wrapString(SAP_UC *uc, int length)
     {
-        RFC_RC rc;
         RFC_ERROR_INFO errorInfo;
 
         Napi::EscapableHandleScope scope(node_rfc::__env);
@@ -67,23 +66,21 @@ namespace node_rfc
         char *utf8 = (char *)malloc(utf8Size + 1);
         utf8[0] = '\0';
         uint_t resultLen = 0;
-        rc = RfcSAPUCToUTF8(uc, length, (RFC_BYTE *)utf8, &utf8Size, &resultLen, &errorInfo);
+        RfcSAPUCToUTF8(uc, length, (RFC_BYTE *)utf8, &utf8Size, &resultLen, &errorInfo);
 
-        if (rc != RFC_OK)
+        if (errorInfo.code != RFC_OK)
         {
             // not enough, try with 6
-            free((char *)utf8);
+            free(utf8);
             utf8Size = length * 6;
             utf8 = (char *)malloc(utf8Size + 1);
             utf8[0] = '\0';
             resultLen = 0;
-            rc = RfcSAPUCToUTF8(uc, length, (RFC_BYTE *)utf8, &utf8Size, &resultLen, &errorInfo);
-            if (rc != RFC_OK)
+            RfcSAPUCToUTF8(uc, length, (RFC_BYTE *)utf8, &utf8Size, &resultLen, &errorInfo);
+            if (errorInfo.code != RFC_OK)
             {
-                free((char *)utf8);
-                char err[255];
-                sprintf(err, "wrapString fatal error: length: %d utf8Size: %u resultLen: %u", length, utf8Size, resultLen);
-                Napi::Error::Fatal(err, "node-rfc internal error");
+                free(utf8);
+                Napi::Error::Fatal("wrapString", "ABAP string could not be parsed to unicode");
             }
         }
 
@@ -184,7 +181,7 @@ namespace node_rfc
         {
             errorObj.Set("rfmPath", errorPath->getpath());
         }
-
+        DEBUG("scope.Escape start");
         return scope.Escape(errorObj);
     }
 

@@ -25,7 +25,8 @@ namespace node_rfc
     void checkConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams);
     void checkClientOptions(Napi::Object clientOptionsObject, ClientOptionsStruct *clientOptions);
 
-    typedef std::pair<Napi::Value, Napi::Value> WrapResultType;
+    typedef std::pair<Napi::Value, Napi::Value> ValuePair;
+    typedef std::pair<RFC_ERROR_INFO, std::string> ErrorPair;
 
     class Client : public Napi::ObjectWrap<Client>
     {
@@ -53,9 +54,11 @@ namespace node_rfc
         Napi::Value PoolIdGetter(const Napi::CallbackInfo &info);
         Napi::ObjectReference clientParamsRef;
         Napi::ObjectReference clientOptionsRef;
-        Napi::Value connectionClosedError(std::string suffix);
 
-        Napi::Value connectionCheck(RFC_ERROR_INFO *errorInfo);
+        Napi::Value connectionClosedError(std::string suffix);
+        ErrorPair connectionCheck(RFC_ERROR_INFO *errorInfo);
+        Napi::Value getOperationError(bool conn_closed, std::string operation, ErrorPair connectionCheckError, RFC_ERROR_INFO *errorInfo, Napi::Env env);
+
         Napi::Value ConnectionInfo(const Napi::CallbackInfo &info);
         Napi::Value Release(const Napi::CallbackInfo &info);
         Napi::Value Open(const Napi::CallbackInfo &info);
@@ -69,9 +72,9 @@ namespace node_rfc
         Napi::Value fillStructure(RFC_STRUCTURE_HANDLE structHandle, RFC_TYPE_DESC_HANDLE functionDescHandle, SAP_UC *cName, Napi::Value value);
         Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Napi::Value value, RFC_TYPE_DESC_HANDLE functionDescHandle);
 
-        WrapResultType wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle);
-        WrapResultType wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc);
-        WrapResultType wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle);
+        ValuePair wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle);
+        ValuePair wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc);
+        ValuePair wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle);
 
         RfmErrorPath errorPath;
 

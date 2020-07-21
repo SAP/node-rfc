@@ -45,6 +45,7 @@ void log(Args &&... args)
     std::cerr << std::endl;
 }
 
+// conditional logging
 #ifdef LOG_RFC_CLIENT
 #define DEBUG(...) \
     log(__VA_ARGS__);
@@ -53,7 +54,6 @@ void log(Args &&... args)
 #endif
 
 // always active logging
-
 #define ERROR(...) \
     log(__VA_ARGS__);
 

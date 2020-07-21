@@ -23,6 +23,36 @@ namespace node_rfc
 
     uint_t Client::_id = 1;
 
+    ErrorPair connectionCheckErrorInit()
+    {
+        RFC_ERROR_INFO errorInfo;
+        errorInfo.code = RFC_OK;
+        return ErrorPair(errorInfo, "");
+    }
+
+    Napi::Value Client::getOperationError(bool conn_closed, std::string operation, ErrorPair connectionCheckError, RFC_ERROR_INFO *errorInfo, Napi::Env env)
+    {
+        Napi::EscapableHandleScope scope(env);
+        Napi::Value error = Env().Undefined();
+        if (conn_closed)
+        {
+            error = connectionClosedError(operation);
+        }
+        else if (connectionCheckError.first.code != RFC_OK)
+        {
+            error = rfcSdkError(&connectionCheckError.first);
+        }
+        else if (connectionCheckError.second.length() > 0)
+        {
+            error = nodeRfcError(connectionCheckError.second);
+        }
+        else if (errorInfo->code != RFC_OK)
+        {
+            error = rfcSdkError(errorInfo);
+        }
+        return scope.Escape(error);
+    }
+
     void checkConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams)
     {
         Napi::Array paramNames = clientParamsObject.GetPropertyNames();
@@ -472,23 +502,8 @@ namespace node_rfc
         void OnOK()
         {
             Napi::HandleScope scope(Env());
-
-            if (conn_closed)
-            {
-                Callback().Call({client->connectionClosedError("resetServerContext()")});
-            }
-            else if (!connectionCheckError.IsUndefined())
-            {
-                Callback().Call({connectionCheckError});
-            }
-            else if (errorInfo.code != RFC_OK)
-            {
-                Callback().Call({rfcSdkError(&errorInfo)});
-            }
-            else
-            {
-                Callback().Call({});
-            }
+            Napi::Value error = client->getOperationError(conn_closed, "resetServerContext()", connectionCheckError, &errorInfo, Env());
+            Callback().Call({error});
             Callback().Reset();
         }
 
@@ -496,7 +511,7 @@ namespace node_rfc
         Client *client;
         RFC_ERROR_INFO errorInfo;
         bool conn_closed;
-        Napi::Value connectionCheckError = Env().Undefined();
+        ErrorPair connectionCheckError = connectionCheckErrorInit();
     };
 
     class PingAsync : public Napi::AsyncWorker
@@ -525,22 +540,9 @@ namespace node_rfc
         {
             Napi::HandleScope scope(Env());
 
-            if (conn_closed)
-            {
-                Callback().Call({client->connectionClosedError("ping()"), Napi::Boolean::New(Env(), false)});
-            }
-            else if (!connectionCheckError.IsUndefined())
-            {
-                Callback().Call({connectionCheckError});
-            }
-            else if (errorInfo.code != RFC_OK)
-            {
-                Callback().Call({rfcSdkError(&errorInfo), Napi::Boolean::New(Env(), false)});
-            }
-            else
-            {
-                Callback().Call({Env().Undefined(), Napi::Boolean::New(Env(), true)});
-            }
+            Napi::Value error = client->getOperationError(conn_closed, "ping()", connectionCheckError, &errorInfo, Env());
+
+            Callback().Call({error, Napi::Boolean::New(Env(), error.IsUndefined())});
             Callback().Reset();
         }
 
@@ -548,7 +550,7 @@ namespace node_rfc
         Client *client;
         bool conn_closed;
         RFC_ERROR_INFO errorInfo;
-        Napi::Value connectionCheckError;
+        ErrorPair connectionCheckError = connectionCheckErrorInit();
     };
 
     class InvokeAsync : public Napi::AsyncWorker
@@ -576,27 +578,21 @@ namespace node_rfc
 
         void OnOK()
         {
-            WrapResultType result = WrapResultType(Env().Undefined(), Env().Undefined());
-            if (conn_closed)
-            {
-                std::string errmsg = "invoke() " + wrapString(client->errorPath.functionName).As<Napi::String>().Utf8Value();
-                result.first = client->connectionClosedError(errmsg);
-            }
-            else if (!connectionCheckError.IsUndefined())
-            {
-                result.first = connectionCheckError;
-            }
-            else if (errorInfo.code != RFC_OK)
-            {
-                result.first = rfcSdkError(&errorInfo);
-            }
-            else
+            Napi::HandleScope scope(Env());
+
+            std::string closed_errmsg = "invoke() " + wrapString(client->errorPath.functionName).As<Napi::String>().Utf8Value();
+            ValuePair result = ValuePair(client->getOperationError(conn_closed, closed_errmsg, connectionCheckError, &errorInfo, Env()), Env().Undefined());
+
+            if (result.first.IsUndefined())
             {
                 result = client->wrapResult(functionDescHandle, functionHandle);
             }
+
             RfcDestroyFunction(functionHandle, NULL);
             client->UnlockMutex();
-            //DEBUG("InvokeAsync unlock client: ", client->id, " handle: ", (pointer_t)client->connectionHandle);
+
+            DEBUG("InvokeAsync unlock client: ", client->id, " handle: ", (pointer_t)client->connectionHandle);
+
             Callback().Call({result.first, result.second});
             Callback().Reset();
         }
@@ -607,7 +603,7 @@ namespace node_rfc
         RFC_FUNCTION_DESC_HANDLE functionDescHandle;
         RFC_ERROR_INFO errorInfo;
         bool conn_closed;
-        Napi::Value connectionCheckError = Env().Undefined();
+        ErrorPair connectionCheckError = connectionCheckErrorInit();
     };
     class PrepareAsync : public Napi::AsyncWorker
     {
@@ -723,8 +719,12 @@ namespace node_rfc
         bool conn_closed;
     };
 
-    Napi::Value Client::connectionCheck(RFC_ERROR_INFO *errorInfo)
+    ErrorPair Client::connectionCheck(RFC_ERROR_INFO *errorInfo)
     {
+        RFC_ERROR_INFO errorInfoOpen;
+
+        errorInfoOpen.code = RFC_OK;
+
         if (
             // error code check
             errorInfo->code == RFC_COMMUNICATION_FAILURE || // Error in Network & Communication layer.
@@ -738,25 +738,34 @@ namespace node_rfc
             errorInfo->group == EXTERNAL_RUNTIME_FAILURE // Problems in the RFC runtime of the external program (i.e "this" library)
             )                                            // closed
         {
-            //DEBUG("Closed after ABAP error ",  (pointer_t)this->connectionHandle);
+            DEBUG("Critical ABAP error ", (pointer_t)this->connectionHandle);
+            RFC_CONNECTION_HANDLE new_handle;
             RFC_CONNECTION_HANDLE old_handle = this->connectionHandle;
             this->connectionHandle = NULL;
-            RFC_CONNECTION_HANDLE new_handle;
-            RFC_ERROR_INFO errorInfo;
-            new_handle = RfcOpenConnection(client_params.connectionParams, client_params.paramSize, &errorInfo);
-            if (errorInfo.code != RFC_OK)
+            if (pool == NULL)
             {
-                return rfcSdkError(&errorInfo);
+                new_handle = RfcOpenConnection(client_params.connectionParams, client_params.paramSize, &errorInfoOpen);
             }
+            else
+            {
+                new_handle = RfcOpenConnection(pool->client_params.connectionParams, pool->client_params.paramSize, &errorInfoOpen);
+            }
+            if (errorInfoOpen.code != RFC_OK)
+            {
+                DEBUG("// error getting a new handle");
+                return ErrorPair(errorInfoOpen, "");
+            }
+
             if (pool != NULL)
             {
-                // assign new handle to managed client
-                Napi::Value updateError = pool->updateLeasedHandle(old_handle, new_handle);
-                if (!updateError.IsUndefined())
+                std::string updateError = pool->updateLeasedHandle(old_handle, new_handle);
+                if (updateError.length() > 0)
                 {
-                    return updateError;
+                    DEBUG("// pool update failed");
+                    return ErrorPair(errorInfoOpen, updateError);
                 }
 
+                DEBUG("// assign new handle to managed client");
                 this->connectionHandle = new_handle;
             }
             else
@@ -767,10 +776,10 @@ namespace node_rfc
         }
         else
         {
-            //DEBUG("connectionCheck ok: ", (pointer_t)this->connectionHandle);
+            DEBUG("Non-critical ABAP error: ", (pointer_t)this->connectionHandle);
         }
 
-        return Env().Undefined();
+        return ErrorPair(errorInfoOpen, "");
     }
 
     Napi::Value Client::Release(const Napi::CallbackInfo &info)
