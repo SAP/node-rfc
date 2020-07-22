@@ -75,7 +75,9 @@ const abapConnection = {
 -   The trusted relationship must be established between the ABAP backend system and the client system.
 -   The client system must be registered in the NW ABAP backend Access Control List (ACL), using transaction SNC0
 -   Keystores are generated on a client system, using SAP cryptography tool SAPGENPSE and the environment variable SECUDIR points to the folder with generated keystores
+
     ![](assets/SNC0-1.png)
+
 -   User X509 certificate must be mapped to ABAP NW backend user, using transaction EXTID_DN
     ![](assets/EXTID_DN-1.png)
 
