@@ -1,8 +1,8 @@
 SAP NW RFC Library supports plain and secure connection with following authentication methods:
 
--   Plain with user / password
--   SNC with user PSE
--   SNC with client system PSE and user X509
+-   [Plain with username/password](#plain-with-username-password)
+-   [SNC with user PSE](#snc-with-user-pse)
+-   [SNC with client system PSE and user X509](#snc-with-client-system-pse-and-user-x509)
 
 NW ABAP servers support in addition:
 
@@ -11,7 +11,7 @@ NW ABAP servers support in addition:
 
 Assuming you are familiar with abovementioned concepts and have ABAP backend system configured for SNC communication, here you may find connection strings examples, for testing plain and secure RFC connections, with various authentication methods.
 
-## Plain with user credentials
+## Plain with username/password
 
 The simplest and the least secure form of the user authentication:
 

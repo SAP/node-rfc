@@ -6,6 +6,11 @@
 -   **[ABAP Function Module](#abap-function-module)**
     <a name="client-toc"></a>
 -   **[Client](#client)**
+
+    -   [Authentication](authentication.md)
+        -   [Plain with user credentials](authentication.md/#plain-with-user-credentials)
+        -   [SNC with user PSE](authentication.md/#snc-with-user-pse)
+        -   [SNC with client system PSE and User X509](authentication.md/#snc-with-client-system-pse-and-user-x509)
     -   [Connection Parameters](#connection-parameters)
     -   [Direct and Managed Clients](#direct-and-managed-clients)
     -   [Client options](#client-options)
@@ -18,6 +23,7 @@
         -   [Async/await](#asyncawait)
         -   [Promise](#promise)
         -   [Callback](#callback)
+
 -   **[Connection Pool](#connection-pool)**
     -   [Pool Options](#pool-options)
 -   **[Closing connections](#closing-connections)**

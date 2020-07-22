@@ -28,10 +28,11 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 -   **[Supported Platforms](#supported-platforms)**
 -   **[Prerequisites](#prerequisites)**
 -   **[Installation](#installation)**
--   **[Getting started](#usage)**
+-   **[Getting started](#getting-started)**
 -   **[Usage](doc/usage.md)**
-    -   **[Connection Pool](doc/usage.md/#connection-pool)**
+    -   **[Authentication](doc/authentication.md)**
     -   **[Client](doc/usage.md/#client-toc)**
+    -   **[Connection Pool](doc/usage.md/#connection-pool)**
     -   **[Throughput](doc/usage.md/#throughput)**
 -   **[API](doc/api.md)**
     -   **[Connection Pool](doc/api.md/#connection-pool)**
@@ -88,7 +89,7 @@ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 
 ## Installation
 
-Check **[Installation](doc/installation.md)** for more details.
+More info: **[Installation](doc/installation.md)**
 
 After the SAP NW RFC SDK is installed on your system, the `node-rfc` can be installed from npm:
 
@@ -106,9 +107,9 @@ npm run addon # rebuild native addon
 npm run ts    # rebuild typescript wrapper
 ```
 
-## Usage
+## Getting started
 
-More info: **[Usage/clients](doc/usage.md#direct-and-managed-clients)**
+More info: **[Usage](doc/usage.md)** and **[API](doc/api.md)**
 
 In order to call remote enabled ABAP function module, we need to create a `node-rfc` client instance with valid logon credentials, connect to SAP ABAP NetWeaver system and then invoke a remote enabled ABAP function module from nodejs. The client instance can be used for one or more subsequent RFC calls, see unit tests for more examples. Callback API example below shows basic principles.
 
@@ -159,34 +160,7 @@ client.connect(function (err) {
 });
 ```
 
-Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method on the client instance.
-
-More info:
-
--   **[Installation](doc/installation.md)**
-    -   [SAP NWRFC SDK installation](doc/installation.md#sap-nwrfc-sdk-installation)
-    -   [Troubleshooting](doc/installation.md#troubleshooting)
--   **[ABAP Function Module example](doc/usage.md#abap-function-module)**
--   **[Data types](doc/usage.md#data-types)**
-    -   [Numeric types](doc/usage.md#numeric-data)
-    -   [Binary types](doc/usage.md#binary-types)
-    -   [Date/Time](doc/usage.md#datetime-types)
-    -   [UTCLONG](doc/usage.md#utclong)
--   **[API Documentation](doc/api.md)**
-    -   [Connection Pool](doc/api.md/#connection-pool)
-    -   [Client](doc/api.md/#client)
-    -   [Throughput](doc/api.md/#throughput)
--   **[Connection Parameters](doc/usage.md#connection-parameters)**
--   **[Client instance](doc/usage.md#client-instance)**
--   **[Client options](doc/usage.md#client-options)**
--   **[Invocation patterns](doc/usage.md#invocation-patterns)**
-    -   [Async/await](doc/usage.md#asyncawait)
-    -   [Promise](doc/usage.md#promise)
-    -   [Callback](doc/usage.md#callback)
--   **[Authentication](doc/authentication.md)**
-    -   [Plain with user credentials](doc/authentication.md/#plain-with-user-credentials)
-    -   [SNC with user PSE](doc/authentication.md/#snc-with-user-pse)
-    -   [SNC with client system PSE and User X509](doc/authentication.md/#snc-with-client-system-pse-and-user-x509)
+Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method of the direct client, or `client.release()` or `pool.release()` for the managed client.
 
 <a name="resources"></a>
 
