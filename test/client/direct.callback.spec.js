@@ -57,7 +57,7 @@ describe("Client: direct callback", () => {
         expect(client._id.indexOf("[d]")).toBeGreaterThan(-1);
     });
 
-    test.only("alive and ping() should return false when disconnected", function (done) {
+    test("alive and ping() should return false when disconnected", function (done) {
         expect.assertions(3);
         expect(client.alive).toBe(false);
         client.ping((err, res) => {
