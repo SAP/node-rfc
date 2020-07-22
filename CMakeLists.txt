@@ -119,7 +119,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
     SAPwithTHREADS
     NAPI_CPP_EXCEPTIONS)
 
-target_compile_options(${PROJECT_NAME} PUBLIC -fexceptions)
+# target_compile_options(${PROJECT_NAME} PUBLIC -fexceptions)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 

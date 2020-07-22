@@ -379,7 +379,7 @@ namespace node_rfc
             {
                 Napi::String name = wrapString(paramDesc.name).As<Napi::String>();
                 errorPath.setParameterName(paramDesc.name);
-                //ERROR("param type ", paramDesc.type, " name ", wrapString(paramDesc.name).As<Napi::String>().Utf8Value(), " direction ", paramDesc.direction, " filter ", paramDesc.direction & client_options.filter_param_type);
+                //EDEBUG("param type ", paramDesc.type, " name ", wrapString(paramDesc.name).As<Napi::String>().Utf8Value(), " direction ", paramDesc.direction, " filter ", paramDesc.direction & client_options.filter_param_type);
                 ValuePair result = wrapVariable(paramDesc.type, functionHandle, paramDesc.name, paramDesc.nucLength, paramDesc.typeDescHandle);
                 if (!result.first.IsUndefined())
                 {

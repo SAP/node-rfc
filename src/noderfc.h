@@ -54,7 +54,7 @@ void log(Args &&... args)
 #endif
 
 // always active logging
-#define ERROR(...) \
+#define EDEBUG(...) \
     log(__VA_ARGS__);
 
 //
