@@ -1,6 +1,6 @@
 SAP NW RFC Library supports plain and secure connection with following authentication methods:
 
--   [Plain with username/password](#plain-with-username-password)
+-   [Plain with username/password](#plain-with-usernamepassword)
 -   [SNC with user PSE](#snc-with-user-pse)
 -   [SNC with client system PSE and user X509](#snc-with-client-system-pse-and-user-x509)
 
