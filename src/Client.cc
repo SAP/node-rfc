@@ -353,7 +353,7 @@ namespace node_rfc
                 RFC_RC rc = RfcCloseConnection(connectionHandle, &errorInfo);
                 if (rc != RFC_OK)
                 {
-                    ERROR("Error closing the direct connection handle ", (pointer_t)connectionHandle, "client ", id);
+                    EDEBUG("Error closing the direct connection handle ", (pointer_t)connectionHandle, "client ", id);
                 }
             }
             else
