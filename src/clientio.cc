@@ -182,12 +182,13 @@ namespace node_rfc
                 return nodeRfcError(err.str(), &errorPath);
             }
 
-            Napi::Buffer<char> buf = value.As<Napi::Buffer<char>>();
-            uint_t size = buf.ByteLength();
-            SAP_RAW *byteValue = (SAP_RAW *)malloc(size);
-            memcpy(byteValue, buf.Data(), size);
+            Napi::Buffer<SAP_RAW> js_buf = value.As<Napi::Buffer<SAP_RAW>>();
+            uint_t js_buf_bytelen = js_buf.ByteLength();
+            SAP_RAW *byteValue = (SAP_RAW *)malloc(js_buf_bytelen);
+            memcpy(byteValue, js_buf.Data(), js_buf_bytelen);
 
-            rc = RfcSetBytes(functionHandle, cName, byteValue, size, &errorInfo);
+            // excessive padding bytes sent from NodeJS, are silently trimmed by SDK to ABAP field length
+            rc = RfcSetBytes(functionHandle, cName, byteValue, js_buf_bytelen, &errorInfo);
             free(byteValue);
             break;
         }
@@ -200,12 +201,12 @@ namespace node_rfc
                 return nodeRfcError(err.str(), &errorPath);
             }
 
-            Napi::Buffer<char> buf = value.As<Napi::Buffer<char>>();
-            uint_t size = buf.ByteLength();
-            SAP_RAW *byteValue = (SAP_RAW *)malloc(size);
-            memcpy(byteValue, buf.Data(), size);
+            Napi::Buffer<SAP_RAW> js_buf = value.As<Napi::Buffer<SAP_RAW>>();
+            uint_t js_buf_bytelen = js_buf.ByteLength();
+            SAP_RAW *byteValue = (SAP_RAW *)malloc(js_buf_bytelen);
+            memcpy(byteValue, js_buf.Data(), js_buf_bytelen);
 
-            rc = RfcSetXString(functionHandle, cName, byteValue, size, &errorInfo);
+            rc = RfcSetXString(functionHandle, cName, byteValue, js_buf_bytelen, &errorInfo);
             free(byteValue);
             break;
         }
@@ -379,7 +380,7 @@ namespace node_rfc
             {
                 Napi::String name = wrapString(paramDesc.name).As<Napi::String>();
                 errorPath.setParameterName(paramDesc.name);
-                //EDEBUG("param type ", paramDesc.type, " name ", wrapString(paramDesc.name).As<Napi::String>().Utf8Value(), " direction ", paramDesc.direction, " filter ", paramDesc.direction & client_options.filter_param_type);
+                //DEBUG("param type ", paramDesc.type, " name ", wrapString(paramDesc.name).As<Napi::String>().Utf8Value(), " direction ", paramDesc.direction, " filter ", paramDesc.direction & client_options.filter_param_type);
                 ValuePair result = wrapVariable(paramDesc.type, functionHandle, paramDesc.name, paramDesc.nucLength, paramDesc.typeDescHandle);
                 if (!result.first.IsUndefined())
                 {
@@ -535,17 +536,13 @@ namespace node_rfc
         {
             SAP_RAW *byteValue = (SAP_RAW *)malloc(cLen);
 
-            //std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            //printf("\nbout %d %s cLen: %u", rc, &fieldName[0], cLen);
-
             rc = RfcGetBytes(functionHandle, cName, byteValue, cLen, &errorInfo);
             if (rc != RFC_OK)
             {
                 free(byteValue);
                 break;
             }
-            resultValue = Napi::Buffer<char>::New(node_rfc::__env, reinterpret_cast<char *>(byteValue), cLen); // .As<Napi::Uint8Array>(); // as a buffer
-            //resultValue = Napi::String::New(env, reinterpret_cast<const char *>(byteValue)); // or as a string
+            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, reinterpret_cast<SAP_RAW *>(byteValue), cLen);
             // do not free byteValue - it will be freed when the buffer is garbage collected
             break;
         }
@@ -561,16 +558,12 @@ namespace node_rfc
 
             rc = RfcGetXString(functionHandle, cName, byteValue, strLen, &resultLen, &errorInfo);
 
-            //std::string fieldName = wrapString(cName).ToString().Utf8Value();
-            //printf("\nxout %d %s cLen: %u strLen %u resultLen %u", rc, &fieldName[0], cLen, strLen, resultLen);
-
             if (rc != RFC_OK)
             {
                 free(byteValue);
                 break;
             }
-            resultValue = Napi::Buffer<char>::New(node_rfc::__env, reinterpret_cast<char *>(byteValue), resultLen); // as a buffer
-            //resultValue = Napi::String::New(node_rfc::__env, reinterpret_cast<const char *>(byteValue)); // or as a string
+            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, reinterpret_cast<SAP_RAW *>(byteValue), resultLen);
             // do not free byteValue - it will be freed when the buffer is garbage collected
             break;
         }
@@ -587,8 +580,7 @@ namespace node_rfc
             rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
             if (rc == 23) // Buffer too small, use returned requried result length
             {
-                //std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                //printf("\nWarning: Buffer for BCD type %d to small when wrapping %s\ncLen=%u, buffer=%u, trying with %u", typ, &fieldName[0], cLen, strLen, resultLen);
+                EDEBUG("Warning: Buffer for BCD type ", typ, " too small, for ", errorPath.pathstr());
                 free(sapuc);
                 strLen = resultLen;
                 sapuc = (SAP_UC *)mallocU(strLen + 1);
@@ -635,8 +627,7 @@ namespace node_rfc
             rc = RfcGetString(functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
             if (rc == 23) // Buffer too small, use returned requried result length
             {
-                //std::string fieldName = wrapString(cName).ToString().Utf8Value();
-                //printf("\nWarning: Buffer for BCD type %d to small when wrapping %s\ncLen=%u, buffer=%u, trying with %u", typ, &fieldName[0], cLen, strLen, resultLen);
+                EDEBUG("Warning: Buffer for BCD type ", typ, " too small, for ", errorPath.pathstr());
                 free(sapuc);
                 strLen = resultLen;
                 sapuc = (SAP_UC *)mallocU(strLen + 1);

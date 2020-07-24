@@ -181,7 +181,6 @@ namespace node_rfc
         {
             errorObj.Set("rfmPath", errorPath->getpath());
         }
-        DEBUG("scope.Escape start");
         return scope.Escape(errorObj);
     }
 

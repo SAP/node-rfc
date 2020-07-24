@@ -435,7 +435,7 @@ namespace node_rfc
         // synchronous because called with locked client mutex or from client destructor
         if (connLeased.erase(connectionHandle) == 0)
         {
-            EDEBUG("Connection ", (pointer_t)connectionHandle, " not found in Pool ", id, " leased set");
+            EDEBUG("Warning: Connection ", (pointer_t)connectionHandle, " not found in Pool ", id, " leased set");
         }
         else
         {
@@ -724,7 +724,7 @@ namespace node_rfc
                 }
                 else
                 {
-                    EDEBUG("    error closing ", (pointer_t)connectionHandle, " group: ", errorInfo.group, "code: ", errorInfo.code);
+                    EDEBUG("    Warning: error closing ", (pointer_t)connectionHandle, " group: ", errorInfo.group, "code: ", errorInfo.code);
                 }
                 connReady.erase(it++);
             }
@@ -745,7 +745,7 @@ namespace node_rfc
                 }
                 else
                 {
-                    EDEBUG("    error closing ", (pointer_t)connectionHandle, " group: ", errorInfo.group, "code: ", errorInfo.code);
+                    EDEBUG("    Warning: error closing ", (pointer_t)connectionHandle, " group: ", errorInfo.group, "code: ", errorInfo.code);
                 }
                 connReady.erase(it++);
             }
