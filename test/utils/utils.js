@@ -46,37 +46,6 @@ module.exports = {
         );
     },
 
-    compareBuffers(c1, c2) {
-        //console.log(c1);
-        //console.log(c2);
-        return Buffer.compare(c1, c2);
-        /*
-        a1 = c1.constructor.name == "Buffer" ? c1 : Buffer.from(c1, "hex");
-        a2 = c2.constructor.name == "Buffer" ? c2 : Buffer.from(c2, "hex");
-        let compareResult = {
-            content: true,
-            length:
-                a1.length == a2.length ? true : { a1: a1.length, a2: a2.length }
-        };
-
-        if (!a1.equals(a2)) {
-            for (let i = 0; i < a1.length; i++) {
-                if (a1[i] != a2[i]) {
-                    compareResult.content = false;
-                    compareResult.diff = {
-                        pos: i,
-                        a1: a1[i],
-                        a2: a2[i],
-                        a1: a1,
-                        a2: a2
-                    };
-                    break;
-                }
-            }
-        }
-        return compareResult;
-        */
-    },
     // https://nodejs.org/api/buffer.html#buffer_buffers_and_character_encodings
     XBYTES_TEST: Buffer.from("01414243444549500051fdfeff", "hex"),
 };

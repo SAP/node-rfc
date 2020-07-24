@@ -282,6 +282,22 @@ namespace node_rfc
             return path;
         }
 
+        std::string pathstr()
+        {
+            std::ostringstream ss;
+            Napi::Object obj = this->getpath();
+            Napi::Array objKeys = obj.GetPropertyNames();
+            ss << "rfmPath: {\n";
+            for (uint_t ii = 0; ii < objKeys.Length(); ii++)
+            {
+                std::string key = objKeys.Get(ii).As<Napi::String>().Utf8Value();
+                std::string val = obj.Get(key).ToString().Utf8Value();
+                ss << "  " << key << ": " << val << ", \n";
+            }
+            ss << "}\n";
+            return ss.str();
+        }
+
     } RfmErrorPath;
 
     // RFC ERRORS

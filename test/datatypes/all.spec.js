@@ -16,7 +16,6 @@
 
 describe("Datatypes: all", () => {
     const setup = require("../utils/setup");
-    //const binding = setup.binding;
     const client = setup.direct_client();
 
     const Decimal = require("decimal.js");
@@ -24,18 +23,15 @@ describe("Datatypes: all", () => {
     const Utils = require("../utils/utils");
     const RFC_MATH = require("../utils/config").RFC_MATH;
 
-    beforeEach(function (done) {
-        client.close(() => {
-            client.open((err) => {
-                if (err) return done(err);
-                done();
-            });
+    beforeAll(function (done) {
+        client.open((err) => {
+            return done(err);
         });
     });
 
-    afterEach(function (done) {
-        client.close(() => {
-            done();
+    afterAll(function (done) {
+        client.close((err) => {
+            return done(err);
         });
     });
 
@@ -52,7 +48,6 @@ describe("Datatypes: all", () => {
             ZDECF34_MIN: RFC_MATH.DECF34.POS.MIN,
             ZDECF34_MAX: RFC_MATH.DECF34.POS.MAX,
         };
-
         client.invoke(
             "/COE/RBP_FE_DATATYPES",
             {
@@ -80,10 +75,7 @@ describe("Datatypes: all", () => {
 
                 expect(typeof output.ZDECF34_MAX).toEqual("string");
                 expect(output.ZDECF34_MAX).toEqual(isInput.ZDECF34_MAX);
-
-                client.close(() => {
-                    done();
-                });
+                done();
             }
         );
     });
@@ -129,10 +121,7 @@ describe("Datatypes: all", () => {
 
                 expect(typeof output.ZDECF34_MAX).toEqual("string");
                 expect(output.ZDECF34_MAX).toEqual(isInput.ZDECF34_MAX);
-
-                client.close(() => {
-                    done();
-                });
+                done();
             }
         );
     });
@@ -310,6 +299,7 @@ describe("Datatypes: all", () => {
     });
 
     test("RAW/BYTE accepts Buffer", function (done) {
+        expect.assertions(3);
         let isInput = {
             ZRAW: Utils.XBYTES_TEST,
         };
@@ -320,18 +310,25 @@ describe("Datatypes: all", () => {
             },
             function (err, res) {
                 expect(err).toBeUndefined();
-                expect(res).toHaveProperty("ES_OUTPUT");
-                expect(isInput.ZRAW.length).toEqual(13);
-                expect(res.ES_OUTPUT.ZRAW.length).toEqual(17);
+                expect(Buffer.compare(isInput.ZRAW, res.ES_OUTPUT.ZRAW)).toBe(
+                    -1 // because the ZRAW is 17 bytes long and padded with zeroes
+                );
                 expect(
-                    Utils.compareBuffers(isInput.ZRAW, res.ES_OUTPUT.ZRAW)
-                ).toBeTruthy();
+                    Buffer.compare(
+                        Buffer.concat([
+                            isInput.ZRAW,
+                            Buffer.from([0, 0, 0, 0]),
+                        ]),
+                        res.ES_OUTPUT.ZRAW
+                    )
+                ).toBe(0); // ok
                 done();
             }
         );
     });
 
     test("XSTRING accepts Buffer", function (done) {
+        expect.assertions(2);
         let isInput = {
             ZRAWSTRING: Utils.XBYTES_TEST,
         };
@@ -342,8 +339,9 @@ describe("Datatypes: all", () => {
             },
             function (err, res) {
                 expect(err).toBeUndefined();
-                expect(res).toHaveProperty("ES_OUTPUT");
-                expect(isInput.ZRAWSTRING).toEqual(res.ES_OUTPUT.ZRAWSTRING);
+                expect(
+                    Buffer.compare(isInput.ZRAWSTRING, res.ES_OUTPUT.ZRAWSTRING)
+                ).toBe(0);
                 done();
             }
         );
@@ -399,16 +397,13 @@ describe("Datatypes: all", () => {
                 let lineIn = IT_SXMSMGUIDT[i];
                 if ("" in lineIn) lineIn = lineIn[""];
                 let lineOut = result.ET_SXMSMGUIDT[i];
-                let test = Utils.compareBuffers(lineIn, lineOut);
-                expect(test.content).toBeTruthy();
+                expect(Buffer.compare(lineIn, lineOut)).ToBe(0);
             }
 
             for (let i = 0; i < IT_SDOKCNTBINS.length; i++) {
                 let lineIn = IT_SDOKCNTBINS[i].LINE;
                 let lineOut = result.ET_SDOKCNTBINS[i].LINE;
-
-                let test = Utils.compareBuffers(lineIn, lineOut);
-                expect(test.content).toBeTruthy();
+                expect(Buffer.compare(lineIn, lineOut)).toBe(0);
             }
             done();
         });
