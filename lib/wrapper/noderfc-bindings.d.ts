@@ -37,8 +37,9 @@ declare const environment: {
         SAPNWRFC_HOME: string;
         RFC_INI: string;
     };
-    noderfc: NodeRfcBindingVersions;
     versions: NodeJS.ProcessVersions;
+} & {
+    noderfc: NodeRfcBindingVersions;
 };
 export { Promise };
 export { noderfc_binding };

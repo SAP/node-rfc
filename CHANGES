@@ -1,6 +1,11 @@
 Change log
 ==========
 
+2.0.3 (2020-XX-XX)
+------------------
+
+- Environment object appended to error message when SAP NWRFC SDK not found or can't be loaded
+
 2.0.2 (2020-07-21)
 ------------------
 
