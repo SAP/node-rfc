@@ -121,12 +121,13 @@ namespace node_rfc
     public:
         AcquireAsync(Napi::Function &callback, const uint_t clients_requested, Pool *pool)
             : Napi::AsyncWorker(callback), clients_requested(clients_requested), pool(pool) {}
-        ~AcquireAsync() {}
+        ~AcquireAsync()
+        {
+        }
 
         void Execute()
         {
             pool->lockMutex();
-
             errorInfo.code = RFC_OK;
 
             uint_t ii = clients_requested;
@@ -136,8 +137,8 @@ namespace node_rfc
             {
                 if (it != pool->connReady.end())
                 {
-                    pool->connReady.erase(it);
-                    ready_connections.insert(*it++);
+                    ready_connections.insert(*it);
+                    pool->connReady.erase(it++);
                 }
                 else
                 {
@@ -239,7 +240,9 @@ namespace node_rfc
     public:
         ReleaseAsync(Napi::Function &callback, Pool *pool, std::set<Client *> clients)
             : Napi::AsyncWorker(callback), pool(pool), clients(clients) {}
-        ~ReleaseAsync() {}
+        ~ReleaseAsync()
+        {
+        }
 
         void Execute()
         {

@@ -14,7 +14,7 @@
 
 "use strict";
 
-describe("Pool Acquire/Release/Ready", () => {
+describe("Pool Acquire/Release", () => {
     const setup = require("../utils/setup");
     const Pool = setup.Pool;
     const abapSystem = setup.abapSystem();
@@ -24,7 +24,6 @@ describe("Pool Acquire/Release/Ready", () => {
         //poolOptions: { low: 2, high: 4 },
     };
     let pool;
-    let acquired = [];
 
     beforeAll((done) => {
         pool = new Pool(poolConfiguration);
@@ -32,44 +31,54 @@ describe("Pool Acquire/Release/Ready", () => {
     });
 
     afterAll((done) => {
-        pool.clearAll();
         done();
     });
 
-    test("pool: acquire()", function () {
+    test("pool: acquire()", function (done) {
         expect.assertions(1);
-        return pool.acquire().then((client) => {
-            acquired.push(client);
+        pool.acquire().then((client) => {
             expect(client.alive).toBe(true);
+            done();
         });
     });
 
-    test("pool: acquire(multiple)", function () {
-        expect.assertions(4);
-        return pool.acquire(3).then((clients) => {
-            acquired.push(...clients);
-            expect(clients.length).toBe(3);
+    test("pool: acquire(multiple)", function (done) {
+        const N = 3;
+        expect.assertions(N + 1);
+        pool.acquire(N).then((clients) => {
+            expect(clients.length).toBe(N);
             clients.forEach((c) => {
                 expect(c.alive).toBe(true);
+            });
+            done();
+        });
+    });
+
+    test("pool: release(single)", function (done) {
+        expect.assertions(3);
+        pool.acquire((err, client) => {
+            expect(err).not.toBeDefined();
+            const LEASED = pool.status.leased;
+            pool.release(client, (err) => {
+                expect(err).not.toBeDefined();
+                expect(pool.status.leased).toBe(LEASED - 1);
+                done();
             });
         });
     });
 
-    test("pool: release(single)", function () {
-        expect.assertions(1);
-        const client = acquired.pop();
-        const LEASED = pool.status.leased;
-        return pool.release(client).then(() => {
-            expect(acquired.length).toBe(LEASED - 1);
-        });
-    });
-
-    test("pool: release(multiple)", function () {
-        expect.assertions(1);
-        const LEASED = pool.status.leased;
-        const return_clients = acquired.slice(0, 2);
-        return pool.release(return_clients).then(() => {
-            expect(pool.status.leased).toBe(LEASED - 2);
+    test("pool: release(multiple)", function (done) {
+        expect.assertions(4);
+        const N = 3;
+        pool.acquire(N, (err, clients) => {
+            expect(err).not.toBeDefined();
+            expect(clients.length).toBe(N);
+            const LEASED = pool.status.leased;
+            pool.release(clients, (err) => {
+                expect(err).not.toBeDefined();
+                expect(pool.status.leased).toBe(LEASED - N);
+                done();
+            });
         });
     });
 
