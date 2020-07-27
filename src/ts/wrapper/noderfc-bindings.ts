@@ -4,6 +4,7 @@ const Promise = require("bluebird");
 import { RfcClientBinding } from "./sapnwrfc-client";
 import { RfcPoolBinding } from "./sapnwrfc-pool";
 import { RfcThroughputBinding } from "./sapnwrfc-throughput";
+import { isUndefined } from "util";
 
 export const USAGE_URL = "https://github.com/SAP/node-rfc#usage";
 export interface NodeRfcBindingVersions {
@@ -38,7 +39,7 @@ try {
     throw ex;
 }
 
-const environment = {
+const E = {
     platform: {
         name: os.platform(),
         arch: os.arch(),
@@ -52,6 +53,19 @@ const environment = {
     versions: process.versions,
 };
 
+if (E.platform.name === "win32") {
+    E.env["nwrfcsdk_lib_on_path"] = false;
+    if (E.env.SAPNWRFC_HOME.length > 0) {
+        const P = process.env.PATH;
+        if (!isUndefined(P)) {
+            E.env["nwrfcsdk_lib_on_path"] =
+                P.toUpperCase().indexOf(
+                    `${E.env.SAPNWRFC_HOME}\\lib;`.toUpperCase()
+                ) > -1;
+        }
+    }
+}
+const environment = E;
 export { Promise };
 export { noderfc_binding };
 export { environment };
