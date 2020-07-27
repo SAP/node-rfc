@@ -6,6 +6,7 @@ Change log
 
 - Environment object appended to error message when SAP NWRFC SDK not found or can't be loaded
 - Accidentally added p-queue dependency removed
+- Segfault when more Pool more connections requested than available as `ready` and at least 1 is available
 
 2.0.2 (2020-07-21)
 ------------------

@@ -34,7 +34,6 @@ describe("Pool Acquire/Release/Ready", () => {
     });
 
     afterAll((done) => {
-        pool.clearAll();
         done();
     });
 
