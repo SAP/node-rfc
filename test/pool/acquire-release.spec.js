@@ -14,8 +14,6 @@
 
 "use strict";
 
-const { forEach } = require("async");
-
 describe("Pool Acquire/Release/Ready", () => {
     const setup = require("../utils/setup");
     const Pool = setup.Pool;
@@ -93,12 +91,16 @@ describe("Pool Acquire/Release/Ready", () => {
         });
     });
 
-    test("client: release()", function () {
-        expect.assertions(1);
-        const LEASED = pool.status.leased;
-        const return_clients = acquired.pop();
-        return return_clients.release().then(() => {
-            expect(pool.status.leased).toBe(LEASED - 1);
+    test("client: release()", function (done) {
+        expect.assertions(3);
+        pool.acquire((err, client) => {
+            const LEASED = pool.status.leased;
+            expect(err).not.toBeDefined();
+            client.release((err) => {
+                expect(err).not.toBeDefined();
+                expect(pool.status.leased).toBe(LEASED - 1);
+                done();
+            });
         });
     });
 });

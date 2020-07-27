@@ -5,7 +5,6 @@ import { RfcClientBinding } from "./sapnwrfc-client";
 import { RfcPoolBinding } from "./sapnwrfc-pool";
 import { RfcThroughputBinding } from "./sapnwrfc-throughput";
 import { isUndefined } from "util";
-import { env } from "process";
 
 export const USAGE_URL = "https://github.com/SAP/node-rfc#usage";
 export interface NodeRfcBindingVersions {
