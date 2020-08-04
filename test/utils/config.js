@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2014 SAP SE Srdjan Boskovic <srdjan.boskovic@sap.com>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 // Numeric types
 //
 // ABAP:       https://help.sap.com/doc/abapdocu_752_index_htm/7.52/en-US/index.htm?file=abenddic_builtin_types_intro.htm
