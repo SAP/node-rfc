@@ -52,30 +52,9 @@ Status of closed issues:
 
 You are welcome to contribute code to node-rfc in order to fix issues or to add new features.
 
-There are three important things to consider:
+### Developer Certificate of Origin (DCO)
 
-1.  You must be aware of the Apache License (which describes contributions) and **agree to the Contributors License Agreement**. This is common practice in all major Open Source projects. If you are an individual contributor, use _[CLA assistant](https://cla-assistant.io/)_. CLA assistant is an open source tool that integrates with GitHub and enables a one-click-experience for accepting the CLA. If you are contributing on behalf of a company, see the [Company Contributors](#company-contributors) section below for details.
-2.  You must follow **code style, quality, and product standards requirements**. You can find more information on the coding guidelines below.
-
-### Contributor License Agreement
-
-When you contribute (code, documentation, or anything else), you must be aware that your contribution is covered by the same [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0) that is applied to node-rfc itself.
-In particular, you need to agree to the Individual Contributor License Agreement,
-which can be [found here](https://gist.github.com/CLAassistant/bd1ea8ec8aa0357414e8).
-(This applies to all contributors, including those contributing on behalf of a company). If you agree to its content, you simply have to click on the link posted by the CLA assistant as a comment to the pull request. Click it to check the CLA and, if you agree to it, accept it on the following screen. CLA assistant saves this decision for upcoming contributions and notifies you if there is any change to the CLA in the meantime.
-
-#### Company Contributors
-
-If employees of a company contribute code, in **addition** to the individual agreement above, there needs to be one company agreement submitted. This is mainly for the protection of the contributing employees.
-
-A company representative authorized to do so needs to download, fill out, and print
-the [Corporate Contributor License Agreement](/docs/SAP%20Corporate%20Contributor%20License%20Agreement.pdf) form. Then either:
-
--   Scan it and e-mail it to [opensource@sap.com](mailto:opensource@sap.com),
--   Fax it to: +49 6227 78-45813,
--   Send it by mail to: _Industry Standards & Open Source Team, Dietmar-Hopp-Allee 16, 69190 Walldorf, Germany_.
-
-The form lists all employees who are authorized to contribute on behalf of your company. When this list changes, please let us know.
+Due to legal reasons, contributors will be asked to accept a DCO before submitting the first pull request to this project. This happens in an automated fashion during the submission process. SAP uses [the standard DCO text of the Linux Foundation](https://developercertificate.org/).
 
 ### Contribution Content Guidelines
 
@@ -88,9 +67,9 @@ All components should have associated unit tests created with a code coverage sc
 ### How to contribute - the Process
 
 1.  Make sure the issue you've filed in the [issue tracker] has the label "contribution welcome" - otherwise, it is not ready to be worked on.
-2.  Fork the node-rfc repository to your GitHub account.
+2.  Fork the `node-rfc` repository to your GitHub account.
 3.  Create a branch for your issue or feature, and commit or push your changes on that branch.
-4.  Create a Pull Request from your forked repository to github.com/SAP/node-rfc. In the subject of the pull request, briefly describe the bug fix or enhancement you're contributing. In the pull request description, please provide a link to the issue in the issue tracker.
+4.  Create a Pull Request from your forked repository to `github.com/SAP/node-rfc`. In the subject of the pull request, briefly describe the bug fix or enhancement you're contributing. In the pull request description, please provide a link to the issue in the issue tracker.
 5.  Follow the link posted by the CLA assistant to your pull request and accept it, as described above.
 6.  Wait for our code review and approval. We may ask you for additional commits, or make changes to your pull request ourselves.
     -   Note that the node-rfc developers also have their regular duties so, depending on the required effort for reviewing, testing, and clarification, this may take a while.

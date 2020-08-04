@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2014 SAP SE Srdjan Boskovic <srdjan.boskovic@sap.com>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 const _node_rfc = require("../../package.json").dependencies["node-rfc"];
 const _binding = require(_node_rfc ? "node-rfc" : "../../lib");
 const _abapSystem = require("./abapSystem");

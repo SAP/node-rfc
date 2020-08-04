@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2014 SAP SE Srdjan Boskovic <srdjan.boskovic@sap.com>
+#
+# SPDX-License-Identifier: CC0-1.0
+
 # cmake standard
 cmake_minimum_required(VERSION 3.18)
 cmake_policy(SET CMP0042 NEW)
