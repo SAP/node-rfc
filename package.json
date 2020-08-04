@@ -24,7 +24,7 @@
     "prepublishOnly": "npm ls --depth=0",
     "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
     "install": "prebuild-install --tag-prefix -r napi || cmake-js rebuild",
-    "addon": "prebuild --backend cmake-js -r napi --force --strip --verbose --tag-prefix",
+    "addon": "prebuild --backend cmake-js -r napi --force --strip --verbose",
     "ts": "tsc -p src/ts",
     "upload": "prebuild -r napi -u --verbose",
     "examples": "tsc -p examples/ts",
