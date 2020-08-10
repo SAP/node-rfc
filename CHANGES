@@ -7,7 +7,7 @@ Change log
 - CLA replaced with DCO, FSFE Reuse compliance 28a4ef5
 - README added: the installation and build from source work for NodeJS versions with N-API >= 6; fix #162 cda585c
 - NWRFC SDK Server API exposed dcc6b83
--
+- Fix error TS2741 closes #164 82be406
 
 
 2.0.3 (2020-07-27)
