@@ -94,8 +94,7 @@ else()
 endif()
 
 # source files and target library
-#add_library(${PROJECT_NAME} SHARED src/node_sapnwrfc.cc src/Client.cc src/rfcio.cc src/noderfcsdk.cc src/Throughput.cc)
-add_library(${PROJECT_NAME} SHARED src/Client.cc src/clientio.cc src/Pool.cc  src/Throughput.cc src/nwrfcsdk.cc)
+add_library(${PROJECT_NAME} SHARED src/Client.cc src/nwrfcsdk.cc src/Pool.cc src/Throughput.cc src/Server.cc src/addon.cc)
 
 # build path ignored on Windows, copy after build
 if ( MSVC )

@@ -3,6 +3,7 @@ declare const Promise: any;
 import { RfcClientBinding } from "./sapnwrfc-client";
 import { RfcPoolBinding } from "./sapnwrfc-pool";
 import { RfcThroughputBinding } from "./sapnwrfc-throughput";
+import { RfcServerBinding } from "./sapnwrfc-server";
 export declare const USAGE_URL = "https://github.com/SAP/node-rfc#usage";
 export interface NodeRfcBindingVersions {
     version: string;
@@ -22,6 +23,7 @@ export interface NWRfcBinding {
     Client: RfcClientBinding;
     Pool: RfcPoolBinding;
     Throughput: RfcThroughputBinding;
+    Server: RfcServerBinding;
     verbose(): this;
     bindingVersions: NodeRfcBindingVersions;
     environment: NodeRfcEnvironment;

@@ -19,7 +19,7 @@ export interface RfcPoolBinding {
     acquire(clients_requested: number, callback: Function): RfcClientBinding | Array<RfcClientBinding>;
     release(clients: RfcClientBinding | Array<RfcClientBinding>, callback: Function): void;
     ready(new_ready?: number, callback?: Function): void;
-    closeAll(callback?: Function): void | Promise<void>;
+    closeAll(callback?: Function): void;
     _config: {
         connectionParameters: object;
         clientOptions?: object;

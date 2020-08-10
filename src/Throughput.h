@@ -20,7 +20,10 @@ namespace node_rfc
 
         void init(Napi::Env env)
         {
-            node_rfc::__env = env;
+            if (node_rfc::__env == NULL)
+            {
+                node_rfc::__env = env;
+            }
         };
 
         Throughput(const Napi::CallbackInfo &info);

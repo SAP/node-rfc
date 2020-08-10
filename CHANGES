@@ -1,11 +1,12 @@
 Change log
 ==========
 
-3.0.0 (2020-xx-xx)
+2.1.0 (2020-08-10)
 ------------------
 
 - CLA replaced with DCO, FSFE Reuse compliance
-- README: added that the installation and build from source work for NodeJS versions whose N-API >= 6; fix #162
+- README added: the installation and build from source work for NodeJS versions with N-API >= 6; fix #162
+
 
 2.0.3 (2020-07-27)
 ------------------
