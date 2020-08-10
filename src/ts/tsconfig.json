@@ -11,7 +11,7 @@
     "stripInternal": true,
     "listFiles": true,
     "removeComments": true,
-    "lib": ["es2015"],
+    "lib": ["esnext"],
     "outDir": "../../lib",
     "noImplicitAny": false,
     "esModuleInterop": true,

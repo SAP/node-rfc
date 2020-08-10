@@ -7,16 +7,12 @@
 
 #include <tuple>
 #include <uv.h>
+#include "nwrfcsdk.h"
 namespace node_rfc
 {
     extern Napi::Env __env;
 
     class Pool;
-    void checkConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams);
-    void checkClientOptions(Napi::Object clientOptionsObject, ClientOptionsStruct *clientOptions);
-
-    typedef std::pair<Napi::Value, Napi::Value> ValuePair;
-    typedef std::pair<RFC_ERROR_INFO, std::string> ErrorPair;
 
     class Client : public Napi::ObjectWrap<Client>
     {
@@ -57,28 +53,21 @@ namespace node_rfc
         Napi::Value Ping(const Napi::CallbackInfo &info);
         Napi::Value Invoke(const Napi::CallbackInfo &info);
 
-        SAP_UC *fillString(std::string str);
-        Napi::Value fillFunctionParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, Napi::String name, Napi::Value value);
-        Napi::Value fillStructure(RFC_STRUCTURE_HANDLE structHandle, RFC_TYPE_DESC_HANDLE functionDescHandle, SAP_UC *cName, Napi::Value value);
-        Napi::Value fillVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Napi::Value value, RFC_TYPE_DESC_HANDLE functionDescHandle);
-
-        ValuePair wrapStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle);
-        ValuePair wrapVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc);
-        ValuePair wrapResult(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle);
-
         RfmErrorPath errorPath;
 
         void init(Napi::Env env)
         {
-            node_rfc::__env = env;
+            if (node_rfc::__env == NULL)
+            {
+                node_rfc::__env = env;
+            }
+
             id = Client::_id++;
 
             pool = NULL;
             connectionHandle = NULL;
 
             uv_sem_init(&invocationMutex, 1);
-
-            destructor_call = false;
         };
 
         static uint_t _id;
@@ -92,8 +81,6 @@ namespace node_rfc
         void LockMutex();
         void UnlockMutex();
         uv_sem_t invocationMutex;
-
-        bool destructor_call;
     };
 
 } // namespace node_rfc

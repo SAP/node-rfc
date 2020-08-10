@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2014 SAP SE Srdjan Boskovic <srdjan.boskovic@sap.com>
 //
 // SPDX-License-Identifier: Apache-2.0
+// language governing permissions and limitations under the License.
 
 #ifndef NodeRfc_SDK_H_
 #define NodeRfc_SDK_H_
@@ -15,9 +16,8 @@ namespace node_rfc
 {
     extern Napi::Env __env;
 
-    // Basic string operations
     Napi::Value wrapString(SAP_UC *uc, int length = -1);
-    SAP_UC *fillString(const Napi::String napistr);
+    Napi::Value wrapString(SAP_UC const *uc, int length = -1);
 
     //
     // Client connection parameters internal representation
@@ -196,12 +196,12 @@ namespace node_rfc
 
     typedef struct _RfmErrorPath
     {
-        SAP_UC functionName[ERROR_PATH_NAME_LEN];
-        SAP_UC parameterName[ERROR_PATH_NAME_LEN];
-        SAP_UC tableName[ERROR_PATH_NAME_LEN];
+        RFC_ABAP_NAME functionName;
+        RFC_ABAP_NAME parameterName;
+        RFC_ABAP_NAME tableName;
         int64_t table_line = -1;
-        SAP_UC structureName[ERROR_PATH_NAME_LEN];
-        SAP_UC fieldName[ERROR_PATH_NAME_LEN];
+        RFC_ABAP_NAME structureName;
+        RFC_ABAP_NAME fieldName;
 
         void clear()
         {
@@ -290,11 +290,30 @@ namespace node_rfc
 
     } RfmErrorPath;
 
+    typedef std::pair<Napi::Value, Napi::Value> ValuePair;
+    typedef std::pair<RFC_ERROR_INFO, std::string> ErrorPair;
+
+    // Write parameters (to SDK)
+    SAP_UC *setString(const Napi::String napistr);
+    SAP_UC *setString(std::string str);
+    Napi::Value setRfmParameter(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, Napi::String name, Napi::Value value, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
+    Napi::Value setStructure(RFC_STRUCTURE_HANDLE structHandle, RFC_TYPE_DESC_HANDLE functionDescHandle, SAP_UC *cName, Napi::Value value, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
+    Napi::Value setVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, Napi::Value value, RFC_TYPE_DESC_HANDLE functionDescHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
+
+    // Read parameters (from SDK)
+    ValuePair getStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
+    ValuePair getVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
+    ValuePair getRfmParameters(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
+
     // RFC ERRORS
     Napi::Object RfcLibError(RFC_ERROR_INFO *errorInfo);
     Napi::Object AbapError(RFC_ERROR_INFO *errorInfo);
     Napi::Value rfcSdkError(RFC_ERROR_INFO *errorInfo, RfmErrorPath *errorPath = NULL);
     Napi::Value nodeRfcError(std::string message, RfmErrorPath *errorPath = NULL);
+
+    // Connection parameters and client options parsers
+    void getConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams);
+    void checkClientOptions(Napi::Object clientOptionsObject, ClientOptionsStruct *clientOptions);
 
 } // namespace node_rfc
 #endif

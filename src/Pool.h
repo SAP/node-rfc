@@ -51,10 +51,12 @@ namespace node_rfc
 
         void init(Napi::Env env)
         {
-            node_rfc::__env = env;
-            id = Pool::_id++;
+            if (node_rfc::__env == NULL)
+            {
+                node_rfc::__env = env;
+            }
 
-            DEBUG("Pool init: ", id);
+            id = Pool::_id++;
 
             // Pool options
             ready_low = POOL_READY_LOW;
