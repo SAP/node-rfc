@@ -44,7 +44,7 @@ export interface RfcConnectionParameters {
     // client
     user?: string;
     passwd?: string;
-    client: string;
+    client?: string;
     lang?: string;
     mysapsso2?: string;
     getsso2?: string;
