@@ -1,6 +1,6 @@
 # node-rfc v2
 
-:exclamation: **[CHANGELOG with breaking changes](https://github.com/SAP/node-rfc/releases/tag/v2.0.0)**
+:exclamation: **[Breaking changes at 2.0](https://github.com/SAP/node-rfc/releases/tag/v2.0.0)**
 
 Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/), providing convenient ABAP business logic consumption from NodeJS.
 
@@ -15,6 +15,7 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 ## Key features
 
+-   **(new)** RFM call templates: **[rfmcall](https://www.npmjs.com/package/rfmcall)**
 -   Based on [N-API](https://github.com/nodejs/node-addon-api) standard
 -   Stateless and stateful connections (multiple function calls in the same ABAP session (same context))
 -   Async/await, promise and callback API
