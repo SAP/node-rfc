@@ -123,7 +123,7 @@ export type RfcArray = Array<RfcVariable>;
 export type RfcStructure = {
     [key: string]: RfcVariable | RfcStructure | RfcTable;
 };
-export type RfcTable = Array<RfcStructure>;
+export type RfcTable = Array<RfcStructure | RfcVariable>;
 export type RfcParameterValue =
     | RfcVariable
     | RfcArray

@@ -83,7 +83,7 @@ export declare type RfcArray = Array<RfcVariable>;
 export declare type RfcStructure = {
     [key: string]: RfcVariable | RfcStructure | RfcTable;
 };
-export declare type RfcTable = Array<RfcStructure>;
+export declare type RfcTable = Array<RfcStructure | RfcVariable>;
 export declare type RfcParameterValue = RfcVariable | RfcArray | RfcStructure | RfcTable;
 export declare type RfcObject = {
     [key: string]: RfcParameterValue;
