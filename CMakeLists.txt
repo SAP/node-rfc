@@ -78,6 +78,8 @@ if (NOT DEFINED ENV{NODE_HEADERS_INCLUDE_DIR})
         file(RENAME "${CMAKE_CURRENT_BINARY_DIR}/node-${NODE_VERSION}/include" "${NODE_HEADERS_INCLUDE_DIR}")
         file(REMOVE_RECURSE "${CMAKE_CURRENT_BINARY_DIR}/node-${NODE_VERSION}")
     endif()
+else ()
+    set(NODE_HEADERS_INCLUDE_DIR $ENV{NODE_HEADERS_INCLUDE_DIR})
 endif()
 
 # build and binding path
