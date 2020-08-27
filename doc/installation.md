@@ -117,7 +117,7 @@ Verify:
 
 ```shell
 @echo off
-findstr Patch %SAPNWRFC_HOME%\lib\sapnwrfc.dl
+findstr Patch %SAPNWRFC_HOME%\lib\sapnwrfc.dll
 ```
 
 **Linux**
