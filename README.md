@@ -59,6 +59,7 @@ Other platforms and frameworks:
 -   [Electron](doc/frameworks/electron-quick-start)
 -   [NW.js](doc/frameworks/nwjs-quick-start)
 -   [Node-RED](https://github.com/PaulWieland/node-red-contrib-saprfc)
+-   [Sails JS](https://github.com/dcolley/sailsjs-node-rfc)
 -   [CloudFoundry, AWS Lambdas, heroku ...](https://github.com/SAP/node-rfc/issues/121)
 
 ## Prerequisites
