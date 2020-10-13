@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { isUndefined } from "util";
 import {
     //Promise,
     noderfc_binding,
@@ -44,7 +43,7 @@ export interface RfcConnectionParameters {
     // client
     user?: string;
     passwd?: string;
-    client?: string;
+    client: string;
     lang?: string;
     mysapsso2?: string;
     getsso2?: string;
@@ -123,7 +122,7 @@ export type RfcArray = Array<RfcVariable>;
 export type RfcStructure = {
     [key: string]: RfcVariable | RfcStructure | RfcTable;
 };
-export type RfcTable = Array<RfcStructure | RfcVariable>;
+export type RfcTable = Array<RfcStructure>;
 export type RfcParameterValue =
     | RfcVariable
     | RfcArray
@@ -152,6 +151,7 @@ export interface RfcClientBinding {
     close(callback: Function): void;
     resetServerContext(callback: Function): void;
     ping(callback: Function): void;
+    setIniPath(pathName: string): void;
     invoke(
         rfmName: string,
         rfmParams: RfcObject,
@@ -168,10 +168,10 @@ export class Client {
         arg1: RfcClientBinding | RfcConnectionParameters,
         clientOptions?: RfcClientOptions
     ) {
-        if (isUndefined(arg1)) {
+        if (arg1 === undefined) {
             throw new TypeError(`Client constructor requires an argument`);
         }
-        if (!isUndefined(arg1["_pool_id"]) && arg1["_pool_id"] > 0) {
+        if (arg1["_pool_id"] !== undefined && arg1["_pool_id"] > 0) {
             this.__client = <RfcClientBinding>arg1;
         } else {
             this.__client = clientOptions
@@ -230,7 +230,7 @@ export class Client {
     }
 
     checkCallbackArg(method: string, callback?: Function) {
-        if (!isUndefined(callback) && typeof callback !== "function") {
+        if (callback !== undefined && typeof callback !== "function") {
             throw new TypeError(
                 `Client ${method}() argument, if provided, must be a Function. Received: ${typeof callback}`
             );
@@ -243,9 +243,25 @@ export class Client {
         return this.open(callback);
     }
 
+    setIniPath(pathName: string, callback?: Function): void | Promise<void> {
+        this.checkCallbackArg("setIniPath", callback);
+        const err = this.__client.setIniPath(pathName);
+        if (callback === undefined) {
+            return new Promise((resolve, reject) => {
+                if (err === undefined) {
+                    resolve();
+                } else {
+                    reject(err);
+                }
+            });
+        } else {
+            callback(err);
+        }
+    }
+
     open(callback?: Function): void | Promise<Client> {
         this.checkCallbackArg("open", callback);
-        if (!isUndefined(callback)) {
+        if (typeof callback === "function") {
             try {
                 this.__client.open(callback);
             } catch (ex) {
@@ -255,7 +271,7 @@ export class Client {
             return new Promise((resolve, reject) => {
                 try {
                     this.__client.open((err) => {
-                        if (!isUndefined(err)) {
+                        if (err !== undefined) {
                             reject(err);
                         } else {
                             resolve(this);
@@ -271,7 +287,7 @@ export class Client {
     ping(callback?: Function): void | Promise<boolean> {
         this.checkCallbackArg("ping", callback);
 
-        if (!isUndefined(callback)) {
+        if (typeof callback === "function") {
             try {
                 this.__client.ping(callback);
             } catch (ex) {
@@ -281,7 +297,7 @@ export class Client {
             return new Promise((resolve, reject) => {
                 try {
                     this.__client.ping((err: any, res: boolean) => {
-                        if (isUndefined(err)) {
+                        if (err === undefined) {
                             resolve(res);
                         } else {
                             reject(err);
@@ -297,7 +313,7 @@ export class Client {
     close(callback?: Function): void | Promise<void> {
         this.checkCallbackArg("close", callback);
 
-        if (!isUndefined(callback)) {
+        if (typeof callback === "function") {
             try {
                 this.__client.close(callback);
             } catch (ex) {
@@ -307,7 +323,7 @@ export class Client {
             return new Promise((resolve, reject) => {
                 try {
                     this.__client.close((err) => {
-                        if (isUndefined(err)) {
+                        if (err === undefined) {
                             resolve();
                         } else {
                             reject(err);
@@ -323,7 +339,7 @@ export class Client {
     resetServerContext(callback?: Function): void | Promise<void> {
         this.checkCallbackArg("resetServerContext", callback);
 
-        if (!isUndefined(callback)) {
+        if (typeof callback === "function") {
             try {
                 this.__client.resetServerContext(callback);
             } catch (ex) {
@@ -333,7 +349,7 @@ export class Client {
             return new Promise((resolve, reject) => {
                 try {
                     this.__client.resetServerContext((err) => {
-                        if (isUndefined(err)) {
+                        if (err === undefined) {
                             resolve();
                         } else {
                             reject(err);
@@ -349,7 +365,7 @@ export class Client {
     release(callback?: Function): void | Promise<void> {
         this.checkCallbackArg("release");
 
-        if (!isUndefined(callback)) {
+        if (typeof callback === "function") {
             try {
                 this.__client.release([this.__client], callback);
             } catch (ex) {
@@ -359,7 +375,7 @@ export class Client {
             return new Promise((resolve, reject) => {
                 try {
                     this.__client.release([this.__client], (err) => {
-                        if (isUndefined(err)) {
+                        if (err === undefined) {
                             resolve();
                         } else {
                             reject(err);
@@ -407,7 +423,7 @@ export class Client {
                 }
 
                 if (
-                    !isUndefined(callOptions) &&
+                    callOptions !== undefined &&
                     typeof callOptions !== "object"
                 ) {
                     reject(
@@ -420,7 +436,7 @@ export class Client {
                         rfmName,
                         rfmParams,
                         (err: any, res: RfcObject) => {
-                            if (!isUndefined(err)) {
+                            if (err !== undefined) {
                                 reject(err);
                             } else {
                                 resolve(res);

@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { isUndefined } from "util";
 import {
     //Promise,
     noderfc_binding,
@@ -49,7 +48,7 @@ export class Server {
         clientParams: RfcConnectionParameters,
         clientOptions?: RfcClientOptions
     ) {
-        if (!isUndefined(clientOptions)) {
+        if (clientOptions !== undefined) {
             this.__server = new noderfc_binding.Server(
                 serverParams,
                 clientParams,
@@ -64,10 +63,10 @@ export class Server {
     }
 
     start(callback?: Function): void | Promise<void> {
-        if (isUndefined(callback)) {
+        if (callback === undefined) {
             return new Promise((resolve, reject) => {
                 this.__server.start((err: any) => {
-                    if (isUndefined(err)) {
+                    if (err === undefined) {
                         resolve();
                     } else {
                         reject(err);
@@ -80,10 +79,10 @@ export class Server {
     }
 
     stop(callback?: Function): void | Promise<void> {
-        if (isUndefined(callback)) {
+        if (callback === undefined) {
             return new Promise((resolve, reject) => {
                 this.__server.stop((err: any) => {
-                    if (isUndefined(err)) {
+                    if (err === undefined) {
                         resolve();
                     } else {
                         reject(err);
@@ -100,13 +99,13 @@ export class Server {
         jsFunction: Function,
         callback?: Function
     ): void | Promise<void> {
-        if (isUndefined(callback)) {
+        if (callback === undefined) {
             return new Promise((resolve, reject) => {
                 this.__server.addFunction(
                     abapFunctionName,
                     jsFunction,
                     (err: any) => {
-                        if (isUndefined(err)) {
+                        if (err === undefined) {
                             resolve();
                         } else {
                             reject(err);
@@ -123,10 +122,10 @@ export class Server {
         abapFunctionName: string,
         callback?: Function
     ): void | Promise<void> {
-        if (isUndefined(callback)) {
+        if (callback === undefined) {
             return new Promise((resolve, reject) => {
                 this.__server.removeFunction(abapFunctionName, (err: any) => {
-                    if (isUndefined(err)) {
+                    if (err === undefined) {
                         resolve();
                     } else {
                         reject(err);
@@ -139,12 +138,12 @@ export class Server {
     }
 
     getFunctionDescription(rfmName: string, callback?: Function) {
-        if (isUndefined(callback)) {
+        if (callback === undefined) {
             return new Promise((resolve, reject) => {
                 this.__server.getFunctionDescription(
                     rfmName,
                     (err: any, rfmFunctionDescription: object) => {
-                        if (isUndefined(err)) {
+                        if (err === undefined) {
                             resolve(rfmFunctionDescription);
                         } else {
                             reject(err);

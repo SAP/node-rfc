@@ -1,7 +1,5 @@
 # node-rfc v2
 
-:exclamation: **[Breaking changes at 2.0](https://github.com/SAP/node-rfc/releases/tag/v2.0.0)**
-
 Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/), providing convenient ABAP business logic consumption from NodeJS.
 
 [![NPM](https://nodei.co/npm/node-rfc.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-rfc/)
@@ -52,7 +50,7 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 -   The _node-rfc_ connector can be [built from source](#setup) on all platforms supported both by [SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1)
 
--   Pre-built binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 10, Ubuntu 16.04 and macOS 10.15.
+-   Pre-built binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 10, macOS 10.15 and [Centos 7 based docker container](https://github.com/SAP/fundamental-tools/tree/master/docker)
 
 Other platforms and frameworks:
 
@@ -70,7 +68,7 @@ Other platforms and frameworks:
 
 -   Build toolchain requires [CMake](https://cmake.org/)
 
--   Build from source on macOS and older Linux systems, may require `uchar.h` file, attached to [SAP OSS Note 2573953](https://launchpad.support.sap.com/#/notes/2573953), to be copied to SAP NW RFC SDK include directory: [documentation](http://sap.github/node-rfc/install.html#macos)
+-   Build from source on older Linux systems, may require `uchar.h` file, attached to [SAP OSS Note 2573953](https://launchpad.support.sap.com/#/notes/2573953), to be copied to SAP NW RFC SDK include directory: [documentation](http://sap.github/node-rfc/install.html#macos)
 
 ### Windows
 
@@ -79,8 +77,6 @@ Other platforms and frameworks:
 -   Build toolchain requires [Microsoft C++ Build Tools](https://aka.ms/buildtools), the latest version reccomended
 
 ### macOS
-
--   :exclamation: Stay on SAP NWRFC SDK <= 7.55 until [#143](https://github.com/SAP/node-rfc/issues/143) closed
 
 -   Disable macOS firewall stealth mode ([Can't ping a machine - why?](https://discussions.apple.com/thread/2554739)):
 
