@@ -1,11 +1,11 @@
+/// <reference types="node" />
+
 // SPDX-FileCopyrightText: 2014 SAP SE Srdjan Boskovic <srdjan.boskovic@sap.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/// <reference types="node" />
 import os from "os";
 const Promise = require("bluebird");
-import { isUndefined } from "util";
 import { RfcClientBinding } from "./sapnwrfc-client";
 import { RfcPoolBinding } from "./sapnwrfc-pool";
 import { RfcThroughputBinding } from "./sapnwrfc-throughput";
@@ -50,7 +50,7 @@ if (E.platform.name === "win32") {
     E.env["nwrfcsdk_lib_on_path"] = false;
     if (E.env.SAPNWRFC_HOME.length > 0) {
         const P = process.env.PATH;
-        if (!isUndefined(P)) {
+        if (P !== undefined) {
             E.env["nwrfcsdk_lib_on_path"] =
                 P.toUpperCase().indexOf(
                     `${E.env.SAPNWRFC_HOME}\\lib;`.toUpperCase()

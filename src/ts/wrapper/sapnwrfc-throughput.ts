@@ -8,7 +8,6 @@ import {
     NodeRfcEnvironment,
 } from "./noderfc-bindings";
 import { Client } from "./sapnwrfc-client";
-import { isUndefined, isNumber } from "util";
 export interface RfcThroughputBinding {
     new (): RfcThroughputBinding;
     (): RfcThroughputBinding;
@@ -60,7 +59,7 @@ export class Throughput {
                     "Throughput can't be set on closed client: " + c.id
                 );
             const e = this.__throughput.setOnConnection(c.connectionHandle);
-            if (isUndefined(e)) {
+            if (e === undefined) {
                 this.__clients.add(c);
             } else throw new Error(JSON.stringify(e));
         });
@@ -79,7 +78,7 @@ export class Throughput {
                 const e = this.__throughput.removeFromConnection(
                     c.connectionHandle
                 );
-                if (!isUndefined(e)) throw new Error(JSON.stringify(e));
+                if (e !== undefined) throw new Error(JSON.stringify(e));
             }
         });
     }
@@ -89,7 +88,7 @@ export class Throughput {
         const e = noderfc_binding.Throughput.getFromConnection(
             client.connectionHandle
         );
-        if (isNumber(e)) {
+        if (typeof e === "number") {
             return Throughput._handles.get(e);
         } else throw new Error(JSON.stringify(e));
     }

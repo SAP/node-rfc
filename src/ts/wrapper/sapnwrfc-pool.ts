@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { isUndefined } from "util";
 import {
     Promise,
     noderfc_binding,
@@ -81,7 +80,7 @@ export class Pool {
         let callback: Function | undefined;
         if (typeof arg1 === "number") {
             clients_requested = arg1;
-            if (!isUndefined(arg2)) {
+            if (arg2 !== undefined) {
                 if (typeof arg2 !== "function") {
                     throw new TypeError(
                         `Pool acquire() argument must be a function, received: ${typeof arg2}`
@@ -93,7 +92,7 @@ export class Pool {
         } else if (typeof arg1 === "function") {
             callback = arg1;
 
-            if (!isUndefined(arg2)) {
+            if (arg2 !== undefined) {
                 if (typeof arg2 !== "number") {
                     throw new TypeError(
                         `Pool acquire() argument must be a number, received: ${typeof arg2}`
@@ -102,13 +101,13 @@ export class Pool {
                     clients_requested = arg2;
                 }
             }
-        } else if (!isUndefined(arg1)) {
+        } else if (arg1 !== undefined) {
             throw new TypeError(
                 `Pool acquire() argument must ne a number or function, received: ${typeof arg1}`
             );
         }
 
-        if (isUndefined(callback)) {
+        if (callback === undefined) {
             return new Promise(
                 (
                     resolve: (arg0: Client | Client[]) => void,
@@ -123,7 +122,7 @@ export class Pool {
                                     | RfcClientBinding
                                     | Array<RfcClientBinding>
                             ) => {
-                                if (!isUndefined(err)) {
+                                if (err !== undefined) {
                                     reject(err);
                                 }
 
@@ -153,7 +152,7 @@ export class Pool {
                     err: any,
                     clientBindings: RfcClientBinding | Array<RfcClientBinding>
                 ) => {
-                    if (!isUndefined(err)) {
+                    if (err !== undefined) {
                         (callback as Function)(err);
                     }
 
@@ -178,7 +177,7 @@ export class Pool {
         tsClient: Client | Array<Client>,
         callback?: Function
     ): void | Promise<any> {
-        if (!isUndefined(callback) && typeof callback !== "function") {
+        if (callback !== undefined && typeof callback !== "function") {
             throw new TypeError(
                 `Pool release() 2nd argument, if provided, must be a function, received: ${typeof callback}`
             );
@@ -197,11 +196,11 @@ export class Pool {
             );
         }
 
-        if (isUndefined(callback)) {
+        if (callback === undefined) {
             return new Promise((resolve, reject) => {
                 try {
                     this.__pool.release(client_bindings, (err: any) => {
-                        if (isUndefined(err)) {
+                        if (err === undefined) {
                             resolve();
                         } else {
                             reject(err);
@@ -221,7 +220,7 @@ export class Pool {
     }
 
     closeAll(callback?: Function): void | Promise<void> {
-        if (isUndefined(callback)) {
+        if (callback === undefined) {
             return new Promise((resolve) => {
                 this.__pool.closeAll(() => {
                     resolve();
@@ -240,7 +239,7 @@ export class Pool {
         let callback: Function | undefined;
         if (typeof arg1 === "number") {
             new_ready = arg1;
-            if (!isUndefined(arg2)) {
+            if (arg2 !== undefined) {
                 if (typeof arg2 !== "function") {
                     throw new TypeError(
                         `Pool ready() argument must be a function, received: ${typeof arg2}`
@@ -251,7 +250,7 @@ export class Pool {
             }
         } else if (typeof arg1 === "function") {
             callback = arg1;
-            if (!isUndefined(arg2)) {
+            if (arg2 !== undefined) {
                 if (typeof arg2 !== "number") {
                     throw new TypeError(
                         `Pool ready() argument must be a number, received: ${typeof arg2}`
@@ -260,16 +259,16 @@ export class Pool {
                     new_ready = arg2;
                 }
             }
-        } else if (!isUndefined(arg1)) {
+        } else if (arg1 !== undefined) {
             throw new TypeError(
                 `Pool ready() argument must ne a number or function, received: ${typeof arg1}`
             );
         }
 
-        if (isUndefined(callback)) {
+        if (callback === undefined) {
             return new Promise((resolve, reject) => {
                 this.__pool.ready(new_ready, (err: any) => {
-                    if (isUndefined(err)) {
+                    if (err == undefined) {
                         resolve();
                     } else {
                         reject(err);

@@ -7,6 +7,7 @@
     <a name="client-toc"></a>
 -   **[Client](#client)**
 
+    -   [Using `sapnwrfc.ini` file](api.md/#setIniPath)
     -   [Authentication](authentication.md)
         -   [Plain with user credentials](authentication.md/#plain-with-user-credentials)
         -   [SNC with user PSE](authentication.md/#snc-with-user-pse)

@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2014 SAP SE Srdjan Boskovic <srdjan.boskovic@sap.com>
 //
 // SPDX-License-Identifier: Apache-2.0
-// language governing permissions and limitations under the License.
 
 #ifndef NodeRfc_SDK_H_
 #define NodeRfc_SDK_H_
@@ -17,7 +16,7 @@ namespace node_rfc
     extern Napi::Env __env;
 
     Napi::Value wrapString(SAP_UC *uc, int length = -1);
-    Napi::Value wrapString(SAP_UC const *uc, int length = -1);
+    //Napi::Value wrapString(SAP_UC const *uc, int length = -1);
 
     //
     // Client connection parameters internal representation

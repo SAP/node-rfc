@@ -52,6 +52,7 @@ namespace node_rfc
                                InstanceAccessor("_connectionHandle", &Client::ConnectionHandleGetter, nullptr),
                                InstanceAccessor("_pool_id", &Client::PoolIdGetter, nullptr),
                                InstanceAccessor("_config", &Client::ConfigGetter, nullptr),
+                               InstanceMethod("setIniPath", &Client::SetIniPath),
                                InstanceMethod("connectionInfo", &Client::ConnectionInfo),
                                InstanceMethod("open", &Client::Open),
                                InstanceMethod("close", &Client::Close),
@@ -117,6 +118,30 @@ namespace node_rfc
             return Number::New(info.Env(), 0);
         }
         return Napi::Number::New(info.Env(), pool->id);
+    }
+
+    Napi::Value Client::SetIniPath(const Napi::CallbackInfo &info)
+    {
+        if (!info[0].IsString())
+        {
+            std::ostringstream errmsg;
+            errmsg << "Client setIniPath() requires a full sapnwrfc.ini path, received ";
+            errmsg << info[0].As<Napi::String>().Utf8Value() << "; see" << USAGE_URL;
+            Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
+        }
+
+        RFC_ERROR_INFO errorInfo;
+        SAP_UC *pathName = setString(info[0].As<Napi::String>());
+        RFC_RC rc = RfcSetIniPath(pathName, &errorInfo);
+        free(pathName);
+
+        if (rc != RFC_OK || errorInfo.code != RFC_OK)
+        {
+            return rfcSdkError(&errorInfo);
+        }
+
+        return info.Env().Undefined();
     }
 
     Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)

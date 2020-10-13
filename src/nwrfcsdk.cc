@@ -394,7 +394,7 @@ namespace node_rfc
         utf8[0] = '\0';
         uint_t resultLen = 0;
         RfcSAPUCToUTF8(uc, length, (RFC_BYTE *)utf8, &utf8Size, &resultLen, &errorInfo);
-
+        //EDEBUG("len: ", length, " utf8Size: ", utf8Size, " resultLen: ", resultLen, " ", errorInfo.code);
         if (errorInfo.code != RFC_OK)
         {
             // not enough, try with 5
@@ -411,7 +411,7 @@ namespace node_rfc
             }
         }
 
-        int i = strlen(utf8) - 1;
+        int i = resultLen - 1;
         while (i >= 0 && isspace(utf8[i]))
         {
             i--;
@@ -423,6 +423,7 @@ namespace node_rfc
         return scope.Escape(resultValue);
     }
 
+    /*
     Napi::Value wrapString(SAP_UC const *uc, int length)
     {
         RFC_ERROR_INFO errorInfo;
@@ -471,6 +472,7 @@ namespace node_rfc
         free((char *)utf8);
         return scope.Escape(resultValue);
     }
+    */
 
     ValuePair getRfmParameters(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options)
     {
@@ -531,6 +533,7 @@ namespace node_rfc
             {
                 return result;
             }
+            //EDEBUG("F: ", wrapString(fieldDesc.name).As<Napi::String>().Utf8Value());
             (resultObj).Set(wrapString(fieldDesc.name), result.second);
         }
 

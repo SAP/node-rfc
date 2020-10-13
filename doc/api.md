@@ -6,6 +6,10 @@
     -   [Properties](#pool-properties)
     -   [Constructor](#pool-constructor)
     -   [API](#pool-api)
+-   **[Server](#server)**
+    -   [Properties](#server-properties)
+    -   [Constructor](#server-constructor)
+    -   [API](#server-api)
 -   **[Throughput](#throughput)**
     -   [Properties](#throughput-properties)
     -   [Constructor](#throughput-constructor)
@@ -71,6 +75,18 @@ The managed client is instantiated using the Connection Pool [`acquire()`](#acqu
 ### Client API
 
 Client API methods accept optional callback argument, for callback invocation pattern. When callback not provided, the Promise is returned.
+
+#### setIniPath
+
+Sets the directory in which to search for the `sapnwrfc.ini` file.
+
+By default the sapnwrfc library searches for the `sapnwrfc.ini` in the current working directory of the process. If you want to keep it in a different directory, use this function to tell the sapnwrfc library about the new path.
+
+After you have changed the directory, the NW RFC lib automatically loads the contents of the new `sapnwrfc.ini` file from that directory.
+
+```ts
+setIniPath(pathName: string, callback?: Function): void | Promise<void>
+```
 
 #### open
 
@@ -255,11 +271,68 @@ All open connections are anyway closed when Pool destructor called.
 closeAll(callback?: Function) // close all ready and leased connections
 ```
 
+## Server (experimental!)
+
+Usage: [usage/server](usage.md#server)
+
+<a name="server-properties"></a>
+
+### Properites
+
+<a name="server-constructor"></a>
+
+### Constructor
+
+```ts
+export interface RfcServerBinding {
+    new (
+        serverParams: RfcConnectionParameters,
+        clientParams: RfcConnectionParameters,
+        clientOptions?: RfcClientOptions
+    ): RfcServerBinding;
+}
+```
+
+<a name="server-api"></a>
+
+### Server API
+
+#### start
+
+```ts
+start(callback?: Function): void | Promise<void>
+```
+
+#### stop
+
+```ts
+stop(callback?: Function): void | Promise<void>
+```
+
+### addFunction
+
+```ts
+addFunction(
+    abapfunctionName: string,
+    jsFunction: Function,
+    callback?: Function
+): void | Promise<void>
+```
+
+### removeFunction
+
+```ts
+removeFunction(
+    abapFunctionName: string,
+    callback?: Function
+): void | Promise<void>
+```
+
 ## Throughput
 
 Usage: [usage/throughput](usage.md#throughput)
 
-<a name="throughput-properties"></a
+<a name="throughput-properties"></a>
 
 ### Properties
 
@@ -288,6 +361,8 @@ export interface RfcThroughputStatus {
 ```ts
 constructor(client?: Client | Array<Client>)
 ```
+
+<a name="throughput-api"></a
 
 ### Throughput API
 

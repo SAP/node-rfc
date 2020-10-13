@@ -1,11 +1,16 @@
 Change log
 ==========
 
-2.1.1 (2020-xx-xx)
+2.2.0 (2020-10-13)
 ------------------
 
+- Client setIniPath method added, exposing NWRFC SDK method RfcSetIniPath:
+  https://github.com/SAP/node-rfc/blob/master/doc/api.md#setIniPath
+- Linux binary built on NodeJS toolchain based on Centos:
+  https://github.com/SAP/fundamental-tools/blob/master/docker/centos.Dockerfile
 - RFM table typing extended with Array of variables 1becb1d
-- RFM call template published, added to README
+- RFM call templates: https://www.npmjs.com/package/rfmcall
+- Server bindings (experimental)
 
 2.1.0 (2020-08-10)
 ------------------
