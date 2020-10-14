@@ -1,4 +1,4 @@
-# node-rfc v2
+# node-rfc
 
 Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/), providing convenient ABAP business logic consumption from NodeJS.
 
@@ -68,7 +68,7 @@ Other platforms and frameworks:
 
 -   Build toolchain requires [CMake](https://cmake.org/)
 
--   Build from source on older Linux systems, may require `uchar.h` file, attached to [SAP OSS Note 2573953](https://launchpad.support.sap.com/#/notes/2573953), to be copied to SAP NW RFC SDK include directory: [documentation](http://sap.github/node-rfc/install.html#macos)
+-   Build from source on older Linux systems, may require `uchar.h` file, attached to [SAP OSS Note 2573953](https://launchpad.support.sap.com/#/notes/2573953), to be copied to SAP NW RFC SDK include directory.
 
 ### Windows
 
@@ -83,6 +83,10 @@ Other platforms and frameworks:
 ```shell
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 ```
+
+-   Remote paths must be set in SAP NWRFC SDK for macOS: [documentation](http://sap.github.io/PyRFC/install.html#macos)
+
+-   When the node-rfc is started for the first time, the popups come-up for each NWRFC SDK library, to confirm it should be opened. If SDK is installed in admin folder, the node-rfc app shall be that first time started with admin privileges, eg. `sudo -E`
 
 ## Installation
 
