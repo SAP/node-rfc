@@ -28,7 +28,7 @@
     "ts": "tsc -p src/ts",
     "upload": "prebuild -r napi -u --verbose",
     "examples": "tsc -p examples/ts",
-    "test": "jest test"
+    "test": "reuse lint && jest test"
   },
   "binary": {
     "napi_versions": [
