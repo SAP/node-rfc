@@ -32,7 +32,7 @@
   },
   "binary": {
     "napi_versions": [
-      6
+      7
     ],
     "module_name": "sapnwrfc",
     "module_path": "./lib/binding/",
@@ -61,7 +61,7 @@
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "devDependencies": {
-    "@babel/core": "^7.11.1",
+    "@babel/core": "^7.12.1",
     "@types/bluebird": "^3.5.32",
     "@types/node": "^14.11.8",
     "@typescript-eslint/eslint-plugin": "^3.8.0",
