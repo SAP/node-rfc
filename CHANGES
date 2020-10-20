@@ -5,6 +5,7 @@ Change log
 ------------------
 
 - NAPI v7
+- The client parameter set to optional in RfcConnectionParameters interface
 
 2.2.0 (2020-10-13)
 ------------------
