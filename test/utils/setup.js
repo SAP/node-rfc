@@ -13,6 +13,10 @@ const _Promise = _binding.Promise;
 const _UNICODETEST = "ทดสอบสร้างลูกค้าจากภายนอกครั้งที่".repeat(7);
 const os = require("os");
 
+const _INI_PATH = "/Users/d037732/src/NG-APPS/node-rfc/test";
+
+_binding.setIniFileDirectory(_INI_PATH);
+
 const _environment = {
     platform: {
         name: os.platform(),
@@ -53,4 +57,5 @@ module.exports = {
     CONNECTIONS: _CONNECTIONS,
     direct_client: _direct_client,
     poolConfiguration: _poolConfiguration,
+    INI_PATH: _INI_PATH,
 };

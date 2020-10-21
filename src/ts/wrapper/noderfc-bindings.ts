@@ -27,9 +27,10 @@ export interface NWRfcBinding {
     Pool: RfcPoolBinding;
     Throughput: RfcThroughputBinding;
     Server: RfcServerBinding;
-    verbose(): this;
     bindingVersions: NodeRfcBindingVersions;
     environment: NodeRfcEnvironment;
+    setIniFileDirectory(iniFileDirectory: string): any | undefined;
+    verbose(): this;
 }
 
 // environment w/o SAP NWRFC SDK

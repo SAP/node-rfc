@@ -22,7 +22,7 @@ export interface RfcConnectionParameters {
     trace?: EnumTrace;
     user?: string;
     passwd?: string;
-    client: string;
+    client?: string;
     lang?: string;
     mysapsso2?: string;
     getsso2?: string;
@@ -104,7 +104,6 @@ export interface RfcClientBinding {
     close(callback: Function): void;
     resetServerContext(callback: Function): void;
     ping(callback: Function): void;
-    setIniPath(pathName: string): void;
     invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: object): void;
     release(oneClientBinding: [RfcClientBinding], callback: Function): void;
 }
@@ -121,9 +120,8 @@ export declare class Client {
     get config(): Object;
     get _id(): string;
     get connectionInfo(): RfcConnectionInfo;
-    checkCallbackArg(method: string, callback?: Function): void;
+    static checkCallbackArg(method: string, callback?: Function): void;
     connect(callback?: Function): void | Promise<Client>;
-    setIniPath(pathName: string, callback?: Function): void | Promise<void>;
     open(callback?: Function): void | Promise<Client>;
     ping(callback?: Function): void | Promise<boolean>;
     close(callback?: Function): void | Promise<void>;
