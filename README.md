@@ -32,13 +32,14 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 -   **[Getting started](#getting-started)**
 -   **[Usage](doc/usage.md)**
     -   **[Authentication](doc/authentication.md)**
-    -   **[Client](doc/usage.md/#client-toc)**
-    -   **[Connection Pool](doc/usage.md/#connection-pool)**
-    -   **[Throughput](doc/usage.md/#throughput)**
+    -   **[sapnwrfc.ini](doc/usage.md#addon)**
+    -   **[Client](doc/usage.md#client-toc)**
+    -   **[Connection Pool](doc/usage.md#connection-pool)**
+    -   **[Throughput](doc/usage.md#throughput)**
 -   **[API](doc/api.md)**
-    -   **[Connection Pool](doc/api.md/#connection-pool)**
-    -   **[Client](doc/api.md/#client)**
-    -   **[Throughput](doc/api.md/#throughput)**
+    -   **[Connection Pool](doc/api.md#connection-pool)**
+    -   **[Client](doc/api.md#client)**
+    -   **[Throughput](doc/api.md#throughput)**
 -   **[Troubleshooting](doc/troubleshooting.md)**
 -   **[More resource and info about SAP Connectors and RFC communication](#resources)**
 -   **[Code of Conduct](CODE_OF_CONDUCT.md)**
