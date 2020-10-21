@@ -6,7 +6,7 @@ Change log
 
 - NAPI v7
 - The client parameter set to optional in RfcConnectionParameters interface 8e7bb8f
-- setIniFileDirectory method added at addon level, to set the sapnwrfc.ini file directory
+- setIniFileDirectory method added at addon level, to set the sapnwrfc.ini file directory 85ec105
 
 2.2.0 (2020-10-13)
 ------------------
