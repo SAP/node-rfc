@@ -9,3 +9,14 @@ export * from "./wrapper/sapnwrfc-client";
 export * from "./wrapper/sapnwrfc-pool";
 export * from "./wrapper/sapnwrfc-throughput";
 export * from "./wrapper/sapnwrfc-server";
+
+import { noderfc_binding } from "./wrapper/noderfc-bindings";
+
+export function setIniFileDirectory(iniFileDirectory: string) {
+    const path = require("path");
+    const fullPath = path.join(iniFileDirectory, "sapnwrfc.ini");
+    if (!require("fs").existsSync(fullPath)) {
+        throw new Error(`sapnwrfc.ini not found in: ${iniFileDirectory}`);
+    }
+    noderfc_binding.setIniFileDirectory(iniFileDirectory);
+}

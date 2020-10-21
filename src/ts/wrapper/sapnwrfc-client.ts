@@ -151,7 +151,6 @@ export interface RfcClientBinding {
     close(callback: Function): void;
     resetServerContext(callback: Function): void;
     ping(callback: Function): void;
-    setIniPath(pathName: string): void;
     invoke(
         rfmName: string,
         rfmParams: RfcObject,
@@ -229,7 +228,7 @@ export class Client {
         return this.__client.connectionInfo();
     }
 
-    checkCallbackArg(method: string, callback?: Function) {
+    static checkCallbackArg(method: string, callback?: Function) {
         if (callback !== undefined && typeof callback !== "function") {
             throw new TypeError(
                 `Client ${method}() argument, if provided, must be a Function. Received: ${typeof callback}`
@@ -239,28 +238,12 @@ export class Client {
 
     // for backwards compatibility only, to be deprecated
     connect(callback?: Function): void | Promise<Client> {
-        this.checkCallbackArg("connect", callback);
+        Client.checkCallbackArg("connect", callback);
         return this.open(callback);
     }
 
-    setIniPath(pathName: string, callback?: Function): void | Promise<void> {
-        this.checkCallbackArg("setIniPath", callback);
-        const err = this.__client.setIniPath(pathName);
-        if (callback === undefined) {
-            return new Promise((resolve, reject) => {
-                if (err === undefined) {
-                    resolve();
-                } else {
-                    reject(err);
-                }
-            });
-        } else {
-            callback(err);
-        }
-    }
-
     open(callback?: Function): void | Promise<Client> {
-        this.checkCallbackArg("open", callback);
+        Client.checkCallbackArg("open", callback);
         if (typeof callback === "function") {
             try {
                 this.__client.open(callback);
@@ -285,7 +268,7 @@ export class Client {
     }
 
     ping(callback?: Function): void | Promise<boolean> {
-        this.checkCallbackArg("ping", callback);
+        Client.checkCallbackArg("ping", callback);
 
         if (typeof callback === "function") {
             try {
@@ -311,7 +294,7 @@ export class Client {
     }
 
     close(callback?: Function): void | Promise<void> {
-        this.checkCallbackArg("close", callback);
+        Client.checkCallbackArg("close", callback);
 
         if (typeof callback === "function") {
             try {
@@ -337,7 +320,7 @@ export class Client {
     }
 
     resetServerContext(callback?: Function): void | Promise<void> {
-        this.checkCallbackArg("resetServerContext", callback);
+        Client.checkCallbackArg("resetServerContext", callback);
 
         if (typeof callback === "function") {
             try {
@@ -363,7 +346,7 @@ export class Client {
     }
 
     release(callback?: Function): void | Promise<void> {
-        this.checkCallbackArg("release");
+        Client.checkCallbackArg("release");
 
         if (typeof callback === "function") {
             try {

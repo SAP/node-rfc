@@ -4,7 +4,12 @@
     -   [Date/Time types](#datetime-types)
     -   [UTCLONG](#utclong)
 -   **[ABAP Function Module](#abap-function-module)**
+-   **[Addon](#addon)**
+
+    -   [setIniFileDirectory](#setinifiledirectory)
+
     <a name="client-toc"></a>
+
 -   **[Client](#client)**
 
     -   [Using `sapnwrfc.ini` file](api.md/#setIniPath)
@@ -115,6 +120,19 @@ FUNCTION STFC_STRUCTURE.
 Using ABAP transaction SE37 in ABAP backend system, you can enter the input data, run the function module and inspect results.
 
 To consume this function module from NodeJS, first the node-rfc client connection shall be instantiated, using ABAP backend system connection parameters.
+
+## Addon
+
+API: [api/addon](api.md#addon)
+
+### setIniFileDirectory
+
+Sets the directory in which the NWRFC SDK shall search for the `sapnwrfc.ini` file, exposing the `RfcSetIniPath` NWRFC SDK method. The default is the current working directory of the process. After the directory is set, the NW RFC lib automatically loads the contents of the new `sapnwrfc.ini` file from that directory. The exception is thrown if `sapnwrfc.ini` not found in the new directory.
+
+```ts
+const noderfc = require("node-rfc");
+noderfc.setIniFileDirectory("/some/folder");
+```
 
 ## Client
 

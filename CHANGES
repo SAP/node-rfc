@@ -1,11 +1,12 @@
 Change log
 ==========
 
-2.2.1 (XXXX-XX-XX)
+2.3.0 (XXXX-XX-XX)
 ------------------
 
 - NAPI v7
-- The client parameter set to optional in RfcConnectionParameters interface
+- The client parameter set to optional in RfcConnectionParameters interface 8e7bb8f
+- setIniFileDirectory method added at addon level, to set the sapnwrfc.ini file directory
 
 2.2.0 (2020-10-13)
 ------------------

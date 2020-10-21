@@ -1,3 +1,5 @@
+-   **[addon](#addon)**
+    -   [setIniFileDirectory](#setinifiledirectory)
 -   **[Client](#client)**
     -   [Properties](#client-properties)
     -   [Constructor](#client-constructor)
@@ -14,6 +16,16 @@
     -   [Properties](#throughput-properties)
     -   [Constructor](#throughput-constructor)
     -   [API](#throughput-api)
+
+## Addon
+
+### setIniFileDirectory
+
+Usage: [usage/addon](usage.md#addon)
+
+```ts
+setIniFileDirectory(iniFileDirectory: string)
+```
 
 ## Client
 
