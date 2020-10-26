@@ -14,7 +14,6 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 ## Key features
 
--   **(new)** RFM call templates: **[rfmcall](https://www.npmjs.com/package/rfmcall)**
 -   Based on [N-API](https://github.com/nodejs/node-addon-api) standard
 -   Stateless and stateful connections (multiple function calls in the same ABAP session (same context))
 -   Async/await, promise and callback API
@@ -56,11 +55,11 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 Other platforms and frameworks:
 
+-   SAP Cloud Platform, AWS Lambdas, heroku ...: Create [SAP feature request](https://github.com/SAP/node-rfc/issues/79#issuecomment-716492557)
 -   [Electron](doc/frameworks/electron-quick-start)
 -   [NW.js](doc/frameworks/nwjs-quick-start)
 -   [Node-RED](https://github.com/PaulWieland/node-red-contrib-saprfc)
 -   [Sails JS](https://github.com/dcolley/sailsjs-node-rfc)
--   [CloudFoundry, AWS Lambdas, heroku ...](https://github.com/SAP/node-rfc/issues/121)
 
 ## Prerequisites
 
