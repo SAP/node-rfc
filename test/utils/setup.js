@@ -13,7 +13,7 @@ const _Promise = _binding.Promise;
 const _UNICODETEST = "ทดสอบสร้างลูกค้าจากภายนอกครั้งที่".repeat(7);
 const os = require("os");
 
-const _INI_PATH = "/Users/d037732/src/NG-APPS/node-rfc/test";
+const _INI_PATH = require("path").join(process.cwd(), "test");
 
 _binding.setIniFileDirectory(_INI_PATH);
 
