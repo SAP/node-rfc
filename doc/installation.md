@@ -161,6 +161,24 @@ $ node -p "require('node-rfc')" # should end w/o errors
 
 ## Verify node-rfc environment
 
+You may use the `npx envinfo`:
+
+```shell
+$ npx envinfo --system --binaries
+npx: installed 1 in 1.399s
+
+  System:
+    OS: macOS 10.15.7
+    CPU: (8) x64 Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz
+    Memory: 1.27 GB / 16.00 GB
+    Shell: 5.8 - /usr/local/bin/zsh
+  Binaries:
+    Node: 14.13.1 - ~/.NodeJS/nvm/versions/node/v14.13.1/bin/node
+    npm: 6.14.8 - ~/.NodeJS/nvm/versions/node/v14.13.1/bin/npm
+```
+
+and/or noderfc `environment` object:
+
 ```shell
 $ node -p "require('node-rfc')".environment
 {
