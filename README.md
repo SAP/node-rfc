@@ -8,7 +8,7 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 [![N-API v6 Badge](https://github.com/nodejs/abi-stable-node/raw/doc/assets/N-API%20v6%20Badge.svg?sanitize=true)](https://github.com/nodejs/abi-stable-node/)
 [![release](https://img.shields.io/npm/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![downloads](https://img.shields.io/github/downloads/sap/node-rfc/total.svg)](https://www.npmjs.com/package/node-rfc)
-[![dpw](https://img.shields.io/npm/dm/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
+[![dpm](https://img.shields.io/npm/dm/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/node-rfc)](https://api.reuse.software/info/github.com/SAP/node-rfc)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4350/badge)](https://bestpractices.coreinfrastructure.org/projects/4350)
 
@@ -115,53 +115,55 @@ npm run ts    # rebuild typescript wrapper
 
 More info: **[Usage](doc/usage.md)** and **[API](doc/api.md)**
 
-In order to call remote enabled ABAP function module, we need to create a `node-rfc` client instance with valid logon credentials, connect to SAP ABAP NetWeaver system and then invoke a remote enabled ABAP function module from nodejs. The client instance can be used for one or more subsequent RFC calls, see unit tests for more examples. Callback API example below shows basic principles.
+In order to call remote enabled ABAP function module, we need to create a `node-rfc` client instance with valid logon credentials, connect to SAP ABAP NetWeaver system and then invoke a remote enabled ABAP function module from nodejs. Async example below shows basic principles and you can check the documentationand unit tests for more examles.
+
+Add your ABAP system destintion, to **sapnwrfc.ini** file in your working directory:
+
+```ini
+DEST=MME
+USER=demo
+PASSWD=welcome
+ASHOST=myhost
+SYSNR=00
+CLIENT=620
+LANG=EN
+```
 
 ```javascript
-"use strict";
+const noderfc = require("node-rfc");
 
-const Client = require("node-rfc").Client;
+const pool = new noderfc.Pool({ connectionParameters: { dest: "MME" } });
 
-const abapSystem = {
-    user: "demo",
-    passwd: "welcome",
-    ashost: "10.68.104.164",
-    sysnr: "00",
-    client: "620",
-    lang: "EN",
-};
+(async () => {
+    try {
+        // get a client connection instance
+        const client = await pool.acquire();
 
-// create new client
-const client = new Client(abapSystem);
+        // invoke ABAP function module, passing structure and table parameters
 
-// open connection
-client.connect(function (err) {
-    // check for login/connection errors
-    if (err) return console.error("could not connect to server", err);
+        // ABAP structure
+        const structure = {
+            RFCINT4: 345,
+            RFCFLOAT: 1.23456789,
+            RFCCHAR4: "ABCD",
+            RFCDATE: "20180625", // ABAP date format
+            // or RFCDATE: new Date('2018-06-25'), // as JavaScript Date object, with clientOption "date"
+        };
+        // ABAP table
+        let table = [structure];
 
-    // invoke ABAP function module, passing structure and table parameters
+        const result = await client.call("STFC_STRUCTURE", {
+            IMPORTSTRUCT: structure,
+            RFCTABLE: table,
+        });
 
-    // ABAP structure
-    const structure = {
-        RFCINT4: 345,
-        RFCFLOAT: 1.23456789,
-        RFCCHAR4: "ABCD",
-        RFCDATE: "20180625", // ABAP date format
-        // or RFCDATE: new Date('2018-06-25'), // as JavaScript Date object, with clientOption "date"
-    };
-    // ABAP table
-    let table = [structure];
-
-    client.invoke(
-        "STFC_STRUCTURE",
-        { IMPORTSTRUCT: structure, RFCTABLE: table },
-        function (err, res) {
-            if (err)
-                return console.error("Error invoking STFC_STRUCTURE:", err);
-            console.log("STFC_STRUCTURE call result:", res);
-        }
-    );
-});
+        // check the result
+        console.log(result);
+    } catch (err) {
+        // connection and invocation errors
+        console.error(err);
+    }
+})();
 ```
 
 Finally, the connection is closed automatically when the instance is deleted by the garbage collector or by explicitly calling the `client.close()` method of the direct client, or `client.release()` or `pool.release()` for the managed client.
