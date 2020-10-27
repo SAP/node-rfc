@@ -117,7 +117,7 @@ More info: **[Usage](doc/usage.md)** and **[API](doc/api.md)**
 
 In order to call remote enabled ABAP function module, we need to create a `node-rfc` client instance with valid logon credentials, connect to SAP ABAP NetWeaver system and then invoke a remote enabled ABAP function module from nodejs. Async example below shows basic principles and you can check the documentationand unit tests for more examles.
 
-Add your ABAP system destintion, to **sapnwrfc.ini** file in your working directory:
+Add your ABAP system destintion to **sapnwrfc.ini** file in your working directory:
 
 ```ini
 DEST=MME
@@ -128,6 +128,8 @@ SYSNR=00
 CLIENT=620
 LANG=EN
 ```
+
+Call the ABAP RFM. When in doubt about RFM parameters' structure, use **[rfmcall](https://github.com/SAP/fundamental-tools/tree/master/tools/rfmcall)**:
 
 ```javascript
 const noderfc = require("node-rfc");
