@@ -283,6 +283,8 @@ All open connections are anyway closed when Pool destructor called.
 closeAll(callback?: Function) // close all ready and leased connections
 ```
 
+<a name="server"></a>
+
 ## Server (experimental!)
 
 Usage: [usage/server](usage.md#server)

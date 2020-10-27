@@ -33,6 +33,7 @@
 -   **[Connection Pool](#connection-pool)**
     -   [Pool Options](#pool-options)
 -   **[Closing connections](#closing-connections)**
+-   **[Server](#server)**
 -   **[Throughput](#throughput)**
 -   **[Environment](#environment)**
 
@@ -516,6 +517,185 @@ is managed, the pool leased connections set is updated.
 | group     | LOGON_FAILURE             | Error message raised when logon fails                                                                       |
 | group     | COMMUNICATION_FAILURE     | Problems with the network connection (or backend broke down and killed the connection)                      |
 | group     | EXTERNAL_RUNTIME_FAILURE  | Problems in the RFC runtime of the external program (i.e "this" library)                                    |
+
+<a name="server"></a>
+
+## Server (!experimental)
+
+API: [api/server](api.md#server)
+
+Using the node-rfc Server instance, NodeJS functions can be exposed and consumed from ABAP, using `CALL FUNCTION DESTINATION` ABAP statement. Just the same way like standard RFMs from ABAP systems.
+
+To expose one NodeJS function for ABAP clients, the ABAP function definition must be provided, defining ABAP parameters through which the ABAP client can invoke the NodeJS function. When ABAP clients calls the NodeJS function, ABAP input parameters are automatically converted to NodeJS function input and the function is invoked. The function output is automatically converted to ABAP output parameters, returned back to ABAP client.
+
+ABAP function definition defines ABAP parameters and data definitions for all variables, structures and tables used in ABAP parameers. Coding these metadata down to field level is not very exciting task and node-rfc Server provides a more elegant solution here:
+
+-   Create an empty ABAP RFM in ABAP client system, with the same parameters that ABAP client shall use to invoke the NodeJS function
+-   Tell the node server that the function definition for NodeJS function X shall be the taken from the ABAP RFM Y, in ABAP client system
+
+When invoked by ABAP, the NodeJS function will automatically fetch the function definition from ABAP RFM and expose itself as exactly such RFM to ABAP
+
+As an example, let make the `STFC_CONNECTION` available as NodeJS RFM and call it from ABAP.
+
+### Function Definition
+
+No work needed because the `STFC_CONNECTION` RFM is already available in ABAP client system. Let us have a look into signature. The function module accepts the `REQTEXT` input stirng and echoes it back as `ECHOTEXT` string. In addition, the `RESPTEXT` string with connection attributes is also sent back:
+
+```abap
+FUNCTION STFC_CONNECTION.
+*"----------------------------------------------------------------------
+*"*"Lokale Schnittstelle:
+*"       IMPORTING
+*"              REQUTEXT LIKE  SY-LISEL
+*"       EXPORTING
+*"              ECHOTEXT LIKE  SY-LISEL
+*"              RESPTEXT LIKE  SY-LISEL
+*"----------------------------------------------------------------------
+```
+
+### NodeJS function
+
+Let provide the NodeJS function, mimicking the ABAP `STFC_CONNECTION` logic. Of course any other logic can be implemented here.
+
+```node
+function my_stfc_connection(
+    request_context,
+    abap_parameters: { REQUTEXT: "" }
+) {
+    console.log("NodeJS stfc invoked ", request_context);
+
+    return {
+        ECHOTEXT: abap_parameters.REQUTEXT,
+        RESPTEXT: `Python server here. Connection attributes are:\nUser '${request_context.user}' from system '${request_context.sysId}', client '${request_context.client}', host '${request_context.partnerHost}'`,
+    };
+}
+```
+
+When invoked from ABAP, the first argument `request_context` provides some information about ABAP consumer and the second argument `abap_parameters` provides input parameters sent from ABAP.
+
+### ABAP calls NodeJS RFM
+
+ABAP call looks like this:
+
+```abap
+*&---------------------------------------------------------------------*
+*& Report ZNODETEST
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT znodetest.
+
+DATA lv_echo LIKE sy-lisel.
+DATA lv_resp LIKE sy-lisel.
+
+CALL FUNCTION 'STFC_CONNECTION' DESTINATION 'NODEJS'
+  EXPORTING
+    requtext = 'Hello Nöde'
+  IMPORTING
+    echotext = lv_echo
+    resptext = lv_resp.
+
+WRITE lv_echo.
+WRITE lv_resp.
+```
+
+### Configuration
+
+The remote destination configuration is described in chapter "5 RFC Server Programs" of **[SAP NWRFC SDK 7.50 Programming Guide](https://support.sap.com/content/dam/support/en_us/library/ssp/products/connectors/nwrfcsdk/NW_RFC_750_ProgrammingGuide.pdf)**
+
+For this particular example, the configuration includes:
+
+**sapnwrfc.ini**
+
+The `client` connection parameters are required for RFM function definition retrival, just like in Client scenario.
+
+The `gateway` parameters are for the NodeJS server regitration in ABAP system.
+
+```ini
+DEST=client
+USER=demo
+PASSWD=welcome
+ASHOST=coevi51
+SYSNR=00
+CLIENT=620
+LANG=EN
+#TRACE=3
+
+DEST=gateway
+GWSERV=sapgw00
+GWHOST=coevi51
+PROGRAM_ID=SERVER1
+REG_COUNT=1
+```
+
+**SM59**
+
+The NodeJS destination is in SM59 look like
+
+![](assets/sm59node.png)
+
+**ABAP**
+
+```abap
+*&---------------------------------------------------------------------*
+*& Report ZSERVERTEST
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zservertest.
+
+
+DATA lv_echo LIKE sy-lisel.
+DATA lv_resp LIKE sy-lisel.
+
+CALL FUNCTION 'STFC_CONNECTION' DESTINATION 'NODEJS'
+  EXPORTING
+    requtext = 'XYZ'
+  IMPORTING
+    echotext = lv_echo
+    resptext = lv_resp.
+
+WRITE lv_echo.
+WRITE lv_resp.
+```
+
+**Node Server**
+
+```node
+const addon = require("../../lib");
+const Server = addon.Server;
+const server = new Server({ dest: "gateway" }, { dest: "MME" });
+
+// Callback function
+function my_stfc_connection(request_context, REQUTEXT = "") {
+    console.log("stfc invoked");
+    console.log("request_context", request_context);
+    console.log("abap_parameters", abap_parameters);
+
+    return {
+        ECHOTEXT: REQUTEXT,
+        RESPTEXT: `Node server here. Connection attributes are:\nUser '${request_context.user}' from system '${request_context.sysId}', client '${request_context.client}', host '${request_context.partnerHost}'`,
+    };
+}
+
+server.start((err) => {
+    if (err) return console.error("error:", err);
+    console.log(
+        `Server alive: ${server.alive} client handle: ${server.client_connection} server handle: ${server.server_connection}`
+    );
+
+    // Expose the my_stfc_connection function as RFM with STFC_CONNECTION pararameters (function definition)
+    const RFM_NAME = "STFC_CONNECTION";
+    server.addFunction(RFM_NAME, my_stfc_connection, (err) => {
+        if (err) return console.error(`error adding ${RFM_NAME}: ${err}`);
+    });
+});
+
+// let server serve
+setTimeout(function () {
+    console.log("bye!");
+}, 20 * 1000);
+```
 
 ## Throughput
 
