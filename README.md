@@ -55,7 +55,7 @@ Asynchronous, non-blocking [SAP NetWeawer RFC SDK](https://support.sap.com/en/pr
 
 Other platforms and frameworks:
 
--   SAP Cloud Platform, AWS Lambdas, heroku ...: Create [SAP feature request](https://github.com/SAP/node-rfc/issues/79#issuecomment-716492557)
+-   SAP Cloud Platform, AWS Lambdas, heroku ...: Create SAP feature request for `SAP Cloud Platform Connectivity Service` sub-topic of the [SAP Cloud Platform - Integration Suite](https://influence.sap.com/sap/ino/#/campaign/2282)
 -   [Electron](doc/frameworks/electron-quick-start)
 -   [NW.js](doc/frameworks/nwjs-quick-start)
 -   [Node-RED](https://github.com/PaulWieland/node-red-contrib-saprfc)

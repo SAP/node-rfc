@@ -4,7 +4,7 @@
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    "start": "RFC_INI=./sapnwrfc.ini electron ."
+    "start": "electron ."
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
@@ -17,9 +17,9 @@
   "author": "GitHub",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^9.0.0"
+    "electron": "^10.1.5"
   },
   "dependencies": {
-    "node-rfc": "^1.2.0"
+    "node-rfc": "^2.3.0"
   }
 }
