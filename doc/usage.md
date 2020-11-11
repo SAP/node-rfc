@@ -33,7 +33,10 @@
 -   **[Connection Pool](#connection-pool)**
     -   [Pool Options](#pool-options)
 -   **[Closing connections](#closing-connections)**
--   **[Server](#server)**
+
+<a name="server-toc"></a>
+
+-   **[Server (experimental)](#server)**
 -   **[Throughput](#throughput)**
 -   **[Environment](#environment)**
 
@@ -520,7 +523,7 @@ is managed, the pool leased connections set is updated.
 
 <a name="server"></a>
 
-## Server (!experimental)
+## Server (experimental)
 
 API: [api/server](api.md#server)
 
