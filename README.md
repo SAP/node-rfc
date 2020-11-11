@@ -144,7 +144,7 @@ const pool = new noderfc.Pool({ connectionParameters: { dest: "MME" } });
         // invoke ABAP function module, passing structure and table parameters
 
         // ABAP structure
-        const structure = {
+        const abap_structure = {
             RFCINT4: 345,
             RFCFLOAT: 1.23456789,
             RFCCHAR4: "ABCD",
@@ -152,11 +152,11 @@ const pool = new noderfc.Pool({ connectionParameters: { dest: "MME" } });
             // or RFCDATE: new Date('2018-06-25'), // as JavaScript Date object, with clientOption "date"
         };
         // ABAP table
-        let table = [structure];
+        let abap_table = [abap_structure];
 
         const result = await client.call("STFC_STRUCTURE", {
-            IMPORTSTRUCT: structure,
-            RFCTABLE: table,
+            IMPORTSTRUCT: abap_structure,
+            RFCTABLE: abap_table,
         });
 
         // check the result
