@@ -123,7 +123,7 @@ export class Pool {
                                     | Array<RfcClientBinding>
                             ) => {
                                 if (err !== undefined) {
-                                    reject(err);
+                                    return reject(err);
                                 }
 
                                 if (Array.isArray(clientBindings)) {
@@ -153,7 +153,7 @@ export class Pool {
                     clientBindings: RfcClientBinding | Array<RfcClientBinding>
                 ) => {
                     if (err !== undefined) {
-                        (callback as Function)(err);
+                        return (callback as Function)(err);
                     }
 
                     if (Array.isArray(clientBindings)) {
