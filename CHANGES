@@ -1,6 +1,12 @@
 Change log
 ==========
 
+2.3.1 (2020-11-18)
+------------------
+
+- Pool acquire() error message for wrong user credentials; fix #185 54a82b6
+- Connection parameters error messages and unit tests; 55c3e02
+
 2.3.0 (2020-10-26)
 ------------------
 
