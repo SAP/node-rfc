@@ -967,8 +967,14 @@ namespace node_rfc
 
     void getConnectionParams(Napi::Object clientParamsObject, ConnectionParamsStruct *clientParams)
     {
+
         Napi::Array paramNames = clientParamsObject.GetPropertyNames();
         clientParams->paramSize = paramNames.Length();
+        if (clientParams->paramSize == 0)
+        {
+            Napi::TypeError::New(node_rfc::__env, "Client connection parameters missing").ThrowAsJavaScriptException();
+            return;
+        }
         DEBUG("getConnectionParams ", clientParams->paramSize);
         clientParams->connectionParams = static_cast<RFC_CONNECTION_PARAMETER *>(malloc(clientParams->paramSize * sizeof(RFC_CONNECTION_PARAMETER)));
         for (uint_t ii = 0; ii < clientParams->paramSize; ii++)

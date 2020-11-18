@@ -174,7 +174,7 @@ namespace node_rfc
 
         if (!info[0].IsUndefined() && (info[0].IsFunction() || !info[0].IsObject()))
         {
-            Napi::TypeError::New(Env(), "Client constructor requires connection parameters").ThrowAsJavaScriptException();
+            Napi::TypeError::New(Env(), "Client connection parameters missing").ThrowAsJavaScriptException();
             return;
         }
 
