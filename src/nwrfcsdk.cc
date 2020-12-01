@@ -388,8 +388,8 @@ namespace node_rfc
         {
             return Napi::String::New(node_rfc::__env, "");
         }
-        // try with 3 bytes per unicode character
-        uint_t utf8Size = length * 3;
+        // try with 5 bytes per unicode character
+        uint_t utf8Size = length * 5;
         char *utf8 = (char *)malloc(utf8Size + 1);
         utf8[0] = '\0';
         uint_t resultLen = 0;
@@ -397,9 +397,9 @@ namespace node_rfc
         //EDEBUG("len: ", length, " utf8Size: ", utf8Size, " resultLen: ", resultLen, " ", errorInfo.code);
         if (errorInfo.code != RFC_OK)
         {
-            // not enough, try with 5
+            // not enough, try with 7
             free(utf8);
-            utf8Size = length * 5;
+            utf8Size = length * 7;
             utf8 = (char *)malloc(utf8Size + 1);
             utf8[0] = '\0';
             resultLen = 0;
@@ -411,6 +411,7 @@ namespace node_rfc
             }
         }
 
+        utf8[resultLen] = 0;
         int i = resultLen - 1;
         while (i >= 0 && isspace(utf8[i]))
         {
