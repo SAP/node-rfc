@@ -14,41 +14,34 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 # project
 execute_process(COMMAND node -p "require('./package.json').version"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE VERSION)
-string(REPLACE "\n" "" VERSION ${VERSION})
+        OUTPUT_VARIABLE VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 project(sapnwrfc VERSION ${VERSION})
 
 # node platform
 execute_process(COMMAND node -p "process.platform"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE NODE_PLATFORM)
-string(REPLACE "\n" "" NODE_PLATFORM ${NODE_PLATFORM})
-string(REPLACE "\"" "" NODE_PLATFORM ${NODE_PLATFORM})
+        OUTPUT_VARIABLE NODE_PLATFORM OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # node version
-execute_process(COMMAND node -v WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE NODE_VERSION)
-string(REPLACE "\n" "" NODE_VERSION ${NODE_VERSION})
+execute_process(COMMAND node -v WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE NODE_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 # node abi version
 execute_process(COMMAND node -p "process.versions.modules"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE NODE_ABI_VERSION)
-string(REPLACE "\n" "" NODE_ABI_VERSION ${NODE_ABI_VERSION})
-string(REPLACE "\"" "" NODE_ABI_VERSION ${NODE_ABI_VERSION})
+        OUTPUT_VARIABLE NODE_ABI_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # N-API version
 execute_process(COMMAND node -p "require('./package.json').binary.napi_versions[0]"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE NAPI_VERSION)
-string(REPLACE "\n" "" NAPI_VERSION ${NAPI_VERSION})
+        OUTPUT_VARIABLE NAPI_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 add_compile_definitions(NAPI_VERSION=${NAPI_VERSION})
 
 # N-API headers
 execute_process(COMMAND node -p "require('node-addon-api').include"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE NAPI_INCLUDE_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-string(REPLACE "\n" "" NAPI_INCLUDE_DIR ${NAPI_INCLUDE_DIR})
 string(REPLACE "\"" "" NAPI_INCLUDE_DIR ${NAPI_INCLUDE_DIR})
 
 # NodeJS headers
@@ -57,15 +50,17 @@ if (NOT DEFINED ENV{NODE_HEADERS_INCLUDE_DIR})
 		execute_process(COMMAND cmd /c "npm -g prefix"
 			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 			OUTPUT_VARIABLE NODE_HEADERS_INCLUDE_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
 		)
 	else()
 	    execute_process(COMMAND npm -g prefix
 			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 			OUTPUT_VARIABLE NODE_HEADERS_INCLUDE_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
 		)
 	endif()
     string(CONCAT NODE_HEADERS_INCLUDE_DIR ${NODE_HEADERS_INCLUDE_DIR} "/include")
-    string(REPLACE "\n" "" NODE_HEADERS_INCLUDE_DIR ${NODE_HEADERS_INCLUDE_DIR})
+    #string(REPLACE "\n" "" NODE_HEADERS_INCLUDE_DIR ${NODE_HEADERS_INCLUDE_DIR})
 
     if (NOT EXISTS "${NODE_HEADERS_INCLUDE_DIR}")
         set(NODE_HEADERS_FILENAME "node-${NODE_VERSION}-headers.tar.gz")
@@ -129,7 +124,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 
     # show SAP NWRFC SDK version
-    execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ci/utils/nwrfcsdk-version-linux.sh OUTPUT_VARIABLE SAPNWRFCSDK_VERSION)
+    execute_process(COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/ci/utils/nwrfcsdk-version-linux.sh OUTPUT_VARIABLE SAPNWRFCSDK_VERSION)
     message("SAP NWRFC SDK: " ${SAPNWRFCSDK_VERSION})
 
     target_compile_options(${PROJECT_NAME} PUBLIC -std=c++11 -Wall)
@@ -206,7 +201,8 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 
     # show SAP NWRFC SDK version
-    execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ci/utils/nwrfcsdk-version-darwin.sh OUTPUT_VARIABLE SAPNWRFCSDK_VERSION)
+    execute_process(COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/ci/utils/nwrfcsdk-version-darwin.sh"
+    OUTPUT_VARIABLE SAPNWRFCSDK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE )
     message("SAP NWRFC SDK: " ${SAPNWRFCSDK_VERSION})
 
     target_compile_options(${PROJECT_NAME} PUBLIC -stdlib=libc++ -std=c++0x -Wall -mmacosx-version-min=10.10 -fvisibility=hidden)
