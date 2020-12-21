@@ -20,36 +20,38 @@ namespace node_rfc
         SAP_UC *sapuc;
         uint_t sapucSize, resultLen = 0;
 
-        //std::string str = std::string(napistr);
-        std::string str = napistr.Utf8Value();
-        sapucSize = str.length() + 1;
+        std::string sstr = std::string(napistr);
+        //std::string str = napistr.Utf8Value();
+        sapucSize = sstr.length() + 1;
 
         sapuc = (SAP_UC *)mallocU(sapucSize);
         memsetU((SAP_UTF16 *)sapuc, 0, sapucSize);
-        rc = RfcUTF8ToSAPUC((RFC_BYTE *)&str[0], str.length(), sapuc, &sapucSize, &resultLen, &errorInfo);
-
+        rc = RfcUTF8ToSAPUC((RFC_BYTE *)&sstr[0], sapucSize - 1, sapuc, &sapucSize, &resultLen, &errorInfo);
+        // EDEBUG("fill: ", sstr, " sapucSize: ", sapucSize, " resultLen: ", resultLen, " code: ", errorInfo.code);
         if (rc != RFC_OK)
-            Napi::Error::Fatal("setString", "NodeJS string could not be parsed to ABAP unicode");
-
+        {
+            Napi::Error::Fatal("setString", "NodeJS string could not be parsed to ABAP string");
+        }
         return sapuc;
     }
 
-    SAP_UC *setString(std::string str)
+    SAP_UC *setString(std::string sstr)
     {
         RFC_RC rc;
         RFC_ERROR_INFO errorInfo;
         SAP_UC *sapuc;
         uint_t sapucSize, resultLen = 0;
-
-        sapucSize = str.length() + 1;
+        sapucSize = sstr.length() + 1;
 
         sapuc = (SAP_UC *)mallocU(sapucSize);
         memsetU((SAP_UTF16 *)sapuc, 0, sapucSize);
-        rc = RfcUTF8ToSAPUC((RFC_BYTE *)&str[0], str.length(), sapuc, &sapucSize, &resultLen, &errorInfo);
+        rc = RfcUTF8ToSAPUC((RFC_BYTE *)&sstr[0], sapucSize - 1, sapuc, &sapucSize, &resultLen, &errorInfo);
+        // EDEBUG("fill: ", sstr, " sapucSize: ", sapucSize, " resultLen: ", resultLen, " code: ", errorInfo.code);
 
         if (rc != RFC_OK)
-            Napi::Error::Fatal("setString", "node-rfc internal error");
-
+        {
+            Napi::Error::Fatal("setString", "NodeJS string could not be parsed to ABAP string");
+        }
         return sapuc;
     }
 
@@ -172,19 +174,6 @@ namespace node_rfc
             }
             break;
         }
-        case RFCTYPE_CHAR:
-        {
-            if (!value.IsString())
-            {
-                std::ostringstream err;
-                err << "Char expected from NodeJS for the field of type " << typ;
-                return nodeRfcError(err.str(), errorPath);
-            }
-            cValue = setString(value.As<Napi::String>());
-            rc = RfcSetChars(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
-            free(cValue);
-            break;
-        }
         case RFCTYPE_BYTE:
         {
             if (!value.IsBuffer())
@@ -222,16 +211,18 @@ namespace node_rfc
             free(byteValue);
             break;
         }
+        case RFCTYPE_CHAR:
         case RFCTYPE_STRING:
         {
             if (!value.IsString())
             {
                 std::ostringstream err;
-                err << "Char expected from NodeJS for the field of type " << typ;
+                err << "String expected from NodeJS for the field of type " << typ;
                 return nodeRfcError(err.str(), errorPath);
             }
-            cValue = setString(value.ToString());
-            rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
+            std::string sstr = std::string(value.As<Napi::String>());
+            cValue = setString(sstr);
+            rc = RfcSetString(functionHandle, cName, cValue, sstr.length(), &errorInfo);
             free(cValue);
             break;
         }

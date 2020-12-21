@@ -146,7 +146,7 @@ describe("Client: direct callback", () => {
             RFCFLOAT: 1.23456789,
             RFCCHAR1: "A",
             RFCCHAR2: "",
-            RFCCHAR4: "D\x01FG",
+            RFCCHAR4: "D\x00FG",
 
             RFCINT1: 1,
             RFCINT2: 2,
