@@ -1,6 +1,11 @@
 Change log
 ==========
 
+2.4.0 (XXXX-XX-XX)
+------------------
+
+- CHARnn fields gets cut off after the first zero byte; fix #193
+
 2.3.1 (2020-11-18)
 ------------------
 

@@ -145,8 +145,8 @@ describe("Client: direct callback", () => {
         let importStruct = {
             RFCFLOAT: 1.23456789,
             RFCCHAR1: "A",
-            RFCCHAR2: "BC",
-            RFCCHAR4: "DEFG",
+            RFCCHAR2: "",
+            RFCCHAR4: "D\x01FG",
 
             RFCINT1: 1,
             RFCINT2: 2,

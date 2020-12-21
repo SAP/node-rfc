@@ -386,7 +386,7 @@ namespace node_rfc
         }
         if (length == 0)
         {
-            return Napi::String::New(node_rfc::__env, "");
+            return scope.Escape(Napi::String::New(node_rfc::__env, ""));
         }
         // try with 5 bytes per unicode character
         uint_t utf8Size = length * 5;
@@ -411,69 +411,17 @@ namespace node_rfc
             }
         }
 
-        utf8[resultLen] = 0;
+        // trim trailing whitespaces
         int i = resultLen - 1;
         while (i >= 0 && isspace(utf8[i]))
         {
             i--;
         }
         utf8[i + 1] = '\0';
-
-        Napi::Value resultValue = Napi::String::New(node_rfc::__env, utf8);
+        Napi::Value resultValue = Napi::String::New(node_rfc::__env, std::string(utf8, i + 1));
         free((char *)utf8);
         return scope.Escape(resultValue);
     }
-
-    /*
-    Napi::Value wrapString(SAP_UC const *uc, int length)
-    {
-        RFC_ERROR_INFO errorInfo;
-
-        Napi::EscapableHandleScope scope(node_rfc::__env);
-
-        if (length == -1)
-        {
-            length = strlenU(uc);
-        }
-        if (length == 0)
-        {
-            return Napi::String::New(node_rfc::__env, "");
-        }
-        // try with 3 bytes per unicode character
-        uint_t utf8Size = length * 3;
-        char *utf8 = (char *)malloc(utf8Size + 1);
-        utf8[0] = '\0';
-        uint_t resultLen = 0;
-        RfcSAPUCToUTF8(uc, length, (RFC_BYTE *)utf8, &utf8Size, &resultLen, &errorInfo);
-
-        if (errorInfo.code != RFC_OK)
-        {
-            // not enough, try with 5
-            free(utf8);
-            utf8Size = length * 5;
-            utf8 = (char *)malloc(utf8Size + 1);
-            utf8[0] = '\0';
-            resultLen = 0;
-            RfcSAPUCToUTF8(uc, length, (RFC_BYTE *)utf8, &utf8Size, &resultLen, &errorInfo);
-            if (errorInfo.code != RFC_OK)
-            {
-                free(utf8);
-                return node_rfc::__env.Undefined();
-            }
-        }
-
-        int i = strlen(utf8) - 1;
-        while (i >= 0 && isspace(utf8[i]))
-        {
-            i--;
-        }
-        utf8[i + 1] = '\0';
-
-        Napi::Value resultValue = Napi::String::New(node_rfc::__env, utf8);
-        free((char *)utf8);
-        return scope.Escape(resultValue);
-    }
-    */
 
     ValuePair getRfmParameters(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options)
     {
