@@ -540,7 +540,7 @@ describe("Datatypes: all", () => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
-                            "Char expected from NodeJS for the field of type 0",
+                            "String expected from NodeJS for the field of type 0",
                         name: "nodeRfcError",
                         rfmPath: {
                             field: "RFCCHAR4",
