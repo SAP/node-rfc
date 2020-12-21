@@ -40,8 +40,7 @@ add_compile_definitions(NAPI_VERSION=${NAPI_VERSION})
 execute_process(COMMAND node -p "require('node-addon-api').include"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE NAPI_INCLUDE_DIR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
+        OUTPUT_STRIP_TRAILING_WHITESPACE )
 string(REPLACE "\"" "" NAPI_INCLUDE_DIR ${NAPI_INCLUDE_DIR})
 
 # NodeJS headers
@@ -50,17 +49,14 @@ if (NOT DEFINED ENV{NODE_HEADERS_INCLUDE_DIR})
 		execute_process(COMMAND cmd /c "npm -g prefix"
 			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 			OUTPUT_VARIABLE NODE_HEADERS_INCLUDE_DIR
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-		)
+            OUTPUT_STRIP_TRAILING_WHITESPACE )
 	else()
 	    execute_process(COMMAND npm -g prefix
 			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 			OUTPUT_VARIABLE NODE_HEADERS_INCLUDE_DIR
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-		)
+            OUTPUT_STRIP_TRAILING_WHITESPACE )
 	endif()
     string(CONCAT NODE_HEADERS_INCLUDE_DIR ${NODE_HEADERS_INCLUDE_DIR} "/include")
-    #string(REPLACE "\n" "" NODE_HEADERS_INCLUDE_DIR ${NODE_HEADERS_INCLUDE_DIR})
 
     if (NOT EXISTS "${NODE_HEADERS_INCLUDE_DIR}")
         set(NODE_HEADERS_FILENAME "node-${NODE_VERSION}-headers.tar.gz")
@@ -106,8 +102,9 @@ endif ( MSVC )
 # build
 #
 
-# All platforms
+message("N-API version: ${NAPI_VERSION}   ${NODE_HEADERS_INCLUDE_DIR}")
 
+# All platforms
 
 # https://launchpad.support.sap.com/#/notes/2573953
 target_compile_definitions(${PROJECT_NAME} PUBLIC
