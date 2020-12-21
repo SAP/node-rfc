@@ -44,7 +44,6 @@ describe("Datatypes: all", () => {
                 IS_INPUT: isInput,
             },
             function (err, res) {
-                expect(err).toBeUndefined();
                 expect(res).toHaveProperty("ES_OUTPUT");
                 const output = res.ES_OUTPUT;
 
@@ -65,7 +64,7 @@ describe("Datatypes: all", () => {
 
                 expect(typeof output.ZDECF34_MAX).toEqual("string");
                 expect(output.ZDECF34_MAX).toEqual(isInput.ZDECF34_MAX);
-                done();
+                done(err);
             }
         );
     });
@@ -90,7 +89,6 @@ describe("Datatypes: all", () => {
                 IS_INPUT: isInput,
             },
             function (err, res) {
-                expect(err).toBeUndefined();
                 expect(res).toHaveProperty("ES_OUTPUT");
                 const output = res.ES_OUTPUT;
 
@@ -111,7 +109,7 @@ describe("Datatypes: all", () => {
 
                 expect(typeof output.ZDECF34_MAX).toEqual("string");
                 expect(output.ZDECF34_MAX).toEqual(isInput.ZDECF34_MAX);
-                done();
+                done(err);
             }
         );
     });
@@ -124,7 +122,6 @@ describe("Datatypes: all", () => {
                 OPTIONS: "A string instead of an array",
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -177,7 +174,6 @@ describe("Datatypes: all", () => {
                     IS_INPUT: isInput,
                 },
                 function (err, res) {
-                    expect(err).toBeUndefined();
                     expect(res).toHaveProperty("ES_OUTPUT");
                     for (let k in isInput) {
                         let inVal = isInput[k];
@@ -187,7 +183,7 @@ describe("Datatypes: all", () => {
                         expect(outVal).toEqual(inVal);
                     }
                     xclient.close(() => {
-                        done();
+                        done(err);
                     });
                 }
             );
@@ -223,7 +219,6 @@ describe("Datatypes: all", () => {
                 IS_INPUT: isInput,
             },
             function (err, res) {
-                expect(err).toBeUndefined();
                 expect(res).toHaveProperty("ES_OUTPUT");
                 for (let k in isInput) {
                     let inVal = isInput[k];
@@ -231,7 +226,7 @@ describe("Datatypes: all", () => {
                     let outTyp = typeof outVal;
                     expect(outTyp).toEqual(EXPECTED_TYPES[k]);
                 }
-                done();
+                done(err);
             }
         );
     });
@@ -269,7 +264,6 @@ describe("Datatypes: all", () => {
                     IS_INPUT: isInput,
                 },
                 function (err, res) {
-                    expect(err).toBeUndefined();
                     expect(res).toHaveProperty("ES_OUTPUT");
                     for (let k in isInput) {
                         let inVal = isInput[k];
@@ -281,7 +275,7 @@ describe("Datatypes: all", () => {
                         else expect(inVal).toEqual(outVal);
                     }
                     xclient.close(() => {
-                        done();
+                        done(err);
                     });
                 }
             );
@@ -289,7 +283,7 @@ describe("Datatypes: all", () => {
     });
 
     test("RAW/BYTE accepts Buffer", function (done) {
-        expect.assertions(3);
+        expect.assertions(2);
         let isInput = {
             ZRAW: Utils.XBYTES_TEST,
         };
@@ -299,7 +293,6 @@ describe("Datatypes: all", () => {
                 IS_INPUT: isInput,
             },
             function (err, res) {
-                expect(err).toBeUndefined();
                 expect(Buffer.compare(isInput.ZRAW, res.ES_OUTPUT.ZRAW)).toBe(
                     -1 // because the ZRAW is 17 bytes long and padded with zeroes
                 );
@@ -312,13 +305,13 @@ describe("Datatypes: all", () => {
                         res.ES_OUTPUT.ZRAW
                     )
                 ).toBe(0); // ok
-                done();
+                done(err);
             }
         );
     });
 
     test("XSTRING accepts Buffer", function (done) {
-        expect.assertions(2);
+        expect.assertions(1);
         let isInput = {
             ZRAWSTRING: Utils.XBYTES_TEST,
         };
@@ -328,13 +321,20 @@ describe("Datatypes: all", () => {
                 IS_INPUT: isInput,
             },
             function (err, res) {
-                expect(err).toBeUndefined();
                 expect(
                     Buffer.compare(isInput.ZRAWSTRING, res.ES_OUTPUT.ZRAWSTRING)
                 ).toBe(0);
-                done();
+                done(err);
             }
         );
+    });
+
+    test("CHAR with zero bytes in the middle", function (done) {
+        client.invoke("ZLONG_STRING", {}, (err, res) => {
+            const expres = "TESTUSER3 \x00\x00\x00\x0c 1000329";
+            expect(res.EV_LONGCHAR).toEqual(expres);
+            done(err);
+        });
     });
 
     test.skip("BYTE and XSTRING tables", function (done) {
@@ -377,7 +377,6 @@ describe("Datatypes: all", () => {
             IT_SDOKCNTBINS: IT_SDOKCNTBINS,
         };
         client.invoke("/COE/RBP_FE_DATATYPES", inp, function (err, result) {
-            expect(err).toBeUndefined();
             expect(res).toHaveProperty("ES_OUTPUT");
 
             expect(IT_SXMSMGUIDT.length).toBe(result.ET_SXMSMGUIDT.length);
@@ -395,7 +394,7 @@ describe("Datatypes: all", () => {
                 let lineOut = result.ET_SDOKCNTBINS[i].LINE;
                 expect(Buffer.compare(lineIn, lineOut)).toBe(0);
             }
-            done();
+            done(err);
         });
     });
 
@@ -412,11 +411,10 @@ describe("Datatypes: all", () => {
                 RFCTABLE: importTable,
             },
             function (err, res) {
-                expect(err).toBeUndefined();
                 expect(res).toHaveProperty("ECHOSTRUCT");
                 expect(res.ECHOSTRUCT.RFCDATE).toEqual(testDate);
                 expect(res.RFCTABLE[0].RFCDATE).toEqual(testDate);
-                done();
+                done(err);
             }
         );
     });
@@ -478,7 +476,7 @@ describe("Datatypes: all", () => {
                 },
                 (err, res) => {
                     if (err) {
-                        done(err);
+                        return done(err);
                     }
                     expect(res).toHaveProperty("ECHOSTRUCT");
                     expect(res).toHaveProperty("RFCTABLE");
@@ -509,7 +507,6 @@ describe("Datatypes: all", () => {
                 RFCTABLE: importTable,
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -540,7 +537,6 @@ describe("Datatypes: all", () => {
                 RFCTABLE: importTable,
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -571,7 +567,6 @@ describe("Datatypes: all", () => {
                 RFCTABLE: importTable,
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
                         code: 22,
@@ -598,7 +593,6 @@ describe("Datatypes: all", () => {
                 RFCTABLE: importTable,
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -630,7 +624,6 @@ describe("Datatypes: all", () => {
                 RFCTABLE: importTable,
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -662,7 +655,6 @@ describe("Datatypes: all", () => {
                 RFCTABLE: importTable,
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -693,7 +685,6 @@ describe("Datatypes: all", () => {
                 RFCTABLE: importTable,
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -724,7 +715,6 @@ describe("Datatypes: all", () => {
                 RFCTABLE: importTable,
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -755,7 +745,6 @@ describe("Datatypes: all", () => {
                 RFCTABLE: importTable,
             },
             function (err) {
-                expect(err).toBeDefined();
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -788,7 +777,6 @@ describe("Datatypes: all", () => {
                 RFCTABLE: importTable,
             },
             function (err, res) {
-                expect(err).toBeUndefined();
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty("ECHOSTRUCT");
                 expect(res).toHaveProperty("RFCTABLE");
@@ -803,7 +791,7 @@ describe("Datatypes: all", () => {
                 expect(res.ECHOSTRUCT.RFCINT4).toBe(2147483646);
                 expect(res.RFCTABLE[0].RFCINT4).toBe(2147483646);
                 expect(res.RFCTABLE[1].RFCINT4).toBe(2147483647);
-                done();
+                done(err);
             }
         );
     });
@@ -822,7 +810,6 @@ describe("Datatypes: all", () => {
                 RFCTABLE: importTable,
             },
             function (err, res) {
-                expect(err).toBeUndefined();
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty("ECHOSTRUCT");
                 expect(res).toHaveProperty("RFCTABLE");
@@ -837,7 +824,7 @@ describe("Datatypes: all", () => {
                 expect(res.ECHOSTRUCT.RFCINT4).toBe(-2147483648);
                 expect(res.RFCTABLE[0].RFCINT4).toBe(-2147483648);
                 expect(res.RFCTABLE[1].RFCINT4).toBe(-2147483647);
-                done();
+                done(err);
             }
         );
     });
@@ -855,8 +842,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err, res) {
-                expect(err).toBeDefined();
+            function (err) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -886,8 +872,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err, res) {
-                expect(err).toBeDefined();
+            function (err) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -917,8 +902,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err, res) {
-                expect(err).toBeDefined();
+            function (err) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
