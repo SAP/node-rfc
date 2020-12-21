@@ -4,7 +4,9 @@ Change log
 2.4.0 (XXXX-XX-XX)
 ------------------
 
-- CHARnn fields gets cut off after the first zero byte; fix #193
+- CHARnn fields gets cut off after the first zero byte; fix #193 b4aeaf9
+- CMakeLists SDK version output ccaddd4
+- N-API versions support 6 and 7
 
 2.3.1 (2020-11-18)
 ------------------
