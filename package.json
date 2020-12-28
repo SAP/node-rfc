@@ -8,7 +8,7 @@
     "email": "srdjan.boskovic@sap.com"
   },
   "engines": {
-    "node":  "~10 >=10.20 || ~12 >=12.17 || >= 14.0"
+    "node": "~10 >=10.23 || ~12 >=12.17 || >= 14.0"
   },
   "cpu": [
     "!arm"
@@ -27,11 +27,11 @@
     "ts": "tsc -p src/ts",
     "upload": "prebuild -r napi -u --verbose",
     "examples": "tsc -p examples/ts",
-    "test": "reuse lint && jest test"
+    "test": "reuse lint && jest --testPathIgnorePatterns throughput"
   },
   "binary": {
     "napi_versions": [
-      6,7
+      6
     ],
     "module_name": "sapnwrfc",
     "module_path": "./lib/binding/",
@@ -66,9 +66,9 @@
   "devDependencies": {
     "@babel/core": "^7.12.10",
     "@types/bluebird": "^3.5.33",
-    "@types/node": "^14.14.14",
-    "@typescript-eslint/eslint-plugin": "^4.10.0",
-    "@typescript-eslint/parser": "^4.10.0",
+    "@types/node": "^14.14.16",
+    "@typescript-eslint/eslint-plugin": "^4.11.0",
+    "@typescript-eslint/parser": "^4.11.0",
     "async": "^3.2.0",
     "cmake-js": "^6.1.0",
     "decimal.js": "^10.2.1",
