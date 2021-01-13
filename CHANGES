@@ -1,7 +1,7 @@
 Change log
 ==========
 
-2.4.0 (XXXX-XX-XX)
+2.4.0 (2021-01-13)
 ------------------
 
 - ABAP CHARnn fields sent to Node, get cut off after the first zero byte; fix #193 b4aeaf9
