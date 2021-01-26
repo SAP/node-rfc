@@ -14,80 +14,80 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 
 ## Key features
 
--   Based on [N-API](https://github.com/nodejs/node-addon-api) standard
--   Stateless and stateful connections (multiple function calls in the same ABAP session (same context))
--   Async/await, promise and callback API
--   ECMAScript, TypeScript
--   Sequential and parallel calls, using one or more clients
--   Automatic conversion between NodeJS and ABAP datatypes
--   Direct and managed connections (connection pool)
--   Throughput monitoring: number of calls, bytes sent/received, application/total time; SAP NWRFC SDK >= 7.53 required
+-  Based on [N-API](https://github.com/nodejs/node-addon-api) standard
+-  Stateless and stateful connections (multiple function calls in the same ABAP session (same context))
+-  Async/await, promise and callback API
+-  ECMAScript, TypeScript
+-  Sequential and parallel calls, using one or more clients
+-  Automatic conversion between NodeJS and ABAP datatypes
+-  Direct and managed connections (connection pool)
+-  Throughput monitoring: number of calls, bytes sent/received, application/total time; SAP NWRFC SDK >= 7.53 required
 
 ## Content
 
--   **[Supported Platforms](#supported-platforms)**
--   **[Prerequisites](#prerequisites)**
--   **[Installation](#installation)**
--   **[Getting started](#getting-started)**
--   **[Usage](doc/usage.md)**
-    -   **[Authentication](doc/authentication.md)**
-    -   **[sapnwrfc.ini](doc/usage.md#addon)**
-    -   **[Client](doc/usage.md#client-toc)**
-    -   **[Connection Pool](doc/usage.md#connection-pool)**
-    -   **[Throughput](doc/usage.md#throughput)**
--   **[API](doc/api.md)**
-    -   **[Connection Pool](doc/api.md#connection-pool)**
-    -   **[Client](doc/api.md#client)**
-    -   **[Throughput](doc/api.md#throughput)**
--   **[Troubleshooting](doc/troubleshooting.md)**
--   **[More resource and info about SAP Connectors and RFC communication](#resources)**
--   **[Code of Conduct](CODE_OF_CONDUCT.md)**
--   **[Contributing](#contributing)**
--   **[License](#license)**
+-  **[Supported Platforms](#supported-platforms)**
+-  **[Prerequisites](#prerequisites)**
+-  **[Installation](#installation)**
+-  **[Getting started](#getting-started)**
+-  **[Usage](doc/usage.md)**
+   -  **[Authentication](doc/authentication.md)**
+   -  **[sapnwrfc.ini](doc/usage.md#addon)**
+   -  **[Client](doc/usage.md#client-toc)**
+   -  **[Connection Pool](doc/usage.md#connection-pool)**
+   -  **[Throughput](doc/usage.md#throughput)**
+-  **[API](doc/api.md)**
+   -  **[Connection Pool](doc/api.md#connection-pool)**
+   -  **[Client](doc/api.md#client)**
+   -  **[Throughput](doc/api.md#throughput)**
+-  **[Troubleshooting](doc/troubleshooting.md)**
+-  **[More resource and info about SAP Connectors and RFC communication](#resources)**
+-  **[Code of Conduct](CODE_OF_CONDUCT.md)**
+-  **[Contributing](#contributing)**
+-  **[License](#license)**
 
 ## Supported platforms
 
--   [Current and active nodejs LTS releases](https://github.com/nodejs/LTS)
+-  [Current and active nodejs LTS releases](https://github.com/nodejs/LTS)
 
--   The _node-rfc_ connector can be [built from source](#setup) on all platforms supported both by [SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1)
+-  The _node-rfc_ connector can be [built from source](#setup) on all platforms supported both by [SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1)
 
--   Pre-built binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 10, macOS 10.15 and [Centos 7 based docker container](https://github.com/SAP/fundamental-tools/tree/master/docker)
+-  Pre-built binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 10, macOS 10.15 and [Centos 7 based docker container](https://github.com/SAP/fundamental-tools/tree/master/docker)
 
 Other platforms and frameworks:
 
--   SAP Cloud Platform, AWS Lambdas, heroku ...: Create SAP feature request for `Security Services` category of the [SAP Cloud Platform – Platform Foundation](https://influence.sap.com/sap/ino/#/campaign/2277)
--   [Electron](doc/frameworks/electron-quick-start)
--   [NW.js](doc/frameworks/nwjs-quick-start)
--   [Node-RED](https://github.com/PaulWieland/node-red-contrib-saprfc)
--   [Sails JS](https://github.com/dcolley/sailsjs-node-rfc)
+-  SAP Cloud Platform, AWS Lambdas, heroku ...: Create SAP feature request for `Security Services` category of the [SAP Cloud Platform – Platform Foundation](https://influence.sap.com/sap/ino/#/campaign/2277)
+-  [Electron](doc/frameworks/electron-quick-start)
+-  [NW.js](doc/frameworks/nwjs-quick-start)
+-  [Node-RED](https://github.com/PaulWieland/node-red-contrib-saprfc)
+-  [Sails JS](https://github.com/dcolley/sailsjs-node-rfc)
 
 ## Prerequisites
 
 ### All platforms
 
--   SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account required) and locally installed ([installation instructions](doc/installation.md#sap-nwrfc-sdk-installation). More information on [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html). Using the latest version is reccomended as SAP NW RFC SDK is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.6C.
+-  SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account required) and locally installed ([installation instructions](doc/installation.md#sap-nwrfc-sdk-installation). More information on [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html). Using the latest version is reccomended as SAP NW RFC SDK is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.6C.
 
--   Build toolchain requires [CMake](https://cmake.org/)
+-  Build toolchain requires [CMake](https://cmake.org/)
 
--   Build from source on older Linux systems, may require `uchar.h` file, attached to [SAP OSS Note 2573953](https://launchpad.support.sap.com/#/notes/2573953), to be copied to SAP NW RFC SDK include directory.
+-  Build from source on older Linux systems, may require `uchar.h` file, attached to [SAP OSS Note 2573953](https://launchpad.support.sap.com/#/notes/2573953), to be copied to SAP NW RFC SDK include directory.
 
 ### Windows
 
--   [Visual C++ Redistributable](https://www.microsoft.com/en-US/download/details.aspx?id=40784) is required for runtime. The version is given in [SAP Note 2573790 - Installation, Support and Availability of the SAP NetWeaver RFC Library 7.50](https://launchpad.support.sap.com/#/notes/2573790)
+-  [Visual C++ Redistributable](https://www.microsoft.com/en-US/download/details.aspx?id=40784) is required for runtime. The version is given in [SAP Note 2573790 - Installation, Support and Availability of the SAP NetWeaver RFC Library 7.50](https://launchpad.support.sap.com/#/notes/2573790)
 
--   Build toolchain requires [Microsoft C++ Build Tools](https://aka.ms/buildtools), the latest version reccomended
+-  Build toolchain requires [Microsoft C++ Build Tools](https://aka.ms/buildtools), the latest version reccomended
 
 ### macOS
 
--   Disable macOS firewall stealth mode ([Can't ping a machine - why?](https://discussions.apple.com/thread/2554739)):
+-  Disable macOS firewall stealth mode ([Can't ping a machine - why?](https://discussions.apple.com/thread/2554739)):
 
 ```shell
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 ```
 
--   Remote paths must be set in SAP NWRFC SDK for macOS: [documentation](http://sap.github.io/PyRFC/install.html#macos)
+-  Remote paths must be set in SAP NWRFC SDK for macOS: [documentation](http://sap.github.io/PyRFC/install.html#macos)
 
--   When the node-rfc is started for the first time, the popups come-up for each NWRFC SDK library, to confirm it should be opened. If SDK is installed in admin folder, the node-rfc app shall be that first time started with admin privileges, eg. `sudo -E`
+-  When the node-rfc is started for the first time, the popups come-up for each NWRFC SDK library, to confirm it should be opened. If SDK is installed in admin folder, the node-rfc app shall be that first time started with admin privileges, eg. `sudo -E`
 
 ## Installation
 
@@ -176,20 +176,20 @@ Finally, the connection is closed automatically when the instance is deleted by 
 
 Highly reccomended series of three insightful articles about RFC communication and SAP NW RFC Library, published in the SAP Professional Journal (SPJ):
 
--   **[Part I RFC Client Programming](https://wiki.scn.sap.com/wiki/x/zz27Gg)**
--   **[Part II RFC Server Programming](https://wiki.scn.sap.com/wiki/x/9z27Gg)**
--   **[Part III Advanced Topics](https://wiki.scn.sap.com/wiki/x/FD67Gg)**
+-  **[Part I RFC Client Programming](https://wiki.scn.sap.com/wiki/x/zz27Gg)**
+-  **[Part II RFC Server Programming](https://wiki.scn.sap.com/wiki/x/9z27Gg)**
+-  **[Part III Advanced Topics](https://wiki.scn.sap.com/wiki/x/FD67Gg)**
 
 and more:
 
--   **[SAP NWRFC SDK 7.50 Programming Guide](https://support.sap.com/content/dam/support/en_us/library/ssp/products/connectors/nwrfcsdk/NW_RFC_750_ProgrammingGuide.pdf)**
--   **[ABAP Connectors](https://support.sap.com/en/product/connectors.html)**
--   **[SAP NWRFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html)**
--   **[node-addon-api](https://github.com/nodejs/node-addon-api)**
+-  **[SAP NWRFC SDK 7.50 Programming Guide](https://support.sap.com/content/dam/support/en_us/library/ssp/products/connectors/nwrfcsdk/NW_RFC_750_ProgrammingGuide.pdf)**
+-  **[ABAP Connectors](https://support.sap.com/en/product/connectors.html)**
+-  **[SAP NWRFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html)**
+-  **[node-addon-api](https://github.com/nodejs/node-addon-api)**
 
 ## Known Issues
 
--   NAPI Type checks [nodejs/node-addon-api/#265](https://github.com/nodejs/node-addon-api/issues/265)
+-  NAPI Type checks [nodejs/node-addon-api/#265](https://github.com/nodejs/node-addon-api/issues/265)
 
 ## How to obtain support
 
