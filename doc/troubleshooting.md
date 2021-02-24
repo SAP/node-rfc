@@ -1,17 +1,17 @@
--  **[Installation issues](installation.md#troubleshooting)**
--  **[RFM call results differ from expected](#rfm-call-results-differ-from-expected)**
--  **[Remote ABAP debugging](#remote-abap-debugging)**
+- **[Installation issues](installation.md#troubleshooting)**
+- **[RFM call results differ from expected](#rfm-call-results-differ-from-expected)**
+- **[Remote ABAP debugging](#remote-abap-debugging)**
 
 ## RFM call results differ from expected
 
 ABAP function module results can be different when invoked via transaction SE37 in ABAP system
 and via `node-rfc` connector, with exactly the same input parameters. Typically:
 
-1.  Leading zeros are not shown in SE37, but sent to NodeJS when remote FM is called from NodeJS.
+1. Leading zeros are not shown in SE37, but sent to NodeJS when remote FM is called from NodeJS.
 
-2.  The function module returns the data in SE37 and does not find any data when exactly the same input key is sent from NodeJS, let say `{PARTNER_ID: '4711'}`
+2. The function module returns the data in SE37 and does not find any data when exactly the same input key is sent from NodeJS, let say `{PARTNER_ID: '4711'}`
 
-3.  Other than expected date returned to NodeJS from ABAP
+3. Other than expected date returned to NodeJS from ABAP
 
 The cause can be a bug in `node-rfc` package or in `SAP NWRFC SDK`, but less likely.
 The problem is usually caused by not respecting the technical restriction of SAP NWRFC protocol,
@@ -36,19 +36,19 @@ Please check possibilities, before reporting the problem with `node-rfc` connect
 Remote ABAP debugging can be very helpful in troubleshooting NodeJS/ABAP integration issues.
 SAPGUI access to ABAP system is reguired.
 
--  Start the SE37 transaction and set the so called "external breakpoint" in ABAP source code, for ABAP user, used in NodeJS application.
+- Start the SE37 transaction and set the so called "external breakpoint" in ABAP source code, for ABAP user, used in NodeJS application.
 
-    ![](assets/debug1.png)
+    ![debug](assets/debug1.png)
 
     Open Settings and set the external debugging user to one used in node-rfc connection
-    ![](assets/debug2.png)
+    ![ext1](assets/debug2.png)
 
-    ![](assets/debug3.png)
+    ![ext2](assets/debug3.png)
 
-    ![](assets/debug4.png)
+    ![ext3](assets/debug4.png)
 
--  Run NodeJS script
+- Run NodeJS script
 
--  After ABAP RFM invocation from NodeJS, the ABAP debugger shows up in ABAP system, stopped at external breakpoint.
+- After ABAP RFM invocation from NodeJS, the ABAP debugger shows up in ABAP system, stopped at external breakpoint.
 
 At this point, the data coming from NodeJS to ABAP can be inspected, catching suspected node-rfc conversion bug.

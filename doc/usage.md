@@ -1,44 +1,44 @@
--  **[Data Types](#data-types)**
-   -  [Numeric types](#numeric-types)
-   -  [Binary types](#binary-types)
-   -  [Date/Time types](#datetime-types)
-   -  [UTCLONG](#utclong)
--  **[ABAP Function Module](#abap-function-module)**
--  **[Addon](#addon)**
+- **[Data Types](#data-types)**
+  - [Numeric types](#numeric-types)
+  - [Binary types](#binary-types)
+  - [Date/Time types](#datetime-types)
+  - [UTCLONG](#utclong)
+- **[ABAP Function Module](#abap-function-module)**
+- **[Addon](#addon)**
 
-   -  [setIniFileDirectory](#setinifiledirectory)
+  - [setIniFileDirectory](#setinifiledirectory)
 
     <a name="client-toc"></a>
 
--  **[Client](#client)**
+- **[Client](#client)**
 
-   -  [Using `sapnwrfc.ini` file](api.md/#setIniPath)
-   -  [Authentication](authentication.md)
-      -  [Plain with user credentials](authentication.md/#plain-with-user-credentials)
-      -  [SNC with user PSE](authentication.md/#snc-with-user-pse)
-      -  [SNC with client system PSE and User X509](authentication.md/#snc-with-client-system-pse-and-user-x509)
-   -  [Connection Parameters](#connection-parameters)
-   -  [Direct and Managed Clients](#direct-and-managed-clients)
-   -  [Client options](#client-options)
-      -  [Stateless communication option "stateless"](#stateless-communication-option-stateless)
-      -  [Decimal data conversion option "bcd"](#decimal-data-conversion-option-bcd)
-      -  [Date and time conversion options "date" and "time"](#date-and-time-conversion-options-date-and-time)
-      -  [Parameter type filter option "filter"](#parameter-type-filter-option-filter)
-   -  [Error handling](#error-handling)
-   -  [Invoction patterns](#invoction-patterns)
-      -  [Async/await](#asyncawait)
-      -  [Promise](#promise)
-      -  [Callback](#callback)
+  - [Using `sapnwrfc.ini` file](api.md/#setIniPath)
+  - [Authentication](authentication.md)
+    - [Plain with user credentials](authentication.md/#plain-with-user-credentials)
+    - [SNC with user PSE](authentication.md/#snc-with-user-pse)
+    - [SNC with client system PSE and User X509](authentication.md/#snc-with-client-system-pse-and-user-x509)
+  - [Connection Parameters](#connection-parameters)
+  - [Direct and Managed Clients](#direct-and-managed-clients)
+  - [Client options](#client-options)
+    - [Stateless communication option "stateless"](#stateless-communication-option-stateless)
+    - [Decimal data conversion option "bcd"](#decimal-data-conversion-option-bcd)
+    - [Date and time conversion options "date" and "time"](#date-and-time-conversion-options-date-and-time)
+    - [Parameter type filter option "filter"](#parameter-type-filter-option-filter)
+  - [Error handling](#error-handling)
+  - [Invoction patterns](#invoction-patterns)
+    - [Async/await](#asyncawait)
+    - [Promise](#promise)
+    - [Callback](#callback)
 
--  **[Connection Pool](#connection-pool)**
-   -  [Pool Options](#pool-options)
--  **[Closing connections](#closing-connections)**
+- **[Connection Pool](#connection-pool)**
+  - [Pool Options](#pool-options)
+- **[Closing connections](#closing-connections)**
 
 <a name="server-toc"></a>
 
--  **[Server (experimental)](#server)**
--  **[Throughput](#throughput)**
--  **[Environment](#environment)**
+- **[Server (experimental)](#server)**
+- **[Throughput](#throughput)**
+- **[Environment](#environment)**
 
 ## Data Types
 
@@ -62,11 +62,11 @@ NodeJS data types are automatically converted to ABAP data types and vice versa:
 
 References:
 
--  [ABAP built-in numeric types](https://help.sap.com/doc/abapdocu_752_index_htm/7.52/en-US/index.htm?file=abenbuiltin_types_numeric.htm)
+- [ABAP built-in numeric types](https://help.sap.com/doc/abapdocu_752_index_htm/7.52/en-US/index.htm?file=abenbuiltin_types_numeric.htm)
 
--  [JavaScript Number Objects](https://www.ecma-international.org/ecma-262/#sec-number-objects)
+- [JavaScript Number Objects](https://www.ecma-international.org/ecma-262/#sec-number-objects)
 
--  [Min/max values](https://github.com/SAP/node-rfc/blob/master/test/testutils/config.js)
+- [Min/max values](https://github.com/SAP/node-rfc/blob/master/test/testutils/config.js)
 
 ### Numeric types
 
@@ -317,9 +317,9 @@ clientOptions = {
 
 Three types of errors can be returned to NodeJS application:
 
--  JavaScript exceptions, thrown when wrong parameters are provided to `Client`, `Pool` or `Throughput` constructor
--  Error objects from NWRFC SDK, like logon error or calling a non-existing RFM
--  Error objects from node node-rfc, like catching a string passed from NodeJS to ABAP RFM integer parameter field
+- JavaScript exceptions, thrown when wrong parameters are provided to `Client`, `Pool` or `Throughput` constructor
+- Error objects from NWRFC SDK, like logon error or calling a non-existing RFM
+- Error objects from node node-rfc, like catching a string passed from NodeJS to ABAP RFM integer parameter field
 
 After certain critical errors, the connection can be automatically re-opened: **[Closing connections](#closing-connections)**.
 
@@ -358,11 +358,11 @@ client.invoke(
 [Schmidt and Li (2009a)](http://sap.github.io/PyRFC/bibliography.html#c09a) describe five error types
 on the basis of the return code (i.e. error code), returned from NWRFC SDK:
 
--  Communication failure
--  Logon failure
--  System failure
--  ABAP exception
--  ABAP messages
+- Communication failure
+- Logon failure
+- System failure
+- ABAP exception
+- ABAP messages
 
 There are in total roughly 30 possible return codes that indicate some kind of error. Error information returned
 from NWRFC SDK provides an `error group`, taken as the basis for two exception classes, shown in a below table.
@@ -533,8 +533,8 @@ To expose one NodeJS function for ABAP clients, the ABAP function definition mus
 
 ABAP function definition defines ABAP parameters and data definitions for all variables, structures and tables used in ABAP parameers. Coding these metadata down to field level is not very exciting task and node-rfc Server provides a more elegant solution here:
 
--  Create an empty ABAP RFM in ABAP client system, with the same parameters that ABAP client shall use to invoke the NodeJS function
--  Tell the node server that the function definition for NodeJS function X shall be the taken from the ABAP RFM Y, in ABAP client system
+- Create an empty ABAP RFM in ABAP client system, with the same parameters that ABAP client shall use to invoke the NodeJS function
+- Tell the node server that the function definition for NodeJS function X shall be the taken from the ABAP RFM Y, in ABAP client system
 
 When invoked by ABAP, the NodeJS function will automatically fetch the function definition from ABAP RFM and expose itself as exactly such RFM to ABAP
 
@@ -633,9 +633,9 @@ REG_COUNT=1
 
 **SM59**
 
-The NodeJS destination is in SM59 look like
+The NodeJS destination is in SM59 looks like
 
-![](assets/sm59node.png)
+![sm59](assets/sm59node.png)
 
 **ABAP**
 
@@ -706,13 +706,13 @@ API: [api/throughput](api.md#throughput)
 
 The Throughput object can be attached to one or more clients, providing the RFM communication monitoring:
 
--  number of calls
--  sent bytes
--  received bytes
--  application time
--  total time
--  serialization time
--  deserialization time
+- number of calls
+- sent bytes
+- received bytes
+- application time
+- total time
+- serialization time
+- deserialization time
 
 ## Environment
 

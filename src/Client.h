@@ -85,4 +85,7 @@ namespace node_rfc
 
 } // namespace node_rfc
 
+#define CONNECTION_INFO_SET(property) \
+    infoObj.Set(#property, wrapString(connInfo.property, strlenU((SAP_UTF16 *)connInfo.property)));
+
 #endif
