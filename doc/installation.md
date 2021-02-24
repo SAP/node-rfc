@@ -1,13 +1,13 @@
--  **[SAP NWRFC SDK installation](#sap-nwrfc-sdk-installation)**
-   -  [Windows](#windows)
-   -  [Linux](#linux)
-   -  [macOS](#macos)
--  **[node-rfc installation](#node-rfc-installation)**
--  **[Troubleshooting](#troubleshooting)**
-   -  [Verify SAP NWRFC SDK release](#verify-sap-nwrfc-sdk-release)
-   -  [Verify node-rfc installation](#verify-node-rfc-installation)
-   -  [Verify node-rfc environment](#verify-node-rfc-environment)
--  **[Publish release](#publish-release) (maintainers)**
+- **[SAP NWRFC SDK installation](#sap-nwrfc-sdk-installation)**
+  - [Windows](#windows)
+  - [Linux](#linux)
+  - [macOS](#macos)
+- **[node-rfc installation](#node-rfc-installation)**
+- **[Troubleshooting](#troubleshooting)**
+  - [Verify SAP NWRFC SDK release](#verify-sap-nwrfc-sdk-release)
+  - [Verify node-rfc installation](#verify-node-rfc-installation)
+  - [Verify node-rfc environment](#verify-node-rfc-environment)
+- **[Publish release](#publish-release) (maintainers)**
 
 ## SAP NWRFC SDK Installation
 
@@ -22,10 +22,10 @@ Here are configuration examples for Windows, Linux and macOS operating systems.
 
 ### Windows
 
-1.  Create the SAP NWRFC SDK home directory, e.g. `c:\nwrfcsdk`
-2.  Set SAPNWRFC_HOME environment variable: `SAPNWRFC_HOME=c:\nwrfcsdk`
-3.  Unpack the SAP NW RFC SDK archive to it, e.g. `c:\nwrfcsdk\lib` shall exist.
-4.  Include the `lib` directory to the library search path on Windows, i.e. add to `PATH` environment variable:
+1. Create the SAP NWRFC SDK home directory, e.g. `c:\nwrfcsdk`
+2. Set SAPNWRFC_HOME environment variable: `SAPNWRFC_HOME=c:\nwrfcsdk`
+3. Unpack the SAP NW RFC SDK archive to it, e.g. `c:\nwrfcsdk\lib` shall exist.
+4. Include the `lib` directory to the library search path on Windows, i.e. add to `PATH` environment variable:
 
 ```shell
 PS C:\> $env:Path += ";$env:SAPNWRFC_HOME\lib"
@@ -33,12 +33,12 @@ PS C:\> $env:Path += ";$env:SAPNWRFC_HOME\lib"
 
 ### Linux
 
-1.  Create the SAP NW RFC SDK home directory, e.g. `/usr/local/sap/nwrfcsdk`.
-2.  Set the SAPNWRFC_HOME environment variable: `SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk`
-3.  Unpack the SAP NW RFC SDK archive to it, e.g. `/usr/local/sap/nwrfcsdk/lib` shall exist.
-4.  Include the `lib` directory in the library search path:
+1. Create the SAP NW RFC SDK home directory, e.g. `/usr/local/sap/nwrfcsdk`.
+2. Set the SAPNWRFC_HOME environment variable: `SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk`
+3. Unpack the SAP NW RFC SDK archive to it, e.g. `/usr/local/sap/nwrfcsdk/lib` shall exist.
+4. Include the `lib` directory in the library search path:
 
-    -  As `root`, create a file `/etc/ld.so.conf.d/nwrfcsdk.conf`
+   - As `root`, create a file `/etc/ld.so.conf.d/nwrfcsdk.conf`
 
         **nwrfcsdk.conf**
 
@@ -47,7 +47,7 @@ PS C:\> $env:Path += ";$env:SAPNWRFC_HOME\lib"
         /usr/local/sap/nwrfcsdk/lib
         ```
 
-    -  As `root`, run the command `ldconfig` and check if libraries are installed:
+   - As `root`, run the command `ldconfig` and check if libraries are installed:
 
         ```shell
         $ ldconfig -p | grep sap # should show something like:
@@ -72,9 +72,9 @@ The macOS firewall stealth mode is by default active, blocking the ICMP protocol
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 ```
 
-1.  Create the SAP NWRFC SDK home directory /usr/local/sap/nwrfcsdk (this location is fixed, more info below)
-2.  Set SAPNWRFC_HOME environment variable: SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk
-3.  Unpack the SAP NWRFC SDK archive to it, e.g. /usr/local/sap/nwrfcsdk/lib shall exist.
+1. Create the SAP NWRFC SDK home directory /usr/local/sap/nwrfcsdk (this location is fixed, more info below)
+2. Set SAPNWRFC_HOME environment variable: SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk
+3. Unpack the SAP NWRFC SDK archive to it, e.g. /usr/local/sap/nwrfcsdk/lib shall exist.
 
 Set the remote paths in SAP NW RFC SDK by running [paths_fix.sh](https://github.com/SAP/PyRFC/blob/master/ci/utils/paths_fix.sh) script.
 
@@ -84,8 +84,8 @@ The default rpath `/usr/local/sap/nwrfcsdk/lib` is embedded into `node-rfc` pack
 
 After moving SAP NWRFC SDK to different location on your system, the rpaths must be adjusted, in SAP NWRFC SDK and in `sapnwrfc.node` binary lib:
 
-1.  Set the SAPNWRFC_HOME env variable to new SAP NWRFC SDK home directory and re-run the above script
-2.  Fix `sapnwrfc.node`
+1. Set the SAPNWRFC_HOME env variable to new SAP NWRFC SDK home directory and re-run the above script
+2. Fix `sapnwrfc.node`
 
     ```shell
     install_name_tool -rpath /usr/local/sap/nwrfcsdk/lib /usr/local/sap/nwrfcsdk_new/lib sapnwrfc.node
@@ -103,9 +103,9 @@ The `node-rfc` package can be installed from npm, or built from source: [Install
 
 Verify:
 
-1.  `SAPNWRFC_HOME\lib` directory is in your PATH environment variable
-2.  SAP NWRFC SDK for your platform is installed, not Linux SDK for example on Windows system
-3.  SAP NWRFC SDK 32bit is installed when runnung 32bit NodeJS, not 64bit SDK
+1. `SAPNWRFC_HOME\lib` directory is in your PATH environment variable
+2. SAP NWRFC SDK for your platform is installed, not Linux SDK for example on Windows system
+3. SAP NWRFC SDK 32bit is installed when runnung 32bit NodeJS, not 64bit SDK
 
 `ImportError: DLL load failed: %1 is not a valid Win32 application`
 
@@ -141,7 +141,7 @@ sudo chmod a+x rfcexec
   Error: Not all mandatory parameters specified
     Please start the program in the following way:
     rfcexec -t -a <program ID> -g <gateway host> -x <gateway service>
-      -f <file with list of allowed commands> -s <allowed Sys ID>
+     -f <file with list of allowed commands> -s <allowed Sys ID>
   The options "-t" (trace), "-f" and "-s" are optional.
 ```
 

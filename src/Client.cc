@@ -122,6 +122,7 @@ namespace node_rfc
 
     Napi::Value Client::ConnectionInfo(const Napi::CallbackInfo &info)
     {
+
         if (connectionHandle == NULL)
         {
             return connectionClosedError("connectionInfo");
@@ -136,32 +137,30 @@ namespace node_rfc
         {
             return rfcSdkError(&errorInfo);
         }
-
-        infoObj.Set("dest", wrapString(connInfo.dest, 64));
-        infoObj.Set("host", wrapString(connInfo.host, 100));
-        infoObj.Set("partnerHost", wrapString(connInfo.partnerHost, 100));
-        infoObj.Set("sysNumber", wrapString(connInfo.sysNumber, 2));
-        infoObj.Set("sysId", wrapString(connInfo.sysId, 8));
-        infoObj.Set("client", wrapString(connInfo.client, 3));
-        infoObj.Set("user", wrapString(connInfo.user, 12));
-        infoObj.Set("language", wrapString(connInfo.language, 2));
-        infoObj.Set("trace", wrapString(connInfo.trace, 1));
-        infoObj.Set("isoLanguage", wrapString(connInfo.isoLanguage, 2));
-        infoObj.Set("codepage", wrapString(connInfo.codepage, 4));
-        infoObj.Set("partnerCodepage", wrapString(connInfo.partnerCodepage, 4));
-        infoObj.Set("rfcRole", wrapString(connInfo.rfcRole, 1));
-        infoObj.Set("type", wrapString(connInfo.type, 1));
-        infoObj.Set("partnerType", wrapString(connInfo.partnerType, 1));
-        infoObj.Set("rel", wrapString(connInfo.rel, 4));
-        infoObj.Set("partnerRel", wrapString(connInfo.partnerRel, 4));
-        infoObj.Set("kernelRel", wrapString(connInfo.kernelRel, 4));
-        infoObj.Set("cpicConvId", wrapString(connInfo.cpicConvId, 8));
-        infoObj.Set("progName", wrapString(connInfo.progName, 128));
-        infoObj.Set("partnerBytesPerChar", wrapString(connInfo.partnerBytesPerChar, 1));
-        infoObj.Set("partnerSystemCodepage", wrapString(connInfo.partnerSystemCodepage, 4));
-        infoObj.Set("partnerIP", wrapString(connInfo.partnerIP, 15));
-        infoObj.Set("partnerIPv6", wrapString(connInfo.partnerIPv6, 45));
-        // infoObj.Set("reserved", wrapString(connInfo.reserved, 17));
+        CONNECTION_INFO_SET(dest);
+        CONNECTION_INFO_SET(host);
+        CONNECTION_INFO_SET(partnerHost)
+        CONNECTION_INFO_SET(sysNumber);
+        CONNECTION_INFO_SET(sysId);
+        CONNECTION_INFO_SET(client);
+        CONNECTION_INFO_SET(user);
+        CONNECTION_INFO_SET(language);
+        CONNECTION_INFO_SET(trace);
+        CONNECTION_INFO_SET(isoLanguage);
+        CONNECTION_INFO_SET(codepage);
+        CONNECTION_INFO_SET(partnerCodepage);
+        CONNECTION_INFO_SET(rfcRole);
+        CONNECTION_INFO_SET(type);
+        CONNECTION_INFO_SET(partnerType);
+        CONNECTION_INFO_SET(rel);
+        CONNECTION_INFO_SET(partnerRel);
+        CONNECTION_INFO_SET(kernelRel);
+        CONNECTION_INFO_SET(cpicConvId);
+        CONNECTION_INFO_SET(progName);
+        CONNECTION_INFO_SET(partnerBytesPerChar);
+        CONNECTION_INFO_SET(partnerSystemCodepage);
+        CONNECTION_INFO_SET(partnerIP);
+        CONNECTION_INFO_SET(partnerIPv6);
 
         return infoObj;
     }

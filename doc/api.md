@@ -1,21 +1,21 @@
--  **[addon](#addon)**
-   -  [setIniFileDirectory](#setinifiledirectory)
--  **[Client](#client)**
-   -  [Properties](#client-properties)
-   -  [Constructor](#client-constructor)
-   -  [API](#client-api)
--  **[Connection Pool](#connection-pool)**
-   -  [Properties](#pool-properties)
-   -  [Constructor](#pool-constructor)
-   -  [API](#pool-api)
--  **[Server](#server)**
-   -  [Properties](#server-properties)
-   -  [Constructor](#server-constructor)
-   -  [API](#server-api)
--  **[Throughput](#throughput)**
-   -  [Properties](#throughput-properties)
-   -  [Constructor](#throughput-constructor)
-   -  [API](#throughput-api)
+- **[addon](#addon)**
+  - [setIniFileDirectory](#setinifiledirectory)
+- **[Client](#client)**
+  - [Properties](#client-properties)
+  - [Constructor](#client-constructor)
+  - [API](#client-api)
+- **[Connection Pool](#connection-pool)**
+  - [Properties](#pool-properties)
+  - [Constructor](#pool-constructor)
+  - [API](#pool-api)
+- **[Server](#server)**
+  - [Properties](#server-properties)
+  - [Constructor](#server-constructor)
+  - [API](#server-api)
+- **[Throughput](#throughput)**
+  - [Properties](#throughput-properties)
+  - [Constructor](#throughput-constructor)
+  - [API](#throughput-api)
 
 ## Addon
 
@@ -121,9 +121,9 @@ close(callback?: Function): void | Promise<void>
 
 RFC ping the ABAP backend system, returning:
 
--  boolean `true` when successful
--  boolean `false` and RFC error object, when not
--  Error object when the connection is already closed
+- boolean `true` when successful
+- boolean `false` and RFC error object, when not
+- Error object when the connection is already closed
 
 ```ts
 ping(callback?: Function): void | Promise<boolean>

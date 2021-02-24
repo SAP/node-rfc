@@ -6,8 +6,8 @@ SAP NW RFC Library supports plain and secure connection with following authentic
 
 NW ABAP servers support in addition:
 
--  SAP logon tickets
--  Security Assertion Markup Language (SAML)
+- SAP logon tickets
+- Security Assertion Markup Language (SAML)
 
 Assuming you are familiar with abovementioned concepts and have ABAP backend system configured for SNC communication, here you may find connection strings examples, for testing plain and secure RFC connections, with various authentication methods.
 
@@ -48,9 +48,9 @@ Alternatively, the path can be set as `SNC_LIB` environment variable, in which c
 
 **Prerequisites**
 
--  SAP Single Sign On must be configured on a client and the user must be logged in on a client.
--  SNC name must be configured for the ABAP user in NW ABAP system, using transaction SU01:
-   ![](assets/SU01-SNC.png)
+- SAP Single Sign On must be configured on a client and the user must be logged in on a client.
+- SNC name must be configured for the ABAP user in NW ABAP system, using transaction SU01:
+   ![su01](assets/SU01-SNC.png)
 
 ## SNC with client system PSE and User X509
 
@@ -71,14 +71,14 @@ const abapConnection = {
 
 **Prerequisites**
 
--  The user does not have to be logged into the client system, neither the Single Sign On must be configured on a client
--  The trusted relationship must be established between the ABAP backend system and the client system.
--  The client system must be registered in the NW ABAP backend Access Control List (ACL), using transaction SNC0
--  Keystores are generated on a client system, using SAP cryptography tool SAPGENPSE and the environment variable SECUDIR points to the folder with generated keystores
+- The user does not have to be logged into the client system, neither the Single Sign On must be configured on a client
+- The trusted relationship must be established between the ABAP backend system and the client system.
+- The client system must be registered in the NW ABAP backend Access Control List (ACL), using transaction SNC0
+- Keystores are generated on a client system, using SAP cryptography tool SAPGENPSE and the environment variable SECUDIR points to the folder with generated keystores
 
-    ![](assets/SNC0-1.png)
+    ![snc50](assets/SNC0-1.png)
 
--  User X509 certificate must be mapped to ABAP NW backend user, using transaction EXTID_DN
-    ![](assets/EXTID_DN-1.png)
+- User X509 certificate must be mapped to ABAP NW backend user, using transaction EXTID_DN
+    ![ext-dn1](assets/EXTID_DN-1.png)
 
-    ![](assets/EXTID_DN-2.png)
+    ![ext-dn2](assets/EXTID_DN-2.png)
