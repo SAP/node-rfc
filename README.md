@@ -22,6 +22,7 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 - Automatic conversion between NodeJS and ABAP datatypes
 - Direct and managed connections (connection pool)
 - Throughput monitoring: number of calls, bytes sent/received, application/total time; SAP NWRFC SDK >= 7.53 required
+- Usage examples & code-snippets: [SAP-samples/node-rfc-samples](https://github.com/SAP-samples/node-rfc-samples)
 
 ## Content
 
@@ -129,7 +130,7 @@ CLIENT=620
 LANG=EN
 ```
 
-Call the ABAP RFM. When in doubt about RFM parameters' structure, use **[rfmcall](https://github.com/SAP/fundamental-tools/tree/master/tools/rfmcall)**:
+Call the ABAP RFM. When in doubt about RFM parameters' structure try `abap call` CLI tool of [SAP/fundamental-tools](https://github.com/SAP/fundamental-tools/tree/main/abap-api-tools)
 
 ```javascript
 const noderfc = require("node-rfc");

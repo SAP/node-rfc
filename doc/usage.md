@@ -25,7 +25,7 @@
     - [Date and time conversion options "date" and "time"](#date-and-time-conversion-options-date-and-time)
     - [Parameter type filter option "filter"](#parameter-type-filter-option-filter)
   - [Error handling](#error-handling)
-  - [Invoction patterns](#invoction-patterns)
+  - [Invocation patterns](#invocation-patterns)
     - [Async/await](#asyncawait)
     - [Promise](#promise)
     - [Callback](#callback)
@@ -377,7 +377,7 @@ The `node-rfc` is using one exception class and exception class names are expose
 | ABAP exception        | [5] RFC_ABAP_EXCEPTION        | ABAP_APPLICATION_FAILURE | AbapError           |
 | node-rfc error        |                               |                          | nodeRfcError        |
 
-### Invoction patterns
+### Invocation patterns
 
 After getting a direct or managed client instance, the ABAP function module can be consumed from NodeJS using Async/await, Promise or callback pattern.
 
