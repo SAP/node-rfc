@@ -6,6 +6,8 @@
 
 #include <node_api.h>
 #include <assert.h>
+#include <uv.h>
+
 namespace node_rfc
 {
     extern Napi::Env __env;
@@ -130,6 +132,7 @@ namespace node_rfc
 
     RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle, RFC_FUNCTION_HANDLE func_handle, RFC_ERROR_INFO *errorInfo)
     {
+        printf("Self thread: %s\n", uv_thread_self());
         Server *server = node_rfc::__server;
 
         RFC_RC rc = RFC_NOT_FOUND;
@@ -315,6 +318,7 @@ namespace node_rfc
     Napi::Value Server::Start(const Napi::CallbackInfo &info)
     {
         DEBUG("Server::Serve");
+        printf("Self thread: %s\n", uv_thread_self());
 
         std::ostringstream errmsg;
 
