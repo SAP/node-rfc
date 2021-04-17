@@ -7,6 +7,7 @@
 #include <node_api.h>
 #include <assert.h>
 #include <uv.h>
+#include <stdio.h>
 
 namespace node_rfc
 {
