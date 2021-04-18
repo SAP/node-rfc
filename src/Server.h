@@ -48,7 +48,7 @@ typedef struct _ServerFunctionStruct
 
     ~_ServerFunctionStruct()
     {
-        threadSafeCallback.Release();
+        //threadSafeCallback.Release(); <-- This misbehaves because I didn't understand when the destructor gets called and assumed it happens at the end
     }
 } ServerFunctionStruct;
 
