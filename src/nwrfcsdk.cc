@@ -414,16 +414,16 @@ namespace node_rfc
         return scope.Escape(resultValue);
     }
 
-    ValuePair getRfmParameters(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options)
+    ValuePair getRfmParameters(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options, Napi::Env env)
     {
-        Napi::EscapableHandleScope scope(node_rfc::__env);
+        Napi::EscapableHandleScope scope(env);
 
         RFC_PARAMETER_DESC paramDesc;
 
         uint_t paramCount = 0;
 
         RfcGetParameterCount(functionDescHandle, &paramCount, NULL);
-        Napi::Object resultObj = Napi::Object::New(node_rfc::__env);
+        Napi::Object resultObj = Napi::Object::New(env);
 
         for (uint_t i = 0; i < paramCount; i++)
         {

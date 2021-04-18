@@ -8,35 +8,47 @@
 #include <uv.h>
 #include <map>
 #include "Client.h"
+
+typedef struct
+{
+		RFC_FUNCTION_DESC_HANDLE func_desc_handle;
+		RFC_FUNCTION_HANDLE func_handle;
+		uv_mutex_t cond_mutex;
+		uv_cond_t cond;
+} DataType;
+
+void CallJs(Napi::Env env, Napi::Function callback, Reference<Value> *context, DataType *data);
+using TSFN = Napi::TypedThreadSafeFunction<Reference<Value>, DataType, CallJs>;
+
 typedef struct _ServerFunctionStruct
 {
     RFC_ABAP_NAME func_name;
     RFC_FUNCTION_DESC_HANDLE func_desc_handle = NULL;
-    Napi::FunctionReference callback;
+    TSFN threadSafeCallback;
 
     _ServerFunctionStruct()
     {
         func_name[0] = 0;
     }
 
-    _ServerFunctionStruct(RFC_ABAP_NAME name, RFC_FUNCTION_DESC_HANDLE desc_handle, Napi::Function cb)
+    _ServerFunctionStruct(RFC_ABAP_NAME name, RFC_FUNCTION_DESC_HANDLE desc_handle, TSFN cb)
     {
         strcpyU(func_name, name);
         func_desc_handle = desc_handle;
-        callback = Napi::Persistent(cb);
+        threadSafeCallback = cb; // Questionable
     }
 
     _ServerFunctionStruct &operator=(_ServerFunctionStruct &src) // note: passed by copy
     {
         strcpyU(func_name, src.func_name);
         func_desc_handle = src.func_desc_handle;
-        callback = Napi::Persistent(src.callback.Value());
+        threadSafeCallback = src.threadSafeCallback; // Questionable, idk what to do here tbh
         return *this;
     }
 
     ~_ServerFunctionStruct()
     {
-        callback.Reset();
+        threadSafeCallback.Release();
     }
 } ServerFunctionStruct;
 
@@ -47,6 +59,7 @@ typedef struct
     napi_async_work work;
     napi_threadsafe_function tsfn;
 } AddonData;
+
 namespace node_rfc
 {
     extern Napi::Env __env;
@@ -61,6 +74,7 @@ namespace node_rfc
         ~Server(void);
         ServerFunctionsMap serverFunctions;
         AddonData *addon_data;
+				
 
     private:
         Napi::Value IdGetter(const Napi::CallbackInfo &info);
@@ -111,7 +125,7 @@ namespace node_rfc
         void UnlockMutex();
         uv_sem_t invocationMutex;
     };
-
+		
 } // namespace node_rfc
 
 #endif

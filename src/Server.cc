@@ -133,7 +133,6 @@ namespace node_rfc
 
     RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle, RFC_FUNCTION_HANDLE func_handle, RFC_ERROR_INFO *errorInfo)
     {
-        printf("Self thread: %d\n", uv_thread_self());
         Server *server = node_rfc::__server;
 
         RFC_RC rc = RFC_NOT_FOUND;
@@ -175,26 +174,32 @@ namespace node_rfc
         uint_t paramCount;
 
         //
-        // ABAP -> JS parameters
-        //
-        //RfmErrorPath errorPath;
-        //ClientOptionsStruct client_options;
-        //ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &errorPath, &client_options);
-
-        //
         // JS Call
         //
-        //it->second.callback.Call({jsContainer});
+        
+        DataType *payload = new DataType();
+        uv_cond_init(&payload->cond);
+        uv_mutex_init(&payload->cond_mutex);
+        payload->func_desc_handle = func_desc_handle;
+        payload->func_handle = func_handle;
+        
+        it->second.threadSafeCallback.BlockingCall(payload);
+
+				printf("Before cond [native thread]\n");
+				uv_mutex_lock(&payload->cond_mutex);
+				uv_cond_wait(&payload->cond, &payload->cond_mutex);
+				uv_mutex_unlock(&payload->cond_mutex);
+				printf("After cond [native thread]\n");
 
         //
         // JS -> ABAP parameters
         //
 
-        RfcGetParameterCount(func_desc_handle, &paramCount, errorInfo);
+        /*RfcGetParameterCount(func_desc_handle, &paramCount, errorInfo);
         if (errorInfo->code != RFC_OK)
         {
             return errorInfo->code;
-        }
+        }*/
 
         //Napi::Value err = Undefined();
         //for (uint_t i = 0; i < paramCount; i++)
@@ -319,7 +324,6 @@ namespace node_rfc
     Napi::Value Server::Start(const Napi::CallbackInfo &info)
     {
         DEBUG("Server::Serve");
-        printf("Self thread: %d\n", uv_thread_self());
 
         std::ostringstream errmsg;
 
@@ -412,8 +416,23 @@ namespace node_rfc
             callback.Call({rfcSdkError(&errorInfo)});
             return scope.Escape(info.Env().Undefined());
         }
+        
+        Napi::Reference<Napi::Value> *context = new Napi::Reference<Napi::Value>(Napi::Persistent(info.This()));
 
-        ServerFunctionStruct sfs = ServerFunctionStruct(func_name, func_desc_handle, jsFunction);
+				// Create thread-safe function from `jsFunction`
+				TSFN threadSafeFunction = TSFN::New(
+				  info.Env(),
+				  jsFunction, 						// JavaScript function called asynchronously
+				  "Resource Name",        // Name
+				  0,                      // Unlimited queue
+				  1,                      // Only one thread will use this initially
+				  context,
+				  [](Napi::Env, void *,
+				     Napi::Reference<Napi::Value> *ctx) { // Finalizer used to clean threads up
+				    delete ctx;
+				  });
+				  
+        ServerFunctionStruct sfs = ServerFunctionStruct(func_name, func_desc_handle, threadSafeFunction);
         free(func_name);
 
         serverFunctions[functionName.Utf8Value()] = sfs;
@@ -469,7 +488,9 @@ namespace node_rfc
             }
             it++;
         }
+        
         free(func_name);
+        it->second.threadSafeCallback.Release();
 
         if (it == serverFunctions.end())
         {
@@ -540,3 +561,35 @@ namespace node_rfc
     }
 
 } // namespace node_rfc
+
+		void CallJs(Napi::Env env, Napi::Function callback, Reference<Value> *context,
+				        DataType *data) {
+				        
+      //
+      // ABAP -> JS parameters
+      //
+      
+      auto func_desc_handle = data->func_desc_handle;
+      auto func_handle = data->func_handle;
+      
+      node_rfc::RfmErrorPath errorPath;
+      node_rfc::ClientOptionsStruct client_options;
+      node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &errorPath, &client_options, env);
+				        
+			// Is the JavaScript environment still available to call into, eg. the TSFN is
+			// not aborted
+			if (env != nullptr) {
+				// On Node-API 5+, the `callback` parameter is optional; however, this example
+				// does ensure a callback is provided.
+				if (callback != nullptr) {
+				  callback.Call(context->Value(), {jsContainer.first, jsContainer.second});
+				  uv_mutex_lock(&data->cond_mutex);
+				  uv_cond_signal(&data->cond);
+				  uv_mutex_unlock(&data->cond_mutex);
+				}
+			}
+			if (data != nullptr) {
+				// We're finished with the data.
+				delete data;
+			}
+		}
