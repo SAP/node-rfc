@@ -25,11 +25,11 @@
 #define NODERFC_VERSION "Deactivate logging: LOG_RFC_CLIENT"
 #else
 // client binding version
-#define NODERFC_VERSION "2.4.0"
+#define NODERFC_VERSION "2.4.1"
 #endif
 
 template <typename... Args>
-void log(Args &&... args)
+void log(Args &&...args)
 {
     (std::cerr << ... << args);
     std::cerr << std::endl;
