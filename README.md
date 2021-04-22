@@ -66,7 +66,7 @@ Other platforms and frameworks:
 
 ### All platforms
 
-- SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account required) and locally installed ([installation instructions](doc/installation.md#sap-nwrfc-sdk-installation). More information on [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html). Using the latest version is reccomended as SAP NW RFC SDK is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.6C.
+- SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account required) and locally installed. Check [installation instructions](doc/installation.md#sap-nwrfc-sdk-installation) and [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html). Using the latest version is reccomended as SAP NW RFC SDK is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.6C.
 
 - Build toolchain requires [CMake](https://cmake.org/)
 

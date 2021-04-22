@@ -379,8 +379,8 @@ namespace node_rfc
         {
             return scope.Escape(Napi::String::New(node_rfc::__env, ""));
         }
-        // try with 5 bytes per unicode character
-        uint_t utf8Size = length * 5;
+        // try with 3 bytes per unicode character
+        uint_t utf8Size = length * 3;
         char *utf8 = (char *)malloc(utf8Size + 1);
         utf8[0] = '\0';
         uint_t resultLen = 0;
@@ -388,9 +388,9 @@ namespace node_rfc
         //EDEBUG("len: ", length, " utf8Size: ", utf8Size, " resultLen: ", resultLen, " ", errorInfo.code);
         if (errorInfo.code != RFC_OK)
         {
-            // not enough, try with 7
+            // not enough, try with 5
             free(utf8);
-            utf8Size = length * 7;
+            utf8Size = length * 5;
             utf8 = (char *)malloc(utf8Size + 1);
             utf8[0] = '\0';
             resultLen = 0;
