@@ -123,7 +123,7 @@ describe("Client: direct callback", () => {
         done();
     });
 
-    test("invoke() STFC_CONNECTION should return unicode string", function (done) {
+    test("invoke() STFC_CONNECTION should return unicode string (1)", function (done) {
         client.connect((err) => {
             if (err) return done(err);
             client.invoke(
@@ -135,6 +135,24 @@ describe("Client: direct callback", () => {
                     if (err) return done(err);
                     expect(res).toHaveProperty("ECHOTEXT");
                     expect(res.ECHOTEXT.indexOf(setup.UNICODETEST)).toBe(0);
+                    client.close(() => done());
+                }
+            );
+        });
+    });
+
+    test("invoke() STFC_CONNECTION should return unicode string (2)", function (done) {
+        client.connect((err) => {
+            if (err) return done(err);
+            client.invoke(
+                "STFC_CONNECTION",
+                {
+                    REQUTEXT: setup.UNICODETEST2,
+                },
+                function (err, res) {
+                    if (err) return done(err);
+                    expect(res).toHaveProperty("ECHOTEXT");
+                    expect(res.ECHOTEXT.indexOf(setup.UNICODETEST2)).toBe(0);
                     client.close(() => done());
                 }
             );
