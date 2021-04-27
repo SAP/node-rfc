@@ -37,7 +37,7 @@ describe("Concurrency: Callbacks", () => {
                 );
             });
         }
-    }, 10000);
+    }, 20000);
 
     test(`${setup.CONNECTIONS} clients make concurrent ping() requests`, function (done) {
         expect.assertions(setup.CONNECTIONS);
@@ -56,5 +56,5 @@ describe("Concurrency: Callbacks", () => {
                 });
             });
         }
-    }, 10000);
+    }, 20000);
 });

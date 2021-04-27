@@ -27,7 +27,8 @@
     "ts": "tsc -p src/ts",
     "upload": "prebuild -r napi -u --verbose",
     "examples": "tsc -p examples/ts",
-    "test": "reuse lint && jest --testPathIgnorePatterns throughput"
+    "test": "reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000",
+    "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000"
   },
   "binary": {
     "napi_versions": [

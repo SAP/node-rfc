@@ -16,11 +16,11 @@ describe("Client: direct promise", () => {
     test("call() STFC_CONNECTION should return unicode string", function (done) {
         client.open().then((clnt) => {
             clnt.call("STFC_CONNECTION", {
-                REQUTEXT: setup.UNICODETEST,
+                REQUTEXT: setup.UNICODETEST2,
             }).then((res) => {
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty("ECHOTEXT");
-                expect(res.ECHOTEXT.indexOf(setup.UNICODETEST)).toEqual(0);
+                expect(res.ECHOTEXT.indexOf(setup.UNICODETEST2)).toEqual(0);
                 clnt.close(() => done());
             });
         });

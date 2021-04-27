@@ -11,6 +11,7 @@ const _Pool = _binding.Pool;
 const _Throughput = _binding.Throughput;
 const _Promise = _binding.Promise;
 const _UNICODETEST = "ทดสอบสร้างลูกค้าจากภายนอกครั้งที่".repeat(7);
+const _UNICODETEST2 = "Hällü ßärÖÄ อกครั้งที่".repeat(3);
 const os = require("os");
 
 const _INI_PATH = require("path").join(process.cwd(), "test");
@@ -54,6 +55,7 @@ module.exports = {
     abapSystem: _abapSystem,
     RefEnvironment: _environment,
     UNICODETEST: _UNICODETEST,
+    UNICODETEST2: _UNICODETEST2,
     CONNECTIONS: _CONNECTIONS,
     direct_client: _direct_client,
     poolConfiguration: _poolConfiguration,
