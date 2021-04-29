@@ -46,7 +46,7 @@ namespace node_rfc
         sapuc = (SAP_UC *)mallocU(sapucSize);
         memsetU((SAP_UTF16 *)sapuc, 0, sapucSize);
         rc = RfcUTF8ToSAPUC((RFC_BYTE *)&sstr[0], sapucSize - 1, sapuc, &sapucSize, &resultLen, &errorInfo);
-        // EDEBUG("fill: ", sstr, " sapucSize: ", sapucSize, " resultLen: ", resultLen, " code: ", errorInfo.code);
+        EDEBUG("fill: ", sstr, " sapucSize: ", sapucSize, " resultLen: ", resultLen, " code: ", errorInfo.code);
 
         if (rc != RFC_OK)
         {
@@ -220,9 +220,8 @@ namespace node_rfc
                 err << "String expected from NodeJS for the field of type " << typ;
                 return nodeRfcError(err.str(), errorPath);
             }
-            std::string sstr = std::string(value.As<Napi::String>());
-            cValue = setString(sstr);
-            rc = RfcSetString(functionHandle, cName, cValue, sstr.length(), &errorInfo);
+            cValue = setString(value.ToString());
+            rc = RfcSetString(functionHandle, cName, cValue, strlenU(cValue), &errorInfo);
             free(cValue);
             break;
         }
