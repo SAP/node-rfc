@@ -202,3 +202,7 @@ Check out the SCN Forum (search for "node-rfc") and stackoverflow (use the tag "
 
 We appreciate contributions from the community to **node-rfc**!
 See [CONTRIBUTING.md](CONTRIBUTING.md) for more details on our philosophy around extending this module.
+
+## License
+
+Copyright (c) 2018 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the [LICENSE file](LICENSES/Apache-2.0.txt).
