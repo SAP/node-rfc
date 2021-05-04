@@ -27,8 +27,8 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 ## Content
 
 - **[Supported Platforms](#supported-platforms)**
-- **[Prerequisites](#prerequisites)**
-- **[Installation](#installation)**
+- **[Requirements](#requirements)**
+- **[Download and installation](#download-and-installation)**
 - **[Getting started](#getting-started)**
 - **[Usage](doc/usage.md)**
   - **[Authentication](doc/authentication.md)**
@@ -62,7 +62,7 @@ Other platforms and frameworks:
 - [Node-RED](https://github.com/PaulWieland/node-red-contrib-saprfc)
 - [Sails JS](https://github.com/dcolley/sailsjs-node-rfc)
 
-## Prerequisites
+## Requirements
 
 ### All platforms
 
@@ -90,7 +90,7 @@ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 
 - When the node-rfc is started for the first time, the popups come-up for each NWRFC SDK library, to confirm it should be opened. If SDK is installed in admin folder, the node-rfc app shall be that first time started with admin privileges, eg. `sudo -E`
 
-## Installation
+## Download and Installation
 
 More info: **[Installation](doc/installation.md)**
 
