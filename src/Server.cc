@@ -355,8 +355,8 @@ namespace node_rfc
         }
 
 				// Uncommented stop code
-        Napi::Function callback = info[0].As<Napi::Function>();
-        (new StopAsync(callback, this))->Queue();
+        //Napi::Function callback = info[0].As<Napi::Function>();
+        //(new StopAsync(callback, this))->Queue();
 
         return info.Env().Undefined();
     };
