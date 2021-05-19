@@ -2,21 +2,31 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-const _node_rfc = require("../../package.json").dependencies["node-rfc"];
-const _binding = require(_node_rfc ? "node-rfc" : "../../lib");
-const _abapSystem = require("./abapSystem");
+const _node_rfc = require("../../package.json").dependencies["node-rfc"],
+    _binding = require(_node_rfc ? "node-rfc" : "../../lib"),
+    _abapSystem = require("./abapSystem"),
+    _Client = _binding.Client,
+    _Pool = _binding.Pool,
+    _Throughput = _binding.Throughput,
+    _Promise = _binding.Promise,
+    os = require("os");
 
-const _Client = _binding.Client;
-const _Pool = _binding.Pool;
-const _Throughput = _binding.Throughput;
-const _Promise = _binding.Promise;
-const _UNICODETEST = "ทดสอบสร้างลูกค้าจากภายนอกครั้งที่".repeat(7);
-const _UNICODETEST2 = "Hällü ßärÖÄ อกครั้งที่".repeat(3);
-const os = require("os");
+const _UNICODETEST = "ทดสอบสร้างลูกค้าจากภายนอกครั้งที่".repeat(7),
+    _UNICODETEST2 = "Hällü ßärÖÄ อกครั้งที่".repeat(3);
 
-const _INI_PATH = require("path").join(process.cwd(), "test");
-
-_binding.setIniFileDirectory(_INI_PATH);
+const _sapnwrfcIniPath = require("path").join(process.cwd(), "test"),
+    _CryptoLibPath = {
+        darwin: "/Applications/Secure Login Client.app/Contents/MacOS/lib/libsapcrypto.dylib",
+        linux: "/usr/local/sap/cryptolib/libsapcrypto.so",
+        win32:
+            //"C:\\Program Files\\SAP\\FrontEnd\\SecureLogin\\libsapcrypto.dll",
+            "C:\\Tools\\cryptolib\\sapcrypto.dll",
+    },
+    _ClientPSEPath = {
+        darwin: "/Users/d037732/dotfiles/sec/rfctest.pse",
+        linux: "/home/www-admin/sec/rfctest.pse",
+        win32: "C:\\Tools\\sec\\rfctest.pse",
+    };
 
 const _environment = {
     platform: {
@@ -36,15 +46,16 @@ const _environment = {
     versions: process.versions,
 };
 
-const _CONNECTIONS = 0x20;
+const _CONNECTIONS = 0x20,
+    _direct_client = (system = _abapSystem(), options) => {
+        return new _Client(system, options);
+    },
+    _poolConfiguration = {
+        connectionParameters: _abapSystem(),
+    };
 
-_direct_client = (system = _abapSystem(), options) => {
-    return new _Client(system, options);
-};
-
-_poolConfiguration = {
-    connectionParameters: _abapSystem(),
-};
+_binding.setIniFileDirectory(_sapnwrfcIniPath);
+_binding.loadCryptoLibrary(_CryptoLibPath[process.platform]);
 
 module.exports = {
     binding: _binding,
@@ -59,5 +70,6 @@ module.exports = {
     CONNECTIONS: _CONNECTIONS,
     direct_client: _direct_client,
     poolConfiguration: _poolConfiguration,
-    INI_PATH: _INI_PATH,
+    sapnwrfcIniPath: _sapnwrfcIniPath,
+    CryptoLibPath: _CryptoLibPath,
 };

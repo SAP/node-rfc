@@ -1,7 +1,7 @@
 {
   "name": "node-rfc",
   "description": "nodejs bindings for SAP NW RFC SDK",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "homepage": "https://github.com/sap/node-rfc",
   "author": {
     "name": "Srdjan Boskovic",
@@ -60,24 +60,24 @@
   ],
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
-  "dependencies": {
-    "bluebird": "^3.7.2",
-    "node-addon-api": "^3.1.0"
-  },
   "devDependencies": {
-    "@babel/core": "^7.13.16",
-    "@types/bluebird": "^3.5.33",
-    "@types/node": "^14.14.41",
-    "@typescript-eslint/eslint-plugin": "^4.22.0",
-    "@typescript-eslint/parser": "^4.22.0",
+    "@babel/core": "^7.14.3",
+    "@types/bluebird": "^3.5.35",
+    "@types/node": "^15.3.0",
+    "@typescript-eslint/eslint-plugin": "^4.24.0",
+    "@typescript-eslint/parser": "^4.24.0",
     "async": "^3.2.0",
     "cmake-js": "^6.1.0",
     "decimal.js": "^10.2.1",
-    "eslint": "^7.24.0",
+    "eslint": "^7.26.0",
     "jest": "^26.6.3",
     "prebuild": "^10.0.1",
-    "prebuild-install": "^6.1.1",
+    "prebuild-install": "^6.1.2",
     "random-bytes": "^1.0.0",
     "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "bluebird": "^3.7.2",
+    "node-addon-api": "^3.2.0"
   }
 }

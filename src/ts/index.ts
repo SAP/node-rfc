@@ -20,3 +20,10 @@ export function setIniFileDirectory(iniFileDirectory: string) {
     }
     noderfc_binding.setIniFileDirectory(iniFileDirectory);
 }
+
+export function loadCryptoLibrary(libAbsolutePath: string) {
+    if (!require("fs").existsSync(libAbsolutePath)) {
+        throw new Error(`Crypto library not found: ${libAbsolutePath}`);
+    }
+    noderfc_binding.loadCryptoLibrary(libAbsolutePath);
+}
