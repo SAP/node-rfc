@@ -28,11 +28,17 @@ LANG=EN
 
 ## WebSocket RFC
 
-Preferred way on newer systems, see https://github.com/SAP/node-rfc/issues/212
+Preferred way on newer systems. See also:
+
+- https://github.com/SAP/node-rfc/issues/212
+- Section 4 of `sapnwrfc.ini` in SAP NWRFC SDK demo folder
 
 Authentication with user/password:
 
 ```ini
+DEFAULT
+TLS_SAPCRYPTOLIB=/usr/local/sap/cryptolib/libsapcrypto.so
+
 DEST=WS_ALX
 WSHOST=ldcialx.wdf.sap.corp
 WSPORT=44318
@@ -46,6 +52,9 @@ TLS_CLIENT_PSE=/Users/d037732/dotfiles/sec/rfctest.pse
 Authentication with client certificate
 
 ```ini
+DEFAULT
+TLS_SAPCRYPTOLIB=/usr/local/sap/cryptolib/libsapcrypto.so
+
 DEST=WS_ALX_CC
 TLS_CLIENT_CERTIFICATE_LOGON=1
 WSHOST=ldcialx.wdf.sap.corp
@@ -53,6 +62,14 @@ WSPORT=44318
 CLIENT=000
 LANG=EN
 TLS_CLIENT_PSE=/Users/d037732/dotfiles/sec/rfctest.pse
+```
+
+The path to crypto library can be also set by `loadCryptoLibrary` method, available from `node-rfc` 2.4.3:
+
+```js
+const noderfc = require("node-rfc");
+
+noderfc.loadCryptoLibrary("/usr/local/sap/cryptolib/libsapcrypto.so")
 ```
 
 ## SNC with user PSE
