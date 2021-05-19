@@ -20,7 +20,6 @@ release/
 lib/binding/
 issues/
 examples/dist/
-ci/test
 # https://github.com/Microsoft/vscode-cpptools/issues/3347
 .vscode/ipch
 prebuilds/
@@ -30,5 +29,6 @@ cmake_install.cmake
 CMakeCache.txt
 CMakeFiles
 ci/test
+ci/test/
 sapnwrfc.ini
 

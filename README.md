@@ -94,7 +94,7 @@ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 
 More info: **[Installation](doc/installation.md)**
 
-:exclamation: The build from source requires NodeJS release with minimum N-API version given in `package.json` property "napi_versions": [NodeJS/N-API version matrix](https://nodejs.org/api/n-api.html#n_api_n_api_version_matrix).
+:exclamation: The build from source requires NodeJS release with minimum N-API version given in `package.json` property "napi_versions": [NodeJS/N-API version matrix](https://nodejnps.org/api/n-api.html#n_api_node_api_version_matrix).
 
 After the SAP NW RFC SDK is installed on your system, the `node-rfc` can be installed from npm:
 

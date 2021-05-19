@@ -30,6 +30,32 @@ namespace node_rfc
         return scope.Escape(version);
     }
 
+    Napi::Value LoadCryptoLibrary(const Napi::CallbackInfo &info)
+    {
+        if (!info[0].IsString())
+        {
+            std::ostringstream errmsg;
+            errmsg << "Client setIniPath() requires the directory in which to search for the sapnwrfc.ini file, received: ";
+            errmsg << info[0].As<Napi::String>().Utf8Value() << "; see" << USAGE_URL;
+            Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
+        }
+
+        Napi::String cryptoLibAbsolutePath = info[0].As<Napi::String>();
+
+        RFC_ERROR_INFO errorInfo;
+        SAP_UC *libPath = setString(cryptoLibAbsolutePath);
+        RFC_RC rc = RfcLoadCryptoLibrary(libPath, &errorInfo);
+        free(libPath);
+
+        if (rc != RFC_OK || errorInfo.code != RFC_OK)
+        {
+            return rfcSdkError(&errorInfo);
+        }
+
+        return info.Env().Undefined();
+    }
+
     Napi::Value SetIniFileDirectory(const Napi::CallbackInfo &info)
     {
         if (!info[0].IsString())
@@ -60,6 +86,7 @@ namespace node_rfc
     {
         exports.Set("bindingVersions", BindingVersions(env));
         exports.Set("setIniFileDirectory", Napi::Function::New(env, SetIniFileDirectory));
+        exports.Set("loadCryptoLibrary", Napi::Function::New(env, LoadCryptoLibrary));
 
         Pool::Init(env, exports);
         Client::Init(env, exports);

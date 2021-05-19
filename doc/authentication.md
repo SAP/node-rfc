@@ -1,7 +1,9 @@
 SAP NW RFC Library supports plain and secure connection with following authentication methods:
 
 - [Plain with username/password](#plain-with-usernamepassword)
+- [WebSocket RFC](#websocket-rfc)
 - [SNC with user PSE](#snc-with-user-pse)
+  - [Prerequisites](#prerequisites)
 - [SNC with client system PSE and User X509](#snc-with-client-system-pse-and-user-x509)
 
 NW ABAP servers support in addition:
@@ -15,15 +17,42 @@ Assuming you are familiar with abovementioned concepts and have ABAP backend sys
 
 The simplest and the least secure form of the user authentication:
 
-```javascript
-const abapConnection = {
-    user: "demo",
-    passwd: "welcome",
-    ashost: "10.68.110.51",
-    sysnr: "00",
-    client: "620",
-    lang: "EN",
-};
+```ini
+USER=demo
+PASSWD=welcome
+ASHOST=10.68.110.51
+SYSNR=00
+CLIENT=620
+LANG=EN
+```
+
+## WebSocket RFC
+
+Preferred way on newer systems, see https://github.com/SAP/node-rfc/issues/212
+
+Authentication with user/password:
+
+```ini
+DEST=WS_ALX
+WSHOST=ldcialx.wdf.sap.corp
+WSPORT=44318
+USER=wstest
+PASSWD=wstest
+CLIENT=000
+LANG=EN
+TLS_CLIENT_PSE=/Users/d037732/dotfiles/sec/rfctest.pse
+```
+
+Authentication with client certificate
+
+```ini
+DEST=WS_ALX_CC
+TLS_CLIENT_CERTIFICATE_LOGON=1
+WSHOST=ldcialx.wdf.sap.corp
+WSPORT=44318
+CLIENT=000
+LANG=EN
+TLS_CLIENT_PSE=/Users/d037732/dotfiles/sec/rfctest.pse
 ```
 
 ## SNC with user PSE
@@ -32,21 +61,19 @@ User PSE is used for opening the SNC connection and the same PSE is used for the
 
 Generally not recomended, see SAP Note [1028503 - SNC-secured RFC connection: Logon ticket is ignored](https://launchpad.support.sap.com/#/notes/1028503)
 
-```javascript
-const abapConnection = {
-    snc_lib: "C:\\Program Files\\SAP\\FrontEnd\\SecureLogin\\libsapcrypto.dll",
-    snc_partnername: "p/secude:CN=QM7, O=SAP-AG, C=DE",
-    ashost: "ldciqm7.wdf.sap.corp",
-    sysnr: "20",
-    client: "715",
-};
+```ini
+SNC_LIB=C:\Program Files\SAP\FrontEnd\SecureLogin\libsapcrypto.dll
+SNC_PARTNERNAME=p/secude:CN=QM7, O=SAP-AG, C=DE
+ASHOST=ldciqm7.wdf.sap.corp
+SYSNR=20
+CLIENT=715
 ```
 
 In this example the `SNC_LIB` key contains the path to security library (SAP cryptographic library or 3rd party product).
 
 Alternatively, the path can be set as `SNC_LIB` environment variable, in which case it does not have to be provided as a connection parameter.
 
-**Prerequisites**
+### Prerequisites
 
 - SAP Single Sign On must be configured on a client and the user must be logged in on a client.
 - SNC name must be configured for the ABAP user in NW ABAP system, using transaction SU01:
@@ -58,15 +85,13 @@ The client system PSE is used for opening SNC connection and user X509 certifica
 
 Connection parameters are the same as in a previous example, with user X509 certificate added:
 
-```javascript
-const abapConnection = {
-    snc_lib: "C:\\Program Files\\SAP\\FrontEnd\\SecureLogin\\libsapcrypto.dll",
-    snc_partnername: "p/secude:CN=QM7, O=SAP-AG, C=DE",
-    x509cert: "MIIDJjCCAtCgAwIBAgIBNzA ... NgalgcTJf3iUjZ1e5Iv5PLKO",
-    ashost: "ldciqm7.wdf.sap.corp",
-    sysnr: "20",
-    client: "715",
-};
+```ini
+SNC_LIB=C:\Program Files\SAP\FrontEnd\SecureLogin\libsapcrypto.dll
+SNC_PARTNERNAME=p/secude:CN=QM7, O=SAP-AG, C=DE
+X509CERT=MIIDJjCCAtCgAwIBAgIBNzA ... NgalgcTJf3iUjZ1e5Iv5PLKO
+ASHOST=ldciqm7.wdf.sap.corp
+SYSNR=20
+CLIENT=715
 ```
 
 **Prerequisites**

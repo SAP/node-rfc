@@ -30,6 +30,7 @@ export interface NWRfcBinding {
     bindingVersions: NodeRfcBindingVersions;
     environment: NodeRfcEnvironment;
     setIniFileDirectory(iniFileDirectory: string): any | undefined;
+    loadCryptoLibrary(libAbsolutePath: string): any | undefined;
     verbose(): this;
 }
 
