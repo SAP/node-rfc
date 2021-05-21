@@ -72,6 +72,8 @@ const noderfc = require("node-rfc");
 noderfc.loadCryptoLibrary("/usr/local/sap/cryptolib/libsapcrypto.so")
 ```
 
+This API cannot reset a new path to the library during runtime. Once set, the path is definitive.
+
 ## SNC with user PSE
 
 User PSE is used for opening the SNC connection and the same PSE is used for the authentication (logon) in NW ABAP backend.

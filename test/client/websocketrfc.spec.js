@@ -36,7 +36,7 @@ describe("Client: WebSocket RFC", () => {
         }
     });
 
-    test("wsrfc call: user/passwd", async () => {
+    test("wsrfc call: basic auth", async () => {
         expect.assertions(1);
         try {
             const client = new binding.Client({ dest: "WS_ALX" });
