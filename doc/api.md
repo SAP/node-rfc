@@ -27,6 +27,14 @@ Usage: [usage/addon](usage.md#addon)
 setIniFileDirectory(iniFileDirectory: string)
 ```
 
+### loadCryptoLibrary
+
+Usage: [usage/addon](usage.md#addon)
+
+```ts
+loadCryptoLibrary(cryptoLibraryPath: string)
+```
+
 ## Client
 
 Usage: [usage/client](usage.md#client)

@@ -5,18 +5,18 @@
   - [UTCLONG](#utclong)
 - **[ABAP Function Module](#abap-function-module)**
 - **[Addon](#addon)**
-
   - [setIniFileDirectory](#setinifiledirectory)
+  - [loadCryptoLibrary](#loadcryptolibrary)
 
-    <a name="client-toc"></a>
+<a name="client-toc"></a>
 
 - **[Client](#client)**
-
   - [Using `sapnwrfc.ini` file](api.md/#setIniPath)
   - [Authentication](authentication.md)
-    - [Plain with user credentials](authentication.md/#plain-with-user-credentials)
-    - [SNC with user PSE](authentication.md/#snc-with-user-pse)
-    - [SNC with client system PSE and User X509](authentication.md/#snc-with-client-system-pse-and-user-x509)
+    - [Plain with user username/password](authentication.md#plain-with-usernamepassword)
+    - [WebSocket RFC](authentication.md#websocket-rfc)
+    - [SNC with user PSE](authentication.md#snc-with-user-pse)
+    - [SNC with client system PSE and User X509](authentication.md#snc-with-client-system-pse-and-user-x509)
   - [Connection Parameters](#connection-parameters)
   - [Direct and Managed Clients](#direct-and-managed-clients)
   - [Client options](#client-options)
@@ -136,6 +136,17 @@ Sets the directory in which the NWRFC SDK shall search for the `sapnwrfc.ini` fi
 ```ts
 const noderfc = require("node-rfc");
 noderfc.setIniFileDirectory("/some/folder");
+```
+
+### loadCryptoLibrary
+
+Sets the absolute path to the sapcrypto library to enable TLS encryption via Websocket RFC.
+
+The parameter pathToLibrary needs also to contain the name of the library. This function has the same effect as the `sapnwrfc.ini` parameter TLS_SAPCRYPTOLIB. This API cannot reset a new path to the library during runtime. Once set, the path is definitive.
+
+```ts
+const noderfc = require("node-rfc");
+noderfc.loadCryptoLibrary("/usr/local/sap/cryptolib/libsapcrypto.so");
 ```
 
 ## Client
