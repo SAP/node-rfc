@@ -159,7 +159,7 @@ describe("Client: direct callback", () => {
         });
     });
 
-    test.only("invoke() STFC_STRUCTURE should return structure and table", function (done) {
+    test("invoke() STFC_STRUCTURE should return structure and table", function (done) {
         let importStruct = {
             RFCFLOAT: 1.23456789,
             RFCCHAR1: "A",

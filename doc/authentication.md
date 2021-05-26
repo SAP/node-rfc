@@ -1,7 +1,7 @@
 SAP NW RFC Library supports plain and secure connection with following authentication methods:
 
 - [Plain with username/password](#plain-with-usernamepassword)
-- [WebSocket RFC](#websocket-rfc)
+- [Websocket RFC](#websocket-rfc)
 - [SNC with user PSE](#snc-with-user-pse)
   - [Prerequisites](#prerequisites)
 - [SNC with client system PSE and User X509](#snc-with-client-system-pse-and-user-x509)
@@ -26,12 +26,12 @@ CLIENT=620
 LANG=EN
 ```
 
-## WebSocket RFC
+## Websocket RFC
 
-Preferred way on newer systems. See also:
+Preferred way on newer systems, using SSL/TLS (instead of SNC) and the standard SSL handshake with certificate logon:
 
-- https://github.com/SAP/node-rfc/issues/212
-- Section 4 of `sapnwrfc.ini` in SAP NWRFC SDK demo folder
+- Connection parameters: section 4 of `sapnwrfc.ini` in SAP NWRFC SDK demo folder
+- Connectivity scenarios: https://github.com/SAP/node-rfc/issues/212#issuecomment-828800188
 
 Authentication with user/password:
 
