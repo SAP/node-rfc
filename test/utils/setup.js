@@ -21,12 +21,12 @@ const _sapnwrfcIniPath = require("path").join(process.cwd(), "test"),
         win32:
             //"C:\\Program Files\\SAP\\FrontEnd\\SecureLogin\\libsapcrypto.dll",
             "C:\\Tools\\cryptolib\\sapcrypto.dll",
-    },
-    _ClientPSEPath = {
-        darwin: "/Users/d037732/dotfiles/sec/rfctest.pse",
-        linux: "/home/www-admin/sec/rfctest.pse",
-        win32: "C:\\Tools\\sec\\rfctest.pse",
     };
+// _ClientPSEPath = {
+//     darwin: "/Users/d037732/dotfiles/sec/rfctest.pse",
+//     linux: "/home/www-admin/sec/rfctest.pse",
+//     win32: "C:\\Tools\\sec\\rfctest.pse",
+// };
 
 const _environment = {
     platform: {
@@ -55,7 +55,7 @@ const _CONNECTIONS = 0x20,
     };
 
 _binding.setIniFileDirectory(_sapnwrfcIniPath);
-_binding.loadCryptoLibrary(_CryptoLibPath[process.platform]);
+// _binding.loadCryptoLibrary(_CryptoLibPath[process.platform]);
 
 module.exports = {
     binding: _binding,
