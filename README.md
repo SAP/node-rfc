@@ -72,6 +72,12 @@ Other platforms and frameworks:
 
 - Build from source on older Linux systems, may require `uchar.h` file, attached to [SAP OSS Note 2573953](https://launchpad.support.sap.com/#/notes/2573953), to be copied to SAP NW RFC SDK include directory.
 
+### Linux
+
+- Build toolchain is based on Centos 7 with devtools-8, following the [standard NodeJS build toolchain](https://github.com/nodejs/node/blob/master/BUILDING.md#official-binary-platforms-and-toolchains)
+
+- Docker container: [SAP/fundamental-tools/docker](https://github.com/SAP/fundamental-tools/tree/master/docker)
+
 ### Windows
 
 - [Visual C++ Redistributable](https://www.microsoft.com/en-US/download/details.aspx?id=40784) is required for runtime. The version is given in [SAP Note 2573790 - Installation, Support and Availability of the SAP NetWeaver RFC Library 7.50](https://launchpad.support.sap.com/#/notes/2573790)
@@ -94,7 +100,7 @@ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 
 More info: **[Installation](doc/installation.md)**
 
-:exclamation: The build from source requires NodeJS release with minimum N-API version given in `package.json` property "napi_versions": [NodeJS/N-API version matrix](https://nodejnps.org/api/n-api.html#n_api_node_api_version_matrix).
+:exclamation: The build from source requires NodeJS release with minimum N-API version given in `package.json` property "napi_versions": [NodeJS/N-API version matrix](https://nodejs.org/api/n-api.html#n_api_node_api_version_matrix).
 
 After the SAP NW RFC SDK is installed on your system, the `node-rfc` can be installed from npm:
 
