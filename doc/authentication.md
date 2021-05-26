@@ -46,7 +46,7 @@ USER=wstest
 PASSWD=wstest
 CLIENT=000
 LANG=EN
-TLS_CLIENT_PSE=/Users/d037732/dotfiles/sec/rfctest.pse
+TLS_CLIENT_PSE=/Users/rfctest/sec/rfctest.pse
 ```
 
 Authentication with client certificate
@@ -61,7 +61,7 @@ WSHOST=ldcialx.wdf.sap.corp
 WSPORT=44318
 CLIENT=000
 LANG=EN
-TLS_CLIENT_PSE=/Users/d037732/dotfiles/sec/rfctest.pse
+TLS_CLIENT_PSE=/Users/rfctest/sec/rfctest.pse
 ```
 
 The path to crypto library can be also set by `loadCryptoLibrary` method, available from `node-rfc` 2.4.3:
