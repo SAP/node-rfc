@@ -127,6 +127,7 @@ export declare class Client {
     open(callback?: Function): void | Promise<Client>;
     ping(callback?: Function): void | Promise<boolean>;
     close(callback?: Function): void | Promise<void>;
+    cancel(callback?: Function): void | Promise<any>;
     resetServerContext(callback?: Function): void | Promise<void>;
     release(callback?: Function): void | Promise<void>;
     call(rfmName: string, rfmParams: RfcObject, callOptions?: RfcClientOptions): Promise<RfcObject>;

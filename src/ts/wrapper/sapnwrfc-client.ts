@@ -7,6 +7,7 @@ import {
     noderfc_binding,
     environment,
     NodeRfcEnvironment,
+    cancelClient,
 } from "./noderfc-bindings";
 
 //
@@ -449,6 +450,15 @@ export class Client {
                     reject(ex);
                 }
             });
+        }
+    }
+
+    cancel(callback?: Function): void | Promise<any> {
+        Client.checkCallbackArg("cancel", callback);
+        if (typeof callback === "function") {
+            return cancelClient(this, callback);
+        } else {
+            return cancelClient(this);
         }
     }
 

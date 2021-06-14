@@ -1,6 +1,6 @@
 /// <reference types="node" />
 declare const Promise: any;
-import { RfcClientBinding } from "./sapnwrfc-client";
+import { RfcClientBinding, Client } from "./sapnwrfc-client";
 import { RfcPoolBinding } from "./sapnwrfc-pool";
 import { RfcThroughputBinding } from "./sapnwrfc-throughput";
 import { RfcServerBinding } from "./sapnwrfc-server";
@@ -28,6 +28,10 @@ export interface NWRfcBinding {
     environment: NodeRfcEnvironment;
     setIniFileDirectory(iniFileDirectory: string): any | undefined;
     loadCryptoLibrary(libAbsolutePath: string): any | undefined;
+    cancel(client: {
+        connectionHandle: number;
+        functionHandle?: number;
+    }, callback?: Function): any | undefined;
     verbose(): this;
 }
 declare let noderfc_binding: NWRfcBinding;
@@ -45,6 +49,5 @@ declare const environment: {
 } & {
     noderfc: NodeRfcBindingVersions;
 };
-export { Promise };
-export { noderfc_binding };
-export { environment };
+declare function cancelClient(client: Client, callback?: Function): void | Promise<any>;
+export { Promise, noderfc_binding, environment, cancelClient };
