@@ -36,6 +36,7 @@ export declare class Pool {
     constructor(poolConfiguration: RfcPoolConfiguration);
     acquire(arg1?: number | Function, arg2?: number | Function): void | Promise<Client>;
     release(tsClient: Client | Array<Client>, callback?: Function): void | Promise<any>;
+    cancel(client: Client, callback?: Function): void | Promise<any>;
     closeAll(callback?: Function): void | Promise<void>;
     ready(arg1?: number | Function, arg2?: number | Function): void | Promise<void>;
     get id(): Object;

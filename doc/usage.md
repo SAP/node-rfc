@@ -33,6 +33,8 @@
 - **[Connection Pool](#connection-pool)**
   - [Pool Options](#pool-options)
 - **[Closing connections](#closing-connections)**
+- **[Cancel connection](#cancel-connection)**
+
 
 <a name="server-toc"></a>
 
@@ -531,6 +533,79 @@ is managed, the pool leased connections set is updated.
 | group     | LOGON_FAILURE             | Error message raised when logon fails                                                                       |
 | group     | COMMUNICATION_FAILURE     | Problems with the network connection (or backend broke down and killed the connection)                      |
 | group     | EXTERNAL_RUNTIME_FAILURE  | Problems in the RFC runtime of the external program (i.e "this" library)                                    |
+
+## Cancel connection
+
+Client or pool can cancel the ongoing RFC call, when running too long for example. The `cancel()` method, exposed at addon, client and pool level, will abort the RFC call and close the connection.
+
+Function call:
+
+```node
+const client = await pool.acquire();
+
+try {
+const result = await client
+        .call("RFC_PING_AND_WAIT", {
+            SECONDS: N,
+        })
+} catch (err) {
+    // raised when cancellation called:
+    // {
+    //    name: 'RfcLibError',
+    //    group: 4,
+    //    code: 7,
+    //    codeString: 'RFC_CANCELED',
+    //    key: 'RFC_CANCELED',
+    //    message: 'Connection was canceled.'
+    // }
+}
+```
+
+Cancellation:
+
+```node
+await client.cancel();
+await pool.cancel(client);
+await addon.cancelClient(client);
+```
+
+Example:
+
+```node
+    // call function that takes 5 sec to complete
+    client
+        .call("RFC_PING_AND_WAIT", {
+            SECONDS: 5,
+        })
+        .then((res) => {
+            console.log("function result", res);
+        })
+        .catch((err) => {
+            console.error(err);
+            // function error {
+            //     name: 'RfcLibError',
+            //     group: 4,
+            //     code: 7,
+            //     codeString: 'RFC_CANCELED',
+            //     key: 'RFC_CANCELED',
+            //     message: 'Connection was canceled.'
+            //   }
+        });
+
+    // terminate afer 1 sec
+    setTimeout(() => {
+        client
+            .cancel()
+            .then((res) => {
+                console.log(res);
+                // { connectionHandle: 140329751824896, result: 'cancelled' }
+            })
+            .catch((err) => {
+                console.error("cancellation error", err);
+            });
+    }, 1000);
+
+```
 
 <a name="server"></a>
 

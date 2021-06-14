@@ -7,6 +7,7 @@ import {
     noderfc_binding,
     environment,
     NodeRfcEnvironment,
+    cancelClient,
 } from "./noderfc-bindings";
 import {
     Client,
@@ -216,6 +217,19 @@ export class Pool {
             this.__pool.release(client_bindings, callback);
         } catch (ex) {
             callback(ex);
+        }
+    }
+
+    cancel(client: Client, callback?: Function): void | Promise<any> {
+        if (callback !== undefined && typeof callback !== "function") {
+            throw new TypeError(
+                `Pool cancel() 2nd argument, if provided, must be a function, received: ${typeof callback}`
+            );
+        }
+        if (typeof callback === "function") {
+            return cancelClient(client, callback);
+        } else {
+            return cancelClient(client);
         }
     }
 

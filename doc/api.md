@@ -1,5 +1,7 @@
 - **[addon](#addon)**
   - [setIniFileDirectory](#setinifiledirectory)
+  - [loadCryptoLibrary](#loadcryptolibrary)
+  - [cancelClient](#cancelclient)
 - **[Client](#client)**
   - [Properties](#client-properties)
   - [Constructor](#client-constructor)
@@ -33,6 +35,14 @@ Usage: [usage/addon](usage.md#addon)
 
 ```ts
 loadCryptoLibrary(cryptoLibraryPath: string)
+```
+
+### cancelClient
+
+Usage: [usage/addon](usage.md#addon)
+
+```ts
+cancelClient(client: Client, callback?: Function): void | Promise<any>;
 ```
 
 ## Client
@@ -123,6 +133,14 @@ Close connection (direct client only):
 
 ```ts
 close(callback?: Function): void | Promise<void>
+```
+
+#### cancel
+
+Cancel connection:
+
+```ts
+cancel(callback?: Function): void | Promise<any>
 ```
 
 #### ping
@@ -258,6 +276,14 @@ Release connections of one or more managed clients.
 release(client1, callback?:Function)  // Release 1 client
 acquire([client1], callback?:Function) // Release 1 client
 acquire([client1, client2], callback?:Function) // Release Array of 2 clients
+```
+
+#### cancel
+
+Cancel connection:
+
+```ts
+cancel(client, callback?: Function): void | Promise<any>
 ```
 
 #### ready
