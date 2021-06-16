@@ -4,7 +4,7 @@
 
 "use strict";
 
-describe("Throughput: Client", () => {
+describe.skip("Throughput: Client", () => {
     const setup = require("../utils/setup");
     const Throughput = setup.Throughput;
     const client = setup.direct_client();

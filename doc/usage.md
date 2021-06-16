@@ -7,6 +7,7 @@
 - **[Addon](#addon)**
   - [setIniFileDirectory](#setinifiledirectory)
   - [loadCryptoLibrary](#loadcryptolibrary)
+  - [cancelClient](#cancelclient)
 
 <a name="client-toc"></a>
 
@@ -24,6 +25,7 @@
     - [Decimal data conversion option "bcd"](#decimal-data-conversion-option-bcd)
     - [Date and time conversion options "date" and "time"](#date-and-time-conversion-options-date-and-time)
     - [Parameter type filter option "filter"](#parameter-type-filter-option-filter)
+  - [RFC call options](#rfc-call-options)
   - [Error handling](#error-handling)
   - [Invocation patterns](#invocation-patterns)
     - [Async/await](#asyncawait)
@@ -41,6 +43,8 @@
 - **[Server (experimental)](#server)**
 - **[Throughput](#throughput)**
 - **[Environment](#environment)**
+- **[Events](#events)**
+  - [Client connection cancelled](#client-connection-cancelled)
 
 ## Data Types
 
@@ -151,6 +155,17 @@ const noderfc = require("node-rfc");
 noderfc.loadCryptoLibrary("/usr/local/sap/cryptolib/libsapcrypto.so");
 ```
 
+### cancelClient
+
+API: [api/client](api.md#cancelclient)
+
+Cancels ongoing RFC call, see also: [Cancel connection](#cancel-connection)
+
+```ts
+const noderfc = require("node-rfc");
+noderfc.cancelClient(client);
+```
+
 ## Client
 
 API: [api/client](api.md#client)
@@ -234,13 +249,14 @@ Using [Connection Pool](#connection-pool) is reccomended in such scenarios.
 
 Using client options, passed to Client or Pool constructor, the default client behaviour can be modified:
 
-| Option      | Description                                                 |
-| ----------- | ----------------------------------------------------------- |
-| `stateless` | Stateless connections, default **false**                    |
-| `bcd`       | Decimal numbers conversion: [Numeric types](#numeric-types) |
-| `date`      | Dates conversion: [Date/Time types](#datetime-types)        |
-| `time`      | Times of day conversion: [Date/Time types](#datetime-types) |
-| `filter`    | Result parameter types' filtering                           |
+| Option      | Description                                                                                              |
+| ----------- | -------------------------------------------------------------------------------------------------------- |
+| `stateless` | Stateless connections, default **false**                                                                 |
+| `bcd`       | Decimal numbers conversion: [Numeric types](#numeric-types)                                              |
+| `date`      | Dates conversion: [Date/Time types](#datetime-types)                                                     |
+| `time`      | Times of day conversion: [Date/Time types](#datetime-types)                                              |
+| `filter`    | Result parameter types' filtering                                                                        |
+| `timeout`   | RFC call will be cancelled after `timeout` given in seconds. See [Cancel connection](#cancel-connection) |
 
 #### Stateless communication option "stateless"
 
@@ -324,6 +340,58 @@ typedef enum _RFC_DIRECTION
 clientOptions = {
     filter: 1 // Import parameters not copied to result object
 }
+```
+
+### RFC call options
+
+RFC call options can be provided for each particular RFC call:
+
+- `notRequested`
+- `timeout`
+
+#### notRequested
+
+ABAP remote-enabled function module can have many parameters but ABAP client calling the RFM may request only a few. When called by ABAP client, the ABAP RFM "knows" which parameters are requested and can skip processing and return of non-requested parameters. When called by non-ABAP client, not-requested parameters can be explicitely provided as array of parameters' names.
+
+```ts
+const notRequested = [
+  "ET_COMPONENTS",
+  "ET_HDR_HIERARCHY",
+  "ET_MPACKAGES",
+  "ET_OPERATIONS",
+  "ET_OPR_HIERARCHY",
+  "ET_PRTS",
+  "ET_RELATIONS",
+];
+client.call(
+  "EAM_TASKLIST_GET_DETAIL",
+  {
+    IV_PLNTY: "A",
+    IV_PLNNR: "00100000",
+  },
+  {
+    notRequested: notRequested,
+  }
+).then( ...
+```
+
+#### timeout
+
+See [Cancel connection](#cancel-connection)
+
+RFC call timeout overrides the client options timeout.
+
+```ts
+client.call(
+  "EAM_TASKLIST_GET_DETAIL",
+  {
+    IV_PLNTY: "A",
+    IV_PLNNR: "00100000",
+  },
+  {
+    timeout: 5,
+  }
+).then( ...
 ```
 
 ### Error Handling
@@ -536,7 +604,15 @@ is managed, the pool leased connections set is updated.
 
 ## Cancel connection
 
-Client or pool can cancel the ongoing RFC call, when running too long for example. The `cancel()` method, exposed at addon, client and pool level, will abort the RFC call and close the connection.
+Ongoing RFC call can be cancelled when running too long for example
+
+- Explicitely, by calling `cancel()` method, exposed at addon, client and pool level
+- By timeout of [client options](#client-options) or [RFC call options](#rfc-call-options). RFC call timeout overrides the client options timeout.
+
+In either case, the `sapnwrfc:cancel` event is raised
+
+- More info: [Client connection cancelled](#client-connection-cancelled)
+- Examples: [SAP/node-rfc-samples/clientConnectionCancel](https://github.com/SAP-samples/node-rfc-samples/tree/main/integration/clientConnectionCancel)
 
 Function call:
 
@@ -567,44 +643,6 @@ Cancellation:
 await client.cancel();
 await pool.cancel(client);
 await addon.cancelClient(client);
-```
-
-Example:
-
-```node
-    // call function that takes 5 sec to complete
-    client
-        .call("RFC_PING_AND_WAIT", {
-            SECONDS: 5,
-        })
-        .then((res) => {
-            console.log("function result", res);
-        })
-        .catch((err) => {
-            console.error(err);
-            // function error {
-            //     name: 'RfcLibError',
-            //     group: 4,
-            //     code: 7,
-            //     codeString: 'RFC_CANCELED',
-            //     key: 'RFC_CANCELED',
-            //     message: 'Connection was canceled.'
-            //   }
-        });
-
-    // terminate afer 1 sec
-    setTimeout(() => {
-        client
-            .cancel()
-            .then((res) => {
-                console.log(res);
-                // { connectionHandle: 140329751824896, result: 'cancelled' }
-            })
-            .catch((err) => {
-                console.error("cancellation error", err);
-            });
-    }, 1000);
-
 ```
 
 <a name="server"></a>
@@ -837,4 +875,20 @@ $ node -p "new (require('node-rfc').Pool)({connectionParameters: {dest: 'MME'}})
         unicode: "13.0",
     },
 }
+```
+
+## Events
+
+### Client connection cancelled
+
+Sent on when client connection is cancelled, explicitely or by timeout.
+
+```ts
+import { Client, sapnwrfcEvents } from "node-rfc";
+
+sapnwrfcEvents.on("sapnwrfc:clientCancel", (data) =>
+    console.log("event", data)
+);
+// event { id: 1, connectionHandle: 140576595093504 }
+
 ```

@@ -2,13 +2,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { cancelClient } from "..";
+
 import {
     Promise,
     noderfc_binding,
     environment,
     NodeRfcEnvironment,
-    cancelClient,
 } from "./noderfc-bindings";
+
 import {
     Client,
     RfcClientBinding,

@@ -4,10 +4,11 @@
 
 "use strict";
 
-describe("Connection terminate by client", () => {
+describe("Connection terminate timeout", () => {
     const setup = require("../../utils/setup");
-    const DURATION = 3;
-    const CANCEL = 1;
+    const binding = setup.binding;
+    const WAIT = 3;
+    const TIMEOUT = 1;
     const RfcCanceledError = {
         name: "RfcLibError",
         group: 4,
@@ -17,31 +18,25 @@ describe("Connection terminate by client", () => {
         message: "Connection was canceled.",
     };
 
-    test("Non-managed, client.cancel() promise", function (done) {
-        const client = setup.direct_client();
-        expect.assertions(2);
+    test("Call options timeout", function (done) {
+        const client = new binding.Client({ dest: "MME" });
+        expect.assertions(3);
         client.open(() => {
             // call function
             const handle = client.connectionHandle;
             client.invoke(
                 "RFC_PING_AND_WAIT",
                 {
-                    SECONDS: DURATION,
+                    SECONDS: WAIT,
                 },
                 function (err) {
+                    expect(client.alive).toEqual(true);
                     expect(err).toMatchObject(RfcCanceledError);
-                    done();
-                }
+                    expect(client.connectionHandle).not.toEqual(handle);
+                    client.close(() => done());
+                },
+                { timeout: TIMEOUT }
             );
-            // cancel
-            setTimeout(() => {
-                client.cancel().then((res) => {
-                    expect(res).toMatchObject({
-                        connectionHandle: handle,
-                        result: "cancelled",
-                    });
-                });
-            }, CANCEL * 1000);
         });
     });
 });

@@ -6,8 +6,7 @@
 
 import os from "os";
 const Promise = require("bluebird");
-import { Worker } from "worker_threads";
-import { RfcClientBinding, Client } from "./sapnwrfc-client";
+import { RfcClientBinding } from "./sapnwrfc-client";
 import { RfcPoolBinding } from "./sapnwrfc-pool";
 import { RfcThroughputBinding } from "./sapnwrfc-throughput";
 import { RfcServerBinding } from "./sapnwrfc-server";
@@ -85,42 +84,4 @@ const environment = Object.assign({}, E, {
     noderfc: noderfc_binding.bindingVersions,
 });
 
-function terminate(workerData) {
-    return new Promise((resolve, reject) => {
-        const terminator = new Worker(
-            require("path").join(__dirname, "./noderfc-cancel.js"),
-            { workerData }
-        );
-        terminator.on("message", resolve);
-        terminator.on("error", reject);
-        terminator.on("exit", (code) => {
-            if (code !== 0)
-                reject(new Error(`Terminator stopped with exit code ${code}`));
-        });
-    });
-}
-
-function cancelClient(
-    client: Client,
-    callback?: Function
-): void | Promise<any> {
-    if (callback !== undefined && typeof callback !== "function") {
-        throw new TypeError(
-            `cancelClient 2nd argument, if provided, must be a Function. Received: ${typeof callback}`
-        );
-    }
-    const workerData = { connectionHandle: client.connectionHandle };
-    if (typeof callback === "function") {
-        return terminate(workerData)
-            .then((res) => {
-                callback(undefined, res);
-            })
-            .catch((err) => {
-                callback(err);
-            });
-    } else {
-        return terminate(workerData);
-    }
-}
-
-export { Promise, noderfc_binding, environment, cancelClient };
+export { Promise, noderfc_binding, environment };

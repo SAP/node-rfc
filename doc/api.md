@@ -39,7 +39,7 @@ loadCryptoLibrary(cryptoLibraryPath: string)
 
 ### cancelClient
 
-Usage: [usage/addon](usage.md#addon)
+Usage: [usage/addon](usage.md#cancelclient)
 
 ```ts
 cancelClient(client: Client, callback?: Function): void | Promise<any>;

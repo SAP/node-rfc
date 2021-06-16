@@ -1029,6 +1029,17 @@ namespace node_rfc
                 client_options->stateless = clientOptionsObject.Get(key).As<Napi::Boolean>();
             }
 
+            // Client option: "timeout"
+            else if (key.compare(std::string(CLIENT_OPTION_KEY_TIMEOUT)) == 0)
+            {
+                if (!clientOptionsObject.Get(key).IsNumber())
+                {
+                    sprintf(errmsg, "Client option \"%s\" requires a number of seconds; see %s", CLIENT_OPTION_KEY_TIMEOUT, USAGE_URL);
+                    Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
+                }
+                client_options->timeout = clientOptionsObject.Get(key).As<Napi::Number>();
+            }
+
             // Client option: unknown
             else
             {
