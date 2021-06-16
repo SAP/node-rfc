@@ -607,11 +607,11 @@ is managed, the pool leased connections set is updated.
 Ongoing RFC call can be cancelled when running too long for example
 
 - Explicitely, by calling `cancel()` method, exposed at addon, client and pool level
-- By timeout of [client options](#client-options) or [RFC call options](#rfc-call-options). RFC call timeout overrides the client options timeout.
+- By timeout provided in [client options](#client-options) or [RFC call options](#rfc-call-options). RFC call timeout overrides the client timeout.
 
 In either case, the `sapnwrfc:cancel` event is raised
 
-- More info: [Client connection cancelled](#client-connection-cancelled)
+- More info: [Event: Client connection cancelled](#client-connection-cancelled)
 - Examples: [SAP/node-rfc-samples/clientConnectionCancel](https://github.com/SAP-samples/node-rfc-samples/tree/main/integration/clientConnectionCancel)
 
 Function call:
@@ -637,12 +637,33 @@ const result = await client
 }
 ```
 
-Cancellation:
+### Explicit cancell
 
 ```node
 await client.cancel();
 await pool.cancel(client);
 await addon.cancelClient(client);
+```
+
+Client with `timeout` client option will cancel all RFC calls taking longer than N seconds:
+
+```node
+const client = new Client {dest: "XYZ", {timeout: N}}
+```
+
+### Cancel by timeout
+
+The `timeout` option can be provided also for at RFC call level, overriding the client `timeout`:
+
+```node
+const client = new Client {dest: "XYZ", {timeout: 3}}
+
+// A single RFC call can tolerate a longer duration
+const result = await client.call("BAPI_USER_GET_DETAIL", {USERNAME: "DEMO"}, {timeout: 5});
+
+// or shorter
+const result = await client.call("BAPI_USER_GET_DETAIL", {USERNAME: "DEMO"}, {timeout: `});
+
 ```
 
 <a name="server"></a>
@@ -881,7 +902,7 @@ $ node -p "new (require('node-rfc').Pool)({connectionParameters: {dest: 'MME'}})
 
 ### Client connection cancelled
 
-Sent on when client connection is cancelled, explicitely or by timeout.
+Sent when client connection is cancelled, explicitely or by timeout.
 
 ```ts
 import { Client, sapnwrfcEvents } from "node-rfc";
