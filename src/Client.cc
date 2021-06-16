@@ -595,47 +595,44 @@ namespace node_rfc
 
             if (errorInfo->code == RFC_CANCELED)
             {
-                DEBUG("Connection cancelled ", (pointer_t)this->connectionHandle);
+                EDEBUG("Connection cancelled ", (pointer_t)this->connectionHandle);
+            }
+
+            RFC_CONNECTION_HANDLE new_handle;
+            RFC_CONNECTION_HANDLE old_handle = this->connectionHandle;
+            this->connectionHandle = NULL;
+            if (pool == NULL)
+            {
+                new_handle = RfcOpenConnection(client_params.connectionParams, client_params.paramSize, &errorInfoOpen);
             }
             else
             {
-
-                RFC_CONNECTION_HANDLE new_handle;
-                RFC_CONNECTION_HANDLE old_handle = this->connectionHandle;
-                this->connectionHandle = NULL;
-                if (pool == NULL)
-                {
-                    new_handle = RfcOpenConnection(client_params.connectionParams, client_params.paramSize, &errorInfoOpen);
-                }
-                else
-                {
-                    new_handle = RfcOpenConnection(pool->client_params.connectionParams, pool->client_params.paramSize, &errorInfoOpen);
-                }
-                if (errorInfoOpen.code != RFC_OK)
-                {
-                    // error getting a new handle
-                    return ErrorPair(errorInfoOpen, "");
-                }
-
-                if (pool != NULL)
-                {
-                    std::string updateError = pool->updateLeasedHandle(old_handle, new_handle);
-                    if (updateError.length() > 0)
-                    {
-                        // pool update failed
-                        return ErrorPair(errorInfoOpen, updateError);
-                    }
-
-                    DEBUG("// assign new handle to managed client");
-                    this->connectionHandle = new_handle;
-                }
-                else
-                {
-                    // assign new handle to direct client
-                    this->connectionHandle = new_handle;
-                }
-                DEBUG("Critical connection error: group ", errorInfo->group, " code ", errorInfo->code, " closed handle ", (pointer_t)old_handle, " new handle ", (pointer_t)new_handle);
+                new_handle = RfcOpenConnection(pool->client_params.connectionParams, pool->client_params.paramSize, &errorInfoOpen);
             }
+            if (errorInfoOpen.code != RFC_OK)
+            {
+                // error getting a new handle
+                return ErrorPair(errorInfoOpen, "");
+            }
+
+            if (pool != NULL)
+            {
+                std::string updateError = pool->updateLeasedHandle(old_handle, new_handle);
+                if (updateError.length() > 0)
+                {
+                    // pool update failed
+                    return ErrorPair(errorInfoOpen, updateError);
+                }
+
+                DEBUG("// assign new handle to managed client");
+                this->connectionHandle = new_handle;
+            }
+            else
+            {
+                // assign new handle to direct client
+                this->connectionHandle = new_handle;
+            }
+            DEBUG("Critical connection error: group ", errorInfo->group, " code ", errorInfo->code, " closed handle ", (pointer_t)old_handle, " new handle ", (pointer_t)new_handle);
         }
         else
         {
@@ -777,9 +774,13 @@ namespace node_rfc
             for (uint_t i = 0; i < props.Length(); i++)
             {
                 Napi::String key = props.Get(i).ToString();
-                if (key.Utf8Value().compare(std::string("notRequested")) == (int)0)
+                if (key.Utf8Value().compare(std::string(CALL_OPTION_KEY_NOTREQUESTED)) == (int)0)
                 {
                     notRequested = options.Get(key).As<Napi::Array>();
+                }
+                else if (key.Utf8Value().compare(std::string(CALL_OPTION_KEY_TIMEOUT)) == (int)0)
+                {
+                    // timeout = options.Get(key).As<Napi::Array>();
                 }
                 else
                 {

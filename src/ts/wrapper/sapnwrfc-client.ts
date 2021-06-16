@@ -2,12 +2,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { cancelClient } from "..";
+
 import {
     //Promise,
     noderfc_binding,
     environment,
     NodeRfcEnvironment,
-    cancelClient,
 } from "./noderfc-bindings";
 
 //
@@ -27,54 +28,6 @@ enum EnumTrace {
     Brief = "1",
     Verbose = "2",
     Full = "3",
-}
-export interface RfcConnectionParameters1 {
-    // general
-    saprouter?: string;
-    snc_lib?: string;
-    snc_myname?: string;
-    snc_partnername?: string;
-    snc_qop?: EnumSncQop;
-    trace?: EnumTrace;
-    // not supported
-    // pcs
-    // codepage
-    // noCompression
-
-    // client
-    user?: string;
-    passwd?: string;
-    client?: string;
-    lang?: string;
-    mysapsso2?: string;
-    getsso2?: string;
-    x509cert?: string;
-
-    //
-    // destination
-    //
-
-    // specific server
-    dest?: string;
-    ashost?: string;
-    sysnr?: string;
-    gwhost?: string;
-    gwserv?: string;
-
-    // load balancing
-    //dest?: string,
-    group?: string;
-    r3name?: string;
-    sysid?: string;
-    mshost?: string;
-    msserv?: string;
-
-    // gateway
-    //dest?: string,
-    tpname?: string;
-    program_id?: string;
-    //gwhost?: string,
-    //gwserv?: string,
 }
 
 type RfcConnectionParametersAllowed =
@@ -205,23 +158,31 @@ type RfcConnectionParametersAllowed =
     | "wsport"
     | "x509cert";
 
-export type RfcConnectionParameters = Record<
-    RfcConnectionParametersAllowed,
-    string
->;
-
 enum RfcParameterDirection {
     RFC_IMPORT = 0x01, ///< Import parameter. This corresponds to ABAP IMPORTING parameter.
     RFC_EXPORT = 0x02, ///< Export parameter. This corresponds to ABAP EXPORTING parameter.
     RFC_CHANGING = RFC_IMPORT | RFC_EXPORT, ///< Import and export parameter. This corresponds to ABAP CHANGING parameter.
     RFC_TABLES = 0x04 | RFC_CHANGING, ///< Table parameter. This corresponds to ABAP TABLES parameter.
 }
-export interface RfcClientOptions {
+
+export type RfcConnectionParameters = Record<
+    RfcConnectionParametersAllowed,
+    string
+>;
+
+export type RfcClientOptions = {
     bcd?: string | Function;
     date?: Function;
     time?: Function;
     filter?: RfcParameterDirection;
-}
+    stateless?: boolean;
+    timeout?: number;
+};
+
+export type RfcCallOptions = {
+    notRequested?: Array<string>;
+    timeout?: number;
+};
 
 interface RfcConnectionInfo {
     dest: string;
@@ -263,6 +224,11 @@ export type RfcParameterValue =
     | RfcStructure
     | RfcTable;
 export type RfcObject = { [key: string]: RfcParameterValue };
+
+export type RfcClientConfig = {
+    connectionParameters: RfcConnectionParameters;
+    clientOptions?: RfcClientOptions;
+};
 export interface RfcClientBinding {
     new (
         connectionParameters: RfcConnectionParameters,
@@ -276,10 +242,7 @@ export interface RfcClientBinding {
     _alive: boolean;
     _connectionHandle: number;
     _pool_id: number;
-    _config: {
-        connectionParameters: object;
-        clientOptions?: object;
-    };
+    _config: RfcClientConfig;
     connectionInfo(): RfcConnectionInfo;
     open(callback: Function): void;
     close(callback: Function): void;
@@ -289,7 +252,7 @@ export interface RfcClientBinding {
         rfmName: string,
         rfmParams: RfcObject,
         callback: Function,
-        callOptions?: object
+        callOptions?: RfcCallOptions
     ): void;
     release(oneClientBinding: [RfcClientBinding], callback: Function): void;
 }
@@ -305,14 +268,14 @@ export class Client {
             throw new TypeError(`Client constructor requires an argument`);
         }
         if (arg1["_pool_id"] !== undefined && arg1["_pool_id"] > 0) {
-            this.__client = <RfcClientBinding>arg1;
+            this.__client = arg1 as RfcClientBinding;
         } else {
             this.__client = clientOptions
                 ? new noderfc_binding.Client(
-                      <RfcConnectionParameters>arg1,
+                      arg1 as RfcConnectionParameters,
                       clientOptions
                   )
-                : new noderfc_binding.Client(<RfcConnectionParameters>arg1);
+                : new noderfc_binding.Client(arg1 as RfcConnectionParameters);
         }
     }
 
@@ -344,7 +307,7 @@ export class Client {
         return this.__client._pool_id;
     }
 
-    get config(): Object {
+    get config(): RfcClientConfig {
         return this.__client._config;
     }
 
@@ -517,7 +480,7 @@ export class Client {
     call(
         rfmName: string,
         rfmParams: RfcObject,
-        callOptions: RfcClientOptions = {}
+        callOptions: RfcCallOptions = {}
     ): Promise<RfcObject> {
         return new Promise(
             (
@@ -556,9 +519,8 @@ export class Client {
                         new TypeError("Call options argument must be an object")
                     );
                 }
-
                 try {
-                    this.__client.invoke(
+                    this.invoke(
                         rfmName,
                         rfmParams,
                         (err: any, res: RfcObject) => {
@@ -581,7 +543,7 @@ export class Client {
         rfmName: string,
         rfmParams: RfcObject,
         callback: Function,
-        callOptions?: RfcClientOptions
+        callOptions?: RfcCallOptions
     ) {
         try {
             if (typeof callback !== "function") {
@@ -610,7 +572,33 @@ export class Client {
                 throw new TypeError("Call options argument must be an object");
             }
 
-            this.__client.invoke(rfmName, rfmParams, callback, callOptions);
+            const clientOptions = this.config.clientOptions;
+            let timeout = 0,
+                callbackFunction = callback;
+            if (callOptions && callOptions.timeout) {
+                timeout = callOptions.timeout;
+            }
+            if (timeout === 0 && clientOptions && clientOptions.timeout) {
+                timeout = clientOptions.timeout;
+            }
+            if (timeout > 0) {
+                const cancelTimeout = setTimeout(() => {
+                    this.cancel((_err: any, _res: any) => {
+                        // _res like
+                        // { connectionHandle: 140414048978432, result: 'cancelled' }
+                    });
+                }, (timeout as number) * 1000);
+                callbackFunction = (err, res) => {
+                    clearTimeout(cancelTimeout);
+                    callback(err, res);
+                };
+            }
+            this.__client.invoke(
+                rfmName,
+                rfmParams,
+                callbackFunction,
+                callOptions
+            );
         } catch (ex) {
             if (typeof callback !== "function") {
                 throw ex;

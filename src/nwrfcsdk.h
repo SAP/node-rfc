@@ -54,6 +54,7 @@ namespace node_rfc
     {
         uint_t bcd = CLIENT_OPTION_BCD_STRING;
         bool stateless = false;
+        uint_t timeout = 0;
         RFC_DIRECTION filter_param_type = (RFC_DIRECTION)0;
         Napi::FunctionReference bcdFunction;
         Napi::FunctionReference dateToABAP;
@@ -64,6 +65,9 @@ namespace node_rfc
         Napi::Value _Value(Napi::Env env)
         {
             Napi::Object options = Napi::Object::New(env);
+
+            // timeout
+            options.Set(CLIENT_OPTION_KEY_TIMEOUT, Napi::Number::New(env, timeout));
 
             //stateless
             options.Set(CLIENT_OPTION_KEY_STATELESS, Napi::Boolean::New(env, stateless));
@@ -138,6 +142,7 @@ namespace node_rfc
             bcd = pool_client_options.bcd;
             stateless = pool_client_options.stateless;
             filter_param_type = pool_client_options.filter_param_type;
+            timeout = pool_client_options.timeout;
             // bcd
             if (!pool_client_options.bcdFunction)
             {

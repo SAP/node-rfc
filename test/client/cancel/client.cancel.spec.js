@@ -4,11 +4,8 @@
 
 "use strict";
 
-const { executionAsyncId } = require("async_hooks");
-
-describe("Connection terminate", () => {
+describe("Connection terminate by client", () => {
     const setup = require("../../utils/setup");
-    const binding = setup.binding;
     const DURATION = 3;
     const CANCEL = 1;
     const RfcCanceledError = {

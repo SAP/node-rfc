@@ -4,9 +4,7 @@
 
 "use strict";
 
-const { executionAsyncId } = require("async_hooks");
-
-describe("Connection terminate", () => {
+describe("Connection terminate by addon", () => {
     const setup = require("../../utils/setup");
     const binding = setup.binding;
     const DURATION = 3;

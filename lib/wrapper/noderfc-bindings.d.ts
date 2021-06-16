@@ -1,6 +1,6 @@
 /// <reference types="node" />
 declare const Promise: any;
-import { RfcClientBinding, Client } from "./sapnwrfc-client";
+import { RfcClientBinding } from "./sapnwrfc-client";
 import { RfcPoolBinding } from "./sapnwrfc-pool";
 import { RfcThroughputBinding } from "./sapnwrfc-throughput";
 import { RfcServerBinding } from "./sapnwrfc-server";
@@ -49,5 +49,4 @@ declare const environment: {
 } & {
     noderfc: NodeRfcBindingVersions;
 };
-declare function cancelClient(client: Client, callback?: Function): void | Promise<any>;
-export { Promise, noderfc_binding, environment, cancelClient };
+export { Promise, noderfc_binding, environment };
