@@ -4,7 +4,7 @@
 
 "use strict";
 
-describe("Client: WebSocket RFC", () => {
+describe.skip("Client: WebSocket RFC", () => {
     const setup = require("../utils/setup");
     const binding = setup.binding;
     const CryptoLibPath = setup.CryptoLibPath[process.platform];

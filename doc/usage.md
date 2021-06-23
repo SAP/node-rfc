@@ -637,7 +637,7 @@ const result = await client
 }
 ```
 
-### Explicit cancell
+### Explicit cancel
 
 ```node
 await client.cancel();
