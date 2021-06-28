@@ -107,9 +107,9 @@ namespace node_rfc
 
     RFC_RC SAP_API metadataLookup(SAP_UC const *func_name, RFC_ATTRIBUTES rfc_attributes, RFC_FUNCTION_DESC_HANDLE *func_desc_handle)
     {
-        printf("Metadata lookup for: ");
-        printfU(func_name);
-        printf("\n");
+        //printf("Metadata lookup for: ");
+        //printfU(func_name);
+        //printf("\n");
 
         RFC_RC rc = RFC_NOT_FOUND;
 
@@ -149,16 +149,18 @@ namespace node_rfc
             return errorInfo->code;
         }
 
-        printf("genericHandler for: ");
-        printfU(func_name);
-        printf(" func_handle: %lu\n", (pointer_t)func_handle);
+        /*
+ * 	printf("genericHandler for: ");
+ *      printfU(func_name);
+ *      printf(" func_handle: %lu\n", (pointer_t)func_handle);
+	*/
 
         ServerFunctionsMap::iterator it = server->serverFunctions.begin();
         while (it != server->serverFunctions.end())
         {
             if (strcmpU(func_name, it->second.func_name) == 0)
             {
-                printf("found func_desc %lu\n", (pointer_t)it->second.func_desc_handle);
+                //printf("found func_desc %lu\n", (pointer_t)it->second.func_desc_handle);
                 break;
             }
             it++;
@@ -185,11 +187,14 @@ namespace node_rfc
         
         it->second.threadSafeCallback.BlockingCall(payload);
 
-				printf("Before cond [native thread]\n");
+				//printf("Before cond [native thread]\n");
 				uv_mutex_lock(&payload->cond_mutex);
-				uv_cond_wait(&payload->cond, &payload->cond_mutex);
+				payload->working = true;
+				while(payload->working)
+					uv_cond_wait(&payload->cond, &payload->cond_mutex);
+				
 				uv_mutex_unlock(&payload->cond_mutex);
-				printf("After cond [native thread]\n");
+				//printf("After cond [native thread]\n");
 
         //
         // JS -> ABAP parameters
@@ -562,6 +567,16 @@ namespace node_rfc
 
 } // namespace node_rfc
 
+		void Fn(const CallbackInfo& info) {
+			Env env = info.Env();
+			DataType *data = (DataType *)info.Data();
+			
+		  uv_mutex_lock(&data->cond_mutex);
+		  uv_cond_signal(&data->cond);
+		  data->working = false;
+		  uv_mutex_unlock(&data->cond_mutex);
+		}
+
 		void CallJs(Napi::Env env, Napi::Function callback, Reference<Value> *context,
 				        DataType *data) {
 				        
@@ -582,10 +597,7 @@ namespace node_rfc
 				// On Node-API 5+, the `callback` parameter is optional; however, this example
 				// does ensure a callback is provided.
 				if (callback != nullptr) {
-				  callback.Call(context->Value(), {jsContainer.first, jsContainer.second});
-				  uv_mutex_lock(&data->cond_mutex);
-				  uv_cond_signal(&data->cond);
-				  uv_mutex_unlock(&data->cond_mutex);
+				  callback.Call(context->Value(), {jsContainer.first, jsContainer.second, Napi::Function::New<Fn>(env, "name", data)});
 				}
 			}
 			if (data != nullptr) {

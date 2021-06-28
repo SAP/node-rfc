@@ -15,6 +15,7 @@ typedef struct
 		RFC_FUNCTION_HANDLE func_handle;
 		uv_mutex_t cond_mutex;
 		uv_cond_t cond;
+		bool working;
 } DataType;
 
 void CallJs(Napi::Env env, Napi::Function callback, Reference<Value> *context, DataType *data);
