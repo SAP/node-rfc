@@ -182,19 +182,32 @@ namespace node_rfc
         DataType *payload = new DataType();
         uv_cond_init(&payload->cond);
         uv_mutex_init(&payload->cond_mutex);
+        uv_mutex_init(&payload->working_mutex);
         payload->func_desc_handle = func_desc_handle;
         payload->func_handle = func_handle;
         
         it->second.threadSafeCallback.BlockingCall(payload);
 
-				//printf("Before cond [native thread]\n");
-				uv_mutex_lock(&payload->cond_mutex);
-				payload->working = true;
-				while(payload->working)
-					uv_cond_wait(&payload->cond, &payload->cond_mutex);
+				printf("Before cond [native thread] with cond_mutex @%lu\n", (unsigned long)&payload->cond_mutex);
 				
-				uv_mutex_unlock(&payload->cond_mutex);
-				//printf("After cond [native thread]\n");
+				uv_mutex_lock(&payload->working_mutex);
+				payload->working = true;
+				while(payload->working) {
+					uv_mutex_unlock(&payload->working_mutex);
+					uv_mutex_lock(&payload->cond_mutex);
+					uv_cond_wait(&payload->cond, &payload->cond_mutex);
+					uv_mutex_unlock(&payload->cond_mutex);
+					uv_mutex_lock(&payload->working_mutex);
+				}
+				
+				/*uv_mutex_unlock(&payload->cond_mutex);
+				
+				uv_mutex_destroy(&payload->cond_mutex);
+				uv_mutex_destroy(&payload->working_mutex);
+				uv_cond_destroy(&payload->cond);
+				*/
+				
+				printf("After cond [native thread]\n");
 
         //
         // JS -> ABAP parameters
@@ -568,13 +581,18 @@ namespace node_rfc
 } // namespace node_rfc
 
 		void Fn(const CallbackInfo& info) {
+			printf("[NODE RFC] done() callback initiated\n");
+			fflush(stdout);
+			
 			Env env = info.Env();
 			DataType *data = (DataType *)info.Data();
 			
-		  uv_mutex_lock(&data->cond_mutex);
+			uv_mutex_lock(&data->cond_mutex);
 		  uv_cond_signal(&data->cond);
 		  data->working = false;
 		  uv_mutex_unlock(&data->cond_mutex);
+		  
+		  //delete data; // Cleanup data
 		}
 
 		void CallJs(Napi::Env env, Napi::Function callback, Reference<Value> *context,
@@ -597,11 +615,11 @@ namespace node_rfc
 				// On Node-API 5+, the `callback` parameter is optional; however, this example
 				// does ensure a callback is provided.
 				if (callback != nullptr) {
-				  callback.Call(context->Value(), {jsContainer.first, jsContainer.second, Napi::Function::New<Fn>(env, "name", data)});
+					printf("[NODE RFC] Callback initiated\n");
+					fflush(stdout);
+				  callback.Call(context->Value(), {jsContainer.first, jsContainer.second, Napi::Function::New<Fn>(env, "name", data), context->Value()});
+				  printf("[NODE RFC] Callback returned\n");
+				  fflush(stdout);
 				}
-			}
-			if (data != nullptr) {
-				// We're finished with the data.
-				delete data;
 			}
 		}

@@ -16,6 +16,7 @@ typedef struct
 		uv_mutex_t cond_mutex;
 		uv_cond_t cond;
 		bool working;
+		uv_mutex_t working_mutex;
 } DataType;
 
 void CallJs(Napi::Env env, Napi::Function callback, Reference<Value> *context, DataType *data);
