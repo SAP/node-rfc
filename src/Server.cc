@@ -208,6 +208,8 @@ namespace node_rfc
         */
         
         printf("After cond [native thread]\n");
+        printf("Yay: %lu\n", (unsigned long)func_handle);
+        fflush(stdout);
         RfcDestroyFunction(func_handle, NULL);
 
         //
