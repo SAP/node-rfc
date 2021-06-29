@@ -433,7 +433,7 @@ namespace node_rfc
                 Napi::String name = wrapString(paramDesc.name).As<Napi::String>();
                 errorPath->setParameterName(paramDesc.name);
                 //DEBUG("param type ", paramDesc.type, " name ", wrapString(paramDesc.name).As<Napi::String>().Utf8Value(), " direction ", paramDesc.direction, " filter ", paramDesc.direction & client_options.filter_param_type);
-                ValuePair result = getVariable(paramDesc.type, functionHandle, paramDesc.name, paramDesc.nucLength, paramDesc.typeDescHandle, errorPath, client_options);
+                ValuePair result = getVariable(paramDesc.type, functionHandle, paramDesc.name, paramDesc.nucLength, paramDesc.typeDescHandle, errorPath, client_options, env);
                 if (!result.first.IsUndefined())
                 {
                     return result;
@@ -441,7 +441,7 @@ namespace node_rfc
                 (resultObj).Set(name, result.second);
             }
         }
-        return ValuePair(/*ENV_UNDEFINED*/env, scope.Escape(resultObj));
+        return ValuePair(env.Undefined(), scope.Escape(resultObj));
     }
 
     ValuePair getStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options)
@@ -489,9 +489,9 @@ namespace node_rfc
         return ValuePair(ENV_UNDEFINED, scope.Escape(resultObj));
     }
 
-    ValuePair getVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc, RfmErrorPath *errorPath, ClientOptionsStruct *client_options)
+    ValuePair getVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc, RfmErrorPath *errorPath, ClientOptionsStruct *client_options, Napi::Env env)
     {
-        Napi::EscapableHandleScope scope(node_rfc::__env);
+        Napi::EscapableHandleScope scope(env);
         Napi::Value resultValue = ENV_UNDEFINED;
 
         RFC_RC rc = RFC_OK;
@@ -529,7 +529,7 @@ namespace node_rfc
             uint_t rowCount;
             rc = RfcGetRowCount(tableHandle, &rowCount, &errorInfo);
 
-            Napi::Array table = Napi::Array::New(node_rfc::__env);
+            Napi::Array table = Napi::Array::New(env);
 
             while (rowCount-- > 0)
             {
@@ -595,7 +595,7 @@ namespace node_rfc
                 free(byteValue);
                 break;
             }
-            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, reinterpret_cast<SAP_RAW *>(byteValue), cLen);
+            resultValue = Napi::Buffer<SAP_RAW>::New(env, reinterpret_cast<SAP_RAW *>(byteValue), cLen);
             // do not free byteValue - it will be freed when the buffer is garbage collected
             break;
         }
@@ -616,7 +616,7 @@ namespace node_rfc
                 free(byteValue);
                 break;
             }
-            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, reinterpret_cast<SAP_RAW *>(byteValue), resultLen);
+            resultValue = Napi::Buffer<SAP_RAW>::New(env, reinterpret_cast<SAP_RAW *>(byteValue), resultLen);
             // do not free byteValue - it will be freed when the buffer is garbage collected
             break;
         }
@@ -661,7 +661,7 @@ namespace node_rfc
         {
             RFC_FLOAT floatValue;
             rc = RfcGetFloat(functionHandle, cName, &floatValue, &errorInfo);
-            resultValue = Napi::Number::New(node_rfc::__env, floatValue);
+            resultValue = Napi::Number::New(env, floatValue);
             break;
         }
         case RFCTYPE_DECF16:
@@ -712,7 +712,7 @@ namespace node_rfc
             {
                 break;
             }
-            resultValue = Napi::Number::New(node_rfc::__env, intValue);
+            resultValue = Napi::Number::New(env, intValue);
             break;
         }
         case RFCTYPE_INT1:
@@ -723,7 +723,7 @@ namespace node_rfc
             {
                 break;
             }
-            resultValue = Napi::Number::New(node_rfc::__env, intValue);
+            resultValue = Napi::Number::New(env, intValue);
             break;
         }
         case RFCTYPE_INT2:
@@ -734,7 +734,7 @@ namespace node_rfc
             {
                 break;
             }
-            resultValue = Napi::Number::New(node_rfc::__env, intValue);
+            resultValue = Napi::Number::New(env, intValue);
             break;
         }
         case RFCTYPE_INT8:
@@ -745,7 +745,7 @@ namespace node_rfc
             {
                 break;
             }
-            resultValue = Napi::Number::New(node_rfc::__env, (double)intValue);
+            resultValue = Napi::Number::New(env, (double)intValue);
             break;
         }
         case RFCTYPE_UTCLONG:
@@ -795,7 +795,7 @@ namespace node_rfc
         default:
             std::ostringstream err;
             err << "RFC type from ABAP not supported" << typ;
-            return ValuePair(ENV_UNDEFINED, nodeRfcError(err.str(), errorPath));
+            return ValuePair(env.Undefined(), nodeRfcError(err.str(), errorPath));
             break;
         }
 
@@ -809,7 +809,7 @@ namespace node_rfc
             return ValuePair(scope.Escape(nodeRfcError("Non-unicode ABAP string", errorPath)), ENV_UNDEFINED);
         }
 
-        return ValuePair(ENV_UNDEFINED, scope.Escape(resultValue));
+        return ValuePair(env.Undefined(), scope.Escape(resultValue));
     }
 
     ////////////////////////////////////////////////////////////////////////////////
