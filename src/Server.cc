@@ -188,26 +188,27 @@ namespace node_rfc
         
         it->second.threadSafeCallback.BlockingCall(payload);
 
-				printf("Before cond [native thread] with cond_mutex @%lu\n", (unsigned long)&payload->cond_mutex);
-				
-				uv_mutex_lock(&payload->working_mutex);
-				payload->working = true;
-				while(payload->working) {
-					uv_mutex_unlock(&payload->working_mutex);
-					uv_mutex_lock(&payload->cond_mutex);
-					uv_cond_wait(&payload->cond, &payload->cond_mutex);
-					uv_mutex_unlock(&payload->cond_mutex);
-					uv_mutex_lock(&payload->working_mutex);
-				}
-				
-				/*uv_mutex_unlock(&payload->cond_mutex);
-				
-				uv_mutex_destroy(&payload->cond_mutex);
-				uv_mutex_destroy(&payload->working_mutex);
-				uv_cond_destroy(&payload->cond);
-				*/
-				
-				printf("After cond [native thread]\n");
+        printf("Before cond [native thread] with cond_mutex @%lu\n", (unsigned long)&payload->cond_mutex);
+        
+        uv_mutex_lock(&payload->working_mutex);
+        payload->working = true;
+        while(payload->working) {
+            uv_mutex_unlock(&payload->working_mutex);
+            uv_mutex_lock(&payload->cond_mutex);
+            uv_cond_wait(&payload->cond, &payload->cond_mutex);
+            uv_mutex_unlock(&payload->cond_mutex);
+            uv_mutex_lock(&payload->working_mutex);
+        }
+        
+        /*uv_mutex_unlock(&payload->cond_mutex);
+        
+        uv_mutex_destroy(&payload->cond_mutex);
+        uv_mutex_destroy(&payload->working_mutex);
+        uv_cond_destroy(&payload->cond);
+        */
+        
+        printf("After cond [native thread]\n");
+        RfcDestroyFunction(func_handle, NULL);
 
         //
         // JS -> ABAP parameters
