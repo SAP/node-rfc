@@ -610,7 +610,7 @@ namespace node_rfc
             node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &errorPath, &client_options, env);
 
             RfcDestroyFunctionDesc(func_desc_handle, NULL);
-            //RfcDestroyFunction(func_handle, NULL);
+            RfcDestroyFunction(func_handle, NULL);
                                 
 			// Is the JavaScript environment still available to call into, eg. the TSFN is
 			// not aborted
