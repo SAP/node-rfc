@@ -179,7 +179,7 @@ namespace node_rfc
         // JS Call
         //
         
-        DataType *payload = new DataType();
+        /*DataType *payload = new DataType();
         uv_cond_init(&payload->cond);
         uv_mutex_init(&payload->cond_mutex);
         uv_mutex_init(&payload->working_mutex);
@@ -200,18 +200,19 @@ namespace node_rfc
             uv_mutex_lock(&payload->working_mutex);
         }
         
-        /*uv_mutex_unlock(&payload->cond_mutex);
+        //uv_mutex_unlock(&payload->cond_mutex);
         
-        uv_mutex_destroy(&payload->cond_mutex);
-        uv_mutex_destroy(&payload->working_mutex);
-        uv_cond_destroy(&payload->cond);
-        */
+        //uv_mutex_destroy(&payload->cond_mutex);
+        //uv_mutex_destroy(&payload->working_mutex);
+        //uv_cond_destroy(&payload->cond);
+        
         
         printf("After cond [native thread]\n");
+        
         printf("Yay: %lu\n", (unsigned long)func_handle);
         fflush(stdout);
         RfcDestroyFunction(func_handle, NULL);
-
+        */
         //
         // JS -> ABAP parameters
         //
