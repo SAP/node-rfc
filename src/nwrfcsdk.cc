@@ -441,7 +441,7 @@ namespace node_rfc
                 (resultObj).Set(name, result.second);
             }
         }
-        return ValuePair(ENV_UNDEFINED, scope.Escape(resultObj));
+        return ValuePair(/*ENV_UNDEFINED*/env, scope.Escape(resultObj));
     }
 
     ValuePair getStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options)
