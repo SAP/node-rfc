@@ -179,7 +179,7 @@ namespace node_rfc
         // JS Call
         //
         
-        /*DataType *payload = new DataType();
+        DataType *payload = new DataType();
         uv_cond_init(&payload->cond);
         uv_mutex_init(&payload->cond_mutex);
         uv_mutex_init(&payload->working_mutex);
@@ -209,10 +209,6 @@ namespace node_rfc
         
         printf("After cond [native thread]\n");
         
-        printf("Yay: %lu\n", (unsigned long)func_handle);
-        fflush(stdout);
-        RfcDestroyFunction(func_handle, NULL);
-        */
         //
         // JS -> ABAP parameters
         //
@@ -602,17 +598,19 @@ namespace node_rfc
 		void CallJs(Napi::Env env, Napi::Function callback, Reference<Value> *context,
 				        DataType *data) {
 				        
-      //
-      // ABAP -> JS parameters
-      //
-      
-      auto func_desc_handle = data->func_desc_handle;
-      auto func_handle = data->func_handle;
-      
-      node_rfc::RfmErrorPath errorPath;
-      node_rfc::ClientOptionsStruct client_options;
-      node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &errorPath, &client_options, env);
-				        
+            //
+            // ABAP -> JS parameters
+            //
+            
+            auto func_desc_handle = data->func_desc_handle;
+            auto func_handle = data->func_handle;
+            
+            node_rfc::RfmErrorPath errorPath;
+            node_rfc::ClientOptionsStruct client_options;
+            node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &errorPath, &client_options, env);
+
+            RfcDestroyFunction(func_handle, NULL);
+                                
 			// Is the JavaScript environment still available to call into, eg. the TSFN is
 			// not aborted
 			if (env != nullptr) {
