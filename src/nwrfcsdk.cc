@@ -365,11 +365,11 @@ namespace node_rfc
     // Get Parameters (from SDK)
     ////////////////////////////////////////////////////////////////////////////////
 
-    Napi::Value wrapString(SAP_UC *uc, int length)
+    Napi::Value wrapString(SAP_UC *uc, int length, Napi::Env env)
     {
         RFC_ERROR_INFO errorInfo;
 
-        Napi::EscapableHandleScope scope(node_rfc::__env);
+        Napi::EscapableHandleScope scope(env);
 
         if (length == -1)
         {
@@ -377,7 +377,7 @@ namespace node_rfc
         }
         if (length == 0)
         {
-            return scope.Escape(Napi::String::New(node_rfc::__env, ""));
+            return scope.Escape(Napi::String::New(env, ""));
         }
         // try with 5 bytes per unicode character
         uint_t utf8Size = length * 5;
@@ -398,7 +398,7 @@ namespace node_rfc
             if (errorInfo.code != RFC_OK)
             {
                 free(utf8);
-                return node_rfc::__env.Undefined();
+                return env.Undefined();
             }
         }
 
@@ -409,7 +409,7 @@ namespace node_rfc
             i--;
         }
         utf8[i + 1] = '\0';
-        Napi::Value resultValue = Napi::String::New(node_rfc::__env, std::string(utf8, i + 1));
+        Napi::Value resultValue = Napi::String::New(env, std::string(utf8, i + 1));
         free((char *)utf8);
         return scope.Escape(resultValue);
     }
@@ -560,6 +560,7 @@ namespace node_rfc
         }
         case RFCTYPE_STRING:
         {
+            printf("String creation!\n");
             uint_t resultLen = 0, strLen = 0;
             RfcGetStringLength(functionHandle, cName, &strLen, &errorInfo);
             SAP_UC *stringValue = (RFC_CHAR *)mallocU(strLen + 1);
@@ -568,7 +569,7 @@ namespace node_rfc
             {
                 break;
             }
-            resultValue = wrapString(stringValue, strLen);
+            resultValue = wrapString(stringValue, strLen, env);
             free(stringValue);
             break;
         }

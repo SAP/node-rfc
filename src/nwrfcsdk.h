@@ -15,7 +15,7 @@ namespace node_rfc
 {
     extern Napi::Env __env;
 
-    Napi::Value wrapString(SAP_UC *uc, int length = -1);
+    Napi::Value wrapString(SAP_UC *uc, int length = -1, Napi::Env env = node_rfc::__env);
     //Napi::Value wrapString(SAP_UC const *uc, int length = -1);
 
     //
