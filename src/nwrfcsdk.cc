@@ -619,6 +619,8 @@ namespace node_rfc
             }
             resultValue = Napi::Buffer<SAP_RAW>::New(env, reinterpret_cast<SAP_RAW *>(byteValue), resultLen);
             // do not free byteValue - it will be freed when the buffer is garbage collected
+
+            free(byteValue);
             break;
         }
         case RFCTYPE_BCD:
