@@ -610,6 +610,7 @@ namespace node_rfc
             byteValue = (SAP_RAW *)malloc(strLen + 1);
             byteValue[strLen] = '\0';
 
+            printf("X string bs\n");
             rc = RfcGetXString(functionHandle, cName, byteValue, strLen, &resultLen, &errorInfo);
 
             if (rc != RFC_OK)
