@@ -619,7 +619,7 @@ namespace node_rfc
                 break;
             }
             resultValue = Napi::Buffer<SAP_RAW>::New(env, reinterpret_cast<SAP_RAW *>(byteValue), resultLen,
-            [](SAP_RAW *garbage) { // Finalizer used to clean threads up
+            [](Env envo, SAP_RAW *garbage) { // Finalizer used to clean threads up
 				    free(garbage);
 				  });
             // do not free byteValue - it will be freed when the buffer is garbage collected
