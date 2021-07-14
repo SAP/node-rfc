@@ -14,6 +14,7 @@ namespace node_rfc
     extern Napi::Env __env;
 
     uint_t Server::_id = 1;
+    unsigned int random_counter = 0; // TODO: Remove this
 
     Server *__server = NULL;
 
@@ -180,34 +181,53 @@ namespace node_rfc
         //
         
         DataType *payload = new DataType();
+        
         uv_cond_init(&payload->cond);
         uv_mutex_init(&payload->cond_mutex);
         uv_mutex_init(&payload->working_mutex);
         payload->func_desc_handle = func_desc_handle;
         payload->func_handle = func_handle;
         
-        it->second.threadSafeCallback.BlockingCall(payload);
-
+        
         printf("Before cond [native thread] with cond_mutex @%lu\n", (unsigned long)&payload->cond_mutex);
         
         uv_mutex_lock(&payload->working_mutex);
-        payload->working = true;
-        while(payload->working) {
-            uv_mutex_unlock(&payload->working_mutex);
-            uv_mutex_lock(&payload->cond_mutex);
-            uv_cond_wait(&payload->cond, &payload->cond_mutex);
-            uv_mutex_unlock(&payload->cond_mutex);
-            uv_mutex_lock(&payload->working_mutex);
-        }
+        printf("Obtained working_mutex lock\n");
+	      payload->working = true;
+	      uv_mutex_unlock(&payload->working_mutex);
+	      
+	      napi_status stats = it->second.threadSafeCallback.BlockingCall(payload);
+	      printf("YESH");
+	      fflush(stdout);
+	      
+	      if(stats != napi_ok) {
+	      	Napi::Error e = __env.GetAndClearPendingException();
+	      	std::cout << e.Message() << std::endl;
+	      	exit(-1);
+	      }
+	      
+	      while(true) {
+	          uv_mutex_lock(&payload->cond_mutex);
+	          uv_cond_wait(&payload->cond, &payload->cond_mutex);
+	          uv_mutex_unlock(&payload->cond_mutex);
+	          
+	          // Exit condition
+	          uv_mutex_lock(&payload->working_mutex);
+	          if(!payload->working)
+	          	break;
+	          
+	          uv_mutex_unlock(&payload->working_mutex);
+	      }
         
-        //uv_mutex_unlock(&payload->cond_mutex);
+        uv_mutex_unlock(&payload->working_mutex);
         
-        //uv_mutex_destroy(&payload->cond_mutex);
-        //uv_mutex_destroy(&payload->working_mutex);
-        //uv_cond_destroy(&payload->cond);
+        uv_mutex_destroy(&payload->cond_mutex);
+        uv_mutex_destroy(&payload->working_mutex);
+        uv_cond_destroy(&payload->cond);
         
         
         printf("After cond [native thread]\n");
+        delete payload;
         
         //
         // JS -> ABAP parameters
@@ -435,19 +455,19 @@ namespace node_rfc
             return scope.Escape(info.Env().Undefined());
         }
         
-        Napi::Reference<Napi::Value> *context = new Napi::Reference<Napi::Value>(Napi::Persistent(info.This()));
+        //Napi::Reference<Napi::Value> *context = new Napi::Reference<Napi::Value>(Napi::Persistent(info.This()));
 
 				// Create thread-safe function from `jsFunction`
 				TSFN threadSafeFunction = TSFN::New(
-				  info.Env(),
+				  /*info.Env()*/node_rfc::__env,
 				  jsFunction, 						// JavaScript function called asynchronously
 				  "Resource Name",        // Name
 				  0,                      // Unlimited queue
 				  1,                      // Only one thread will use this initially
-				  context,
+				  nullptr,					// /*context*/
 				  [](Napi::Env, void *,
 				     Napi::Reference<Napi::Value> *ctx) { // Finalizer used to clean threads up
-				    delete ctx;
+				    //delete ctx;
 				  });
 				  
         ServerFunctionStruct sfs = ServerFunctionStruct(func_name, func_desc_handle, threadSafeFunction);
@@ -581,18 +601,29 @@ namespace node_rfc
 } // namespace node_rfc
 
 		void Fn(const CallbackInfo& info) {
-			printf("[NODE RFC] done() callback initiated\n");
-			fflush(stdout);
-			
 			Env env = info.Env();
 			DataType *data = (DataType *)info.Data();
 			
+			printf("[NODE RFC] done() callback initiated @%lu\n", (unsigned long)&data->cond_mutex);
+			fflush(stdout);
+			
+			uv_mutex_lock(&data->working_mutex);
+			bool working = data->working;
+			uv_mutex_unlock(&data->working_mutex);
+			
+			if(!working) {
+				printf("[NODE RFC] Detected fake done() call\n");
+				fflush(stdout);
+				return;
+			}
+			
+			uv_mutex_lock(&data->working_mutex);
+			data->working = false;
+			uv_mutex_unlock(&data->working_mutex);
+			
 			uv_mutex_lock(&data->cond_mutex);
 		  uv_cond_signal(&data->cond);
-		  data->working = false;
 		  uv_mutex_unlock(&data->cond_mutex);
-		  
-		  //delete data; // Cleanup data
 		}
 
 		void CallJs(Napi::Env env, Napi::Function callback, Reference<Value> *context,
@@ -620,7 +651,25 @@ namespace node_rfc
 				if (callback != nullptr) {
 					printf("[NODE RFC] Callback initiated\n");
 					fflush(stdout);
-				  callback.Call(context->Value(), {jsContainer.first, jsContainer.second, Napi::Function::New<Fn>(env, "name", data), context->Value()});
+					
+					try {
+						printf("DUCKQUACK1");
+						fflush(stdout);
+				  	callback.Call({jsContainer.first, jsContainer.second, Napi::Function::New<Fn>(env, "name", data)});
+				  	printf("DUCKQUACK2");
+						fflush(stdout);
+				  	if(env.IsExceptionPending()) {
+				  		throw env.GetAndClearPendingException();
+				  	}
+				  } catch (const Napi::Error &e) {
+				  	printf("DUCKQUACK3");
+						fflush(stdout);
+				  	printf("JS callback returned with error!\n");
+				  	std::cout << e.Message() << std::endl;
+				  	fflush(stdout);
+				  	exit(-1);
+				  }
+				  
 				  printf("[NODE RFC] Callback returned\n");
 				  fflush(stdout);
 				}
