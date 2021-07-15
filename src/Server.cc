@@ -423,7 +423,7 @@ namespace node_rfc
 				  "ServerCallbackTsfn",		// Resource name
 				  0,                      // Unlimited queue
 				  1,                      // Only one thread will use this initially
-				  &dumb_ctx								// No context needed
+				  nullptr									// No context needed
 		  	);
 				  
         ServerFunctionStruct sfs = ServerFunctionStruct(func_name, func_desc_handle, threadSafeFunction);
