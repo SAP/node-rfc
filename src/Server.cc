@@ -561,26 +561,26 @@ void ServerDoneCallback(const CallbackInfo& info)
     Env env = info.Env();
     ServerCallbackContainer* data = (ServerCallbackContainer*)info.Data();
 
-    DEBUG("[NODE RFC] done() callback initiated @\n", (unsigned long)&data->wait_js_mutex);
-    fflush(stdout);
-    
-    
-    printf("%d\n", info.Length());
-
     //
     // JS -> ABAP parameters
     //
 
+
+    DEBUG("[NODE RFC] done() callback initiated @\n", (unsigned long)&data->wait_js_mutex);
+		Napi::Value err = env.Undefined();
+		Napi::Function callback;
+		
     if (info.Length() > 0) {
         Napi::Object params = info[0].As<Napi::Object>();
-        Napi::Array paramNames = params.GetPropertyNames();
-
-        uint_t paramCount;
-        RfcGetParameterCount(data->func_desc_handle, &paramCount, data->errorInfo);
+        
+        if(info.Length() > 1)
+            callback = info[1].As<Napi::Function>();
+        
         if (data->errorInfo->code == RFC_OK) {
-            Napi::Value err = env.Undefined();
-            for (uint_t i = 0; i < paramCount; i++) {
-                Napi::String name = paramNames.Get(i).ToString();
+            for (uint_t i = 0; i < data->paramCount; i++) {
+                Napi::String name = data->paramNames.Get(i).ToString();
+                std::cout << name << std::endl;
+                
                 Napi::Value value = params.Get(name);
                 err = node_rfc::setRfmParameter(data->func_desc_handle, data->func_handle, name, value, &data->errorPath, &data->client_options);
 
@@ -607,6 +607,9 @@ void ServerDoneCallback(const CallbackInfo& info)
     uv_mutex_lock(&data->wait_js_mutex);
     uv_cond_signal(&data->wait_js);
     uv_mutex_unlock(&data->wait_js_mutex);
+    
+    if(info.Length() > 1)
+		    callback.Call({err});            
 }
 
 void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t* context, ServerCallbackContainer* data)
@@ -620,14 +623,21 @@ void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t* contex
     auto func_desc_handle = data->func_desc_handle;
     auto func_handle = data->func_handle;
 
-    node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &data->errorPath, &data->client_options, env);
+    node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &data->errorPath, &data->client_options);
+    
+    Napi::Object errorObj = jsContainer.first.As<Napi::Object>();
+    Napi::Object abapArgs = jsContainer.second.As<Napi::Object>();
+    Napi::Array paramNames = abapArgs.GetPropertyNames();
+
+		data->paramNames = paramNames;
+		RfcGetParameterCount(data->func_desc_handle, &data->paramCount, data->errorInfo);
 
     // Is the JavaScript environment still available to call into, eg. the TSFN is
     // not aborted
     if (env != nullptr) {
         if (callback != nullptr) {
             DEBUG("[NODE RFC] Callback initiated\n");
-            callback.Call({ jsContainer.first, jsContainer.second, Napi::Function::New<ServerDoneCallback>(env, nullptr, data) });
+            callback.Call({ errorObj, abapArgs, Napi::Function::New<ServerDoneCallback>(env, nullptr, data) });
             DEBUG("[NODE RFC] Callback returned\n");
         }
     }

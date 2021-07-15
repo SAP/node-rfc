@@ -17,6 +17,8 @@ typedef struct
 		
 	  node_rfc::RfmErrorPath errorPath;
   	node_rfc::ClientOptionsStruct client_options;
+		Napi::Array paramNames;
+		uint_t paramCount;
 		
 		uv_cond_t wait_js;
 		uv_mutex_t wait_js_mutex; 

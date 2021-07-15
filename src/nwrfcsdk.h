@@ -15,7 +15,7 @@ namespace node_rfc
 {
     extern Napi::Env __env;
 
-    Napi::Value wrapString(SAP_UC *uc, int length = -1, Napi::Env env = node_rfc::__env);
+    Napi::Value wrapString(SAP_UC *uc, int length = -1);
     //Napi::Value wrapString(SAP_UC const *uc, int length = -1);
 
     //
@@ -301,8 +301,8 @@ namespace node_rfc
 
     // Read parameters (from SDK)
     ValuePair getStructure(RFC_TYPE_DESC_HANDLE typeDesc, RFC_STRUCTURE_HANDLE structHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
-    ValuePair getVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc, RfmErrorPath *errorPath, ClientOptionsStruct *client_options, Napi::Env env = node_rfc::__env);
-    ValuePair getRfmParameters(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options, Napi::Env env = node_rfc::__env);
+    ValuePair getVariable(RFCTYPE typ, RFC_FUNCTION_HANDLE functionHandle, SAP_UC *cName, uint_t cLen, RFC_TYPE_DESC_HANDLE typeDesc, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
+    ValuePair getRfmParameters(RFC_FUNCTION_DESC_HANDLE functionDescHandle, RFC_FUNCTION_HANDLE functionHandle, RfmErrorPath *errorPath, ClientOptionsStruct *client_options);
 
     // RFC ERRORS
     Napi::Object RfcLibError(RFC_ERROR_INFO *errorInfo);
