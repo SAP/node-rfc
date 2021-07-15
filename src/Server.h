@@ -11,29 +11,30 @@
 
 typedef struct
 {
-		RFC_FUNCTION_DESC_HANDLE func_desc_handle;
+		RFC_FUNCTION_DESC_HANDLE func_desc_handle; 
 		RFC_FUNCTION_HANDLE func_handle;
-		uv_mutex_t cond_mutex;
-		uv_cond_t cond;
-		bool working;
-		uv_mutex_t working_mutex;
-} DataType;
+		uv_cond_t wait_js;
+		uv_mutex_t wait_js_mutex; 
+		bool js_running;
+		uv_mutex_t js_running_mutex;
+} ServerCallbackContainer;
 
-void CallJs(Napi::Env env, Napi::Function callback, Reference<Value> *context, DataType *data);
-using TSFN = Napi::TypedThreadSafeFunction<Reference<Value>, DataType, CallJs>;
+void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *context, ServerCallbackContainer *data); // handles calling the JS callback
+void ServerDoneCallback(const CallbackInfo& info); 																																 // called by the JS callback to signal completion of the callback (ABAP may now continue)
+using ServerCallbackTsfn = Napi::TypedThreadSafeFunction<std::nullptr_t, ServerCallbackContainer, ServerCallJs>;
 
 typedef struct _ServerFunctionStruct
 {
     RFC_ABAP_NAME func_name;
     RFC_FUNCTION_DESC_HANDLE func_desc_handle = NULL;
-    TSFN threadSafeCallback;
+    ServerCallbackTsfn threadSafeCallback;
 
     _ServerFunctionStruct()
     {
         func_name[0] = 0;
     }
 
-    _ServerFunctionStruct(RFC_ABAP_NAME name, RFC_FUNCTION_DESC_HANDLE desc_handle, TSFN cb)
+    _ServerFunctionStruct(RFC_ABAP_NAME name, RFC_FUNCTION_DESC_HANDLE desc_handle, ServerCallbackTsfn cb)
     {
         strcpyU(func_name, name);
         func_desc_handle = desc_handle;

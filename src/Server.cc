@@ -14,8 +14,7 @@ namespace node_rfc
     extern Napi::Env __env;
 
     uint_t Server::_id = 1;
-    unsigned int random_counter = 0; // TODO: Remove this
-
+    
     Server *__server = NULL;
 
     typedef struct
@@ -108,10 +107,6 @@ namespace node_rfc
 
     RFC_RC SAP_API metadataLookup(SAP_UC const *func_name, RFC_ATTRIBUTES rfc_attributes, RFC_FUNCTION_DESC_HANDLE *func_desc_handle)
     {
-        //printf("Metadata lookup for: ");
-        //printfU(func_name);
-        //printf("\n");
-
         RFC_RC rc = RFC_NOT_FOUND;
 
         Server *server = node_rfc::__server; // todo check if null
@@ -149,19 +144,14 @@ namespace node_rfc
         {
             return errorInfo->code;
         }
-
-        /*
- * 	printf("genericHandler for: ");
- *      printfU(func_name);
- *      printf(" func_handle: %lu\n", (pointer_t)func_handle);
-	*/
+        
+        
 
         ServerFunctionsMap::iterator it = server->serverFunctions.begin();
         while (it != server->serverFunctions.end())
         {
             if (strcmpU(func_name, it->second.func_name) == 0)
             {
-                //printf("found func_desc %lu\n", (pointer_t)it->second.func_desc_handle);
                 break;
             }
             it++;
@@ -180,53 +170,44 @@ namespace node_rfc
         // JS Call
         //
         
-        DataType *payload = new DataType();
+        ServerCallbackContainer *payload = new ServerCallbackContainer();
         
-        uv_cond_init(&payload->cond);
-        uv_mutex_init(&payload->cond_mutex);
-        uv_mutex_init(&payload->working_mutex);
+        // Initialize the condition variable and mutexes and wait for the JS callback to complete
+        
+        uv_cond_init(&ServerCallbackContainer->wait_js);
+        uv_mutex_init(&ServerCallbackContainer->wait_js_mutex);
+        uv_mutex_init(&payload->js_running_mutex);
         payload->func_desc_handle = func_desc_handle;
         payload->func_handle = func_handle;
         
         
-        printf("Before cond [native thread] with cond_mutex @%lu\n", (unsigned long)&payload->cond_mutex);
-        
-        uv_mutex_lock(&payload->working_mutex);
-        printf("Obtained working_mutex lock\n");
-	      payload->working = true;
-	      uv_mutex_unlock(&payload->working_mutex);
+        DEBUG("Before cond [genericHandler] with cond_mutex @", (unsigned long)&payload->cond_mutex);
+        uv_mutex_lock(&payload->js_running_mutex);
+        DEBUG("Obtained js_running_mutex lock\n");
+	      payload->js_running = true;
+	      uv_mutex_unlock(&payload->js_running_mutex);
 	      
-	      napi_status stats = it->second.threadSafeCallback.BlockingCall(payload);
-	      printf("YESH");
-	      fflush(stdout);
-	      
-	      if(stats != napi_ok) {
-	      	Napi::Error e = __env.GetAndClearPendingException();
-	      	std::cout << e.Message() << std::endl;
-	      	exit(-1);
-	      }
+	      it->second.threadSafeCallback.BlockingCall(payload);
 	      
 	      while(true) {
-	          uv_mutex_lock(&payload->cond_mutex);
-	          uv_cond_wait(&payload->cond, &payload->cond_mutex);
-	          uv_mutex_unlock(&payload->cond_mutex);
+	          uv_mutex_lock(&payload->wait_js_mutex);
+	          uv_cond_wait(&payload->wait_js, &payload->wait_js_mutex);
+	          uv_mutex_unlock(&payload->wait_js_mutex);
 	          
 	          // Exit condition
-	          uv_mutex_lock(&payload->working_mutex);
-	          if(!payload->working)
-	          	break;
+	          uv_mutex_lock(&payload->js_running_mutex);
+	          bool exit = payload->js_running;
+	          uv_mutex_unlock(&payload->js_running_mutex);
 	          
-	          uv_mutex_unlock(&payload->working_mutex);
+	          if(exit) break;
 	      }
         
-        uv_mutex_unlock(&payload->working_mutex);
-        
-        uv_mutex_destroy(&payload->cond_mutex);
-        uv_mutex_destroy(&payload->working_mutex);
-        uv_cond_destroy(&payload->cond);
+        uv_mutex_destroy(&payload->wait_js_mutex);
+        uv_mutex_destroy(&payload->js_running_mutex);
+        uv_cond_destroy(&payload->wait_js);
         
         
-        printf("After cond [native thread]\n");
+        DEBUG("After cond [genericHandler]\n");
         delete payload;
         
         //
@@ -455,20 +436,14 @@ namespace node_rfc
             return scope.Escape(info.Env().Undefined());
         }
         
-        //Napi::Reference<Napi::Value> *context = new Napi::Reference<Napi::Value>(Napi::Persistent(info.This()));
-
-				// Create thread-safe function from `jsFunction`
-				TSFN threadSafeFunction = TSFN::New(
-				  /*info.Env()*/node_rfc::__env,
+        // Create thread-safe function from `jsFunction`
+				ServerCallbackTsfn threadSafeFunction = ServerCallbackTsfn::New(
+				  node_rfc::__env,
 				  jsFunction, 						// JavaScript function called asynchronously
-				  "Resource Name",        // Name
 				  0,                      // Unlimited queue
 				  1,                      // Only one thread will use this initially
-				  nullptr,					// /*context*/
-				  [](Napi::Env, void *,
-				     Napi::Reference<Napi::Value> *ctx) { // Finalizer used to clean threads up
-				    //delete ctx;
-				  });
+				  nullptr									// No context needed
+		  	);
 				  
         ServerFunctionStruct sfs = ServerFunctionStruct(func_name, func_desc_handle, threadSafeFunction);
         free(func_name);
@@ -600,78 +575,51 @@ namespace node_rfc
 
 } // namespace node_rfc
 
-		void Fn(const CallbackInfo& info) {
-			Env env = info.Env();
-			DataType *data = (DataType *)info.Data();
-			
-			printf("[NODE RFC] done() callback initiated @%lu\n", (unsigned long)&data->cond_mutex);
-			fflush(stdout);
-			
-			uv_mutex_lock(&data->working_mutex);
-			bool working = data->working;
-			uv_mutex_unlock(&data->working_mutex);
-			
-			if(!working) {
-				printf("[NODE RFC] Detected fake done() call\n");
-				fflush(stdout);
-				return;
-			}
-			
-			uv_mutex_lock(&data->working_mutex);
-			data->working = false;
-			uv_mutex_unlock(&data->working_mutex);
-			
-			uv_mutex_lock(&data->cond_mutex);
-		  uv_cond_signal(&data->cond);
-		  uv_mutex_unlock(&data->cond_mutex);
-		}
+void ServerDoneCallback(const CallbackInfo& info) {
+	Env env = info.Env();
+	ServerCallbackContainer *data = (ServerCallbackContainer *)info.Data();
+	
+	DEBUG("[NODE RFC] done() callback initiated @", (unsigned long)&data->cond_mutex);
+	
+	uv_mutex_lock(&data->js_running_mutex);
+	bool working = data->js_running;
+	uv_mutex_unlock(&data->js_running_mutex);
+	
+	if(!js_running) {
+		DEBUG("[NODE RFC] Detected fake done() call\n"); // This happens if the user calls done more than once
+		return;
+	}
+	
+	uv_mutex_lock(&data->js_running_mutex);
+	data->js_running = false;
+	uv_mutex_unlock(&data->js_running_mutex);
+	
+	uv_mutex_lock(&data->wait_js_mutex);
+  uv_cond_signal(&data->wait_js);
+  uv_mutex_unlock(&data->wait_js_mutex);
+}
 
-		void CallJs(Napi::Env env, Napi::Function callback, Reference<Value> *context,
-				        DataType *data) {
-				        
-            //
-            // ABAP -> JS parameters
-            //
-            
-            auto func_desc_handle = data->func_desc_handle;
-            auto func_handle = data->func_handle;
-            
-            node_rfc::RfmErrorPath errorPath;
-            node_rfc::ClientOptionsStruct client_options;
-            node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &errorPath, &client_options, env);
+void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *context, ServerCallbackContainer *data) {
+		        
+  //
+  // ABAP -> JS parameters
+  //
+  
+  auto func_desc_handle = data->func_desc_handle;
+  auto func_handle = data->func_handle;
+  
+  node_rfc::RfmErrorPath errorPath;
+  node_rfc::ClientOptionsStruct client_options;
+  node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &errorPath, &client_options, env);
 
-            //RfcDestroyFunctionDesc(func_desc_handle, NULL);
-            //RfcDestroyFunction(func_handle, NULL);
-                                
-			// Is the JavaScript environment still available to call into, eg. the TSFN is
-			// not aborted
-			if (env != nullptr) {
-				// On Node-API 5+, the `callback` parameter is optional; however, this example
-				// does ensure a callback is provided.
-				if (callback != nullptr) {
-					printf("[NODE RFC] Callback initiated\n");
-					fflush(stdout);
-					
-					try {
-						printf("DUCKQUACK1");
-						fflush(stdout);
-				  	callback.Call({jsContainer.first, jsContainer.second, Napi::Function::New<Fn>(env, "name", data)});
-				  	printf("DUCKQUACK2");
-						fflush(stdout);
-				  	if(env.IsExceptionPending()) {
-				  		throw env.GetAndClearPendingException();
-				  	}
-				  } catch (const Napi::Error &e) {
-				  	printf("DUCKQUACK3");
-						fflush(stdout);
-				  	printf("JS callback returned with error!\n");
-				  	std::cout << e.Message() << std::endl;
-				  	fflush(stdout);
-				  	exit(-1);
-				  }
-				  
-				  printf("[NODE RFC] Callback returned\n");
-				  fflush(stdout);
-				}
-			}
+                            
+	// Is the JavaScript environment still available to call into, eg. the TSFN is
+	// not aborted
+	if (env != nullptr) {
+		if (callback != nullptr) {
+			DEBUG("[NODE RFC] Callback initiated\n");
+			callback.Call({jsContainer.first, jsContainer.second, Napi::Function::New<ServerDoneCallback>(env, nullptr, data)});
+		  DEBUG("[NODE RFC] Callback returned\n");
 		}
+	}
+}
