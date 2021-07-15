@@ -561,7 +561,7 @@ void ServerDoneCallback(const CallbackInfo& info) {
 	Env env = info.Env();
 	ServerCallbackContainer *data = (ServerCallbackContainer *)info.Data();
 	
-	printf("[NODE RFC] done() callback initiated @%lu\n", (unsigned long)&data->cond_mutex);
+	printf("[NODE RFC] done() callback initiated @%lu\n", (unsigned long)&data->wait_js_mutex);
 	
 	//
   // JS -> ABAP parameters
