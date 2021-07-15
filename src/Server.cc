@@ -14,7 +14,6 @@ namespace node_rfc
     extern Napi::Env __env;
 
     uint_t Server::_id = 1;
-    
     Server *__server = NULL;
 
     typedef struct
@@ -164,7 +163,6 @@ namespace node_rfc
         }
 
         RFC_FUNCTION_DESC_HANDLE func_desc_handle = it->second.func_desc_handle;
-        uint_t paramCount;
 
         //
         // JS Call
@@ -210,28 +208,7 @@ namespace node_rfc
         DEBUG("After cond [genericHandler]\n");
         delete payload;
         
-        //
-        // JS -> ABAP parameters
-        //
-
-        /*RfcGetParameterCount(func_desc_handle, &paramCount, errorInfo);
-        if (errorInfo->code != RFC_OK)
-        {
-            return errorInfo->code;
-        }*/
-
-        //Napi::Value err = Undefined();
-        //for (uint_t i = 0; i < paramCount; i++)
-        //{
-        //    Napi::String name = paramNames.Get(i).ToString();
-        //    Napi::Value value = params.Get(name);
-        //    err = client->setRfmParameter(functionDescHandle, functionHandle, name, value);
-        //
-        //    if (!err.IsUndefined())
-        //    {
-        //        break;
-        //    }
-        //}
+        
 
         return RFC_OK;
     }
@@ -373,8 +350,7 @@ namespace node_rfc
             return info.Env().Undefined();
         }
 
-				// Uncommented stop code
-        //Napi::Function callback = info[0].As<Napi::Function>();
+				//Napi::Function callback = info[0].As<Napi::Function>();
         //(new StopAsync(callback, this))->Queue();
 
         return info.Env().Undefined();
@@ -575,11 +551,41 @@ namespace node_rfc
 
 } // namespace node_rfc
 
+// No error handling! TODO: Add error handling
 void ServerDoneCallback(const CallbackInfo& info) {
 	Env env = info.Env();
 	ServerCallbackContainer *data = (ServerCallbackContainer *)info.Data();
 	
 	DEBUG("[NODE RFC] done() callback initiated @", (unsigned long)&data->cond_mutex);
+	
+	//
+  // JS -> ABAP parameters
+  //
+  
+  if(info.Length() > 0) {
+  	Napi::Object params = info[0].As<Napi::Object>();
+  	Napi::Array paramNames = object.GetPropertyNames();
+  
+		uint_t paramCount;
+		RfcGetParameterCount(data->func_desc_handle, &paramCount, errorInfo);
+		if (errorInfo->code != RFC_OK)
+		{
+		    return errorInfo->code;
+		}
+		
+		Napi::Value err = Undefined();
+		for (uint_t i = 0; i < paramCount; i++)
+		{
+		    Napi::String name = paramNames.Get(i).ToString();
+		    Napi::Value value = params.Get(name);
+		    err = client->setRfmParameter(functionDescHandle, functionHandle, name, value);
+		
+		    if (!err.IsUndefined())
+		    {
+		        break;
+		    }
+		}
+  }
 	
 	uv_mutex_lock(&data->js_running_mutex);
 	bool working = data->js_running;
