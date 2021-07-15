@@ -624,9 +624,9 @@ void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *contex
 	// not aborted
 	if (env != nullptr) {
 		if (callback != nullptr) {
-			DEBUG("[NODE RFC] Callback initiated\n");
+			EDEBUG("[NODE RFC] Callback initiated\n");
 			callback.Call({jsContainer.first, jsContainer.second, Napi::Function::New<ServerDoneCallback>(env, nullptr, data)});
-		  DEBUG("[NODE RFC] Callback returned\n");
+		  EDEBUG("[NODE RFC] Callback returned\n");
 		}
 	}
 }
