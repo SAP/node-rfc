@@ -193,16 +193,16 @@ namespace node_rfc
 	          uv_mutex_lock(&payload->wait_js_mutex);
 	          uv_cond_wait(&payload->wait_js, &payload->wait_js_mutex);
 	          uv_mutex_unlock(&payload->wait_js_mutex);
-	          
+	          	          
 	          // Exit condition
 	          uv_mutex_lock(&payload->js_running_mutex);
-	          bool exit = payload->js_running;
+	          bool exit = !payload->js_running;
 	          uv_mutex_unlock(&payload->js_running_mutex);
 	          
 	          if(exit) break;
 	      }
-        
-        uv_mutex_destroy(&payload->wait_js_mutex);
+	      
+	      uv_mutex_destroy(&payload->wait_js_mutex);
         uv_mutex_destroy(&payload->js_running_mutex);
         uv_cond_destroy(&payload->wait_js);
         DEBUG("After cond [genericHandler]\n");
@@ -213,7 +213,7 @@ namespace node_rfc
         } else { 
         	return RFC_OK;
         }
-    }
+   }
 
     class StartAsync : public Napi::AsyncWorker
     {
@@ -561,7 +561,8 @@ void ServerDoneCallback(const CallbackInfo& info) {
 	Env env = info.Env();
 	ServerCallbackContainer *data = (ServerCallbackContainer *)info.Data();
 	
-	printf("[NODE RFC] done() callback initiated @%lu\n", (unsigned long)&data->wait_js_mutex);
+	DEBUG("[NODE RFC] done() callback initiated @\n", (unsigned long)&data->wait_js_mutex);
+	fflush(stdout);
 	
 	//
   // JS -> ABAP parameters
@@ -595,7 +596,7 @@ void ServerDoneCallback(const CallbackInfo& info) {
 	uv_mutex_unlock(&data->js_running_mutex);
 	
 	if(!js_running) {
-		printf("[NODE RFC] Detected fake done() call\n"); // This happens if the user calls done more than once
+		DEBUG("[NODE RFC] Detected fake done() call\n"); // This happens if the user calls done more than once
 		return;
 	}
 	
@@ -609,7 +610,8 @@ void ServerDoneCallback(const CallbackInfo& info) {
 }
 
 void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *context, ServerCallbackContainer *data) {
-		        
+	DEBUG("[NODE RFC] Callback BEGIN\n");
+	       
   //
   // ABAP -> JS parameters
   //
@@ -624,9 +626,9 @@ void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *contex
 	// not aborted
 	if (env != nullptr) {
 		if (callback != nullptr) {
-			printf("[NODE RFC] Callback initiated\n");
+			DEBUG("[NODE RFC] Callback initiated\n");
 			callback.Call({jsContainer.first, jsContainer.second, Napi::Function::New<ServerDoneCallback>(env, nullptr, data)});
-		  printf("[NODE RFC] Callback returned\n");
+		  DEBUG("[NODE RFC] Callback returned\n");
 		}
 	}
 }
