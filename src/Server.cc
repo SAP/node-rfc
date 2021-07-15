@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Server.h"
+#include "nwrfcsdk.h"
 
 #include <node_api.h>
 #include <assert.h>
