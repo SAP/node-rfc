@@ -569,14 +569,14 @@ void ServerDoneCallback(const CallbackInfo& info) {
   
 		uint_t paramCount;
 		RfcGetParameterCount(data->func_desc_handle, &paramCount, data->errorInfo);
-		if (errorInfo->code == RFC_OK)
+		if (data->errorInfo->code == RFC_OK)
 		{
-			Napi::Value err = Undefined();
+			Napi::Value err = env.Undefined();
 			for (uint_t i = 0; i < paramCount; i++)
 			{
 				  Napi::String name = paramNames.Get(i).ToString();
 				  Napi::Value value = params.Get(name);
-				  err = client->setRfmParameter(functionDescHandle, functionHandle, name, value);
+				  err = setRfmParameter(functionDescHandle, functionHandle, name, value);
 			
 				  if (!err.IsUndefined())
 				  {
@@ -587,7 +587,7 @@ void ServerDoneCallback(const CallbackInfo& info) {
   }
 	
 	uv_mutex_lock(&data->js_running_mutex);
-	bool working = data->js_running;
+	bool js_running = data->js_running;
 	uv_mutex_unlock(&data->js_running_mutex);
 	
 	if(!js_running) {
