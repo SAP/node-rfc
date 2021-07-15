@@ -420,6 +420,7 @@ namespace node_rfc
 				ServerCallbackTsfn threadSafeFunction = ServerCallbackTsfn::New(
 				  node_rfc::__env,
 				  jsFunction, 						// JavaScript function called asynchronously
+				  "ServerCallbackTsfn"		// Resource name
 				  0,                      // Unlimited queue
 				  1,                      // Only one thread will use this initially
 				  &dumb_ctx								// No context needed
