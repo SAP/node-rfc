@@ -576,7 +576,7 @@ void ServerDoneCallback(const CallbackInfo& info) {
 			{
 				  Napi::String name = paramNames.Get(i).ToString();
 				  Napi::Value value = params.Get(name);
-				  err = setRfmParameter(functionDescHandle, functionHandle, name, value);
+				  err = setRfmParameter(data->functionDescHandle, data->functionHandle, name, value);
 			
 				  if (!err.IsUndefined())
 				  {
