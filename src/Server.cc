@@ -569,22 +569,20 @@ void ServerDoneCallback(const CallbackInfo& info) {
   
 		uint_t paramCount;
 		RfcGetParameterCount(data->func_desc_handle, &paramCount, data->errorInfo);
-		if (errorInfo->code != RFC_OK)
+		if (errorInfo->code == RFC_OK)
 		{
-		    return errorInfo->code;
-		}
-		
-		Napi::Value err = Undefined();
-		for (uint_t i = 0; i < paramCount; i++)
-		{
-		    Napi::String name = paramNames.Get(i).ToString();
-		    Napi::Value value = params.Get(name);
-		    err = client->setRfmParameter(functionDescHandle, functionHandle, name, value);
-		
-		    if (!err.IsUndefined())
-		    {
-		        break;
-		    }
+			Napi::Value err = Undefined();
+			for (uint_t i = 0; i < paramCount; i++)
+			{
+				  Napi::String name = paramNames.Get(i).ToString();
+				  Napi::Value value = params.Get(name);
+				  err = client->setRfmParameter(functionDescHandle, functionHandle, name, value);
+			
+				  if (!err.IsUndefined())
+				  {
+				      break;
+				  }
+			}
 		}
   }
 	
