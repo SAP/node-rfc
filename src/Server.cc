@@ -556,79 +556,79 @@ namespace node_rfc
 
 } // namespace node_rfc
 
-// No error handling! TODO: Add error handling
-void ServerDoneCallback(const CallbackInfo& info) {
-	Env env = info.Env();
-	ServerCallbackContainer *data = (ServerCallbackContainer *)info.Data();
-	
-	DEBUG("[NODE RFC] done() callback initiated @\n", (unsigned long)&data->wait_js_mutex);
-	fflush(stdout);
-	
-	//
-  // JS -> ABAP parameters
-  //
-  
-  if(info.Length() > 0) {
-  	Napi::Object params = info[0].As<Napi::Object>();
-  	Napi::Array paramNames = params.GetPropertyNames();
-  
-		uint_t paramCount;
-		RfcGetParameterCount(data->func_desc_handle, &paramCount, data->errorInfo);
-		if (data->errorInfo->code == RFC_OK)
-		{
-			Napi::Value err = env.Undefined();
-			for (uint_t i = 0; i < paramCount; i++)
-			{
-				  Napi::String name = paramNames.Get(i).ToString();
-				  Napi::Value value = params.Get(name);
-				  err = node_rfc::setRfmParameter(data->func_desc_handle, data->func_handle, name, value, &data->errorPath, &data->client_options);
-			
-				  if (!err.IsUndefined())
-				  {
-				      break;
-				  }
-			}
-		}
-  }
-	
-	uv_mutex_lock(&data->js_running_mutex);
-	bool js_running = data->js_running;
-	uv_mutex_unlock(&data->js_running_mutex);
-	
-	if(!js_running) {
-		DEBUG("[NODE RFC] Detected fake done() call\n"); // This happens if the user calls done more than once
-		return;
-	}
-	
-	uv_mutex_lock(&data->js_running_mutex);
-	data->js_running = false;
-	uv_mutex_unlock(&data->js_running_mutex);
-	
-	uv_mutex_lock(&data->wait_js_mutex);
-  uv_cond_signal(&data->wait_js);
-  uv_mutex_unlock(&data->wait_js_mutex);
+void ServerDoneCallback(const CallbackInfo& info)
+{
+    Env env = info.Env();
+    ServerCallbackContainer* data = (ServerCallbackContainer*)info.Data();
+
+    DEBUG("[NODE RFC] done() callback initiated @\n", (unsigned long)&data->wait_js_mutex);
+    fflush(stdout);
+    
+    
+    printf("%d\n", info.Length());
+
+    //
+    // JS -> ABAP parameters
+    //
+
+    if (info.Length() > 0) {
+        Napi::Object params = info[0].As<Napi::Object>();
+        Napi::Array paramNames = params.GetPropertyNames();
+
+        uint_t paramCount;
+        RfcGetParameterCount(data->func_desc_handle, &paramCount, data->errorInfo);
+        if (data->errorInfo->code == RFC_OK) {
+            Napi::Value err = env.Undefined();
+            for (uint_t i = 0; i < paramCount; i++) {
+                Napi::String name = paramNames.Get(i).ToString();
+                Napi::Value value = params.Get(name);
+                err = node_rfc::setRfmParameter(data->func_desc_handle, data->func_handle, name, value, &data->errorPath, &data->client_options);
+
+                if (!err.IsUndefined()) {
+                    break;
+                }
+            }
+        }
+    }
+
+    uv_mutex_lock(&data->js_running_mutex);
+    bool js_running = data->js_running;
+    uv_mutex_unlock(&data->js_running_mutex);
+
+    if (!js_running) {
+        DEBUG("[NODE RFC] Detected fake done() call\n"); // This happens if the user calls done more than once
+        return;
+    }
+
+    uv_mutex_lock(&data->js_running_mutex);
+    data->js_running = false;
+    uv_mutex_unlock(&data->js_running_mutex);
+
+    uv_mutex_lock(&data->wait_js_mutex);
+    uv_cond_signal(&data->wait_js);
+    uv_mutex_unlock(&data->wait_js_mutex);
 }
 
-void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *context, ServerCallbackContainer *data) {
-	DEBUG("[NODE RFC] Callback BEGIN\n");
-	       
-  //
-  // ABAP -> JS parameters
-  //
-  
-  auto func_desc_handle = data->func_desc_handle;
-  auto func_handle = data->func_handle;
-  
-  node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &data->errorPath, &data->client_options, env);
+void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t* context, ServerCallbackContainer* data)
+{
+    DEBUG("[NODE RFC] Callback BEGIN\n");
 
-                            
-	// Is the JavaScript environment still available to call into, eg. the TSFN is
-	// not aborted
-	if (env != nullptr) {
-		if (callback != nullptr) {
-			DEBUG("[NODE RFC] Callback initiated\n");
-			callback.Call({jsContainer.first, jsContainer.second, Napi::Function::New<ServerDoneCallback>(env, nullptr, data)});
-		  DEBUG("[NODE RFC] Callback returned\n");
-		}
-	}
+    //
+    // ABAP -> JS parameters
+    //
+
+    auto func_desc_handle = data->func_desc_handle;
+    auto func_handle = data->func_handle;
+
+    node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &data->errorPath, &data->client_options, env);
+
+    // Is the JavaScript environment still available to call into, eg. the TSFN is
+    // not aborted
+    if (env != nullptr) {
+        if (callback != nullptr) {
+            DEBUG("[NODE RFC] Callback initiated\n");
+            callback.Call({ jsContainer.first, jsContainer.second, Napi::Function::New<ServerDoneCallback>(env, nullptr, data) });
+            DEBUG("[NODE RFC] Callback returned\n");
+        }
+    }
 }
