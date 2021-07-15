@@ -15,6 +15,9 @@ typedef struct
 		RFC_FUNCTION_HANDLE func_handle;
 		RFC_ERROR_INFO *errorInfo;
 		
+	  node_rfc::RfmErrorPath errorPath;
+  	node_rfc::ClientOptionsStruct client_options;
+		
 		uv_cond_t wait_js;
 		uv_mutex_t wait_js_mutex; 
 		bool js_running;

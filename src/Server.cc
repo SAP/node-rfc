@@ -577,7 +577,7 @@ void ServerDoneCallback(const CallbackInfo& info) {
 			{
 				  Napi::String name = paramNames.Get(i).ToString();
 				  Napi::Value value = params.Get(name);
-				  err = node_rfc::setRfmParameter(data->func_desc_handle, data->func_handle, name, value);
+				  err = node_rfc::setRfmParameter(data->func_desc_handle, data->func_handle, name, value, &data->errorPath, &data->client_options);
 			
 				  if (!err.IsUndefined())
 				  {
@@ -614,9 +614,7 @@ void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *contex
   auto func_desc_handle = data->func_desc_handle;
   auto func_handle = data->func_handle;
   
-  node_rfc::RfmErrorPath errorPath;
-  node_rfc::ClientOptionsStruct client_options;
-  node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &errorPath, &client_options, env);
+  node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &data->errorPath, &data->client_options, env);
 
                             
 	// Is the JavaScript environment still available to call into, eg. the TSFN is
