@@ -561,7 +561,7 @@ void ServerDoneCallback(const CallbackInfo& info) {
 	Env env = info.Env();
 	ServerCallbackContainer *data = (ServerCallbackContainer *)info.Data();
 	
-	DEBUG("[NODE RFC] done() callback initiated @", (unsigned long)&data->cond_mutex);
+	printf("[NODE RFC] done() callback initiated @%lu\n", (unsigned long)&data->cond_mutex);
 	
 	//
   // JS -> ABAP parameters
@@ -595,7 +595,7 @@ void ServerDoneCallback(const CallbackInfo& info) {
 	uv_mutex_unlock(&data->js_running_mutex);
 	
 	if(!js_running) {
-		DEBUG("[NODE RFC] Detected fake done() call\n"); // This happens if the user calls done more than once
+		printf("[NODE RFC] Detected fake done() call\n"); // This happens if the user calls done more than once
 		return;
 	}
 	
@@ -624,9 +624,9 @@ void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *contex
 	// not aborted
 	if (env != nullptr) {
 		if (callback != nullptr) {
-			EDEBUG("[NODE RFC] Callback initiated\n");
+			printf("[NODE RFC] Callback initiated\n");
 			callback.Call({jsContainer.first, jsContainer.second, Napi::Function::New<ServerDoneCallback>(env, nullptr, data)});
-		  EDEBUG("[NODE RFC] Callback returned\n");
+		  printf("[NODE RFC] Callback returned\n");
 		}
 	}
 }
