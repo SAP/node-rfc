@@ -13,6 +13,8 @@ typedef struct
 {
 		RFC_FUNCTION_DESC_HANDLE func_desc_handle; 
 		RFC_FUNCTION_HANDLE func_handle;
+		RFC_ERROR_INFO *errorInfo;
+		
 		uv_cond_t wait_js;
 		uv_mutex_t wait_js_mutex; 
 		bool js_running;

@@ -172,11 +172,12 @@ namespace node_rfc
         
         // Initialize the condition variable and mutexes and wait for the JS callback to complete
         
-        uv_cond_init(&ServerCallbackContainer->wait_js);
-        uv_mutex_init(&ServerCallbackContainer->wait_js_mutex);
+        uv_cond_init(&payload->wait_js);
+        uv_mutex_init(&payload->wait_js_mutex);
         uv_mutex_init(&payload->js_running_mutex);
         payload->func_desc_handle = func_desc_handle;
         payload->func_handle = func_handle;
+        payload->errorInfo = errorInfo;
         
         
         DEBUG("Before cond [genericHandler] with cond_mutex @", (unsigned long)&payload->cond_mutex);
@@ -203,14 +204,14 @@ namespace node_rfc
         uv_mutex_destroy(&payload->wait_js_mutex);
         uv_mutex_destroy(&payload->js_running_mutex);
         uv_cond_destroy(&payload->wait_js);
-        
-        
         DEBUG("After cond [genericHandler]\n");
         delete payload;
         
-        
-
-        return RFC_OK;
+        if (errorInfo->code != RFC_OK) {
+          return errorInfo->code;
+        } else { 
+        	return RFC_OK;
+        }
     }
 
     class StartAsync : public Napi::AsyncWorker
@@ -564,10 +565,10 @@ void ServerDoneCallback(const CallbackInfo& info) {
   
   if(info.Length() > 0) {
   	Napi::Object params = info[0].As<Napi::Object>();
-  	Napi::Array paramNames = object.GetPropertyNames();
+  	Napi::Array paramNames = params.GetPropertyNames();
   
 		uint_t paramCount;
-		RfcGetParameterCount(data->func_desc_handle, &paramCount, errorInfo);
+		RfcGetParameterCount(data->func_desc_handle, &paramCount, data->errorInfo);
 		if (errorInfo->code != RFC_OK)
 		{
 		    return errorInfo->code;
