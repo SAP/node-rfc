@@ -26,7 +26,7 @@ typedef struct
 
 void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *context, ServerCallbackContainer *data); // handles calling the JS callback
 void ServerDoneCallback(const CallbackInfo& info); 																																 // called by the JS callback to signal completion of the callback (ABAP may now continue)
-using ServerCallbackTsfn = Napi::TypedThreadSafeFunction<std::nullptr_t, ServerCallbackContainer, ServerCallJs>;
+using ServerCallbackTsfn = Napi::TypedThreadSafeFunction<ServerCallbackContainer, ServerCallJs>;
 
 typedef struct _ServerFunctionStruct
 {
