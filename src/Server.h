@@ -24,9 +24,9 @@ typedef struct
 		uv_mutex_t js_running_mutex;
 } ServerCallbackContainer;
 
-void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *context, ServerCallbackContainer *data); // handles calling the JS callback
+void ServerCallJs(Napi::Env env, Napi::Function callback, Napi::Reference<Napi::Value> *context, ServerCallbackContainer *data); // handles calling the JS callback
 void ServerDoneCallback(const CallbackInfo& info); 																																 // called by the JS callback to signal completion of the callback (ABAP may now continue)
-using ServerCallbackTsfn = Napi::TypedThreadSafeFunction<ServerCallbackContainer, ServerCallJs>;
+using ServerCallbackTsfn = Napi::TypedThreadSafeFunction<Napi::Reference<Napi::Value>, ServerCallbackContainer, ServerCallJs>;
 
 typedef struct _ServerFunctionStruct
 {
