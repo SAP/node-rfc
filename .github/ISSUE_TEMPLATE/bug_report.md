@@ -11,7 +11,9 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **To Reproduce**
-Describe the steps to reproduce the behavior, including the test script.
+Describe how the `node-rfc` is installed, like locally or globally and using `npm install` or build from source.
+
+Describe steps to reproduce the behavior, including the test script.
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
