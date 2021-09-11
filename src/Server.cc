@@ -14,6 +14,8 @@ namespace node_rfc
 {
     extern Napi::Env __env;
 
+
+    ClientOptionsStruct client_options; // Messy horror
     uint_t Server::_id = 1;
     Server *__server = NULL;
 
@@ -170,6 +172,7 @@ namespace node_rfc
         //
         
         ServerCallbackContainer *payload = new ServerCallbackContainer();
+        auto errorPath = node_rfc::RfmErrorPath();
         
         // Initialize the condition variable and mutexes and wait for the JS callback to complete
         
@@ -179,6 +182,8 @@ namespace node_rfc
         payload->func_desc_handle = func_desc_handle;
         payload->func_handle = func_handle;
         payload->errorInfo = errorInfo;
+        payload->client_options = client_options;
+        payload->errorPath = errorPath;
         
         
         DEBUG("Before cond [genericHandler] with cond_mutex @", (unsigned long)&payload->cond_mutex);
@@ -565,21 +570,18 @@ void ServerDoneCallback(const CallbackInfo& info)
     // JS -> ABAP parameters
     //
 
-
     DEBUG("[NODE RFC] done() callback initiated @\n", (unsigned long)&data->wait_js_mutex);
-		Napi::Value err = env.Undefined();
-		Napi::Function callback;
-		
+    Napi::Value err = env.Undefined();
+    Napi::Function callback;
+
     if (info.Length() > 0) {
         Napi::Object params = info[0].As<Napi::Object>();
-        
         if(info.Length() > 1)
             callback = info[1].As<Napi::Function>();
         
         if (data->errorInfo->code == RFC_OK) {
             for (uint_t i = 0; i < data->paramCount; i++) {
-                Napi::String name = data->paramNames.Get(i).ToString();
-                std::cout << name << std::endl;
+                Napi::String name = data->paramNames.Value().Get(i).ToString();
                 
                 Napi::Value value = params.Get(name);
                 err = node_rfc::setRfmParameter(data->func_desc_handle, data->func_handle, name, value, &data->errorPath, &data->client_options);
@@ -629,8 +631,9 @@ void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t* contex
     Napi::Object abapArgs = jsContainer.second.As<Napi::Object>();
     Napi::Array paramNames = abapArgs.GetPropertyNames();
 
-		data->paramNames = paramNames;
-		RfcGetParameterCount(data->func_desc_handle, &data->paramCount, data->errorInfo);
+
+    data->paramNames = Napi::Persistent(paramNames);
+    RfcGetParameterCount(data->func_desc_handle, &data->paramCount, data->errorInfo);
 
     // Is the JavaScript environment still available to call into, eg. the TSFN is
     // not aborted

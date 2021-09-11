@@ -17,7 +17,7 @@ typedef struct
 		
 	  node_rfc::RfmErrorPath errorPath;
   	node_rfc::ClientOptionsStruct client_options;
-		Napi::Array paramNames;
+		Napi::Reference<Napi::Array> paramNames;
 		uint_t paramCount;
 		
 		uv_cond_t wait_js;
@@ -97,6 +97,7 @@ namespace node_rfc
         Napi::Value AddFunction(const Napi::CallbackInfo &info);
         Napi::Value RemoveFunction(const Napi::CallbackInfo &info);
         Napi::Value GetFunctionDescription(const Napi::CallbackInfo &info);
+        
         //RFC_RC SAP_API metadataLookup(SAP_UC *func_name, RFC_ATTRIBUTES rfc_attributes, RFC_FUNCTION_DESC_HANDLE *func_handle);
         //RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle, RFC_FUNCTION_HANDLE func_handle, RFC_ERROR_INFO *errorInfo);
 
@@ -105,7 +106,7 @@ namespace node_rfc
         RFC_SERVER_HANDLE serverHandle;
         ConnectionParamsStruct server_params;
         ConnectionParamsStruct client_params;
-        ClientOptionsStruct client_options;
+        //ClientOptionsStruct client_options;
         Napi::ObjectReference serverParamsRef;
         Napi::ObjectReference clientParamsRef;
         Napi::ObjectReference clientOptionsRef;
