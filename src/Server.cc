@@ -3,15 +3,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Server.h"
+#include "nwrfcsdk.h"
 
 #include <node_api.h>
 #include <assert.h>
+#include <uv.h>
+#include <stdio.h>
+
 namespace node_rfc
 {
     extern Napi::Env __env;
 
-    uint_t Server::_id = 1;
 
+    ClientOptionsStruct client_options; // Messy horror
+    uint_t Server::_id = 1;
     Server *__server = NULL;
 
     typedef struct
@@ -104,10 +109,6 @@ namespace node_rfc
 
     RFC_RC SAP_API metadataLookup(SAP_UC const *func_name, RFC_ATTRIBUTES rfc_attributes, RFC_FUNCTION_DESC_HANDLE *func_desc_handle)
     {
-        printf("Metadata lookup for: ");
-        printfU(func_name);
-        printf("\n");
-
         RFC_RC rc = RFC_NOT_FOUND;
 
         Server *server = node_rfc::__server; // todo check if null
@@ -145,17 +146,14 @@ namespace node_rfc
         {
             return errorInfo->code;
         }
-
-        printf("genericHandler for: ");
-        printfU(func_name);
-        printf(" func_handle: %lu\n", (pointer_t)func_handle);
+        
+        
 
         ServerFunctionsMap::iterator it = server->serverFunctions.begin();
         while (it != server->serverFunctions.end())
         {
             if (strcmpU(func_name, it->second.func_name) == 0)
             {
-                printf("found func_desc %lu\n", (pointer_t)it->second.func_desc_handle);
                 break;
             }
             it++;
@@ -168,45 +166,59 @@ namespace node_rfc
         }
 
         RFC_FUNCTION_DESC_HANDLE func_desc_handle = it->second.func_desc_handle;
-        uint_t paramCount;
-
-        //
-        // ABAP -> JS parameters
-        //
-        //RfmErrorPath errorPath;
-        //ClientOptionsStruct client_options;
-        //ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &errorPath, &client_options);
 
         //
         // JS Call
         //
-        //it->second.callback.Call({jsContainer});
-
-        //
-        // JS -> ABAP parameters
-        //
-
-        RfcGetParameterCount(func_desc_handle, &paramCount, errorInfo);
-        if (errorInfo->code != RFC_OK)
-        {
-            return errorInfo->code;
+        
+        ServerCallbackContainer *payload = new ServerCallbackContainer();
+        auto errorPath = node_rfc::RfmErrorPath();
+        
+        // Initialize the condition variable and mutexes and wait for the JS callback to complete
+        
+        uv_cond_init(&payload->wait_js);
+        uv_mutex_init(&payload->wait_js_mutex);
+        uv_mutex_init(&payload->js_running_mutex);
+        payload->func_desc_handle = func_desc_handle;
+        payload->func_handle = func_handle;
+        payload->errorInfo = errorInfo;
+        payload->client_options = client_options;
+        payload->errorPath = errorPath;
+        
+        
+        DEBUG("Before cond [genericHandler] with cond_mutex @", (unsigned long)&payload->cond_mutex);
+        uv_mutex_lock(&payload->js_running_mutex);
+        DEBUG("Obtained js_running_mutex lock\n");
+	      payload->js_running = true;
+	      uv_mutex_unlock(&payload->js_running_mutex);
+	      
+	      it->second.threadSafeCallback.BlockingCall(payload);
+	      
+	      while(true) {
+	          uv_mutex_lock(&payload->wait_js_mutex);
+	          uv_cond_wait(&payload->wait_js, &payload->wait_js_mutex);
+	          uv_mutex_unlock(&payload->wait_js_mutex);
+	          	          
+	          // Exit condition
+	          uv_mutex_lock(&payload->js_running_mutex);
+	          bool exit = !payload->js_running;
+	          uv_mutex_unlock(&payload->js_running_mutex);
+	          
+	          if(exit) break;
+	      }
+	      
+	      uv_mutex_destroy(&payload->wait_js_mutex);
+        uv_mutex_destroy(&payload->js_running_mutex);
+        uv_cond_destroy(&payload->wait_js);
+        DEBUG("After cond [genericHandler]\n");
+        delete payload;
+        
+        if (errorInfo->code != RFC_OK) {
+          return errorInfo->code;
+        } else { 
+        	return RFC_OK;
         }
-
-        //Napi::Value err = Undefined();
-        //for (uint_t i = 0; i < paramCount; i++)
-        //{
-        //    Napi::String name = paramNames.Get(i).ToString();
-        //    Napi::Value value = params.Get(name);
-        //    err = client->setRfmParameter(functionDescHandle, functionHandle, name, value);
-        //
-        //    if (!err.IsUndefined())
-        //    {
-        //        break;
-        //    }
-        //}
-
-        return RFC_OK;
-    }
+   }
 
     class StartAsync : public Napi::AsyncWorker
     {
@@ -345,8 +357,7 @@ namespace node_rfc
             return info.Env().Undefined();
         }
 
-        //Napi::Function callback = info[0].As<Napi::Function>();
-
+				//Napi::Function callback = info[0].As<Napi::Function>();
         //(new StopAsync(callback, this))->Queue();
 
         return info.Env().Undefined();
@@ -407,8 +418,20 @@ namespace node_rfc
             callback.Call({rfcSdkError(&errorInfo)});
             return scope.Escape(info.Env().Undefined());
         }
-
-        ServerFunctionStruct sfs = ServerFunctionStruct(func_name, func_desc_handle, jsFunction);
+        
+        Napi::Reference<Napi::Value> dumb_ctx;
+        
+        // Create thread-safe function from `jsFunction`
+				ServerCallbackTsfn threadSafeFunction = ServerCallbackTsfn::New(
+				  node_rfc::__env,
+				  jsFunction, 						// JavaScript function called asynchronously
+				  "ServerCallbackTsfn",		// Resource name
+				  0,                      // Unlimited queue
+				  1,                      // Only one thread will use this initially
+				  nullptr									// No context needed
+		  	);
+				  
+        ServerFunctionStruct sfs = ServerFunctionStruct(func_name, func_desc_handle, threadSafeFunction);
         free(func_name);
 
         serverFunctions[functionName.Utf8Value()] = sfs;
@@ -464,7 +487,9 @@ namespace node_rfc
             }
             it++;
         }
+        
         free(func_name);
+        it->second.threadSafeCallback.Release();
 
         if (it == serverFunctions.end())
         {
@@ -535,3 +560,88 @@ namespace node_rfc
     }
 
 } // namespace node_rfc
+
+void ServerDoneCallback(const CallbackInfo& info)
+{
+    Env env = info.Env();
+    ServerCallbackContainer* data = (ServerCallbackContainer*)info.Data();
+
+    //
+    // JS -> ABAP parameters
+    //
+
+    DEBUG("[NODE RFC] done() callback initiated @\n", (unsigned long)&data->wait_js_mutex);
+    Napi::Value err = env.Undefined();
+    Napi::Function callback;
+
+    if (info.Length() > 0) {
+        Napi::Object params = info[0].As<Napi::Object>();
+        if(info.Length() > 1)
+            callback = info[1].As<Napi::Function>();
+        
+        if (data->errorInfo->code == RFC_OK) {
+            for (uint_t i = 0; i < data->paramCount; i++) {
+                Napi::String name = data->paramNames.Value().Get(i).ToString();
+                
+                Napi::Value value = params.Get(name);
+                err = node_rfc::setRfmParameter(data->func_desc_handle, data->func_handle, name, value, &data->errorPath, &data->client_options);
+
+                if (!err.IsUndefined()) {
+                    break;
+                }
+            }
+        }
+    }
+
+    uv_mutex_lock(&data->js_running_mutex);
+    bool js_running = data->js_running;
+    uv_mutex_unlock(&data->js_running_mutex);
+
+    if (!js_running) {
+        DEBUG("[NODE RFC] Detected fake done() call\n"); // This happens if the user calls done more than once
+        return;
+    }
+
+    uv_mutex_lock(&data->js_running_mutex);
+    data->js_running = false;
+    uv_mutex_unlock(&data->js_running_mutex);
+
+    uv_mutex_lock(&data->wait_js_mutex);
+    uv_cond_signal(&data->wait_js);
+    uv_mutex_unlock(&data->wait_js_mutex);
+    
+    if(info.Length() > 1)
+		    callback.Call({err});            
+}
+
+void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t* context, ServerCallbackContainer* data)
+{
+    DEBUG("[NODE RFC] Callback BEGIN\n");
+
+    //
+    // ABAP -> JS parameters
+    //
+
+    auto func_desc_handle = data->func_desc_handle;
+    auto func_handle = data->func_handle;
+
+    node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &data->errorPath, &data->client_options);
+    
+    Napi::Object errorObj = jsContainer.first.As<Napi::Object>();
+    Napi::Object abapArgs = jsContainer.second.As<Napi::Object>();
+    Napi::Array paramNames = abapArgs.GetPropertyNames();
+
+
+    data->paramNames = Napi::Persistent(paramNames);
+    RfcGetParameterCount(data->func_desc_handle, &data->paramCount, data->errorInfo);
+
+    // Is the JavaScript environment still available to call into, eg. the TSFN is
+    // not aborted
+    if (env != nullptr) {
+        if (callback != nullptr) {
+            DEBUG("[NODE RFC] Callback initiated\n");
+            callback.Call({ errorObj, abapArgs, Napi::Function::New<ServerDoneCallback>(env, nullptr, data) });
+            DEBUG("[NODE RFC] Callback returned\n");
+        }
+    }
+}

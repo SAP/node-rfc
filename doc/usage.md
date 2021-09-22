@@ -674,7 +674,9 @@ API: [api/server](api.md#server)
 
 Using the node-rfc Server instance, NodeJS functions can be exposed and consumed from ABAP, using `CALL FUNCTION DESTINATION` ABAP statement. Just the same way like standard RFMs from ABAP systems.
 
-To expose one NodeJS function for ABAP clients, the ABAP function definition must be provided, defining ABAP parameters through which the ABAP client can invoke the NodeJS function. When ABAP clients calls the NodeJS function, ABAP input parameters are automatically converted to NodeJS function input and the function is invoked. The function output is automatically converted to ABAP output parameters, returned back to ABAP client.
+To expose one NodeJS function for ABAP clients, the ABAP function definition must be provided, defining ABAP parameters through which the ABAP client can invoke the NodeJS function. When ABAP clients calls the NodeJS function, the NodeJS function is called with three arguments. The first argument indicates if any error occurred, the second arguments is an object representing the input parametes passed from ABAP and the final argument is a `done` function that the addon requires be called once ABAP may continue execution.
+
+The `done` function takes two optional arguments. The first is an object representing data to be passed back to ABAP and the second is a callback that executes once we have returned our data to ABAP. This second callback also accepts an error parameter.
 
 ABAP function definition defines ABAP parameters and data definitions for all variables, structures and tables used in ABAP parameers. Coding these metadata down to field level is not very exciting task and node-rfc Server provides a more elegant solution here:
 
@@ -683,7 +685,7 @@ ABAP function definition defines ABAP parameters and data definitions for all va
 
 When invoked by ABAP, the NodeJS function will automatically fetch the function definition from ABAP RFM and expose itself as exactly such RFM to ABAP
 
-As an example, let make the `STFC_CONNECTION` available as NodeJS RFM and call it from ABAP.
+As an example, let's make the `STFC_CONNECTION` available as NodeJS RFM and call it from ABAP.
 
 ### Function Definition
 
@@ -707,44 +709,53 @@ Let provide the NodeJS function, mimicking the ABAP `STFC_CONNECTION` logic. Of 
 
 ```node
 function my_stfc_connection(
-    request_context,
-    abap_parameters: { REQUTEXT: "" }
+    error,
+    abap_parameters,
+    done
 ) {
-    console.log("NodeJS stfc invoked ", request_context);
+    console.log("NodeJS stfc invoked ", abap_parameters);
 
-    return {
-        ECHOTEXT: abap_parameters.REQUTEXT,
-        RESPTEXT: `Python server here. Connection attributes are:\nUser '${request_context.user}' from system '${request_context.sysId}', client '${request_context.client}', host '${request_context.partnerHost}'`,
-    };
+		done({
+				REQUTEXT: abap_parameters.REQUTEXT,
+        ECHOTEXT: 'Some response text goes here',
+        RESPTEXT: 'Some response text goes here',
+    }, (err) => {
+    	if(err)
+    		console.log('Error occurred while transferring data to ABAP!', err);
+    	else
+    		console.log('All fine :)');
+    });
 }
 ```
 
-When invoked from ABAP, the first argument `request_context` provides some information about ABAP consumer and the second argument `abap_parameters` provides input parameters sent from ABAP.
+When invoked from ABAP, the first argument `error` indicates whether an error occurred.
+
+The second argument `abap_parameters` is an object containing all of the information ABAP passed in the call (the arguments).
+
+The third argument `done` is the callback which **MUST** be called when finished (otherwise the ABAP will be stuck in an endless deadlock).
 
 ### ABAP calls NodeJS RFM
 
 ABAP call looks like this:
 
 ```abap
-*&---------------------------------------------------------------------*
-*& Report ZNODETEST
-*&---------------------------------------------------------------------*
-*&
-*&---------------------------------------------------------------------*
-REPORT znodetest.
+FUNCTION ZNODETEST.
 
 DATA lv_echo LIKE sy-lisel.
 DATA lv_resp LIKE sy-lisel.
 
 CALL FUNCTION 'STFC_CONNECTION' DESTINATION 'NODEJS'
   EXPORTING
-    requtext = 'Hello Nöde'
+    requtext = 'Hello Nöde 1'
   IMPORTING
     echotext = lv_echo
     resptext = lv_resp.
 
+WRITE 'RESULTS:'.
 WRITE lv_echo.
 WRITE lv_resp.
+
+ENDFUNCTION.
 ```
 
 ### Configuration
@@ -785,26 +796,23 @@ The NodeJS destination is in SM59 looks like
 **ABAP**
 
 ```abap
-*&---------------------------------------------------------------------*
-*& Report ZSERVERTEST
-*&---------------------------------------------------------------------*
-*&
-*&---------------------------------------------------------------------*
-REPORT zservertest.
-
+FUNCTION ZNODETEST.
 
 DATA lv_echo LIKE sy-lisel.
 DATA lv_resp LIKE sy-lisel.
 
 CALL FUNCTION 'STFC_CONNECTION' DESTINATION 'NODEJS'
   EXPORTING
-    requtext = 'XYZ'
+    requtext = 'Hello Nöde 1'
   IMPORTING
     echotext = lv_echo
     resptext = lv_resp.
 
+WRITE 'RESULTS:'.
 WRITE lv_echo.
 WRITE lv_resp.
+
+ENDFUNCTION.
 ```
 
 **Node Server**
@@ -815,22 +823,27 @@ const Server = addon.Server;
 const server = new Server({ dest: "gateway" }, { dest: "MME" });
 
 // Callback function
-function my_stfc_connection(request_context, REQUTEXT = "") {
-    console.log("stfc invoked");
-    console.log("request_context", request_context);
-    console.log("abap_parameters", abap_parameters);
+function my_stfc_connection(
+    error,
+    abap_parameters,
+    done
+) {
+    console.log("NodeJS stfc invoked ", abap_parameters);
 
-    return {
-        ECHOTEXT: REQUTEXT,
-        RESPTEXT: `Node server here. Connection attributes are:\nUser '${request_context.user}' from system '${request_context.sysId}', client '${request_context.client}', host '${request_context.partnerHost}'`,
-    };
+		done({
+				REQUTEXT: abap_parameters.REQUTEXT,
+        ECHOTEXT: 'Some response text goes here',
+        RESPTEXT: 'Some response text goes here',
+    }, (err) => {
+    	if(err)
+    		console.log('Error occurred while transferring data to ABAP!', err);
+    	else
+    		console.log('All fine :)');
+    });
 }
 
 server.start((err) => {
     if (err) return console.error("error:", err);
-    console.log(
-        `Server alive: ${server.alive} client handle: ${server.client_connection} server handle: ${server.server_connection}`
-    );
 
     // Expose the my_stfc_connection function as RFM with STFC_CONNECTION pararameters (function definition)
     const RFM_NAME = "STFC_CONNECTION";

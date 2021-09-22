@@ -8,35 +8,57 @@
 #include <uv.h>
 #include <map>
 #include "Client.h"
+
+typedef struct
+{
+		RFC_FUNCTION_DESC_HANDLE func_desc_handle; 
+		RFC_FUNCTION_HANDLE func_handle;
+		RFC_ERROR_INFO *errorInfo;
+		
+	  node_rfc::RfmErrorPath errorPath;
+  	node_rfc::ClientOptionsStruct client_options;
+		Napi::Reference<Napi::Array> paramNames;
+		uint_t paramCount;
+		
+		uv_cond_t wait_js;
+		uv_mutex_t wait_js_mutex; 
+		bool js_running;
+		uv_mutex_t js_running_mutex;
+} ServerCallbackContainer;
+
+void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *context, ServerCallbackContainer *data); // handles calling the JS callback
+void ServerDoneCallback(const CallbackInfo& info); 																																 // called by the JS callback to signal completion of the callback (ABAP may now continue)
+using ServerCallbackTsfn = Napi::TypedThreadSafeFunction<std::nullptr_t, ServerCallbackContainer, ServerCallJs>;
+
 typedef struct _ServerFunctionStruct
 {
     RFC_ABAP_NAME func_name;
     RFC_FUNCTION_DESC_HANDLE func_desc_handle = NULL;
-    Napi::FunctionReference callback;
+    ServerCallbackTsfn threadSafeCallback;
 
     _ServerFunctionStruct()
     {
         func_name[0] = 0;
     }
 
-    _ServerFunctionStruct(RFC_ABAP_NAME name, RFC_FUNCTION_DESC_HANDLE desc_handle, Napi::Function cb)
+    _ServerFunctionStruct(RFC_ABAP_NAME name, RFC_FUNCTION_DESC_HANDLE desc_handle, ServerCallbackTsfn cb)
     {
         strcpyU(func_name, name);
         func_desc_handle = desc_handle;
-        callback = Napi::Persistent(cb);
+        threadSafeCallback = cb; // Questionable
     }
 
     _ServerFunctionStruct &operator=(_ServerFunctionStruct &src) // note: passed by copy
     {
         strcpyU(func_name, src.func_name);
         func_desc_handle = src.func_desc_handle;
-        callback = Napi::Persistent(src.callback.Value());
+        threadSafeCallback = src.threadSafeCallback; // Questionable, idk what to do here tbh
         return *this;
     }
 
     ~_ServerFunctionStruct()
     {
-        callback.Reset();
+        //threadSafeCallback.Release(); <-- This misbehaves because I didn't understand when the destructor gets called and assumed it happens at the end
     }
 } ServerFunctionStruct;
 
@@ -47,6 +69,7 @@ typedef struct
     napi_async_work work;
     napi_threadsafe_function tsfn;
 } AddonData;
+
 namespace node_rfc
 {
     extern Napi::Env __env;
@@ -61,6 +84,7 @@ namespace node_rfc
         ~Server(void);
         ServerFunctionsMap serverFunctions;
         AddonData *addon_data;
+				
 
     private:
         Napi::Value IdGetter(const Napi::CallbackInfo &info);
@@ -73,6 +97,7 @@ namespace node_rfc
         Napi::Value AddFunction(const Napi::CallbackInfo &info);
         Napi::Value RemoveFunction(const Napi::CallbackInfo &info);
         Napi::Value GetFunctionDescription(const Napi::CallbackInfo &info);
+        
         //RFC_RC SAP_API metadataLookup(SAP_UC *func_name, RFC_ATTRIBUTES rfc_attributes, RFC_FUNCTION_DESC_HANDLE *func_handle);
         //RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle, RFC_FUNCTION_HANDLE func_handle, RFC_ERROR_INFO *errorInfo);
 
@@ -81,7 +106,7 @@ namespace node_rfc
         RFC_SERVER_HANDLE serverHandle;
         ConnectionParamsStruct server_params;
         ConnectionParamsStruct client_params;
-        ClientOptionsStruct client_options;
+        //ClientOptionsStruct client_options;
         Napi::ObjectReference serverParamsRef;
         Napi::ObjectReference clientParamsRef;
         Napi::ObjectReference clientOptionsRef;
@@ -111,7 +136,7 @@ namespace node_rfc
         void UnlockMutex();
         uv_sem_t invocationMutex;
     };
-
+		
 } // namespace node_rfc
 
 #endif

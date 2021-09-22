@@ -615,8 +615,17 @@ namespace node_rfc
                 free(byteValue);
                 break;
             }
-            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, reinterpret_cast<SAP_RAW *>(byteValue), resultLen);
-            // do not free byteValue - it will be freed when the buffer is garbage collected
+            
+            // Note: Previous code (see commented) created a memory leak with large volumes of data
+            // resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, reinterpret_cast<SAP_RAW *>(byteValue), resultLen);
+            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, reinterpret_cast<SAP_RAW *>(byteValue), resultLen,
+		          [](Env env, SAP_RAW *garbage) { // Finalizer used to clean threads up
+						  free(garbage);
+						});
+				  
+				  	// do not free byteValue - it will be freed when the buffer is garbage collected
+				  	// Not based on my experience: see note above
+				  	
             break;
         }
         case RFCTYPE_BCD:
