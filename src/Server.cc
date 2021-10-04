@@ -13,8 +13,6 @@
 namespace node_rfc
 {
     extern Napi::Env __env;
-
-
     ClientOptionsStruct client_options; // Messy horror
     uint_t Server::_id = 1;
     Server *__server = NULL;
@@ -146,8 +144,6 @@ namespace node_rfc
         {
             return errorInfo->code;
         }
-        
-        
 
         ServerFunctionsMap::iterator it = server->serverFunctions.begin();
         while (it != server->serverFunctions.end())
@@ -167,10 +163,11 @@ namespace node_rfc
 
         RFC_FUNCTION_DESC_HANDLE func_desc_handle = it->second.func_desc_handle;
 
+
         //
         // JS Call
         //
-        
+  
         ServerCallbackContainer *payload = new ServerCallbackContainer();
         auto errorPath = node_rfc::RfmErrorPath();
         
@@ -357,7 +354,7 @@ namespace node_rfc
             return info.Env().Undefined();
         }
 
-				//Napi::Function callback = info[0].As<Napi::Function>();
+        //Napi::Function callback = info[0].As<Napi::Function>();
         //(new StopAsync(callback, this))->Queue();
 
         return info.Env().Undefined();
@@ -432,6 +429,7 @@ namespace node_rfc
 		  	);
 				  
         ServerFunctionStruct sfs = ServerFunctionStruct(func_name, func_desc_handle, threadSafeFunction);
+
         free(func_name);
 
         serverFunctions[functionName.Utf8Value()] = sfs;
@@ -490,6 +488,7 @@ namespace node_rfc
         
         free(func_name);
         it->second.threadSafeCallback.Release();
+
 
         if (it == serverFunctions.end())
         {

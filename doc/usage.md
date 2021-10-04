@@ -678,6 +678,7 @@ To expose one NodeJS function for ABAP clients, the ABAP function definition mus
 
 The `done` function takes two optional arguments. The first is an object representing data to be passed back to ABAP and the second is a callback that executes once we have returned our data to ABAP. This second callback also accepts an error parameter.
 
+
 ABAP function definition defines ABAP parameters and data definitions for all variables, structures and tables used in ABAP parameers. Coding these metadata down to field level is not very exciting task and node-rfc Server provides a more elegant solution here:
 
 - Create an empty ABAP RFM in ABAP client system, with the same parameters that ABAP client shall use to invoke the NodeJS function
@@ -686,6 +687,7 @@ ABAP function definition defines ABAP parameters and data definitions for all va
 When invoked by ABAP, the NodeJS function will automatically fetch the function definition from ABAP RFM and expose itself as exactly such RFM to ABAP
 
 As an example, let's make the `STFC_CONNECTION` available as NodeJS RFM and call it from ABAP.
+
 
 ### Function Definition
 
@@ -734,12 +736,14 @@ The second argument `abap_parameters` is an object containing all of the informa
 
 The third argument `done` is the callback which **MUST** be called when finished (otherwise the ABAP will be stuck in an endless deadlock).
 
+
 ### ABAP calls NodeJS RFM
 
 ABAP call looks like this:
 
 ```abap
 FUNCTION ZNODETEST.
+
 
 DATA lv_echo LIKE sy-lisel.
 DATA lv_resp LIKE sy-lisel.

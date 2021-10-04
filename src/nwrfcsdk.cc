@@ -626,6 +626,7 @@ namespace node_rfc
 				  	// do not free byteValue - it will be freed when the buffer is garbage collected
 				  	// Not based on my experience: see note above
 				  	
+
             break;
         }
         case RFCTYPE_BCD:

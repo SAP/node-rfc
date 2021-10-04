@@ -84,7 +84,7 @@ namespace node_rfc
         ~Server(void);
         ServerFunctionsMap serverFunctions;
         AddonData *addon_data;
-				
+
 
     private:
         Napi::Value IdGetter(const Napi::CallbackInfo &info);
@@ -97,7 +97,7 @@ namespace node_rfc
         Napi::Value AddFunction(const Napi::CallbackInfo &info);
         Napi::Value RemoveFunction(const Napi::CallbackInfo &info);
         Napi::Value GetFunctionDescription(const Napi::CallbackInfo &info);
-        
+
         //RFC_RC SAP_API metadataLookup(SAP_UC *func_name, RFC_ATTRIBUTES rfc_attributes, RFC_FUNCTION_DESC_HANDLE *func_handle);
         //RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle, RFC_FUNCTION_HANDLE func_handle, RFC_ERROR_INFO *errorInfo);
 
@@ -107,6 +107,7 @@ namespace node_rfc
         ConnectionParamsStruct server_params;
         ConnectionParamsStruct client_params;
         //ClientOptionsStruct client_options;
+
         Napi::ObjectReference serverParamsRef;
         Napi::ObjectReference clientParamsRef;
         Napi::ObjectReference clientOptionsRef;
@@ -136,7 +137,7 @@ namespace node_rfc
         void UnlockMutex();
         uv_sem_t invocationMutex;
     };
-		
+
 } // namespace node_rfc
 
 #endif
