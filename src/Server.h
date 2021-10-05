@@ -58,12 +58,11 @@ typedef struct _ServerFunctionStruct
 
     ~_ServerFunctionStruct()
     {
-        printf("Server Function Struct Destructor called\n");
         threadSafeCallback.Release();
     }
 } ServerFunctionStruct;
 
-typedef std::map<std::string, ServerFunctionStruct> ServerFunctionsMap;
+typedef std::map<std::string, ServerFunctionStruct *> ServerFunctionsMap;
 
 typedef struct
 {

@@ -114,9 +114,9 @@ namespace node_rfc
         ServerFunctionsMap::iterator it = server->serverFunctions.begin();
         while (it != server->serverFunctions.end())
         {
-            if (strcmpU(func_name, it->second.func_name) == 0)
+            if (strcmpU(func_name, it->second->func_name) == 0)
             {
-                *func_desc_handle = it->second.func_desc_handle;
+                *func_desc_handle = it->second->func_desc_handle;
                 rc = RFC_OK;
                 DEBUG("\nmetadataLookup found: ", (pointer_t)*func_desc_handle);
                 break;
@@ -148,7 +148,7 @@ namespace node_rfc
         ServerFunctionsMap::iterator it = server->serverFunctions.begin();
         while (it != server->serverFunctions.end())
         {
-            if (strcmpU(func_name, it->second.func_name) == 0)
+            if (strcmpU(func_name, it->second->func_name) == 0)
             {
                 break;
             }
@@ -161,7 +161,7 @@ namespace node_rfc
             return rc;
         }
 
-        RFC_FUNCTION_DESC_HANDLE func_desc_handle = it->second.func_desc_handle;
+        RFC_FUNCTION_DESC_HANDLE func_desc_handle = it->second->func_desc_handle;
 
 
         //
@@ -189,7 +189,7 @@ namespace node_rfc
 	      payload->js_running = true;
 	      uv_mutex_unlock(&payload->js_running_mutex);
 	      
-	      it->second.threadSafeCallback.BlockingCall(payload);
+	      it->second->threadSafeCallback.BlockingCall(payload);
 	      
 	      while(true) {
 	          uv_mutex_lock(&payload->wait_js_mutex);
@@ -303,7 +303,7 @@ namespace node_rfc
             server->LockMutex();
             DEBUG("StopAsync locked");
 
-            printf("Started stopasync sequence\n");
+            DEBUG("Started stopasync sequence\n");
 
             unsigned int grace_period = 0; // May be exposed to the user in the future
             RfcShutdownServer(server->serverHandle, grace_period, &errorInfo);
@@ -311,7 +311,7 @@ namespace node_rfc
             {
                 return;
             }
-            DEBUG("Server:: server shut down ", (pointer_t)server->serverHandle);
+            DEBUG("Server:: server shut down", (pointer_t)server->serverHandle);
 
             RfcDestroyServer(server->serverHandle, &errorInfo);  
             if (errorInfo.code != RFC_OK)
@@ -321,6 +321,8 @@ namespace node_rfc
             DEBUG("Server:: server destroyed");
 
             RfcCloseConnection(server->server_conn_handle, &errorInfo);
+            server->server_conn_handle = NULL;
+
             if (errorInfo.code != RFC_OK)
             {
                 return;
@@ -329,13 +331,15 @@ namespace node_rfc
 
 
             RfcCloseConnection(server->client_conn_handle, &errorInfo);
+            server->client_conn_handle = NULL;
+
             if (errorInfo.code != RFC_OK)
             {
                 return;
             }
             DEBUG("Server:: client connection closed");
 
-            printf("Completed all shutdowns!\n");
+            DEBUG("Completed all shutdowns!");
 
             server->UnlockMutex();
             DEBUG("StopAsync unlocked");
@@ -495,11 +499,9 @@ namespace node_rfc
             nullptr                 // No context needed
         );
 				  
-        ServerFunctionStruct sfs = ServerFunctionStruct(func_name, func_desc_handle, threadSafeFunction);
-
         free(func_name);
 
-        serverFunctions[functionName.Utf8Value()] = sfs;
+        serverFunctions[functionName.Utf8Value()] = new ServerFunctionStruct(func_name, func_desc_handle, threadSafeFunction);
         DEBUG("Server::AddFunction added ", functionName.Utf8Value(), ": ", (pointer_t)func_desc_handle);
 
         callback.Call({});
@@ -546,7 +548,7 @@ namespace node_rfc
         ServerFunctionsMap::iterator it = serverFunctions.begin();
         while (it != serverFunctions.end())
         {
-            if (strcmpU(func_name, it->second.func_name) == 0)
+            if (strcmpU(func_name, it->second->func_name) == 0)
             {
                 break;
             }
