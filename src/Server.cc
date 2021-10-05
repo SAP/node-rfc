@@ -416,17 +416,15 @@ namespace node_rfc
             return scope.Escape(info.Env().Undefined());
         }
         
-        Napi::Reference<Napi::Value> dumb_ctx;
-        
         // Create thread-safe function from `jsFunction`
-				ServerCallbackTsfn threadSafeFunction = ServerCallbackTsfn::New(
-				  node_rfc::__env,
-				  jsFunction, 						// JavaScript function called asynchronously
-				  "ServerCallbackTsfn",		// Resource name
-				  0,                      // Unlimited queue
-				  1,                      // Only one thread will use this initially
-				  nullptr									// No context needed
-		  	);
+        ServerCallbackTsfn threadSafeFunction = ServerCallbackTsfn::New(
+            node_rfc::__env,
+            jsFunction,             // JavaScript function called asynchronously
+            "ServerCallbackTsfn",   // Resource name
+            0,                      // Unlimited queue
+            1,                      // Only one thread will use this initially
+            nullptr                 // No context needed
+        );
 				  
         ServerFunctionStruct sfs = ServerFunctionStruct(func_name, func_desc_handle, threadSafeFunction);
 
