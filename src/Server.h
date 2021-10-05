@@ -15,8 +15,8 @@ typedef struct
 		RFC_FUNCTION_HANDLE func_handle;
 		RFC_ERROR_INFO *errorInfo;
 		
-	  node_rfc::RfmErrorPath errorPath;
-  	node_rfc::ClientOptionsStruct client_options;
+	    node_rfc::RfmErrorPath errorPath;
+  	    node_rfc::ClientOptionsStruct client_options;
 		Napi::Reference<Napi::Array> paramNames;
 		uint_t paramCount;
 		
@@ -45,20 +45,21 @@ typedef struct _ServerFunctionStruct
     {
         strcpyU(func_name, name);
         func_desc_handle = desc_handle;
-        threadSafeCallback = cb; // Questionable
+        threadSafeCallback = cb;
     }
 
     _ServerFunctionStruct &operator=(_ServerFunctionStruct &src) // note: passed by copy
     {
         strcpyU(func_name, src.func_name);
         func_desc_handle = src.func_desc_handle;
-        threadSafeCallback = src.threadSafeCallback; // Questionable, idk what to do here tbh
+        threadSafeCallback = src.threadSafeCallback;
         return *this;
     }
 
     ~_ServerFunctionStruct()
     {
-        //threadSafeCallback.Release(); <-- This misbehaves because I didn't understand when the destructor gets called and assumed it happens at the end
+        printf("Server Function Struct Destructor called\n");
+        threadSafeCallback.Release();
     }
 } ServerFunctionStruct;
 
@@ -78,6 +79,7 @@ namespace node_rfc
     {
     public:
         friend class StartAsync;
+        friend class StopAsync;
         friend class GetFunctionDescAsync;
         static Napi::Object Init(Napi::Env env, Napi::Object exports);
         Server(const Napi::CallbackInfo &info);

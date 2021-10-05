@@ -289,6 +289,78 @@ namespace node_rfc
         RFC_ERROR_INFO errorInfo;
     };
 
+    class StopAsync : public Napi::AsyncWorker
+    {
+    public:
+        StopAsync(Napi::Function &callback, Server *server)
+            : Napi::AsyncWorker(callback), server(server) {}
+        ~StopAsync()
+        {
+        }
+
+        void Execute()
+        {
+            server->LockMutex();
+            DEBUG("StopAsync locked");
+
+            printf("Started stopasync sequence\n");
+
+            unsigned int grace_period = 0; // May be exposed to the user in the future
+            RfcShutdownServer(server->serverHandle, grace_period, &errorInfo);
+            if (errorInfo.code != RFC_OK)
+            {
+                return;
+            }
+            DEBUG("Server:: server shut down ", (pointer_t)server->serverHandle);
+
+            RfcDestroyServer(server->serverHandle, &errorInfo);  
+            if (errorInfo.code != RFC_OK)
+            {
+                return;
+            }
+            DEBUG("Server:: server destroyed");
+
+            RfcCloseConnection(server->server_conn_handle, &errorInfo);
+            if (errorInfo.code != RFC_OK)
+            {
+                return;
+            }
+            DEBUG("Server:: server connection closed");
+
+
+            RfcCloseConnection(server->client_conn_handle, &errorInfo);
+            if (errorInfo.code != RFC_OK)
+            {
+                return;
+            }
+            DEBUG("Server:: client connection closed");
+
+            printf("Completed all shutdowns!\n");
+
+            server->UnlockMutex();
+            DEBUG("StopAsync unlocked");
+        }
+
+        void OnOK()
+        {
+            Napi::EscapableHandleScope scope(Env());
+            if (errorInfo.code != RFC_OK)
+            {
+                //Callback().Call({Env().Undefined()});
+                Callback().Call({rfcSdkError(&errorInfo)});
+            }
+            else
+            {
+                Callback().Call({});
+            }
+            Callback().Reset();
+        }
+
+    private:
+        Server *server;
+        RFC_ERROR_INFO errorInfo;
+    };
+
     class GetFunctionDescAsync : public Napi::AsyncWorker
     {
     public:
@@ -354,8 +426,8 @@ namespace node_rfc
             return info.Env().Undefined();
         }
 
-        //Napi::Function callback = info[0].As<Napi::Function>();
-        //(new StopAsync(callback, this))->Queue();
+        Napi::Function callback = info[0].As<Napi::Function>();
+        (new StopAsync(callback, this))->Queue();
 
         return info.Env().Undefined();
     };
@@ -363,7 +435,6 @@ namespace node_rfc
     Napi::Value Server::AddFunction(const Napi::CallbackInfo &info)
     {
         Napi::EscapableHandleScope scope(info.Env());
-
         std::ostringstream errmsg;
 
         if (!info[0].IsString())
@@ -404,9 +475,7 @@ namespace node_rfc
 
         // Install function
         RFC_ERROR_INFO errorInfo;
-
         SAP_UC *func_name = setString(functionName);
-
         RFC_FUNCTION_DESC_HANDLE func_desc_handle = RfcGetFunctionDesc(client_conn_handle, func_name, &errorInfo);
 
         if (errorInfo.code != RFC_OK)
@@ -485,8 +554,6 @@ namespace node_rfc
         }
         
         free(func_name);
-        it->second.threadSafeCallback.Release();
-
 
         if (it == serverFunctions.end())
         {
