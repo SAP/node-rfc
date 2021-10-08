@@ -499,10 +499,10 @@ namespace node_rfc
             nullptr                 // No context needed
         );
 				  
-        free(func_name);
 
         serverFunctions[functionName.Utf8Value()] = new ServerFunctionStruct(func_name, func_desc_handle, threadSafeFunction);
         DEBUG("Server::AddFunction added ", functionName.Utf8Value(), ": ", (pointer_t)func_desc_handle);
+        free(func_name);
 
         callback.Call({});
         return scope.Escape(info.Env().Undefined());
