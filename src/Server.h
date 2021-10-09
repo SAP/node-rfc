@@ -32,7 +32,7 @@ using ServerCallbackTsfn = Napi::TypedThreadSafeFunction<std::nullptr_t, ServerC
 
 typedef struct _ServerFunctionStruct
 {
-    SAP_UC *func_name;
+    SAP_UC func_name[128];
     RFC_FUNCTION_DESC_HANDLE func_desc_handle = NULL;
     ServerCallbackTsfn threadSafeCallback;
 
@@ -41,7 +41,7 @@ typedef struct _ServerFunctionStruct
         func_name[0] = 0;
     }
 
-    _ServerFunctionStruct(RFC_ABAP_NAME name, RFC_FUNCTION_DESC_HANDLE desc_handle, ServerCallbackTsfn cb)
+    _ServerFunctionStruct(SAP_UC *name, RFC_FUNCTION_DESC_HANDLE desc_handle, ServerCallbackTsfn cb)
     {
         strcpyU(func_name, name);
         func_desc_handle = desc_handle;
