@@ -306,37 +306,34 @@ namespace node_rfc
             DEBUG("Started stopasync sequence\n");
 
             unsigned int grace_period = 0; // May be exposed to the user in the future
-            RfcShutdownServer(server->serverHandle, grace_period, &errorInfo);
-            if (errorInfo.code != RFC_OK)
-            {
-                return;
-            }
-            DEBUG("Server:: server shut down", (pointer_t)server->serverHandle);
+            if(server->serverHandle != NULL) {
+                RfcShutdownServer(server->serverHandle, grace_period, &errorInfo);
+                if (errorInfo.code != RFC_OK)
+                {
+                    return;
+                }
+                DEBUG("Server:: server shut down", (pointer_t)server->serverHandle);
 
-            RfcDestroyServer(server->serverHandle, &errorInfo);  
-            if (errorInfo.code != RFC_OK)
-            {
-                return;
+                RfcDestroyServer(server->serverHandle, &errorInfo);  
+                if (errorInfo.code != RFC_OK)
+                {
+                    return;
+                }
+                DEBUG("Server:: server destroyed");
             }
-            DEBUG("Server:: server destroyed");
 
-            RfcCloseConnection(server->server_conn_handle, &errorInfo);
-            server->server_conn_handle = NULL;
-
-            if (errorInfo.code != RFC_OK)
-            {
-                return;
+            if(server->server_conn_handle != NULL) {
+                RfcCloseConnection(server->server_conn_handle, NULL);
+                server->server_conn_handle = NULL;
             }
+
             DEBUG("Server:: server connection closed");
 
-
-            RfcCloseConnection(server->client_conn_handle, &errorInfo);
-            server->client_conn_handle = NULL;
-
-            if (errorInfo.code != RFC_OK)
-            {
-                return;
+            if(server->client_conn_handle != NULL) {
+                RfcCloseConnection(server->client_conn_handle, &errorInfo);
+                server->client_conn_handle = NULL;
             }
+
             DEBUG("Server:: client connection closed");
 
             DEBUG("Completed all shutdowns!");
