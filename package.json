@@ -24,6 +24,7 @@
     "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
     "install": "prebuild-install --tag-prefix -r napi || cmake-js rebuild",
     "addon": "prebuild --backend cmake-js -r napi --force --strip --verbose",
+    "debugo": "prebuild --backend cmake-js -r napi --force --debug --verbose",
     "ts": "tsc -p src/ts",
     "upload": "prebuild -r napi -u --verbose",
     "test": "reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000",

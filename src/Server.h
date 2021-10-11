@@ -9,22 +9,37 @@
 #include <map>
 #include "Client.h"
 
-typedef struct
+class ServerCallbackContainer
 {
-		RFC_FUNCTION_DESC_HANDLE func_desc_handle; 
-		RFC_FUNCTION_HANDLE func_handle;
-		RFC_ERROR_INFO *errorInfo;
-		
-	    node_rfc::RfmErrorPath errorPath;
-  	    node_rfc::ClientOptionsStruct client_options;
-		Napi::Reference<Napi::Array> paramNames;
-		uint_t paramCount;
-		
-		uv_cond_t wait_js;
-		uv_mutex_t wait_js_mutex; 
-		bool js_running;
-		uv_mutex_t js_running_mutex;
-} ServerCallbackContainer;
+public:
+    RFC_FUNCTION_DESC_HANDLE func_desc_handle; 
+    RFC_FUNCTION_HANDLE func_handle;
+    RFC_ERROR_INFO *errorInfo;
+    
+    node_rfc::RfmErrorPath errorPath;
+    node_rfc::ClientOptionsStruct client_options;
+    Napi::Reference<Napi::Array> paramNames;
+    Napi::Reference<Napi::Object> abapArgsRef;
+    Napi::Reference<Napi::Value> errorObjRef;
+    bool errorObjRefNeedClean = false;
+    Napi::Reference<Napi::Function> doneRef;
+    uint_t paramCount;
+    
+    uv_cond_t wait_js;
+    uv_mutex_t wait_js_mutex; 
+    bool js_running;
+    uv_mutex_t js_running_mutex;
+
+    ServerCallbackContainer() {
+        //
+    }
+
+    ~ServerCallbackContainer() {
+        paramNames.Unref();
+        abapArgsRef.Unref();  
+        doneRef.Unref();
+    }
+};
 
 void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *context, ServerCallbackContainer *data); // handles calling the JS callback
 void ServerDoneCallback(const CallbackInfo& info); 																																 // called by the JS callback to signal completion of the callback (ABAP may now continue)

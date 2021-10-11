@@ -129,6 +129,7 @@ namespace node_rfc
 
     RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle, RFC_FUNCTION_HANDLE func_handle, RFC_ERROR_INFO *errorInfo)
     {
+        printf("As always :/\n");
         Server *server = node_rfc::__server;
 
         RFC_RC rc = RFC_NOT_FOUND;
@@ -186,25 +187,25 @@ namespace node_rfc
         DEBUG("Before cond [genericHandler] with cond_mutex @", (unsigned long)&payload->cond_mutex);
         uv_mutex_lock(&payload->js_running_mutex);
         DEBUG("Obtained js_running_mutex lock\n");
-	      payload->js_running = true;
-	      uv_mutex_unlock(&payload->js_running_mutex);
-	      
-	      it->second->threadSafeCallback.BlockingCall(payload);
-	      
-	      while(true) {
-	          uv_mutex_lock(&payload->wait_js_mutex);
-	          uv_cond_wait(&payload->wait_js, &payload->wait_js_mutex);
-	          uv_mutex_unlock(&payload->wait_js_mutex);
-	          	          
-	          // Exit condition
-	          uv_mutex_lock(&payload->js_running_mutex);
-	          bool exit = !payload->js_running;
-	          uv_mutex_unlock(&payload->js_running_mutex);
-	          
-	          if(exit) break;
-	      }
-	      
-	      uv_mutex_destroy(&payload->wait_js_mutex);
+        payload->js_running = true;
+        uv_mutex_unlock(&payload->js_running_mutex);
+        
+        it->second->threadSafeCallback.BlockingCall(payload);
+        
+        while(true) {
+            uv_mutex_lock(&payload->wait_js_mutex);
+            uv_cond_wait(&payload->wait_js, &payload->wait_js_mutex);
+            uv_mutex_unlock(&payload->wait_js_mutex);
+                        
+            // Exit condition
+            uv_mutex_lock(&payload->js_running_mutex);
+            bool exit = !payload->js_running;
+            uv_mutex_unlock(&payload->js_running_mutex);
+            
+            if(exit) break;
+        }
+        
+        uv_mutex_destroy(&payload->wait_js_mutex);
         uv_mutex_destroy(&payload->js_running_mutex);
         uv_cond_destroy(&payload->wait_js);
         DEBUG("After cond [genericHandler]\n");
@@ -485,6 +486,9 @@ namespace node_rfc
             callback.Call({rfcSdkError(&errorInfo)});
             return scope.Escape(info.Env().Undefined());
         }
+
+        // Keep a reference to `this`
+        // Napi::Reference<Napi::Value> *context = new Napi::Reference<Napi::Value>(Napi::Persistent(info.This()));
         
         // Create thread-safe function from `jsFunction`
         ServerCallbackTsfn threadSafeFunction = ServerCallbackTsfn::New(
@@ -493,7 +497,10 @@ namespace node_rfc
             "ServerCallbackTsfn",   // Resource name
             0,                      // Unlimited queue
             1,                      // Only one thread will use this initially
-            nullptr                 // No context needed
+            nullptr//,              // Context of `this`
+            /*[](Napi::Env, void *, Napi::Reference<Napi::Value> *ctx) { 
+                delete ctx;
+            }*/
         );
 				  
 
@@ -677,7 +684,7 @@ void ServerDoneCallback(const CallbackInfo& info)
 		    callback.Call({err});            
 }
 
-void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t* context, ServerCallbackContainer* data)
+void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *context, ServerCallbackContainer* data)
 {
     DEBUG("[NODE RFC] Callback BEGIN\n");
 
@@ -690,12 +697,19 @@ void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t* contex
 
     node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &data->errorPath, &data->client_options);
     
-    Napi::Object errorObj = jsContainer.first.As<Napi::Object>();
     Napi::Object abapArgs = jsContainer.second.As<Napi::Object>();
     Napi::Array paramNames = abapArgs.GetPropertyNames();
+    Napi::Value errorObj = jsContainer.first;
+    if(!errorObj.IsUndefined()) {
+        data->errorObjRef = Napi::Reference<Napi::Value>::New(errorObj, 0);
+    }
 
+    
 
-    data->paramNames = Napi::Persistent(paramNames);
+    data->paramNames = Napi::Reference<Napi::Array>::New(paramNames, 1);
+    data->abapArgsRef = Napi::Reference<Napi::Object>::New(abapArgs, 1);
+    data->doneRef = Napi::Reference<Napi::Function>::New(Napi::Function::New<ServerDoneCallback>(env, nullptr, data), 1);
+
     RfcGetParameterCount(data->func_desc_handle, &data->paramCount, data->errorInfo);
 
     // Is the JavaScript environment still available to call into, eg. the TSFN is
@@ -703,7 +717,7 @@ void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t* contex
     if (env != nullptr) {
         if (callback != nullptr) {
             DEBUG("[NODE RFC] Callback initiated\n");
-            callback.Call({ errorObj, abapArgs, Napi::Function::New<ServerDoneCallback>(env, nullptr, data) });
+            callback.Call({ errorObj, data->abapArgsRef.Value(), data->doneRef.Value()});
             DEBUG("[NODE RFC] Callback returned\n");
         }
     }
