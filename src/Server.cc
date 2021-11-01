@@ -129,7 +129,6 @@ namespace node_rfc
 
     RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle, RFC_FUNCTION_HANDLE func_handle, RFC_ERROR_INFO *errorInfo)
     {
-        printf("As always :/\n");
         Server *server = node_rfc::__server;
 
         RFC_RC rc = RFC_NOT_FOUND;
@@ -184,7 +183,9 @@ namespace node_rfc
         payload->errorPath = errorPath;
         
         
-        DEBUG("Before cond [genericHandler] with cond_mutex @", (unsigned long)&payload->cond_mutex);
+        int mm = rand();
+        //printf("Before cond [genericHandler] with cond_mutex %d\n", mm);//@%p", &payload->wait_js_mutex);
+        //fflush(stdout);
         uv_mutex_lock(&payload->js_running_mutex);
         DEBUG("Obtained js_running_mutex lock\n");
         payload->js_running = true;
@@ -208,7 +209,8 @@ namespace node_rfc
         uv_mutex_destroy(&payload->wait_js_mutex);
         uv_mutex_destroy(&payload->js_running_mutex);
         uv_cond_destroy(&payload->wait_js);
-        DEBUG("After cond [genericHandler]\n");
+        //printf("After cond [genericHandler] with cond_mutex %d\n", mm);//@%u\n", &payload->wait_js_mutex);
+        //fflush(stdout);
         delete payload;
         
         if (errorInfo->code != RFC_OK) {
@@ -502,9 +504,10 @@ namespace node_rfc
                 delete ctx;
             }*/
         );
-				  
-
+				
         serverFunctions[functionName.Utf8Value()] = new ServerFunctionStruct(func_name, func_desc_handle, threadSafeFunction);
+        //serverFunctions[functionName.Utf8Value()]->callback_ref = new Napi::FunctionReference(Napi::Persistent(jsFunction));
+        //serverFunctions[functionName.Utf8Value()]->callback_ref->SuppressDestruct();
         DEBUG("Server::AddFunction added ", functionName.Utf8Value(), ": ", (pointer_t)func_desc_handle);
         free(func_name);
 
@@ -651,7 +654,7 @@ void ServerDoneCallback(const CallbackInfo& info)
         
         if (data->errorInfo->code == RFC_OK) {
             for (uint_t i = 0; i < data->paramCount; i++) {
-                Napi::String name = data->paramNames.Value().Get(i).ToString();
+                Napi::String name = Napi::String::New(node_rfc::__env, data->paramNames[i]);
                 
                 Napi::Value value = params.Get(name);
                 err = node_rfc::setRfmParameter(data->func_desc_handle, data->func_handle, name, value, &data->errorPath, &data->client_options);
@@ -684,9 +687,12 @@ void ServerDoneCallback(const CallbackInfo& info)
 		    callback.Call({err});            
 }
 
+unsigned int m = 0;
+
 void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *context, ServerCallbackContainer* data)
 {
-    DEBUG("[NODE RFC] Callback BEGIN\n");
+    //printf("[NODE RFC] Callback BEGIN\n");
+		//fflush(stdout);
 
     //
     // ABAP -> JS parameters
@@ -698,17 +704,21 @@ void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *contex
     node_rfc::ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &data->errorPath, &data->client_options);
     
     Napi::Object abapArgs = jsContainer.second.As<Napi::Object>();
-    Napi::Array paramNames = abapArgs.GetPropertyNames();
+    Napi::Function doneFunc = Napi::Function::New<ServerDoneCallback>(env, nullptr, data);
+    Napi::Array paramNamesArr = abapArgs.GetPropertyNames();
     Napi::Value errorObj = jsContainer.first;
-    if(!errorObj.IsUndefined()) {
-        data->errorObjRef = Napi::Reference<Napi::Value>::New(errorObj, 0);
-    }
+    //if(!errorObj.IsUndefined()) {
+    //    data->errorObjRef = Napi::Reference<Napi::Value>::New(errorObj, 0);
+    //}
 
-    
+		data->paramNames = std::vector<std::string>();
+		for(unsigned int i = 0; i < paramNamesArr.Length(); i++) {
+			data->paramNames.push_back(paramNamesArr.Get(i).As<Napi::String>());
+		}    
 
-    data->paramNames = Napi::Reference<Napi::Array>::New(paramNames, 1);
-    data->abapArgsRef = Napi::Reference<Napi::Object>::New(abapArgs, 1);
-    data->doneRef = Napi::Reference<Napi::Function>::New(Napi::Function::New<ServerDoneCallback>(env, nullptr, data), 1);
+		//data->paramNames = paramNames;
+    //data->paramNamesRef = Napi::Reference<Napi::Value>::New(paramNames, 1);
+    //data->paramNamesRef.SuppressDestruct();
 
     RfcGetParameterCount(data->func_desc_handle, &data->paramCount, data->errorInfo);
 
@@ -716,9 +726,11 @@ void ServerCallJs(Napi::Env env, Napi::Function callback, std::nullptr_t *contex
     // not aborted
     if (env != nullptr) {
         if (callback != nullptr) {
-            DEBUG("[NODE RFC] Callback initiated\n");
-            callback.Call({ errorObj, data->abapArgsRef.Value(), data->doneRef.Value()});
-            DEBUG("[NODE RFC] Callback returned\n");
+            //printf("[NODE RFC] Callback initiated %u\n", m);
+            //fflush(stdout);
+            callback.Call({ errorObj, abapArgs, doneFunc});
+            //printf("[NODE RFC] Callback returned %u\n", m);
+            //fflush(stdout);
         }
     }
 }

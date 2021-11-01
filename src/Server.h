@@ -7,6 +7,8 @@
 
 #include <uv.h>
 #include <map>
+#include <vector>
+#include <stdio.h>
 #include "Client.h"
 
 class ServerCallbackContainer
@@ -18,9 +20,9 @@ public:
     
     node_rfc::RfmErrorPath errorPath;
     node_rfc::ClientOptionsStruct client_options;
-    Napi::Reference<Napi::Array> paramNames;
-    Napi::Reference<Napi::Object> abapArgsRef;
-    Napi::Reference<Napi::Value> errorObjRef;
+    std::vector<std::string> paramNames;
+    //Napi::Reference<Napi::Value> abapArgsRef;
+    //Napi::Reference<Napi::Value> errorObjRef;
     bool errorObjRefNeedClean = false;
     Napi::Reference<Napi::Function> doneRef;
     uint_t paramCount;
@@ -35,9 +37,7 @@ public:
     }
 
     ~ServerCallbackContainer() {
-        paramNames.Unref();
-        abapArgsRef.Unref();  
-        doneRef.Unref();
+
     }
 };
 
@@ -50,6 +50,7 @@ typedef struct _ServerFunctionStruct
     SAP_UC func_name[128];
     RFC_FUNCTION_DESC_HANDLE func_desc_handle = NULL;
     ServerCallbackTsfn threadSafeCallback;
+    Napi::FunctionReference *callback_ref;
 
     _ServerFunctionStruct()
     {
@@ -74,6 +75,7 @@ typedef struct _ServerFunctionStruct
     ~_ServerFunctionStruct()
     {
         threadSafeCallback.Release();
+        delete callback_ref;
     }
 } ServerFunctionStruct;
 
