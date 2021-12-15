@@ -7,7 +7,7 @@ declare enum RfcParameterDirection {
     RFC_CHANGING = 3,
     RFC_TABLES = 7
 }
-export declare type RfcConnectionParameters = Partial<Record<RfcConnectionParametersAllowed, string>>;
+export declare type RfcConnectionParameters = Record<RfcConnectionParametersAllowed, string>;
 export declare type RfcClientOptions = {
     bcd?: string | Function;
     date?: Function;
