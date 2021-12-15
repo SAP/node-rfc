@@ -167,10 +167,10 @@ enum RfcParameterDirection {
     RFC_TABLES = 0x04 | RFC_CHANGING, ///< Table parameter. This corresponds to ABAP TABLES parameter.
 }
 
-export type RfcConnectionParameters = Record<
+export type RfcConnectionParameters = Partial<Record<
     RfcConnectionParametersAllowed,
     string
->;
+>>;
 
 export type RfcClientOptions = {
     bcd?: string | Function;
