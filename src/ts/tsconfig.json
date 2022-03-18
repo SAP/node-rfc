@@ -1,20 +1,17 @@
 {
+  "extends": "@tsconfig/node16/tsconfig.json",
   "compileOnSave": false,
   "compilerOptions": {
-    "module": "commonjs",
-    "sourceMap": true,
-    "target": "ESNext",
-    "declaration": true,
-    "strict": true,
-    "moduleResolution": "node",
-    "allowJs": false,
-    "stripInternal": true,
-    "listFiles": true,
-    "removeComments": true,
-    "lib": ["es2015"],
     "outDir": "../../lib",
     "noImplicitAny": false,
-    "esModuleInterop": true,
+    "sourceMap": true,
+    "declaration": true,
+    "allowJs": false,
+    "stripInternal": true,
+    "removeComments": true,
+    "listFiles": true,
     "allowSyntheticDefaultImports": true
-  }
+
+  },
+  "exclude": ["node_modules"]
 }

@@ -534,7 +534,7 @@ export class Client {
                         callOptions
                     );
                 } catch (ex) {
-                    reject(ex);
+                    reject(ex as TypeError);
                 }
             }
         );
