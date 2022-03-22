@@ -22,7 +22,7 @@
     "devDependencies": "npm install --save-dev cmake-js typescript async decimal.js eslint jest prebuild prebuild-install random-bytes @types/node @types/bluebird @babel/core @typescript-eslint/eslint-plugin @typescript-eslint/parser",
     "prepublishOnly": "npm ls --depth=0",
     "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
-    "install": "prebuild-install --tag-prefix -r napi || cmake-js rebuild",
+    "install": "prebuild-install -r napi || cmake-js rebuild",
     "addon": "prebuild --backend cmake-js -r napi --force --strip --verbose",
     "ts": "tsc -p src/ts",
     "upload": "prebuild -r napi -u --verbose",
