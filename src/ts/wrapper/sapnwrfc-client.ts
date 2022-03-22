@@ -589,11 +589,19 @@ export class Client {
                         // { connectionHandle: 140414048978432, result: 'cancelled' }
                     });
                 }, (timeout as number) * 1000);
-                callbackFunction = (err, res) => {
+                callbackFunction = (err: unknown, res: unknown) => {
                     clearTimeout(cancelTimeout);
                     callback(err, res);
                 };
             }
+            // check rfm parmeters' names
+            for (let rfmParamName of Object.keys(rfmParams)) {
+                if (rfmParamName.length === 0)
+                    throw new TypeError(`Empty RFM parameter name when calling "${rfmName}"}`);
+                if (!rfmParamName.match(/^[a-zA-Z0-9_]*$/))
+                    throw new TypeError(`RFM parameter name invalid: "${rfmParamName}" when calling "${rfmName}"`);
+            }
+
             this.__client.invoke(
                 rfmName,
                 rfmParams,

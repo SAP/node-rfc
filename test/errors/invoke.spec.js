@@ -20,6 +20,26 @@ describe("Errors: Invoke", () => {
         });
     });
 
+    test("error: invoke() rfm parameter name must not be empty", function (done) {
+        expect.assertions(1);
+        client.invoke("STFC_CONNECTION", {"": ""}, function (err, res) {
+            expect(err).toMatchObject(
+                new TypeError(`Empty RFM parameter name when calling "STFC_CONNECTION"`)
+            )
+            done();
+        });
+    });
+
+    test("error: invoke() rfm parameter name must be a valid string", function (done) {
+        expect.assertions(1);
+        client.invoke("STFC_CONNECTION", {"%$": ""}, function (err, res) {
+            expect(err).toMatchObject(
+                new TypeError(`RFM parameter name invalid: "%$" when calling "STFC_CONNECTION"`)
+            )
+            done();
+        });
+    });
+
     test("error: invoke() requires at least three arguments", function () {
         return expect(() => client.invoke("rfc", {})).toThrow(
             new Error("Callback function must be supplied")
