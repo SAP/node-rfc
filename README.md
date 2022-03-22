@@ -86,12 +86,6 @@ Other platforms and frameworks:
 
 ### macOS
 
-- Disable macOS firewall stealth mode ([Can't ping a machine - why?](https://discussions.apple.com/thread/2554739)):
-
-```shell
-sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
-```
-
 - Remote paths must be set in SAP NWRFC SDK for macOS: [documentation](http://sap.github.io/PyRFC/install.html#macos)
 
 - When the node-rfc is started for the first time, the popups come-up for each NWRFC SDK library, to confirm it should be opened. If SDK is installed in admin folder, the node-rfc app shall be that first time started with admin privileges, eg. `sudo -E`
@@ -137,6 +131,48 @@ LANG=EN
 ```
 
 Call the ABAP RFM. When in doubt about RFM parameters' structure try `abap call` CLI tool of [SAP/fundamental-tools](https://github.com/SAP/fundamental-tools/tree/main/abap-api-tools)
+
+### Direct client
+
+```javascript
+const noderfc = require("node-rfc");
+
+const client = new noderfc.Client({ dest: "MME" });
+
+(async () => {
+    try {
+        // unlike the connection acquired from pool,
+        // the direct client connection is initially closed
+        await client.open();
+
+        // invoke ABAP function module, passing structure and table parameters
+
+        // ABAP structure
+        const abap_structure = {
+            RFCINT4: 345,
+            RFCFLOAT: 1.23456789,
+            RFCCHAR4: "ABCD",
+            RFCDATE: "20180625", // ABAP date format
+            // or RFCDATE: new Date('2018-06-25'), // as JavaScript Date object, with clientOption "date"
+        };
+        // ABAP table
+        let abap_table = [abap_structure];
+
+        const result = await client.call("STFC_STRUCTURE", {
+            IMPORTSTRUCT: abap_structure,
+            RFCTABLE: abap_table,
+        });
+
+        // check the result
+        console.log(result);
+    } catch (err) {
+        // connection and invocation errors
+        console.error(err);
+    }
+})();
+```
+
+### Managed client
 
 ```javascript
 const noderfc = require("node-rfc");
