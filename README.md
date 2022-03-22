@@ -56,10 +56,17 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 
 Other platforms and frameworks:
 
-- SAP Cloud Platform, AWS Lambdas, heroku ...: Create SAP feature request for `Security Services` category of the [SAP Cloud Platform – Platform Foundation](https://influence.sap.com/sap/ino/#/campaign/2277)
-- [Electron](https://github.com/SAP-samples/node-rfc-samples/tree/main/frameworks/electron-quick-start)
-- [NW.js](https://github.com/SAP-samples/node-rfc-samples/tree/main/frameworks/nwjs-quick-start)
-- [Node-RED](https://github.com/PaulWieland/node-red-contrib-saprfc)
+- SAP Cloud Platform, AWS Lambdas, heroku ...:
+  - Create SAP feature request for `Security Services` category of the [SAP Cloud Platform – Platform Foundation](https://influence.sap.com/sap/ino/#/campaign/2277)
+- Electron
+  - Feature request: #144
+  - Experimental work: [SAP-samples/node-rfc-samples/frameworks/electron-quick-start](https://github.com/SAP-samples/node-rfc-samples/tree/main/frameworks/electron-quick-start)
+- NW.js
+  - Feature request: #144
+  - [SAP-samples/node-rfc-samples/frameworks/nwjs-quick-start](https://github.com/SAP-samples/node-rfc-samples/tree/main/frameworks/nwjs-quick-start)
+- Node-RED
+  - Feature requests: #161 and #148
+  - Experimental work: [PaulWieland/node-red-contrib-saprfc](https://github.com/PaulWieland/node-red-contrib-saprfc)
 - [Sails JS](https://github.com/dcolley/sailsjs-node-rfc)
 
 ## Requirements
