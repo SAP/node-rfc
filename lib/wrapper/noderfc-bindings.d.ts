@@ -28,10 +28,6 @@ export interface NWRfcBinding {
     environment: NodeRfcEnvironment;
     setIniFileDirectory(iniFileDirectory: string): any | undefined;
     loadCryptoLibrary(libAbsolutePath: string): any | undefined;
-    cancel(client: {
-        connectionHandle: number;
-        functionHandle?: number;
-    }, callback?: Function): any | undefined;
     verbose(): this;
 }
 declare let noderfc_binding: NWRfcBinding;

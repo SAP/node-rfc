@@ -82,41 +82,11 @@ namespace node_rfc
         return info.Env().Undefined();
     }
 
-    Napi::Value Cancel(const Napi::CallbackInfo &info)
-    {
-        DEBUG("Cancel");
-
-        Napi::Object client = info[0].As<Napi::Object>();
-        RFC_FUNCTION_HANDLE functionHandle = NULL;
-        RFC_CONNECTION_HANDLE connectionHandle = (RFC_CONNECTION_HANDLE)client.Get("connectionHandle").As<Napi::Number>().Int64Value();
-        Napi::Value num = client.Get("functionHandle");
-        if (num.IsNumber())
-        {
-            functionHandle = (RFC_FUNCTION_HANDLE)num.As<Napi::Number>().Int64Value();
-        }
-
-        RFC_RC rc = RFC_OK;
-        RFC_ERROR_INFO errorInfo;
-
-        DEBUG("Cancel connectionHandle: ", (pointer_t)connectionHandle, " functionHandle: ", (pointer_t)functionHandle);
-        rc = RfcCancel(connectionHandle, &errorInfo);
-        if (rc == RFC_OK && errorInfo.code == RFC_OK)
-        {
-            if (functionHandle != NULL)
-            {
-                rc = RfcDestroyFunction(functionHandle, &errorInfo);
-            }
-        }
-
-        return (rc == RFC_OK && errorInfo.code == RFC_OK) ? info.Env().Undefined() : rfcSdkError(&errorInfo);
-    }
-
     Napi::Object RegisterModule(Napi::Env env, Napi::Object exports)
     {
         exports.Set("bindingVersions", BindingVersions(env));
         exports.Set("setIniFileDirectory", Napi::Function::New(env, SetIniFileDirectory));
         exports.Set("loadCryptoLibrary", Napi::Function::New(env, LoadCryptoLibrary));
-        exports.Set("cancel", Napi::Function::New(env, Cancel));
 
         Pool::Init(env, exports);
         Client::Init(env, exports);

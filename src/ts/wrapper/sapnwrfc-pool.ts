@@ -2,8 +2,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { cancelClient } from "..";
-
 import {
     Promise,
     noderfc_binding,
@@ -229,9 +227,9 @@ export class Pool {
             );
         }
         if (typeof callback === "function") {
-            return cancelClient(client, callback);
+            return client.cancel(callback);
         } else {
-            return cancelClient(client);
+            return client.cancel();
         }
     }
 

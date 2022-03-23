@@ -2,8 +2,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { cancelClient } from "..";
-
 import {
     //Promise,
     noderfc_binding,
@@ -249,6 +247,7 @@ export interface RfcClientBinding {
     close(callback: Function): void;
     resetServerContext(callback: Function): void;
     ping(callback: Function): void;
+    cancel(callback: Function): void;
     invoke(
         rfmName: string,
         rfmParams: RfcObject,
@@ -351,7 +350,7 @@ export class Client {
         } else {
             return new Promise((resolve, reject) => {
                 try {
-                    this.__client.open((err) => {
+                    this.__client.open((err: unknown) => {
                         if (err !== undefined) {
                             reject(err);
                         } else {
@@ -403,7 +402,7 @@ export class Client {
         } else {
             return new Promise((resolve, reject) => {
                 try {
-                    this.__client.close((err) => {
+                    this.__client.close((err: unknown) => {
                         if (err === undefined) {
                             resolve();
                         } else {
@@ -417,12 +416,28 @@ export class Client {
         }
     }
 
-    cancel(callback?: Function): void | Promise<any> {
+    cancel(callback?: Function): void | Promise<void> {
         Client.checkCallbackArg("cancel", callback);
         if (typeof callback === "function") {
-            return cancelClient(this, callback);
+            try {
+                this.__client.cancel(callback);
+            } catch (ex) {
+                callback(ex);
+            }
         } else {
-            return cancelClient(this);
+            return new Promise((resolve, reject) => {
+                try {
+                    this.__client.cancel((err: unknown) => {
+                        if (err === undefined) {
+                            resolve();
+                        } else {
+                            reject(err);
+                        }
+                    });
+                } catch (ex) {
+                    reject(ex);
+                }
+            });
         }
     }
 
@@ -438,7 +453,7 @@ export class Client {
         } else {
             return new Promise((resolve, reject) => {
                 try {
-                    this.__client.resetServerContext((err) => {
+                    this.__client.resetServerContext((err: unknown) => {
                         if (err === undefined) {
                             resolve();
                         } else {
@@ -464,7 +479,7 @@ export class Client {
         } else {
             return new Promise((resolve, reject) => {
                 try {
-                    this.__client.release([this.__client], (err) => {
+                    this.__client.release([this.__client], (err: unknown) => {
                         if (err === undefined) {
                             resolve();
                         } else {
@@ -594,12 +609,17 @@ export class Client {
                     callback(err, res);
                 };
             }
+
             // check rfm parmeters' names
             for (let rfmParamName of Object.keys(rfmParams)) {
                 if (rfmParamName.length === 0)
-                    throw new TypeError(`Empty RFM parameter name when calling "${rfmName}"}`);
+                    throw new TypeError(
+                        `Empty RFM parameter name when calling "${rfmName}"}`
+                    );
                 if (!rfmParamName.match(/^[a-zA-Z0-9_]*$/))
-                    throw new TypeError(`RFM parameter name invalid: "${rfmParamName}" when calling "${rfmName}"`);
+                    throw new TypeError(
+                        `RFM parameter name invalid: "${rfmParamName}" when calling "${rfmName}"`
+                    );
             }
 
             this.__client.invoke(

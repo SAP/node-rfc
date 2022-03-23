@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <thread>
 #include "Client.h"
 #include "Pool.h"
 
@@ -52,10 +53,11 @@ namespace node_rfc
                                InstanceAccessor("_connectionHandle", &Client::ConnectionHandleGetter, nullptr),
                                InstanceAccessor("_pool_id", &Client::PoolIdGetter, nullptr),
                                InstanceAccessor("_config", &Client::ConfigGetter, nullptr),
-                               //InstanceMethod("setIniPath", &Client::SetIniPath),
+                               // InstanceMethod("setIniPath", &Client::SetIniPath),
                                InstanceMethod("connectionInfo", &Client::ConnectionInfo),
                                InstanceMethod("open", &Client::Open),
                                InstanceMethod("close", &Client::Close),
+                               InstanceMethod("cancel", &Client::Cancel),
                                InstanceMethod("release", &Client::Release),
                                InstanceMethod("resetServerContext", &Client::ResetServerContext),
                                InstanceMethod("ping", &Client::Ping),
@@ -249,7 +251,7 @@ namespace node_rfc
 
     Napi::Object Client::NewInstance(Napi::Env env)
     {
-        //DEBUG("Client::NewInstance");
+        // DEBUG("Client::NewInstance");
         Napi::EscapableHandleScope scope(env);
         Napi::Object obj = env.GetInstanceData<Napi::FunctionReference>()->New({});
         return scope.Escape(napi_value(obj)).ToObject();
@@ -424,7 +426,11 @@ namespace node_rfc
             conn_closed = (client->connectionHandle == NULL);
             if (!conn_closed)
             {
+                // todo: check if needed for cancel()
+                // client->functionHandle = functionHandle;
                 RfcInvoke(client->connectionHandle, functionHandle, &errorInfo);
+                // todo: check if needed for cancel()
+                // client->functionHandle = NULL;
                 if (errorInfo.code != RFC_OK)
                 {
                     connectionCheckError = client->connectionCheck(&errorInfo);
@@ -665,6 +671,46 @@ namespace node_rfc
         // the rest of arguments check done in Pool::Release
         pool->Release(info);
 
+        return info.Env().Undefined();
+    }
+    void cancelConnection(RFC_RC *rc, RFC_CONNECTION_HANDLE connectionHandle, RFC_ERROR_INFO *errorInfo)
+    {
+        *rc = RfcCancel(connectionHandle, errorInfo);
+    }
+
+    Napi::Value Client::Cancel(const Napi::CallbackInfo &info)
+    {
+        std::ostringstream errmsg;
+        if (!info[0].IsFunction())
+        {
+            errmsg << "Client cancel() requires a callback function; see" << USAGE_URL;
+            Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+            return info.Env().Undefined();
+        }
+
+        Napi::Function callback = info[0].As<Napi::Function>();
+
+        RFC_RC rc = RFC_OK;
+        RFC_ERROR_INFO errorInfo;
+
+        EDEBUG("Cancelled connection ", (pointer_t)connectionHandle);
+        std::thread tcancel(cancelConnection, &rc, connectionHandle, &errorInfo);
+        tcancel.join();
+
+        if (rc == RFC_OK && errorInfo.code == RFC_OK)
+        {
+            // todo: check if needed
+            // if (functionHandle != NULL)
+            // {
+            //     EDEBUG("Cancelled function ", (pointer_t)functionHandle);
+            //     rc = RfcDestroyFunction(functionHandle, &errorInfo);
+            // }
+            callback.Call({});
+        }
+        else
+        {
+            callback.Call({rfcSdkError(&errorInfo)});
+        }
         return info.Env().Undefined();
     }
 

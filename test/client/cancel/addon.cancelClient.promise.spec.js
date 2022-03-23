@@ -4,7 +4,7 @@
 
 "use strict";
 
-describe("Connection terminate by addon", () => {
+describe.skip("Connection terminate by addon", () => {
     const setup = require("../../utils/setup");
     const binding = setup.binding;
     const DURATION = 3;

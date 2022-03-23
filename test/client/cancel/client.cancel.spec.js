@@ -19,7 +19,7 @@ describe("Connection terminate by client", () => {
 
     test("Non-managed, client.cancel() callback", function (done) {
         const client = setup.direct_client();
-        expect.assertions(3);
+        expect.assertions(2);
         client.open(() => {
             // call function
             const handle = client.connectionHandle;
@@ -35,12 +35,8 @@ describe("Connection terminate by client", () => {
             );
             // cancel
             setTimeout(() => {
-                client.cancel((err, res) => {
+                client.cancel((err) => {
                     expect(err).toBeUndefined();
-                    expect(res).toMatchObject({
-                        connectionHandle: handle,
-                        result: "cancelled",
-                    });
                 });
             }, CANCEL * 1000);
         });

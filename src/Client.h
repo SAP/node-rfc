@@ -49,6 +49,7 @@ namespace node_rfc
         Napi::Value Release(const Napi::CallbackInfo &info);
         Napi::Value Open(const Napi::CallbackInfo &info);
         Napi::Value Close(const Napi::CallbackInfo &info);
+        Napi::Value Cancel(const Napi::CallbackInfo &info);
         Napi::Value ResetServerContext(const Napi::CallbackInfo &info);
         Napi::Value Ping(const Napi::CallbackInfo &info);
         Napi::Value Invoke(const Napi::CallbackInfo &info);
@@ -66,6 +67,7 @@ namespace node_rfc
 
             pool = NULL;
             connectionHandle = NULL;
+            functionHandle = NULL;
 
             uv_sem_init(&invocationMutex, 1);
         };
@@ -74,6 +76,7 @@ namespace node_rfc
         uint_t id;
         Pool *pool;
         RFC_CONNECTION_HANDLE connectionHandle;
+        RFC_FUNCTION_HANDLE functionHandle;
 
         ConnectionParamsStruct client_params;
         ClientOptionsStruct client_options;

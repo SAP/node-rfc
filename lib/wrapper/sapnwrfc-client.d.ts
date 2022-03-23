@@ -73,6 +73,7 @@ export interface RfcClientBinding {
     close(callback: Function): void;
     resetServerContext(callback: Function): void;
     ping(callback: Function): void;
+    cancel(callback: Function): void;
     invoke(rfmName: string, rfmParams: RfcObject, callback: Function, callOptions?: RfcCallOptions): void;
     release(oneClientBinding: [RfcClientBinding], callback: Function): void;
 }
@@ -94,7 +95,7 @@ export declare class Client {
     open(callback?: Function): void | Promise<Client>;
     ping(callback?: Function): void | Promise<boolean>;
     close(callback?: Function): void | Promise<void>;
-    cancel(callback?: Function): void | Promise<any>;
+    cancel(callback?: Function): void | Promise<void>;
     resetServerContext(callback?: Function): void | Promise<void>;
     release(callback?: Function): void | Promise<void>;
     call(rfmName: string, rfmParams: RfcObject, callOptions?: RfcCallOptions): Promise<RfcObject>;

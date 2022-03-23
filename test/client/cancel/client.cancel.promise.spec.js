@@ -35,11 +35,8 @@ describe("Connection terminate by client", () => {
             );
             // cancel
             setTimeout(() => {
-                client.cancel().then((res) => {
-                    expect(res).toMatchObject({
-                        connectionHandle: handle,
-                        result: "cancelled",
-                    });
+                client.cancel().then((err) => {
+                    expect(err).toBeUndefined();
                 });
             }, CANCEL * 1000);
         });
