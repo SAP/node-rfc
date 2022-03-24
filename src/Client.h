@@ -67,7 +67,6 @@ namespace node_rfc
 
             pool = NULL;
             connectionHandle = NULL;
-            functionHandle = NULL;
 
             uv_sem_init(&invocationMutex, 1);
         };
@@ -76,7 +75,6 @@ namespace node_rfc
         uint_t id;
         Pool *pool;
         RFC_CONNECTION_HANDLE connectionHandle;
-        RFC_FUNCTION_HANDLE functionHandle;
 
         ConnectionParamsStruct client_params;
         ClientOptionsStruct client_options;

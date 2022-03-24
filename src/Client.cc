@@ -426,11 +426,7 @@ namespace node_rfc
             conn_closed = (client->connectionHandle == NULL);
             if (!conn_closed)
             {
-                // todo: check if needed for cancel()
-                // client->functionHandle = functionHandle;
                 RfcInvoke(client->connectionHandle, functionHandle, &errorInfo);
-                // todo: check if needed for cancel()
-                // client->functionHandle = NULL;
                 if (errorInfo.code != RFC_OK)
                 {
                     connectionCheckError = client->connectionCheck(&errorInfo);
@@ -601,7 +597,7 @@ namespace node_rfc
 
             if (errorInfo->code == RFC_CANCELED)
             {
-                EDEBUG("Connection cancelled ", (pointer_t)this->connectionHandle);
+                EDEBUG("Connection canceled ", (pointer_t)this->connectionHandle);
             }
 
             RFC_CONNECTION_HANDLE new_handle;
@@ -675,6 +671,7 @@ namespace node_rfc
     }
     void cancelConnection(RFC_RC *rc, RFC_CONNECTION_HANDLE connectionHandle, RFC_ERROR_INFO *errorInfo)
     {
+        EDEBUG("Cancel connection ", (pointer_t)connectionHandle);
         *rc = RfcCancel(connectionHandle, errorInfo);
     }
 
@@ -693,18 +690,11 @@ namespace node_rfc
         RFC_RC rc = RFC_OK;
         RFC_ERROR_INFO errorInfo;
 
-        EDEBUG("Cancelled connection ", (pointer_t)connectionHandle);
         std::thread tcancel(cancelConnection, &rc, connectionHandle, &errorInfo);
         tcancel.join();
 
         if (rc == RFC_OK && errorInfo.code == RFC_OK)
         {
-            // todo: check if needed
-            // if (functionHandle != NULL)
-            // {
-            //     EDEBUG("Cancelled function ", (pointer_t)functionHandle);
-            //     rc = RfcDestroyFunction(functionHandle, &errorInfo);
-            // }
             callback.Call({});
         }
         else
