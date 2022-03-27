@@ -614,7 +614,7 @@ export class Client {
             for (let rfmParamName of Object.keys(rfmParams)) {
                 if (rfmParamName.length === 0)
                     throw new TypeError(
-                        `Empty RFM parameter name when calling "${rfmName}"}`
+                        `Empty RFM parameter name when calling "${rfmName}"`
                     );
                 if (!rfmParamName.match(/^[a-zA-Z0-9_]*$/))
                     throw new TypeError(
