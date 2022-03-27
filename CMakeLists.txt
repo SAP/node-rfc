@@ -15,7 +15,8 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 execute_process(COMMAND node -p "require('./package.json').version"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
-project(sapnwrfc VERSION ${VERSION})
+project(sapnwrfc)
+set(PROJECT_VERSION ${VERSION})
 
 # node platform
 execute_process(COMMAND node -p "process.platform"
