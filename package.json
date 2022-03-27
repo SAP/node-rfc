@@ -1,14 +1,14 @@
 {
   "name": "node-rfc",
   "description": "nodejs bindings for SAP NW RFC SDK",
-  "version": "2.6.0-rc1",
+  "version": "2.6.0",
   "homepage": "https://github.com/sap/node-rfc",
   "author": {
     "name": "Srdjan Boskovic",
     "email": "srdjan.boskovic@sap.com"
   },
   "engines": {
-    "node": "~10 >=10.23 || ~12 >=12.17 || >= 14.0"
+    "node": "~12 >=12.17 || >= 14.0"
   },
   "cpu": [
     "!arm"
