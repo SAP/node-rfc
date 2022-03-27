@@ -21,7 +21,7 @@ namespace node_rfc
         uint_t sapucSize, resultLen = 0;
 
         std::string sstr = std::string(napistr);
-        //std::string str = napistr.Utf8Value();
+        // std::string str = napistr.Utf8Value();
         sapucSize = sstr.length() + 1;
 
         sapuc = (SAP_UC *)mallocU(sapucSize);
@@ -275,8 +275,8 @@ namespace node_rfc
                 return nodeRfcError(err.str(), errorPath);
             }
             RFC_INT rfcInt = (RFC_INT)value.As<Napi::Number>().Int64Value();
-            //int64_t rfcInt = value.As<Napi::Number>().Int64Value();
-            //printf("typ: %d value: %d %u", typ, rfcInt, UINT8_MAX);
+            // int64_t rfcInt = value.As<Napi::Number>().Int64Value();
+            // printf("typ: %d value: %d %u", typ, rfcInt, UINT8_MAX);
             if (typ == RFCTYPE_INT8)
             {
                 rc = RfcSetInt8(functionHandle, cName, rfcInt, &errorInfo);
@@ -384,7 +384,7 @@ namespace node_rfc
         utf8[0] = '\0';
         uint_t resultLen = 0;
         RfcSAPUCToUTF8(uc, length, (RFC_BYTE *)utf8, &utf8Size, &resultLen, &errorInfo);
-        //EDEBUG("len: ", length, " utf8Size: ", utf8Size, " resultLen: ", resultLen, " ", errorInfo.code);
+        // EDEBUG("len: ", length, " utf8Size: ", utf8Size, " resultLen: ", resultLen, " ", errorInfo.code);
         if (errorInfo.code != RFC_OK)
         {
             // not enough, try with 5
@@ -431,7 +431,7 @@ namespace node_rfc
             {
                 Napi::String name = wrapString(paramDesc.name).As<Napi::String>();
                 errorPath->setParameterName(paramDesc.name);
-                //DEBUG("param type ", paramDesc.type, " name ", wrapString(paramDesc.name).As<Napi::String>().Utf8Value(), " direction ", paramDesc.direction, " filter ", paramDesc.direction & client_options.filter_param_type);
+                // DEBUG("param type ", paramDesc.type, " name ", wrapString(paramDesc.name).As<Napi::String>().Utf8Value(), " direction ", paramDesc.direction, " filter ", paramDesc.direction & client_options.filter_param_type);
                 ValuePair result = getVariable(paramDesc.type, functionHandle, paramDesc.name, paramDesc.nucLength, paramDesc.typeDescHandle, errorPath, client_options);
                 if (!result.first.IsUndefined())
                 {
@@ -472,7 +472,7 @@ namespace node_rfc
             {
                 return result;
             }
-            //EDEBUG("F: ", wrapString(fieldDesc.name).As<Napi::String>().Utf8Value());
+            // EDEBUG("F: ", wrapString(fieldDesc.name).As<Napi::String>().Utf8Value());
             (resultObj).Set(wrapString(fieldDesc.name), result.second);
         }
 
@@ -594,8 +594,8 @@ namespace node_rfc
                 free(byteValue);
                 break;
             }
-            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, reinterpret_cast<SAP_RAW *>(byteValue), cLen);
-            // do not free byteValue - it will be freed when the buffer is garbage collected
+            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, reinterpret_cast<SAP_RAW *>(byteValue), cLen, [](Env env, SAP_RAW *byteValue)
+                                                     { free(byteValue); });
             break;
         }
 
@@ -615,8 +615,8 @@ namespace node_rfc
                 free(byteValue);
                 break;
             }
-            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, reinterpret_cast<SAP_RAW *>(byteValue), resultLen);
-            // do not free byteValue - it will be freed when the buffer is garbage collected
+            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, reinterpret_cast<SAP_RAW *>(byteValue), resultLen, [](Env env, SAP_RAW *byteValue)
+                                                     { free(byteValue); });
             break;
         }
         case RFCTYPE_BCD:
