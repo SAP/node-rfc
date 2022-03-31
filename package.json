@@ -1,7 +1,7 @@
 {
   "name": "node-rfc",
   "description": "nodejs bindings for SAP NW RFC SDK",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "homepage": "https://github.com/sap/node-rfc",
   "author": {
     "name": "Srdjan Boskovic",
@@ -18,7 +18,7 @@
     "test": "test"
   },
   "scripts": {
-    "dependencies": "npm install --save bluebird node-addon-api",
+    "dependencies": "npm install --save bluebird node-addon-api prebuild-install",
     "devDependencies": "npm install --save-dev cmake-js typescript async decimal.js eslint jest prebuild prebuild-install random-bytes @types/node @types/bluebird @babel/core @typescript-eslint/eslint-plugin @typescript-eslint/parser",
     "prepublishOnly": "npm ls --depth=0",
     "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
@@ -74,14 +74,14 @@
     "eslint": "^7.30.0",
     "jest": "^27.0.6",
     "prebuild": "^10.0.1",
-    "prebuild-install": "^6.1.4",
     "random-bytes": "^1.0.0",
     "ts-node": "^10.7.0",
     "typescript": "^4.3.5"
   },
   "dependencies": {
     "bluebird": "^3.7.2",
-    "node-addon-api": "^4.3.0"
+    "node-addon-api": "^4.3.0",
+    "prebuild-install": "^7.0.1"
   },
   "config": {
     "commitizen": {
