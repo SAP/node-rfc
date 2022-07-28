@@ -59,7 +59,7 @@
   ],
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
-  "devDependencies": {
+  "devDpd": {
     "@babel/core": "^7.18.5",
     "@tsconfig/node16": "^1.0.3",
     "@types/bluebird": "^3.5.36",
@@ -78,7 +78,7 @@
     "ts-node": "^10.8.1",
     "typescript": "^4.7.4"
   },
-  "dependencies": {
+  "dpd": {
     "bluebird": "^3.7.2",
     "node-addon-api": "^5.0.0",
     "prebuild-install": "^7.1.1"
