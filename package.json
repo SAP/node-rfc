@@ -1,44 +1,7 @@
 {
   "name": "node-rfc",
-  "description": "nodejs bindings for SAP NW RFC SDK",
   "version": "2.6.1",
-  "homepage": "https://github.com/sap/node-rfc",
-  "author": {
-    "name": "Srdjan Boskovic",
-    "email": "srdjan.boskovic@sap.com"
-  },
-  "engines": {
-    "node": ">=14.0.0"
-  },
-  "cpu": [
-    "!arm"
-  ],
-  "directories": {
-    "doc": "doc",
-    "test": "test"
-  },
-  "scripts": {
-    "dpd": "npm install --save bluebird node-addon-api prebuild-install",
-    "devDpd": "npm install --save-dev cmake-js commitizen cz-conventional-changelog ts-node typescript async decimal.js eslint jest prebuild random-bytes @tsconfig/node16 @types/node @types/bluebird @babel/core @typescript-eslint/eslint-plugin @typescript-eslint/parser",
-    "prepublishOnly": "npm ls --depth=0",
-    "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
-    "install": "prebuild-install -r napi || cmake-js rebuild",
-    "addon": "prebuild --backend cmake-js -r napi --force --strip --verbose",
-    "ts": "tsc -p src/ts",
-    "upload": "prebuild -r napi -u --verbose",
-    "test": "reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000",
-    "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000"
-  },
-  "binary": {
-    "napi_versions": [
-      5
-    ],
-    "module_name": "sapnwrfc",
-    "module_path": "./lib/binding/",
-    "host": "https://github.com/sap/node-rfc/releases/download/",
-    "remote_path": "v{version}"
-  },
-  "license": "Apache-2.0",
+  "description": "nodejs bindings for SAP NW RFC SDK",
   "keywords": [
     "sap",
     "rfc",
@@ -48,44 +11,81 @@
     "node",
     "nodejs"
   ],
+  "homepage": "https://github.com/sap/node-rfc",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sap/node-rfc.git"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Srdjan Boskovic",
+    "email": "srdjan.boskovic@sap.com"
+  },
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "directories": {
+    "doc": "doc",
+    "test": "test"
   },
   "files": [
     "lib",
     "src",
     "CMakeLists.txt"
   ],
-  "main": "./lib/index.js",
-  "types": "./lib/index.d.ts",
-  "devDpd": {
-    "@babel/core": "^7.18.5",
-    "@tsconfig/node16": "^1.0.3",
-    "@types/bluebird": "^3.5.36",
-    "@types/node": "^18.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.29.0",
-    "@typescript-eslint/parser": "^5.29.0",
-    "async": "^3.2.4",
-    "cmake-js": "^6.3.2",
-    "commitizen": "^4.2.4",
-    "cz-conventional-changelog": "^3.3.0",
-    "decimal.js": "^10.3.1",
-    "eslint": "^8.18.0",
-    "jest": "^28.1.1",
-    "prebuild": "^11.0.3",
-    "random-bytes": "^1.0.0",
-    "ts-node": "^10.8.1",
-    "typescript": "^4.7.4"
+  "binary": {
+    "module_name": "sapnwrfc",
+    "module_path": "./lib/binding/",
+    "remote_path": "v{version}",
+    "host": "https://github.com/sap/node-rfc/releases/download/",
+    "napi_versions": [
+      5
+    ]
   },
-  "dpd": {
-    "bluebird": "^3.7.2",
-    "node-addon-api": "^5.0.0",
-    "prebuild-install": "^7.1.1"
+  "scripts": {
+    "addon": "prebuild --backend cmake-js -r napi --force --strip --verbose",
+    "devDpd": "npm install --save-dev cmake-js commitizen cz-conventional-changelog ts-node typescript async decimal.js eslint jest prebuild random-bytes @tsconfig/node16 @types/node @types/bluebird @babel/core @typescript-eslint/eslint-plugin @typescript-eslint/parser",
+    "dpd": "npm install --save bluebird node-addon-api prebuild-install",
+    "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
+    "install": "prebuild-install -r napi || cmake-js rebuild",
+    "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
+    "prepublishOnly": "npm ls --depth=0",
+    "test": "reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000",
+    "ts": "tsc -p src/ts",
+    "upload": "prebuild -r napi -u --verbose"
   },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
-  }
+  },
+  "dependencies": {
+    "bluebird": "^3.7.2",
+    "node-addon-api": "^5.0.0",
+    "prebuild-install": "^7.1.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.9",
+    "@tsconfig/node16": "^1.0.3",
+    "@types/bluebird": "^3.5.36",
+    "@types/node": "^18.6.2",
+    "@typescript-eslint/eslint-plugin": "^5.31.0",
+    "@typescript-eslint/parser": "^5.31.0",
+    "async": "^3.2.4",
+    "cmake-js": "^6.3.2",
+    "commitizen": "^4.2.5",
+    "cz-conventional-changelog": "^3.3.0",
+    "decimal.js": "^10.3.1",
+    "eslint": "^8.20.0",
+    "jest": "^28.1.3",
+    "prebuild": "^11.0.4",
+    "random-bytes": "^1.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.7.4"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "cpu": [
+    "!arm"
+  ]
 }
