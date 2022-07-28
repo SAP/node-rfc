@@ -18,8 +18,8 @@
     "test": "test"
   },
   "scripts": {
-    "dependencies": "npm install --save bluebird node-addon-api prebuild-install",
-    "devDependencies": "npm install --save-dev cmake-js commitizen cz-conventional-changelog decimal.js ts-node typescript async decimal.js eslint jest prebuild random-bytes @tsconfig/node16 @types/node @types/bluebird @babel/core @typescript-eslint/eslint-plugin @typescript-eslint/parser",
+    "dpd": "npm install --save bluebird node-addon-api prebuild-install",
+    "devDpd": "npm install --save-dev cmake-js commitizen cz-conventional-changelog ts-node typescript async decimal.js eslint jest prebuild random-bytes @tsconfig/node16 @types/node @types/bluebird @babel/core @typescript-eslint/eslint-plugin @typescript-eslint/parser",
     "prepublishOnly": "npm ls --depth=0",
     "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
     "install": "prebuild-install -r napi || cmake-js rebuild",
