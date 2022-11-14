@@ -38,7 +38,7 @@
     "remote_path": "v{version}",
     "host": "https://github.com/sap/node-rfc/releases/download/",
     "napi_versions": [
-      5
+      8
     ]
   },
   "scripts": {
@@ -49,7 +49,7 @@
     "install": "prebuild-install -r napi || cmake-js rebuild",
     "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
     "prepublishOnly": "npm ls --depth=0",
-    "test": "reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000",
+    "test": "npm audit --production && reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000",
     "ts": "tsc -p src/ts",
     "upload": "prebuild -r napi -u --verbose"
   },
@@ -83,7 +83,7 @@
     "typescript": "^4.7.4"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=14.17.0"
   },
   "cpu": [
     "!arm"

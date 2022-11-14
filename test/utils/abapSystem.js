@@ -15,6 +15,6 @@ const FULL = {
 module.exports = function (sid = "MME", trace = false) {
     if (sid == "full") return FULL;
     const as = { dest: sid };
-    if (trace) as.trace = trace;
+    if (trace) as.trace = '3';
     return as;
 };

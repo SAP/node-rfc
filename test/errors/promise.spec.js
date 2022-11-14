@@ -22,7 +22,7 @@ describe("Errors: Promise", () => {
 
     test("error: call() promise rejects invalid credentials", function () {
         expect.assertions(1);
-        let wrongParams = Object.assign({}, setup.abapSystem("full"));
+        let wrongParams = Object.assign({}, setup.abapSystem());
         delete wrongParams.user;
         delete wrongParams.USER;
         wrongParams.user = "WRONGUSER";

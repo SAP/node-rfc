@@ -32,9 +32,12 @@ execute_process(COMMAND node -p "process.versions.modules"
     OUTPUT_VARIABLE NODE_ABI_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # N-API version
-execute_process(COMMAND node -p "process.versions.napi"
+execute_process(COMMAND node -p "require('./package.json').binary.napi_versions[0]"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE NAPI_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+    OUTPUT_VARIABLE NAPI_VERSION  OUTPUT_STRIP_TRAILING_WHITESPACE)
+# execute_process(COMMAND node -p "process.versions.napi"
+#     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+#     OUTPUT_VARIABLE NAPI_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 add_compile_definitions(NAPI_VERSION=${NAPI_VERSION})
 
 # N-API headers
