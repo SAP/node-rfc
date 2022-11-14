@@ -928,7 +928,7 @@ namespace node_rfc
 
     void checkClientOptions(Napi::Object clientOptionsObject, ClientOptionsStruct *client_options)
     {
-        char errmsg[254];
+        char errmsg[ERRMSG_LENGTH];
         Napi::Array props = clientOptionsObject.GetPropertyNames();
         for (uint_t ii = 0; ii < props.Length(); ii++)
         {
@@ -952,7 +952,7 @@ namespace node_rfc
                     }
                     else
                     {
-                        sprintf(errmsg, "Client option \"%s\" value not allowed: \"%s\"; see %s", CLIENT_OPTION_KEY_BCD, &bcdString[0], USAGE_URL);
+                        snprintf(errmsg, ERRMSG_LENGTH - 1, "Client option \"%s\" value not allowed: \"%s\"; see %s", CLIENT_OPTION_KEY_BCD, &bcdString[0], USAGE_URL);
                         Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
                     }
                 }
@@ -971,7 +971,7 @@ namespace node_rfc
                     Napi::Value fromABAP = opt.As<Napi::Object>().Get("fromABAP");
                     if (!toABAP.IsFunction() || !fromABAP.IsFunction())
                     {
-                        sprintf(errmsg, "Client option \"%s\" is not an object with toABAP() and fromABAP() functions; see %s", CLIENT_OPTION_KEY_DATE, USAGE_URL);
+                        snprintf(errmsg, ERRMSG_LENGTH - 1, "Client option \"%s\" is not an object with toABAP() and fromABAP() functions; see %s", CLIENT_OPTION_KEY_DATE, USAGE_URL);
                         Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
                     }
                     else
@@ -995,7 +995,7 @@ namespace node_rfc
                     Napi::Value fromABAP = opt.As<Napi::Object>().Get("fromABAP");
                     if (!toABAP.IsFunction() || !fromABAP.IsFunction())
                     {
-                        sprintf(errmsg, "Client option \"%s\" is not an object with toABAP() and fromABAP() functions; see %s", CLIENT_OPTION_KEY_TIME, USAGE_URL);
+                        snprintf(errmsg, ERRMSG_LENGTH - 1, "Client option \"%s\" is not an object with toABAP() and fromABAP() functions; see %s", CLIENT_OPTION_KEY_TIME, USAGE_URL);
                         Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
                         ;
                     }
@@ -1013,7 +1013,7 @@ namespace node_rfc
                 client_options->filter_param_type = (RFC_DIRECTION)clientOptionsObject.Get(key).As<Napi::Number>().Uint32Value();
                 if (((int)client_options->filter_param_type < 1) || ((int)client_options->filter_param_type) > 4)
                 {
-                    sprintf(errmsg, "Client option \"%s\" value allowed: \"%u\"; see %s", CLIENT_OPTION_KEY_FILTER, (uint_t)client_options->filter_param_type, USAGE_URL);
+                    snprintf(errmsg, ERRMSG_LENGTH - 1, "Client option \"%s\" value allowed: \"%u\"; see %s", CLIENT_OPTION_KEY_FILTER, (uint_t)client_options->filter_param_type, USAGE_URL);
                     Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
                 }
             }
@@ -1023,7 +1023,7 @@ namespace node_rfc
             {
                 if (!clientOptionsObject.Get(key).IsBoolean())
                 {
-                    sprintf(errmsg, "Client option \"%s\" requires a boolean value; see %s", CLIENT_OPTION_KEY_STATELESS, USAGE_URL);
+                    snprintf(errmsg, ERRMSG_LENGTH - 1, "Client option \"%s\" requires a boolean value; see %s", CLIENT_OPTION_KEY_STATELESS, USAGE_URL);
                     Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
                 }
                 client_options->stateless = clientOptionsObject.Get(key).As<Napi::Boolean>();
@@ -1034,7 +1034,7 @@ namespace node_rfc
             {
                 if (!clientOptionsObject.Get(key).IsNumber())
                 {
-                    sprintf(errmsg, "Client option \"%s\" requires a number of seconds; see %s", CLIENT_OPTION_KEY_TIMEOUT, USAGE_URL);
+                    snprintf(errmsg, ERRMSG_LENGTH - 1, "Client option \"%s\" requires a number of seconds; see %s", CLIENT_OPTION_KEY_TIMEOUT, USAGE_URL);
                     Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
                 }
                 client_options->timeout = clientOptionsObject.Get(key).As<Napi::Number>();
@@ -1043,7 +1043,7 @@ namespace node_rfc
             // Client option: unknown
             else
             {
-                sprintf(errmsg, "Client option not allowed: \"%s\"; see %s", key.c_str(), USAGE_URL);
+                snprintf(errmsg, ERRMSG_LENGTH - 1, "Client option not allowed: \"%s\"; see %s", key.c_str(), USAGE_URL);
                 Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
             }
         }

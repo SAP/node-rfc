@@ -10,13 +10,14 @@
 
 using namespace Napi;
 
+#define ERRMSG_LENGTH 255
 #define ERROR_PATH_NAME_LEN 48
 namespace node_rfc
 {
     extern Napi::Env __env;
 
     Napi::Value wrapString(SAP_UC *uc, int length = -1);
-    //Napi::Value wrapString(SAP_UC const *uc, int length = -1);
+    // Napi::Value wrapString(SAP_UC const *uc, int length = -1);
 
     //
     // Client connection parameters internal representation
@@ -33,7 +34,7 @@ namespace node_rfc
 
         ~_ConnectionParamsStruct()
         {
-            //DEBUG("~ConnectionParamsStruct ", paramSize);
+            // DEBUG("~ConnectionParamsStruct ", paramSize);
             if (connectionParams != NULL)
             {
                 for (uint_t i = 0; i < this->paramSize; i++)
@@ -69,7 +70,7 @@ namespace node_rfc
             // timeout
             options.Set(CLIENT_OPTION_KEY_TIMEOUT, Napi::Number::New(env, timeout));
 
-            //stateless
+            // stateless
             options.Set(CLIENT_OPTION_KEY_STATELESS, Napi::Boolean::New(env, stateless));
 
             // filter
@@ -171,8 +172,8 @@ namespace node_rfc
 
         ~_ClientOptionsStruct()
         {
-            //DEBUG("~ClientOptionsStruct");
-            // bcd
+            // DEBUG("~ClientOptionsStruct");
+            //  bcd
             if (!bcdFunction.IsEmpty())
             {
                 bcdFunction.Unref();

@@ -193,8 +193,8 @@ namespace node_rfc
 
         if (info.Length() > 2)
         {
-            char errmsg[254];
-            sprintf(errmsg, "Client constructor requires max. two arguments, received %zu; see: %s", info.Length(), USAGE_URL);
+            char errmsg[ERRMSG_LENGTH];
+            snprintf(errmsg, ERRMSG_LENGTH - 1, "Client constructor requires max. two arguments, received %zu; see: %s", info.Length(), USAGE_URL);
             Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
         }
     };
@@ -820,9 +820,9 @@ namespace node_rfc
                 }
                 else
                 {
-                    char err[256];
+                    char err[255];
                     std::string optionName = key.Utf8Value();
-                    sprintf(err, "Unknown option: %s", &optionName[0]);
+                    snprintf(err, 254, "Unknown option: %s", &optionName[0]);
                     Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
                 }
             }

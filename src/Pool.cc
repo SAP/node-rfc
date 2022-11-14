@@ -22,18 +22,18 @@ namespace node_rfc
 
             uint_t ready = pool->connReady.size();
 
-            //DEBUG("CheckPoolAsync ready_low: ", pool->ready_low, "ready: ", ready);
+            // DEBUG("CheckPoolAsync ready_low: ", pool->ready_low, "ready: ", ready);
 
             if (ready < pool->ready_low)
             {
-                //DEBUG("  Pool up: ", ready, " to ", pool->ready_low);
+                // DEBUG("  Pool up: ", ready, " to ", pool->ready_low);
                 for (uint_t ii = ready; ii < pool->ready_low; ii++)
                 {
                     RFC_ERROR_INFO errorInfo;
                     RFC_CONNECTION_HANDLE connectionHandle = RfcOpenConnection(pool->client_params.connectionParams, pool->client_params.paramSize, &errorInfo);
                     if (errorInfo.code == RFC_OK)
                     {
-                        //DEBUG("    new handle: ", (pointer_t)(connectionHandle));
+                        // DEBUG("    new handle: ", (pointer_t)(connectionHandle));
                         pool->connReady.insert(connectionHandle);
                     }
                     else
@@ -62,18 +62,18 @@ namespace node_rfc
         {
             pool->lockMutex();
             uint_t ready = pool->connReady.size();
-            //DEBUG("SetPoolAsync new ready_low: ", ready_low, " ready: ", ready);
+            // DEBUG("SetPoolAsync new ready_low: ", ready_low, " ready: ", ready);
             errorInfo.code = RFC_OK;
 
             if (ready < ready_low)
             {
-                //DEBUG("Pool up: ", ready, " to ", ready_low);
+                // DEBUG("Pool up: ", ready, " to ", ready_low);
                 for (uint_t ii = ready; ii < ready_low; ii++)
                 {
                     connectionHandle = RfcOpenConnection(pool->client_params.connectionParams, pool->client_params.paramSize, &errorInfo);
                     if (errorInfo.code == RFC_OK)
                     {
-                        //DEBUG("    new handle: ", (pointer_t)(connectionHandle));
+                        // DEBUG("    new handle: ", (pointer_t)(connectionHandle));
                         pool->connReady.insert(connectionHandle);
                     }
                     else
@@ -263,7 +263,7 @@ namespace node_rfc
                     {
                         (*client)->LockMutex();
                         (*client)->connectionHandle = NULL;
-                        //DEBUG("ReleaseAsync ResetServerContext client: %u handle: %lu", (*client)->id, (pointer_t)connectionHandle);
+                        // DEBUG("ReleaseAsync ResetServerContext client: %u handle: %lu", (*client)->id, (pointer_t)connectionHandle);
                         RfcResetServerContext(connectionHandle, &errorInfo);
                         (*client)->UnlockMutex();
                         if (errorInfo.code == RFC_OK)
@@ -275,7 +275,7 @@ namespace node_rfc
                     {
                         (*client)->LockMutex();
                         (*client)->connectionHandle = NULL;
-                        //DEBUG("ReleaseAsync Close client: %u handle: %lu", (*client)->id, (pointer_t)connectionHandle);
+                        // DEBUG("ReleaseAsync Close client: %u handle: %lu", (*client)->id, (pointer_t)connectionHandle);
                         RfcCloseConnection(connectionHandle, &errorInfo);
                         (*client)->UnlockMutex();
                         if (errorInfo.code != RFC_OK)
@@ -451,7 +451,7 @@ namespace node_rfc
 
     bool argsCheckReady(const Napi::CallbackInfo &info, uint_t *new_ready, Napi::Function *callback)
     {
-        char errmsg[254];
+        char errmsg[ERRMSG_LENGTH];
 
         uint_t ii = info.Length();
 
@@ -462,7 +462,7 @@ namespace node_rfc
                 int32_t n = info[ii].As<Napi::Number>().Int32Value();
                 if (n < 0)
                 {
-                    sprintf(errmsg, "Pool ready() number of connections argument must be positive, received %d; see: %s", n, USAGE_URL);
+                    snprintf(errmsg, ERRMSG_LENGTH - 1, "Pool ready() number of connections argument must be positive, received %d; see: %s", n, USAGE_URL);
                     Napi::Error::New(info.Env(), errmsg).ThrowAsJavaScriptException();
                     return false;
                 }
@@ -474,7 +474,7 @@ namespace node_rfc
             }
             else if (!info[ii].IsUndefined())
             {
-                sprintf(errmsg, "Pool ready() argument is neiter a number, nor a function; see: %s", USAGE_URL);
+                snprintf(errmsg, ERRMSG_LENGTH - 1, "Pool ready() argument is neiter a number, nor a function; see: %s", USAGE_URL);
                 Napi::Error::New(info.Env(), errmsg).ThrowAsJavaScriptException();
                 return false;
             }
@@ -509,8 +509,8 @@ namespace node_rfc
             }
             else
             {
-                char errmsg[254];
-                sprintf(errmsg, "Pool closeAll argument, if provided, must be a function; see: %s", USAGE_URL);
+                char errmsg[ERRMSG_LENGTH];
+                snprintf(errmsg, ERRMSG_LENGTH - 1, "Pool closeAll argument, if provided, must be a function; see: %s", USAGE_URL);
                 Napi::Error::New(info.Env(), errmsg).ThrowAsJavaScriptException();
             }
         }
