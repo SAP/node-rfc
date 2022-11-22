@@ -49,7 +49,7 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 
 - [Current and active nodejs LTS releases](https://github.com/nodejs/LTS)
 
-- The _node-rfc_ connector can be [built from source](#setup) on all platforms supported both by [SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1)
+- The _node-rfc_ connector can be [built from source](#download-and-installation) on all platforms supported both by [SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1)
 
 - Pre-built binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 10, macOS 10.15 and [Centos 7 based docker container](https://github.com/SAP/fundamental-tools/tree/master/docker)
 
