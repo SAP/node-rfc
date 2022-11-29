@@ -22,11 +22,11 @@ describe("Concurrency: Callbacks", () => {
                     i % 2 === 0 ? "BAPI_USER_GET_DETAIL" : "RFC_PING_AND_WAIT",
                     i % 2 === 0
                         ? {
-                              USERNAME: "DEMO",
-                          }
+                            USERNAME: "DEMO",
+                        }
                         : {
-                              SECONDS: WAIT_SECONDS,
-                          },
+                            SECONDS: WAIT_SECONDS,
+                        },
                     (err, res) => {
                         if (err) return done(err);
                         expect(res).toBeDefined();
@@ -37,7 +37,7 @@ describe("Concurrency: Callbacks", () => {
                 );
             });
         }
-    }, 20000);
+    }, 60000);
 
     test(`${setup.CONNECTIONS} clients make concurrent ping() requests`, function (done) {
         expect.assertions(setup.CONNECTIONS);
@@ -56,5 +56,5 @@ describe("Concurrency: Callbacks", () => {
                 });
             });
         }
-    }, 20000);
+    }, 60000);
 });

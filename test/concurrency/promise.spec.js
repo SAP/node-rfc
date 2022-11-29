@@ -26,11 +26,11 @@ describe("Concurrency: Promises", () => {
                                 : "RFC_PING_AND_WAIT",
                             i % 2 === 0
                                 ? {
-                                      USERNAME: "DEMO",
-                                  }
+                                    USERNAME: "DEMO",
+                                }
                                 : {
-                                      SECONDS: WAIT_SECONDS,
-                                  }
+                                    SECONDS: WAIT_SECONDS,
+                                }
                         )
                         .then((res) => {
                             expect(res).toBeDefined();
@@ -43,7 +43,7 @@ describe("Concurrency: Promises", () => {
                 })
                 .catch((ex) => done(ex));
         }
-    }, 15000);
+    }, 20000);
 
     test(`${setup.CONNECTIONS} clients make concurrent ping() requests`, function (done) {
         const CLIENTS = setup.CONNECTIONS;
@@ -67,5 +67,5 @@ describe("Concurrency: Promises", () => {
                 )
                 .catch((ex) => done(ex));
         }
-    }, 10000);
+    }, 20000);
 });

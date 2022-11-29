@@ -49,7 +49,7 @@
     "install": "prebuild-install -r napi || cmake-js rebuild",
     "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
     "prepublishOnly": "npm ls --depth=0",
-    "test": "npm audit --production && reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000",
+    "test": "npm audit --omit=dev && reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000",
     "ts": "tsc -p src/ts",
     "upload": "prebuild -r napi -u --verbose"
   },

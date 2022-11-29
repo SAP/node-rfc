@@ -28,7 +28,7 @@ describe("Concurrency: Await", () => {
             await client.close();
             done();
         })();
-    }, 30000);
+    }, 60000);
 
     test(`${setup.CONNECTIONS} clients make concurrent call() requests`, function (done) {
         expect.assertions(setup.CONNECTIONS);
@@ -47,11 +47,11 @@ describe("Concurrency: Await", () => {
                             : "RFC_PING_AND_WAIT",
                         i % 2 === 0
                             ? {
-                                  USERNAME: "DEMO",
-                              }
+                                USERNAME: "DEMO",
+                            }
                             : {
-                                  SECONDS: WAIT_SECONDS,
-                              }
+                                SECONDS: WAIT_SECONDS,
+                            }
                     );
                     expect(res).toBeDefined();
                     await c.close();
@@ -61,5 +61,5 @@ describe("Concurrency: Await", () => {
                 }
             }
         })();
-    }, 36000);
+    }, 60000);
 });
