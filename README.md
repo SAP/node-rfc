@@ -124,7 +124,7 @@ npm run ts    # rebuild typescript wrapper
 
 ## Getting started
 
-More info: **[Usage](doc/usage.md)** and **[API](doc/api.md)**
+See [Usage](doc/usage.md) and [API](doc/api.md), also [SAP NWRFC SDK 7.50 Programming Guide](https://support.sap.com/content/dam/support/en_us/library/ssp/products/connectors/nwrfcsdk/NW_RFC_750_ProgrammingGuide.pdf)
 
 In order to call remote enabled ABAP function module, we need to create a `node-rfc` client instance with valid logon credentials, connect to SAP ABAP NetWeaver system and then invoke a remote enabled ABAP function module from nodejs. Async example below shows basic principles and you can check the documentationand unit tests for more examles.
 
@@ -139,6 +139,8 @@ SYSNR=00
 CLIENT=620
 LANG=EN
 ```
+
+Connection parameters are documented in `sapnwrfc.ini` file, located in the _SAP NWRFC SDK_ `demo` folder. Check also section `4.1.2 Using sapnwrfc.ini` of [SAP NWRFC SDK 7.50 Programming Guide](https://support.sap.com/content/dam/support/en_us/library/ssp/products/connectors/nwrfcsdk/NW_RFC_750_ProgrammingGuide.pdf)
 
 Call the ABAP RFM. When in doubt about RFM parameters' structure try `abap call` CLI tool of [SAP/fundamental-tools](https://github.com/SAP/fundamental-tools/tree/main/abap-api-tools)
 
