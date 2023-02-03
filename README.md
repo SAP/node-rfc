@@ -1,5 +1,7 @@
 # node-rfc
 
+:tada: Darwin on ARM supported with SAP NW RFC SDK 7.50 PL11 :tada:
+
 Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/), providing convenient ABAP business logic consumption from Node.js.
 
 [![NPM](https://nodei.co/npm/node-rfc.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-rfc/)
@@ -49,9 +51,11 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 
 - [Current and active nodejs LTS releases](https://github.com/nodejs/LTS)
 
-- The _node-rfc_ connector can be [built from source](#download-and-installation) on all platforms supported both by [SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1)
+- The _node-rfc_ connector can be built from source([build instructions](#download-and-installation)) on all platforms supported by both [SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1)
 
-- Pre-built binaries are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for 64 bit Windows 10, macOS 10.15 and [Centos 7 based docker container](https://github.com/SAP/fundamental-tools/tree/master/docker)
+- In addition, pre-built wheels are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for Windows, Darwin and Ubuntu Linux, attached to node-rfc GitHub [release](https://github.com/SAP/node-rfc/releases/latest).
+
+- Docker containers: [[SAP fundamental-tools/docker]](https://github.com/SAP/fundamental-tools/tree/main/docker)
 
 Other platforms and frameworks:
 
@@ -74,7 +78,7 @@ Other platforms and frameworks:
 
 ## Requirements
 
-### All platforms
+### SAP NW RFC SDK 7.50.11
 
 - SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account required) and locally installed. Check [installation instructions](doc/installation.md#sap-nwrfc-sdk-installation) and [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html). Using the latest version is reccomended as SAP NW RFC SDK is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.6C.
 

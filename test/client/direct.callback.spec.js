@@ -23,7 +23,6 @@ describe("Client: direct callback", () => {
         expect(binding.environment).toMatchObject(setup.RefEnvironment);
         expect(binding.Client.environment).toMatchObject(setup.RefEnvironment);
         expect(client.environment).toMatchObject(setup.RefEnvironment);
-        expect;
     });
 
     test("Typescript Promises replaced by Bluebird", () => {

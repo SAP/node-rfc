@@ -22,6 +22,15 @@ export interface NodeRfcEnvironment {
     noderfc: NodeRfcBindingVersions;
     versions: Object;
 }
+export interface NWRfcSdkError {
+    name: string;
+    group: number;
+    code: number;
+    codeString: string;
+    key: string;
+    message: string;
+}
+
 export interface NWRfcBinding {
     Client: RfcClientBinding;
     Pool: RfcPoolBinding;
@@ -31,6 +40,9 @@ export interface NWRfcBinding {
     environment: NodeRfcEnvironment;
     setIniFileDirectory(iniFileDirectory: string): any | undefined;
     loadCryptoLibrary(libAbsolutePath: string): any | undefined;
+    languageIsoToSap(langIso: string): string | NWRfcSdkError;
+    languageSapToIso(langSap: string): string | NWRfcSdkError;
+    reloadIniFile(): undefined | NWRfcSdkError;
     verbose(): this;
 }
 

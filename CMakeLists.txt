@@ -93,7 +93,7 @@ else()
 endif()
 
 # source files and target library
-add_library(${PROJECT_NAME} SHARED src/Client.cc src/nwrfcsdk.cc src/Pool.cc src/Throughput.cc src/Server.cc src/addon.cc)
+add_library(${PROJECT_NAME} SHARED src/cpp/Client.cc src/cpp/nwrfcsdk.cc src/cpp/Pool.cc src/cpp/Throughput.cc src/cpp/Server.cc src/cpp/addon.cc)
 
 # build path ignored on Windows, copy after build
 if(MSVC)

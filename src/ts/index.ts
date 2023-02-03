@@ -30,6 +30,13 @@ export function setIniFileDirectory(iniFileDirectory: string) {
     noderfc_binding.setIniFileDirectory(iniFileDirectory);
 }
 
+export function reloadIniFile() {
+    const err = noderfc_binding.reloadIniFile();
+    if (err && err.message) {
+        throw new Error(err.message)
+    }
+}
+
 export function loadCryptoLibrary(libAbsolutePath: string) {
     if (!require("fs").existsSync(libAbsolutePath)) {
         throw new Error(`Crypto library not found: ${libAbsolutePath}`);
@@ -80,4 +87,20 @@ export function cancelClient(
     } else {
         return terminate(workerData);
     }
+}
+
+export function languageIsoToSap(langIso: string): string {
+    const langSap = noderfc_binding.languageIsoToSap(langIso);
+    if (typeof langSap === "string") {
+        return langSap
+    }
+    throw new Error(`Language ISO code not found: ${langIso}`)
+}
+
+export function languageSapToIso(langSap: string): string {
+    const langIso = noderfc_binding.languageSapToIso(langSap);
+    if (typeof langIso === "string") {
+        return langIso
+    }
+    throw new Error(`Language SAP code not found: ${langSap}`)
 }

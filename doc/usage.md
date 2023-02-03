@@ -6,8 +6,11 @@
 - **[ABAP Function Module](#abap-function-module)**
 - **[Addon](#addon)**
   - [setIniFileDirectory](#setinifiledirectory)
+  - [reloadIniFile](#reloadinifile)
   - [loadCryptoLibrary](#loadcryptolibrary)
   - [cancelClient](#cancelclient)
+  - [languageIsoToSap](#languageisotosap)
+  - [languageSapToIso](#languagesaptoiso)
 
 <a name="client-toc"></a>
 
@@ -144,6 +147,27 @@ const noderfc = require("node-rfc");
 noderfc.setIniFileDirectory("/some/folder");
 ```
 
+### reloadIniFile
+
+Reloads the contents of the `sapnwrfc.ini` file into memory.
+
+Searches the directory given by `RfcSetIniPath()` (or the current working directory)
+for the file `sapnwrfc.ini` and loads its contents into memory. Reloading the `sapnwrfc.ini`
+file is only necessary after the file has been manually edited.
+If you want to use a `sapnwrfc.ini` file in a different location, consider using `setIniFileDirectory()`.
+
+Note: If a file with the name `sapnwrfc.ini` does not exist in the given directory,
+this is not considered an error! Default settings are used in this case.
+
+```ts
+const noderfc = require("node-rfc");
+try{
+noderfc.reloadIniFile();
+} catch (ex) {
+    console.log(ex);
+}
+```
+
 ### loadCryptoLibrary
 
 Sets the absolute path to the sapcrypto library to enable TLS encryption via Websocket RFC.
@@ -164,6 +188,28 @@ Cancels ongoing RFC call, see also: [Cancel connection](#cancel-connection)
 ```ts
 const noderfc = require("node-rfc");
 noderfc.cancelClient(client);
+```
+
+### languageIsoToSap
+
+API: [api/addon](api.md#languageisotosap)
+
+Conversion of language ISO code to 1-digit SAP code
+
+```ts
+const noderfc = require("node-rfc");
+const langSAP = noderfc.languageIsoToSap("EN");
+```
+
+### languageSapToIso
+
+API: [api/addon](api.md#languagesaptoiso)
+
+Conversion of language 1-digit SAP code to ISO code
+
+```ts
+const noderfc = require("node-rfc");
+const langSAP = noderfc.languageSapToIso("E");
 ```
 
 ## Client

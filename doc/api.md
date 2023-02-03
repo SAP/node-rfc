@@ -29,6 +29,14 @@ Usage: [usage/addon](usage.md#addon)
 setIniFileDirectory(iniFileDirectory: string)
 ```
 
+### reloadIniFile
+
+Usage: [usage/addon](usage.md#addon)
+
+```ts
+reloadIniFile()
+```
+
 ### loadCryptoLibrary
 
 Usage: [usage/addon](usage.md#addon)
@@ -43,6 +51,22 @@ Usage: [usage/addon](usage.md#cancelclient)
 
 ```ts
 cancelClient(client: Client, callback?: Function): void | Promise<any>;
+```
+
+### languageIsoToSap
+
+Usage: [usage/addon](usage.md#addon)
+
+```ts
+languageIsoToSap(langIsoCode: string): string|Error
+```
+
+### languageSapToIso
+
+Usage: [usage/addon](usage.md#addon)
+
+```ts
+languageSapToIso(langSapCode: string): string|Error
 ```
 
 ## Client
