@@ -9,8 +9,9 @@
 namespace node_rfc
 {
 
-    uint_t Throughput::_id = 0;
     extern Napi::Env __env;
+
+    uint_t Throughput::_id = 0;
 
     Napi::FunctionReference Throughput::constructor;
 
@@ -20,7 +21,6 @@ namespace node_rfc
         {
             Napi::Error::New(info.Env(), "Use the new operator to create instances of Rfc Throughput.").ThrowAsJavaScriptException();
         }
-        init(info.Env());
         RFC_ERROR_INFO errorInfo;
         this->throughput_handle = RfcCreateThroughput(&errorInfo);
         if (errorInfo.code != RFC_OK)
@@ -36,7 +36,7 @@ namespace node_rfc
         if (this->throughput_handle != NULL)
         {
             RfcDestroyThroughput(this->throughput_handle, &errorInfo);
-            //if (errorInfo.code != RFC_OK) ...
+            // if (errorInfo.code != RFC_OK) ...
             this->throughput_handle = NULL;
         }
     }

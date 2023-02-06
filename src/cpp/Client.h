@@ -58,11 +58,6 @@ namespace node_rfc
 
         void init(Napi::Env env)
         {
-            if (node_rfc::__env == NULL)
-            {
-                node_rfc::__env = env;
-            }
-
             id = Client::_id++;
 
             pool = NULL;

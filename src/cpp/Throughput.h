@@ -18,14 +18,6 @@ namespace node_rfc
         static Napi::FunctionReference constructor;
         static Napi::Object Init(Napi::Env env, Napi::Object exports);
 
-        void init(Napi::Env env)
-        {
-            if (node_rfc::__env == NULL)
-            {
-                node_rfc::__env = env;
-            }
-        };
-
         Throughput(const Napi::CallbackInfo &info);
         ~Throughput(void);
 

@@ -73,8 +73,8 @@ namespace node_rfc
         Napi::Value AddFunction(const Napi::CallbackInfo &info);
         Napi::Value RemoveFunction(const Napi::CallbackInfo &info);
         Napi::Value GetFunctionDescription(const Napi::CallbackInfo &info);
-        //RFC_RC SAP_API metadataLookup(SAP_UC *func_name, RFC_ATTRIBUTES rfc_attributes, RFC_FUNCTION_DESC_HANDLE *func_handle);
-        //RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle, RFC_FUNCTION_HANDLE func_handle, RFC_ERROR_INFO *errorInfo);
+        // RFC_RC SAP_API metadataLookup(SAP_UC *func_name, RFC_ATTRIBUTES rfc_attributes, RFC_FUNCTION_DESC_HANDLE *func_handle);
+        // RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle, RFC_FUNCTION_HANDLE func_handle, RFC_ERROR_INFO *errorInfo);
 
         RFC_CONNECTION_HANDLE server_conn_handle;
         RFC_CONNECTION_HANDLE client_conn_handle;
@@ -88,10 +88,6 @@ namespace node_rfc
 
         void init(Napi::Env env)
         {
-            if (node_rfc::__env == NULL)
-            {
-                node_rfc::__env = env;
-            };
             id = Server::_id++;
 
             server_conn_handle = NULL;
