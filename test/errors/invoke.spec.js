@@ -22,20 +22,20 @@ describe("Errors: Invoke", () => {
 
     test("error: invoke() rfm parameter name must not be empty", function (done) {
         expect.assertions(1);
-        client.invoke("STFC_CONNECTION", {"": ""}, function (err, res) {
+        client.invoke("STFC_CONNECTION", { "": "" }, function (err, res) {
             expect(err).toMatchObject(
                 new TypeError(`Empty RFM parameter name when calling "STFC_CONNECTION"`)
-            )
+            );
             done();
         });
     });
 
     test("error: invoke() rfm parameter name must be a valid string", function (done) {
         expect.assertions(1);
-        client.invoke("STFC_CONNECTION", {"%$": ""}, function (err, res) {
+        client.invoke("STFC_CONNECTION", { "%$": "" }, function (err, res) {
             expect(err).toMatchObject(
                 new TypeError(`RFM parameter name invalid: "%$" when calling "STFC_CONNECTION"`)
-            )
+            );
             done();
         });
     });
@@ -170,25 +170,22 @@ describe("Errors: Invoke", () => {
         });
     });
 
-    test("error: call() over closed connection", function (done) {
+    test("error: call() over closed connection", async () => {
         expect.assertions(2);
-        (async () => {
-            try {
-                await client.close();
-                expect(client.alive).toEqual(false);
-                await client.call("STFC_CONNECTION", {
-                    REQUTEXT: setup.UNICODETEST,
-                });
-            } catch (ex) {
-                expect(ex).toEqual(
-                    expect.objectContaining({
-                        message:
-                            "RFM client request over closed connection: invoke() STFC_CONNECTION",
-                        name: "nodeRfcError",
-                    })
-                );
-                done();
-            }
-        })();
+        try {
+            await client.close();
+            expect(client.alive).toEqual(false);
+            await client.call("STFC_CONNECTION", {
+                REQUTEXT: setup.UNICODETEST,
+            });
+        } catch (ex) {
+            expect(ex).toEqual(
+                expect.objectContaining({
+                    message:
+                        "RFM client request over closed connection: invoke() STFC_CONNECTION",
+                    name: "nodeRfcError",
+                })
+            );
+        }
     });
 });

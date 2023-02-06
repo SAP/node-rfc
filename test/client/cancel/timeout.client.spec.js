@@ -35,8 +35,9 @@ describe("Connection terminate timeout", () => {
                 function (err) {
                     expect(client.alive).toEqual(true);
                     expect(err).toMatchObject(RfcCanceledError);
-                    expect(client.connectionHandle).notjest.toEqual(handle);
-                    client.close(() => done());
+                    expect(client.connectionHandle).not.toEqual(handle);
+                    client.close();
+                    done();
                 }
             );
         });

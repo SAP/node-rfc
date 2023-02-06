@@ -18,23 +18,23 @@ describe("Datatypes: UTCLONG", () => {
         return client.close();
     });
 
-    test("UTCLONG accepts min, max, initial", () => {
-        return (async () => {
-            let res = await client.call("ZDATATYPES", {
-                IV_UTCLONG: UTCLONG.MIN,
-            });
-            expect(res.EV_UTCLONG).toEqual(UTCLONG.MIN);
+    test("UTCLONG accepts min, max, initial", async () => {
+        expect.assertions(3);
+        let res = await client.call("ZDATATYPES", {
+            IV_UTCLONG: UTCLONG.MIN,
+        });
+        expect(res.EV_UTCLONG).toEqual(UTCLONG.MIN);
 
-            res = await client.call("ZDATATYPES", {
-                IV_UTCLONG: UTCLONG.MAX,
-            });
-            expect(res.EV_UTCLONG).toEqual(UTCLONG.MAX);
+        res = await client.call("ZDATATYPES", {
+            IV_UTCLONG: UTCLONG.MAX,
+        });
+        expect(res.EV_UTCLONG).toEqual(UTCLONG.MAX);
 
-            res = await client.call("ZDATATYPES", {
-                IV_UTCLONG: UTCLONG.INITIAL,
-            });
-            expect(res.EV_UTCLONG).toEqual(UTCLONG.INITIAL);
-        })();
+        res = await client.call("ZDATATYPES", {
+            IV_UTCLONG: UTCLONG.INITIAL,
+        });
+        expect(res.EV_UTCLONG).toEqual(UTCLONG.INITIAL);
+
     });
 
     test("UTCLONG rejects non string", () => {

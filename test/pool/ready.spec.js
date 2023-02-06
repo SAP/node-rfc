@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { forEach } = require("async");
-
 describe("Pool Acquire/Release/Ready", () => {
     const setup = require("../utils/setup");
     const Pool = setup.Pool;

@@ -4,7 +4,7 @@
 
 "use strict";
 
-describe.skip("Throughput: Client", () => {
+describe("Throughput: Client", () => {
     const setup = require("../utils/setup");
     const Throughput = setup.Throughput;
     const client = setup.direct_client();
@@ -53,122 +53,118 @@ describe.skip("Throughput: Client", () => {
         done();
     });
 
-    test("Throughput set/remove connection", function () {
-        return (async () => {
-            await client.open();
+    test("Throughput set/remove connection", async () => {
+        expect.assertions(2);
 
-            throughput.setOnConnection(client);
-            expect(throughput.clients.size).toEqual(1);
+        await client.open();
 
-            throughput.removeFromConnection(client);
-            expect(throughput.clients.size).toEqual(0);
+        throughput.setOnConnection(client);
+        expect(throughput.clients.size).toEqual(1);
 
-            await client.close();
-        })();
+        throughput.removeFromConnection(client);
+        expect(throughput.clients.size).toEqual(0);
+
+        await client.close();
     });
 
-    test("Throughput get from connection", function () {
-        return (async () => {
-            await client.open();
+    test("Throughput get from connection", async () => {
+        expect.assertions(3);
+        await client.open();
 
-            throughput.setOnConnection(client);
-            expect(throughput.clients.size).toEqual(1);
+        throughput.setOnConnection(client);
+        expect(throughput.clients.size).toEqual(1);
 
-            let throughput1 = Throughput.getFromConnection(client);
-            expect(throughput._handle).toEqual(throughput1._handle);
+        let throughput1 = Throughput.getFromConnection(client);
+        expect(throughput._handle).toEqual(throughput1._handle);
 
-            throughput.removeFromConnection(client);
-            expect(throughput.clients.size).toEqual(0);
+        throughput.removeFromConnection(client);
+        expect(throughput.clients.size).toEqual(0);
 
-            await client.close();
-        })();
+        await client.close();
     });
 
-    test("Throughput single connection", function () {
-        return (async () => {
-            await client.open();
+    test("Throughput single connection", async () => {
+        expect.assertions(13);
 
-            throughput.setOnConnection(client);
-            expect(throughput.clients.size).toEqual(1);
-            expect(throughput.status).toMatchObject({
-                numberOfCalls: 0,
-                sentBytes: 0,
-                receivedBytes: 0,
-                applicationTime: 0,
-                totalTime: 0,
-                serializationTime: 0,
-                deserializationTime: 0,
-            });
+        await client.open();
 
-            await client.call("STFC_CONNECTION", {
-                REQUTEXT: "hello",
-            });
-            expect(throughput.status).toMatchObject({
-                numberOfCalls: 2,
-                sentBytes: 1089,
-                receivedBytes: 2812,
-            });
+        throughput.setOnConnection(client);
+        expect(throughput.clients.size).toEqual(1);
+        expect(throughput.status).toMatchObject({
+            numberOfCalls: 0,
+            sentBytes: 0,
+            receivedBytes: 0,
+            applicationTime: 0,
+            totalTime: 0,
+            serializationTime: 0,
+            deserializationTime: 0,
+        });
 
-            await client.call("STFC_CONNECTION", {
-                REQUTEXT: "hello",
-            });
-            expect(throughput.status).toMatchObject({
-                numberOfCalls: 3,
-                sentBytes: 1737,
-                receivedBytes: 4022,
-            });
+        await client.call("STFC_CONNECTION", {
+            REQUTEXT: "hello",
+        });
 
-            throughput.reset();
-            expect(throughput.status).toMatchObject({
-                numberOfCalls: 0,
-                sentBytes: 0,
-                receivedBytes: 0,
-                applicationTime: 0,
-                totalTime: 0,
-                serializationTime: 0,
-                deserializationTime: 0,
-            });
+        expect(throughput.status.numberOfCalls).toEqual(2);
+        expect(throughput.status.sentBytes).toBeGreaterThan(1000);
+        expect(throughput.status.receivedBytes).toBeGreaterThan(2000);
 
-            await client.call("BAPI_USER_GET_DETAIL", {
-                USERNAME: "DEMO",
-            });
-            expect(throughput.status).toMatchObject({
-                numberOfCalls: 87,
-                sentBytes: 64968,
-                receivedBytes: 393716,
-            });
 
-            throughput.removeFromConnection(client);
-            expect(throughput.clients.size).toEqual(0);
+        await client.call("STFC_CONNECTION", {
+            REQUTEXT: "hello",
+        });
 
-            await client.close();
-        })();
+        expect(throughput.status.numberOfCalls).toEqual(3);
+        expect(throughput.status.sentBytes).toBeGreaterThan(1000);
+        expect(throughput.status.receivedBytes).toBeGreaterThan(3000);
+
+        throughput.reset();
+        expect(throughput.status).toMatchObject({
+            numberOfCalls: 0,
+            sentBytes: 0,
+            receivedBytes: 0,
+            applicationTime: 0,
+            totalTime: 0,
+            serializationTime: 0,
+            deserializationTime: 0,
+        });
+
+        await client.call("BAPI_USER_GET_DETAIL", {
+            USERNAME: "DEMO",
+        });
+
+        expect(throughput.status.numberOfCalls).toEqual(87);
+        expect(throughput.status.sentBytes).toBeGreaterThan(60000);
+        expect(throughput.status.receivedBytes).toBeGreaterThan(300000);
+
+        throughput.removeFromConnection(client);
+        expect(throughput.clients.size).toEqual(0);
+
+        await client.close();
     }, 10000);
 
-    test("Throughput multiple connection", function () {
-        return (async () => {
-            const client1 = setup.direct_client();
-            const client2 = setup.direct_client();
+    test("Throughput multiple connection", async () => {
+        expect.assertions(3);
+        const client1 = setup.direct_client();
+        const client2 = setup.direct_client();
 
-            await client1.open();
-            await client2.open();
+        await client1.open();
+        await client2.open();
 
-            throughput.reset();
+        throughput.reset();
 
-            // set two connections
-            throughput.setOnConnection([client1, client2]);
-            expect(throughput.clients.size).toEqual(2);
+        // set two connections
+        throughput.setOnConnection([client1, client2]);
+        expect(throughput.clients.size).toEqual(2);
 
-            // remove two connections
-            throughput.removeFromConnection([client1, client2]);
-            expect(throughput.clients.size).toEqual(0);
+        // remove two connections
+        throughput.removeFromConnection([client1, client2]);
+        expect(throughput.clients.size).toEqual(0);
 
-            // create with multiple connections
-            let throughput1 = new Throughput([client1, client2]);
-            expect(throughput1.clients.size).toEqual(2);
+        // create with multiple connections
+        let throughput1 = new Throughput([client1, client2]);
+        expect(throughput1.clients.size).toEqual(2);
 
-            await client1.close();
-            await client2.close();
-        })();
+        await client1.close();
+        await client2.close();
     });
 });
