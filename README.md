@@ -55,7 +55,7 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 
 - In addition, pre-built wheels are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for Windows, Darwin and Ubuntu Linux, attached to node-rfc GitHub [release](https://github.com/SAP/node-rfc/releases/latest).
 
-- Docker containers: [[SAP fundamental-tools/docker]](https://github.com/SAP/fundamental-tools/tree/main/docker)
+- Docker containers: [SAP fundamental-tools/docker](https://github.com/SAP/fundamental-tools/tree/main/docker)
 
 Other platforms and frameworks:
 
@@ -86,11 +86,13 @@ Other platforms and frameworks:
 
 - Build from source on older Linux systems, may require `uchar.h` file, attached to [SAP OSS Note 2573953](https://launchpad.support.sap.com/#/notes/2573953), to be copied to SAP NW RFC SDK include directory.
 
+### Docker
+
+Docker container examples for Linux, Intel and ARM based Darwin: [SAP/fundamental-tools/docker](https://github.com/SAP/fundamental-tools/tree/main/docker). SAP NWRFC SDK libraries are not included.
+
 ### Linux
 
 - Build toolchain is based on Centos 7 with devtools-8, following the [standard NodeJS build toolchain](https://github.com/nodejs/node/blob/master/BUILDING.md#official-binary-platforms-and-toolchains)
-
-- Docker container: [SAP/fundamental-tools/docker](https://github.com/SAP/fundamental-tools/tree/master/docker)
 
 ### Windows
 
