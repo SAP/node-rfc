@@ -51,7 +51,7 @@ describe("Concurrency: Await", () => {
                 );
                 expect(res).toBeDefined();
                 await c.close();
-                if (++callbackCount === setup.CONNECTIONS) done();
+                if (++callbackCount === setup.CONNECTIONS);
             } catch (ex) {
                 console.error(ex);
             }
