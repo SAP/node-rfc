@@ -11,6 +11,8 @@
 
 ## SAP NWRFC SDK Installation
 
+First check if your host system platform is supported and install prerequisites, if needed: [SAP/node-rfc#requirements](https://github.com/SAP/node-rfc#requirements)
+
 Information on where to download the SAP NWRFC SDK you may find at: https://support.sap.com/en/product/connectors/nwrfcsdk.html
 
 The NodeJS RFC connector relies on SAP NWRFC SDK and must be able to find the library
