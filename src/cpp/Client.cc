@@ -820,9 +820,9 @@ namespace node_rfc
                 }
                 else
                 {
-                    char err[255];
+                    char err[ERRMSG_LENGTH];
                     std::string optionName = key.Utf8Value();
-                    snprintf(err, 254, "Unknown option: %s", &optionName[0]);
+                    snprintf(err, ERRMSG_LENGTH - 1, "Unknown option: %s", &optionName[0]);
                     Napi::TypeError::New(node_rfc::__env, err).ThrowAsJavaScriptException();
                 }
             }
