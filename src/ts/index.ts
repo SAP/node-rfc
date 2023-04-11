@@ -9,6 +9,9 @@ import { EventEmitter } from "events";
 import { Worker } from "worker_threads";
 import { Client } from "./wrapper/sapnwrfc-client";
 
+import fs from "fs";
+import path from "path";
+
 export * from "./wrapper/noderfc-bindings";
 export * from "./wrapper/sapnwrfc-client";
 export * from "./wrapper/sapnwrfc-pool";
@@ -22,9 +25,8 @@ import { noderfc_binding } from "./wrapper/noderfc-bindings";
 //
 
 export function setIniFileDirectory(iniFileDirectory: string) {
-    const path = require("path");
     const fullPath = path.join(iniFileDirectory, "sapnwrfc.ini");
-    if (!require("fs").existsSync(fullPath)) {
+    if (!fs.existsSync(fullPath)) {
         throw new Error(`sapnwrfc.ini not found in: ${iniFileDirectory}`);
     }
     noderfc_binding.setIniFileDirectory(iniFileDirectory);
@@ -38,7 +40,7 @@ export function reloadIniFile() {
 }
 
 export function loadCryptoLibrary(libAbsolutePath: string) {
-    if (!require("fs").existsSync(libAbsolutePath)) {
+    if (!fs.existsSync(libAbsolutePath)) {
         throw new Error(`Crypto library not found: ${libAbsolutePath}`);
     }
     noderfc_binding.loadCryptoLibrary(libAbsolutePath);
@@ -49,7 +51,7 @@ export const sapnwrfcEvents = new EventEmitter();
 function terminate(workerData) {
     return new Promise((resolve, reject) => {
         const terminator = new Worker(
-            require("path").join(__dirname, "./wrapper/cancel.js"),
+            path.join(__dirname, "./wrapper/cancel.js"),
             { workerData }
         );
         terminator.on("message", resolve);

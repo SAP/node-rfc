@@ -36,7 +36,8 @@ export interface RfcPoolConfiguration {
     poolOptions?: RfcPoolOptions;
 }
 export interface RfcPoolBinding {
-    new (poolConfiguration: RfcPoolConfiguration): RfcPoolBinding;
+    /* eslint-disable @typescript-eslint/no-misused-new */
+    new(poolConfiguration: RfcPoolConfiguration): RfcPoolBinding;
     (poolConfiguration: RfcPoolConfiguration): RfcPoolBinding;
     acquire(
         clients_requested: number,
@@ -112,13 +113,13 @@ export class Pool {
             return new Promise(
                 (
                     resolve: (arg0: Client | Client[]) => void,
-                    reject: (arg0: any) => void
+                    reject: (arg0: unknown) => void
                 ) => {
                     try {
                         this.__pool.acquire(
                             clients_requested,
                             (
-                                err: any,
+                                err: unknown,
                                 clientBindings:
                                     | RfcClientBinding
                                     | Array<RfcClientBinding>
@@ -128,13 +129,13 @@ export class Pool {
                                 }
 
                                 if (Array.isArray(clientBindings)) {
-                                    let clients: Array<Client> = [];
+                                    const clients: Array<Client> = [];
                                     clientBindings.forEach((cb) => {
                                         clients.push(new Client(cb));
                                     });
                                     resolve(clients);
                                 } else {
-                                    let c = new Client(clientBindings);
+                                    const c = new Client(clientBindings);
                                     resolve(c);
                                 }
                             }
@@ -150,7 +151,7 @@ export class Pool {
             this.__pool.acquire(
                 clients_requested,
                 (
-                    err: any,
+                    err: unknown,
                     clientBindings: RfcClientBinding | Array<RfcClientBinding>
                 ) => {
                     if (err !== undefined) {
@@ -158,13 +159,13 @@ export class Pool {
                     }
 
                     if (Array.isArray(clientBindings)) {
-                        let clients: Array<Client> = [];
+                        const clients: Array<Client> = [];
                         clientBindings.forEach((cb) => {
                             clients.push(new Client(cb));
                         });
                         (callback as Function)(err, clients);
                     } else {
-                        let c = new Client(clientBindings);
+                        const c = new Client(clientBindings);
                         (callback as Function)(err, c);
                     }
                 }
@@ -177,14 +178,14 @@ export class Pool {
     release(
         tsClient: Client | Array<Client>,
         callback?: Function
-    ): void | Promise<any> {
+    ): void | Promise<unknown> {
         if (callback !== undefined && typeof callback !== "function") {
             throw new TypeError(
                 `Pool release() 2nd argument, if provided, must be a function, received: ${typeof callback}`
             );
         }
 
-        let client_bindings: Array<RfcClientBinding> = [];
+        const client_bindings: Array<RfcClientBinding> = [];
         if (Array.isArray(tsClient)) {
             tsClient.forEach((tsc) => {
                 client_bindings.push(tsc.binding);
@@ -200,7 +201,7 @@ export class Pool {
         if (callback === undefined) {
             return new Promise((resolve, reject) => {
                 try {
-                    this.__pool.release(client_bindings, (err: any) => {
+                    this.__pool.release(client_bindings, (err: unknown) => {
                         if (err === undefined) {
                             resolve();
                         } else {
@@ -220,7 +221,7 @@ export class Pool {
         }
     }
 
-    cancel(client: Client, callback?: Function): void | Promise<any> {
+    cancel(client: Client, callback?: Function): void | Promise<unknown> {
         if (callback !== undefined && typeof callback !== "function") {
             throw new TypeError(
                 `Pool cancel() 2nd argument, if provided, must be a function, received: ${typeof callback}`
@@ -281,7 +282,7 @@ export class Pool {
 
         if (callback === undefined) {
             return new Promise((resolve, reject) => {
-                this.__pool.ready(new_ready, (err: any) => {
+                this.__pool.ready(new_ready, (err: unknown) => {
                     if (err == undefined) {
                         resolve();
                     } else {

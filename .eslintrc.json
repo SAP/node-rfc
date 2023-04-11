@@ -1,0 +1,33 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2020
+  },
+  "env": {
+    "es6": true,
+    "browser": false,
+    "node": true
+  },
+  "rules": {
+    "@typescript-eslint/ban-types": [
+      "error",
+      {
+        "types": {
+          "Object": false,
+          "object": false,
+          "Function": false
+        },
+        "extendDefaults": true
+      }
+    ]
+  }
+}

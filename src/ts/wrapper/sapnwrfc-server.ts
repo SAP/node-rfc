@@ -15,7 +15,8 @@ import { RfcConnectionParameters, RfcClientOptions } from "./sapnwrfc-client";
 //
 
 export interface RfcServerBinding {
-    new (
+    /* eslint-disable @typescript-eslint/no-misused-new */
+    new(
         serverParams: RfcConnectionParameters,
         clientParams: RfcConnectionParameters,
         clientOptions?: RfcClientOptions
@@ -65,7 +66,7 @@ export class Server {
     start(callback?: Function): void | Promise<void> {
         if (callback === undefined) {
             return new Promise((resolve, reject) => {
-                this.__server.start((err: any) => {
+                this.__server.start((err: unknown) => {
                     if (err === undefined) {
                         resolve();
                     } else {
@@ -81,7 +82,7 @@ export class Server {
     stop(callback?: Function): void | Promise<void> {
         if (callback === undefined) {
             return new Promise((resolve, reject) => {
-                this.__server.stop((err: any) => {
+                this.__server.stop((err: unknown) => {
                     if (err === undefined) {
                         resolve();
                     } else {
@@ -104,7 +105,7 @@ export class Server {
                 this.__server.addFunction(
                     abapFunctionName,
                     jsFunction,
-                    (err: any) => {
+                    (err: unknown) => {
                         if (err === undefined) {
                             resolve();
                         } else {
@@ -124,7 +125,7 @@ export class Server {
     ): void | Promise<void> {
         if (callback === undefined) {
             return new Promise((resolve, reject) => {
-                this.__server.removeFunction(abapFunctionName, (err: any) => {
+                this.__server.removeFunction(abapFunctionName, (err: unknown) => {
                     if (err === undefined) {
                         resolve();
                     } else {
@@ -142,7 +143,7 @@ export class Server {
             return new Promise((resolve, reject) => {
                 this.__server.getFunctionDescription(
                     rfmName,
-                    (err: any, rfmFunctionDescription: object) => {
+                    (err: unknown, rfmFunctionDescription: object) => {
                         if (err === undefined) {
                             resolve(rfmFunctionDescription);
                         } else {

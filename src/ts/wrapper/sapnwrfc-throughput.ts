@@ -9,14 +9,15 @@ import {
 } from "./noderfc-bindings";
 import { Client } from "./sapnwrfc-client";
 export interface RfcThroughputBinding {
-    new (): RfcThroughputBinding;
+    /* eslint-disable @typescript-eslint/no-misused-new */
+    new(): RfcThroughputBinding;
     (): RfcThroughputBinding;
     clients: Set<Client>;
     status: RfcThroughputStatus;
     _handle: number;
-    setOnConnection(_connectionHandle: number): any;
-    removeFromConnection(_connectionHandle: number): any;
-    getFromConnection(_connectionHandle: number): any;
+    setOnConnection(_connectionHandle: number): unknown;
+    removeFromConnection(_connectionHandle: number): unknown;
+    getFromConnection(_connectionHandle: number): unknown;
     reset(): void;
     destroy(): void;
 }
@@ -44,7 +45,7 @@ export class Throughput {
     }
 
     setOnConnection(client: Client | Array<Client>) {
-        let connections: Array<Client> = new Array();
+        let connections: Array<Client> = [];
         if (client instanceof Client) {
             connections.push(client);
         } else if (client instanceof Array) {
@@ -66,7 +67,7 @@ export class Throughput {
     }
 
     removeFromConnection(client: Client | Array<Client>) {
-        let connections: Array<Client> = new Array();
+        let connections: Array<Client> = [];
         if (client instanceof Client) {
             connections.push(client);
         } else if (client instanceof Array) {

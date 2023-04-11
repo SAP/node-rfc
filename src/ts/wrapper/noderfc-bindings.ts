@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import os from "os";
-const Promise = require("bluebird");
+import { Promise } from "bluebird";
 import { RfcClientBinding } from "./sapnwrfc-client";
 import { RfcPoolBinding } from "./sapnwrfc-pool";
 import { RfcThroughputBinding } from "./sapnwrfc-throughput";
@@ -17,10 +17,10 @@ export interface NodeRfcBindingVersions {
     nwrfcsdk: { major: number; minor: number; patchLevel: number };
 }
 export interface NodeRfcEnvironment {
-    platform: Object;
-    env: Object;
+    platform: object;
+    env: object;
     noderfc: NodeRfcBindingVersions;
-    versions: Object;
+    versions: object;
 }
 export interface NWRfcSdkError {
     name: string;
@@ -38,8 +38,8 @@ export interface NWRfcBinding {
     Server: RfcServerBinding;
     bindingVersions: NodeRfcBindingVersions;
     environment: NodeRfcEnvironment;
-    setIniFileDirectory(iniFileDirectory: string): any | undefined;
-    loadCryptoLibrary(libAbsolutePath: string): any | undefined;
+    setIniFileDirectory(iniFileDirectory: string): unknown | undefined;
+    loadCryptoLibrary(libAbsolutePath: string): unknown | undefined;
     languageIsoToSap(langIso: string): string | NWRfcSdkError;
     languageSapToIso(langSap: string): string | NWRfcSdkError;
     reloadIniFile(): undefined | NWRfcSdkError;

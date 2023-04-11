@@ -13,7 +13,7 @@ import {
 // RfcClient
 //
 
-enum EnumSncQop {
+export enum EnumSncQop {
     DigSig = "1",
     DigSigEnc = "2",
     DigSigEncUserAuth = "3",
@@ -21,7 +21,7 @@ enum EnumSncQop {
     Maximum = "9",
 }
 
-enum EnumTrace {
+export enum EnumTrace {
     Off = "0",
     Brief = "1",
     Verbose = "2",
@@ -228,8 +228,10 @@ export type RfcClientConfig = {
     connectionParameters: RfcConnectionParameters;
     clientOptions?: RfcClientOptions;
 };
+
+/* eslint-disable @typescript-eslint/no-misused-new */
 export interface RfcClientBinding {
-    new (
+    new(
         connectionParameters: RfcConnectionParameters,
         clientOptions?: RfcClientOptions
     ): RfcClientBinding;
@@ -272,9 +274,9 @@ export class Client {
         } else {
             this.__client = clientOptions
                 ? new noderfc_binding.Client(
-                      arg1 as RfcConnectionParameters,
-                      clientOptions
-                  )
+                    arg1 as RfcConnectionParameters,
+                    clientOptions
+                )
                 : new noderfc_binding.Client(arg1 as RfcConnectionParameters);
         }
     }
@@ -312,13 +314,11 @@ export class Client {
     }
 
     get _id(): string {
-        return `${this.__client._id} handle: ${
-            this.__client._connectionHandle
-        } ${
-            this.__client._pool_id
+        return `${this.__client._id} handle: ${this.__client._connectionHandle
+            } ${this.__client._pool_id
                 ? "[m] pool: " + this.__client._pool_id
                 : "[d]"
-        }`;
+            }`;
     }
 
     get connectionInfo(): RfcConnectionInfo {
@@ -376,7 +376,7 @@ export class Client {
         } else {
             return new Promise((resolve, reject) => {
                 try {
-                    this.__client.ping((err: any, res: boolean) => {
+                    this.__client.ping((err: unknown, res: boolean) => {
                         if (err === undefined) {
                             resolve(res);
                         } else {
@@ -539,7 +539,7 @@ export class Client {
                     this.invoke(
                         rfmName,
                         rfmParams,
-                        (err: any, res: RfcObject) => {
+                        (err: unknown, res: RfcObject) => {
                             if (err !== undefined) {
                                 reject(err);
                             } else {
@@ -599,7 +599,8 @@ export class Client {
             }
             if (timeout > 0) {
                 const cancelTimeout = setTimeout(() => {
-                    this.cancel((_err: any, _res: any) => {
+                    /* eslint-disable @typescript-eslint/no-unused-vars */
+                    this.cancel((_err: unknown, _res: unknown) => {
                         // _res like
                         // { connectionHandle: 140414048978432, result: 'cancelled' }
                     });
@@ -611,7 +612,7 @@ export class Client {
             }
 
             // check rfm parmeters' names
-            for (let rfmParamName of Object.keys(rfmParams)) {
+            for (const rfmParamName of Object.keys(rfmParams)) {
                 if (rfmParamName.length === 0)
                     throw new TypeError(
                         `Empty RFM parameter name when calling "${rfmName}"`
