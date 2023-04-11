@@ -47,12 +47,12 @@ namespace node_rfc
 
     Napi::Value Server::IdGetter(const Napi::CallbackInfo &info)
     {
-        return Napi::Number::New(Env(), id);
+        return Napi::Number::New(info.Env(), id);
     }
 
     Napi::Value Server::AliveGetter(const Napi::CallbackInfo &info)
     {
-        return Napi::Boolean::New(Env(), server_conn_handle != NULL);
+        return Napi::Boolean::New(info.Env(), server_conn_handle != NULL);
     }
 
     Napi::Value Server::ServerConnectionHandleGetter(const Napi::CallbackInfo &info)
@@ -68,7 +68,7 @@ namespace node_rfc
     {
         node_rfc::__server = this;
 
-        init(info.Env());
+        init();
 
         DEBUG("Server::Server ", id);
 
@@ -104,6 +104,8 @@ namespace node_rfc
 
     RFC_RC SAP_API metadataLookup(SAP_UC const *func_name, RFC_ATTRIBUTES rfc_attributes, RFC_FUNCTION_DESC_HANDLE *func_desc_handle)
     {
+        UNUSED(rfc_attributes);
+
         printf("Metadata lookup for: ");
         printfU(func_name);
         printf("\n");
@@ -130,6 +132,8 @@ namespace node_rfc
 
     RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle, RFC_FUNCTION_HANDLE func_handle, RFC_ERROR_INFO *errorInfo)
     {
+        UNUSED(conn_handle);
+
         Server *server = node_rfc::__server;
 
         RFC_RC rc = RFC_NOT_FOUND;

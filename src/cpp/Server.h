@@ -88,7 +88,7 @@ namespace node_rfc
         Napi::ObjectReference clientParamsRef;
         Napi::ObjectReference clientOptionsRef;
 
-        void init(Napi::Env env)
+        void init()
         {
             id = Server::_id++;
 

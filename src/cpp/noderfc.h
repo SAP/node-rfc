@@ -47,6 +47,9 @@ void log(Args &&...args)
 #define EDEBUG(...) \
     log(__VA_ARGS__);
 
+// surpress unused parameter warnings
+#define UNUSED(x) (void)(x)
+
 //
 // Client constants
 //

@@ -540,8 +540,8 @@ export class Client {
                         rfmName,
                         rfmParams,
                         (err: unknown, res: RfcObject) => {
-                            if (err !== undefined) {
-                                reject(err);
+                            if (err !== undefined && err !== null) {
+                                reject(err as TypeError);
                             } else {
                                 resolve(res);
                             }

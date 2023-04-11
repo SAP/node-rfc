@@ -75,12 +75,12 @@ namespace node_rfc
 
     Napi::Value Client::IdGetter(const Napi::CallbackInfo &info)
     {
-        return Napi::Number::New(Env(), id);
+        return Napi::Number::New(info.Env(), id);
     }
 
     Napi::Value Client::AliveGetter(const Napi::CallbackInfo &info)
     {
-        return Napi::Boolean::New(Env(), connectionHandle != NULL);
+        return Napi::Boolean::New(info.Env(), connectionHandle != NULL);
     }
 
     Napi::Value Client::ConnectionHandleGetter(const Napi::CallbackInfo &info)

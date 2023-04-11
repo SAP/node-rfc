@@ -50,7 +50,7 @@ namespace node_rfc
         static uint_t _id;
         uint_t id;
 
-        void init(Napi::Env env)
+        void init()
         {
             id = Pool::_id++;
 

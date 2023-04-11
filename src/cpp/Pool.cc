@@ -544,7 +544,7 @@ namespace node_rfc
 
     Napi::Value Pool::IdGetter(const Napi::CallbackInfo &info)
     {
-        return Napi::Number::New(Env(), id);
+        return Napi::Number::New(info.Env(), id);
     }
 
     Pool::Pool(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Pool>(info)
@@ -552,7 +552,7 @@ namespace node_rfc
         Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
 
-        init(env);
+        init();
 
         std::ostringstream errmsg;
 
@@ -781,6 +781,8 @@ namespace node_rfc
 
     Napi::Value Pool::ConfigGetter(const Napi::CallbackInfo &info)
     {
+        UNUSED(info);
+
         return poolConfiguration.Value();
     }
 
