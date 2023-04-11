@@ -46,7 +46,7 @@ namespace node_rfc
         RFC_ERROR_INFO errorInfo;
         SAP_UC *libPath = setString(cryptoLibAbsolutePath);
         RFC_RC rc = RfcLoadCryptoLibrary(libPath, &errorInfo);
-        free(libPath);
+        delete[] libPath;
 
         if (rc != RFC_OK || errorInfo.code != RFC_OK)
         {
@@ -72,7 +72,7 @@ namespace node_rfc
         RFC_ERROR_INFO errorInfo;
         SAP_UC *pathName = setString(iniFileDir);
         RFC_RC rc = RfcSetIniPath(pathName, &errorInfo);
-        free(pathName);
+        delete[] pathName;
 
         if (rc != RFC_OK || errorInfo.code != RFC_OK)
         {
@@ -113,7 +113,7 @@ namespace node_rfc
         SAP_UC *ucLangISO = setString(langISO);
         SAP_UC ucLangSAP[8];
         RFC_RC rc = RfcLanguageIsoToSap(ucLangISO, ucLangSAP, &errorInfo);
-        free(ucLangISO);
+        delete[] ucLangISO;
 
         if (rc != RFC_OK || errorInfo.code != RFC_OK)
         {
@@ -140,7 +140,7 @@ namespace node_rfc
         SAP_UC *ucLangSAP = setString(info[0].As<Napi::String>());
         SAP_UC ucLangISO[8];
         RFC_RC rc = RfcLanguageSapToIso(ucLangSAP, ucLangISO, &errorInfo);
-        free(ucLangSAP);
+        delete[] ucLangSAP;
 
         if (rc != RFC_OK || errorInfo.code != RFC_OK)
         {

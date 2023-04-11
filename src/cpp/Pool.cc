@@ -226,7 +226,7 @@ namespace node_rfc
     class ReleaseAsync : public Napi::AsyncWorker
     {
     public:
-        ReleaseAsync(Napi::Function &callback, Pool *pool, std::set<Client *> clients)
+        ReleaseAsync(Napi::Function &callback, Pool *pool, const std::set<Client *> &clients)
             : Napi::AsyncWorker(callback), pool(pool), clients(clients) {}
         ~ReleaseAsync()
         {
@@ -245,7 +245,7 @@ namespace node_rfc
                     closed_client_id = (*client)->id;
                     break;
                 }
-                client++;
+                ++client;
             }
 
             if (closed_client_id == 0)
@@ -283,7 +283,7 @@ namespace node_rfc
                             break;
                         }
                     }
-                    client++;
+                    ++client;
                 }
             }
             pool->unlockMutex();
@@ -641,36 +641,30 @@ namespace node_rfc
                 Napi::Array props = poolOptions.Value().GetPropertyNames();
                 for (uint_t n = 0; n < props.Length(); n++)
                 {
-                    std::string key = props.Get(n).ToString().Utf8Value();
-                    if (!poolOptions.Get(key).IsNumber())
+                    std::string name = props.Get(n).ToString().Utf8Value();
+                    if (!poolOptions.Get(name).IsNumber())
                     {
-                        errmsg << "Pool() option \"" << key << "\" must be a number; see" << USAGE_URL;
+                        errmsg << "Pool() option \"" << name << "\" must be a number; see" << USAGE_URL;
                         Napi::TypeError::New(env, errmsg.str()).ThrowAsJavaScriptException();
                         return;
                     }
-                    if (key.compare(POOL_KEY_OPTION_LOW) == 0)
+                    if (name.compare(POOL_KEY_OPTION_LOW) == 0)
                     {
-                        ready_low = poolOptions.Get(key).As<Napi::Number>();
-                        if (ready_low < 0)
-                        {
-                            errmsg << "Pool option \"" << key << "\" must not be negative; see" << USAGE_URL;
-                            Napi::TypeError::New(env, errmsg.str()).ThrowAsJavaScriptException();
-                            return;
-                        }
+                        continue;
                     }
-                    else if (key.compare(POOL_KEY_OPTION_HIGH) == 0)
+                    else if (name.compare(POOL_KEY_OPTION_HIGH) == 0)
                     {
-                        ready_high = poolOptions.Get(key).As<Napi::Number>();
+                        ready_high = poolOptions.Get(name).As<Napi::Number>();
                         if (ready_high < 1)
                         {
-                            errmsg << "Pool option \"" << key << "\" must be greater than zero; see" << USAGE_URL;
+                            errmsg << "Pool option \"" << name << "\" must be greater than zero; see" << USAGE_URL;
                             Napi::TypeError::New(env, errmsg.str()).ThrowAsJavaScriptException();
                             return;
                         }
                     }
                     else
                     {
-                        errmsg << "Pool option not allowed: \"" << key << "\"; see" << USAGE_URL;
+                        errmsg << "Pool option not allowed: \"" << name << "\"; see" << USAGE_URL;
                         Napi::TypeError::New(env, errmsg.str()).ThrowAsJavaScriptException();
                         return;
                     }

@@ -25,6 +25,7 @@ namespace node_rfc
         friend class CheckPoolAsync;
         friend class SetPoolAsync;
         static Napi::Object Init(Napi::Env env, Napi::Object exports);
+        // cppcheck-suppress noExplicitConstructor
         Pool(const Napi::CallbackInfo &info);
         ~Pool(void);
 

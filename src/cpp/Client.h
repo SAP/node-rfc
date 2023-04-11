@@ -28,6 +28,7 @@ namespace node_rfc
         friend class PrepareAsync;
         friend class InvokeAsync;
         static Napi::Object Init(Napi::Env env, Napi::Object exports);
+        // cppcheck-suppress noExplicitConstructor
         Client(const Napi::CallbackInfo &info);
         ~Client(void);
 
@@ -41,9 +42,9 @@ namespace node_rfc
         Napi::ObjectReference clientParamsRef;
         Napi::ObjectReference clientOptionsRef;
 
-        Napi::Value connectionClosedError(std::string suffix);
+        Napi::Value connectionClosedError(const char *suffix);
         ErrorPair connectionCheck(RFC_ERROR_INFO *errorInfo);
-        Napi::Value getOperationError(bool conn_closed, std::string operation, ErrorPair connectionCheckError, RFC_ERROR_INFO *errorInfo, Napi::Env env);
+        Napi::Value getOperationError(bool conn_closed, const char *operation, ErrorPair connectionCheckError, RFC_ERROR_INFO *errorInfo, Napi::Env env);
 
         Napi::Value ConnectionInfo(const Napi::CallbackInfo &info);
         Napi::Value Release(const Napi::CallbackInfo &info);
@@ -56,7 +57,7 @@ namespace node_rfc
 
         RfmErrorPath errorPath;
 
-        void init(Napi::Env env)
+        void init()
         {
             id = Client::_id++;
 

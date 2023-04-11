@@ -16,7 +16,7 @@ namespace node_rfc
 {
     extern Napi::Env __env;
 
-    Napi::Value wrapString(SAP_UC *uc, int length = -1);
+    Napi::Value wrapString(const SAP_UC *uc, int length = -1);
 
     //
     // Client connection parameters internal representation
@@ -38,10 +38,10 @@ namespace node_rfc
             {
                 for (uint_t i = 0; i < this->paramSize; i++)
                 {
-                    free((void *)connectionParams[i].name);
-                    free((void *)connectionParams[i].value);
+                    delete[] connectionParams[i].name;
+                    delete[] connectionParams[i].value;
                 }
-                free(connectionParams);
+                delete[] connectionParams;
                 connectionParams = NULL;
             }
         }

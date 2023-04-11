@@ -17,7 +17,7 @@ namespace node_rfc
     public:
         static Napi::FunctionReference constructor;
         static Napi::Object Init(Napi::Env env, Napi::Object exports);
-
+        // cppcheck-suppress noExplicitConstructor
         Throughput(const Napi::CallbackInfo &info);
         ~Throughput(void);
 

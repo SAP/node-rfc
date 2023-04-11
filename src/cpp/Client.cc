@@ -19,7 +19,7 @@ namespace node_rfc
         return ErrorPair(errorInfo, "");
     }
 
-    Napi::Value Client::getOperationError(bool conn_closed, std::string operation, ErrorPair connectionCheckError, RFC_ERROR_INFO *errorInfo, Napi::Env env)
+    Napi::Value Client::getOperationError(bool conn_closed, const char *operation, ErrorPair connectionCheckError, RFC_ERROR_INFO *errorInfo, Napi::Env env)
     {
         Napi::EscapableHandleScope scope(env);
         Napi::Value error = Env().Undefined();
@@ -169,7 +169,7 @@ namespace node_rfc
 
     Client::Client(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Client>(info)
     {
-        init(info.Env());
+        init();
 
         DEBUG("Client::Client ", id);
 
@@ -242,10 +242,10 @@ namespace node_rfc
         uv_sem_destroy(&invocationMutex);
     }
 
-    Napi::Value Client::connectionClosedError(std::string suffix)
+    Napi::Value Client::connectionClosedError(const char *suffix)
     {
         std::ostringstream err;
-        err << "RFM client request over closed connection: " << suffix;
+        err << "RFM client request over closed connection: " << std::string(suffix);
         return nodeRfcError(err.str());
     }
 
@@ -264,6 +264,7 @@ namespace node_rfc
             : Napi::AsyncWorker(callback), client(client) {}
         ~OpenAsync() {}
 
+        // cppcheck-suppress unusedFunction
         void Execute()
         {
             client->LockMutex();
@@ -275,6 +276,7 @@ namespace node_rfc
             client->UnlockMutex();
         }
 
+        // cppcheck-suppress unusedFunction
         void OnOK()
         {
             if (errorInfo.code != RFC_OK)
@@ -297,7 +299,9 @@ namespace node_rfc
     {
     public:
         CloseAsync(Napi::Function &callback, Client *client)
-            : Napi::AsyncWorker(callback), client(client) {}
+            : Napi::AsyncWorker(callback), client(client)
+        {
+        }
         ~CloseAsync() {}
 
         void Execute()
@@ -334,14 +338,16 @@ namespace node_rfc
     private:
         Client *client;
         RFC_ERROR_INFO errorInfo;
-        bool conn_closed;
+        bool conn_closed = false;
     };
 
     class ResetServerAsync : public Napi::AsyncWorker
     {
     public:
         ResetServerAsync(Napi::Function &callback, Client *client)
-            : Napi::AsyncWorker(callback), client(client) {}
+            : Napi::AsyncWorker(callback), client(client)
+        {
+        }
         ~ResetServerAsync() {}
 
         void Execute()
@@ -370,7 +376,7 @@ namespace node_rfc
     private:
         Client *client;
         RFC_ERROR_INFO errorInfo;
-        bool conn_closed;
+        bool conn_closed = false;
         ErrorPair connectionCheckError = connectionCheckErrorInit();
     };
 
@@ -378,7 +384,9 @@ namespace node_rfc
     {
     public:
         PingAsync(Napi::Function &callback, Client *client)
-            : Napi::AsyncWorker(callback), client(client) {}
+            : Napi::AsyncWorker(callback), client(client)
+        {
+        }
         ~PingAsync() {}
 
         void Execute()
@@ -406,7 +414,7 @@ namespace node_rfc
 
     private:
         Client *client;
-        bool conn_closed;
+        bool conn_closed = false;
         RFC_ERROR_INFO errorInfo;
         ErrorPair connectionCheckError = connectionCheckErrorInit();
     };
@@ -439,7 +447,7 @@ namespace node_rfc
             Napi::HandleScope scope(Env());
 
             std::string closed_errmsg = "invoke() " + wrapString(client->errorPath.functionName).As<Napi::String>().Utf8Value();
-            ValuePair result = ValuePair(client->getOperationError(conn_closed, closed_errmsg, connectionCheckError, &errorInfo, Env()), Env().Undefined());
+            ValuePair result = ValuePair(client->getOperationError(conn_closed, closed_errmsg.c_str(), connectionCheckError, &errorInfo, Env()), Env().Undefined());
 
             if (result.first.IsUndefined())
             {
@@ -458,7 +466,7 @@ namespace node_rfc
         RFC_FUNCTION_HANDLE functionHandle;
         RFC_FUNCTION_DESC_HANDLE functionDescHandle;
         RFC_ERROR_INFO errorInfo;
-        bool conn_closed;
+        bool conn_closed = false;
         ErrorPair connectionCheckError = connectionCheckErrorInit();
     };
     class PrepareAsync : public Napi::AsyncWorker
@@ -474,7 +482,7 @@ namespace node_rfc
         }
         ~PrepareAsync()
         {
-            free(funcName);
+            delete[] funcName;
         }
 
         void Execute()
@@ -496,7 +504,7 @@ namespace node_rfc
             if (conn_closed)
             {
                 std::string errmsg = "invoke() " + wrapString(client->errorPath.functionName).As<Napi::String>().Utf8Value();
-                argv[0] = client->connectionClosedError(errmsg);
+                argv[0] = client->connectionClosedError(errmsg.c_str());
             }
             else if (functionDescHandle == NULL || errorInfo.code != RFC_OK)
             {
@@ -518,7 +526,7 @@ namespace node_rfc
                         Napi::String name = notRequested.Value().Get(i).ToString();
                         SAP_UC *paramName = setString(name);
                         RFC_RC rc = RfcSetParameterActive(functionHandle, paramName, 0, &errorInfo);
-                        free(const_cast<SAP_UC *>(paramName));
+                        delete[] paramName;
                         if (rc != RFC_OK)
                         {
                             argv[0] = rfcSdkError(&errorInfo);
@@ -572,7 +580,7 @@ namespace node_rfc
 
         RFC_FUNCTION_DESC_HANDLE functionDescHandle;
         RFC_ERROR_INFO errorInfo;
-        bool conn_closed;
+        bool conn_closed = false;
     };
 
     ErrorPair Client::connectionCheck(RFC_ERROR_INFO *errorInfo)

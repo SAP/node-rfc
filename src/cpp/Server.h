@@ -47,6 +47,7 @@ typedef struct
     napi_async_work work;
     napi_threadsafe_function tsfn;
 } AddonData;
+
 namespace node_rfc
 {
     extern Napi::Env __env;
@@ -57,6 +58,7 @@ namespace node_rfc
         friend class StartAsync;
         friend class GetFunctionDescAsync;
         static Napi::Object Init(Napi::Env env, Napi::Object exports);
+        // cppcheck-suppress noExplicitConstructor
         Server(const Napi::CallbackInfo &info);
         ~Server(void);
         ServerFunctionsMap serverFunctions;
@@ -96,7 +98,7 @@ namespace node_rfc
 
             uv_sem_init(&invocationMutex, 1);
 
-            addon_data = (AddonData *)malloc(sizeof(*addon_data));
+            addon_data = new AddonData;
             addon_data->work = NULL;
         };
 

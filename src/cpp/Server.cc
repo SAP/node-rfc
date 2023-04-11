@@ -122,7 +122,7 @@ namespace node_rfc
                 DEBUG("\nmetadataLookup found: ", (pointer_t)*func_desc_handle);
                 break;
             }
-            it++;
+            ++it;
         }
 
         return rc;
@@ -158,7 +158,7 @@ namespace node_rfc
                 printf("found func_desc %lu\n", (pointer_t)it->second.func_desc_handle);
                 break;
             }
-            it++;
+            ++it;
         }
 
         if (it == server->serverFunctions.end())
@@ -173,14 +173,14 @@ namespace node_rfc
         //
         // ABAP -> JS parameters
         //
-        //RfmErrorPath errorPath;
-        //ClientOptionsStruct client_options;
-        //ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &errorPath, &client_options);
+        // RfmErrorPath errorPath;
+        // ClientOptionsStruct client_options;
+        // ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle, &errorPath, &client_options);
 
         //
         // JS Call
         //
-        //it->second.callback.Call({jsContainer});
+        // it->second.callback.Call({jsContainer});
 
         //
         // JS -> ABAP parameters
@@ -192,18 +192,18 @@ namespace node_rfc
             return errorInfo->code;
         }
 
-        //Napi::Value err = Undefined();
-        //for (uint_t i = 0; i < paramCount; i++)
+        // Napi::Value err = Undefined();
+        // for (uint_t i = 0; i < paramCount; i++)
         //{
-        //    Napi::String name = paramNames.Get(i).ToString();
-        //    Napi::Value value = params.Get(name);
-        //    err = client->setRfmParameter(functionDescHandle, functionHandle, name, value);
+        //     Napi::String name = paramNames.Get(i).ToString();
+        //     Napi::Value value = params.Get(name);
+        //     err = client->setRfmParameter(functionDescHandle, functionHandle, name, value);
         //
-        //    if (!err.IsUndefined())
-        //    {
-        //        break;
-        //    }
-        //}
+        //     if (!err.IsUndefined())
+        //     {
+        //         break;
+        //     }
+        // }
 
         return RFC_OK;
     }
@@ -265,7 +265,7 @@ namespace node_rfc
             Napi::EscapableHandleScope scope(Env());
             if (errorInfo.code != RFC_OK)
             {
-                //Callback().Call({Env().Undefined()});
+                // Callback().Call({Env().Undefined()});
                 Callback().Call({rfcSdkError(&errorInfo)});
             }
             else
@@ -345,7 +345,7 @@ namespace node_rfc
             return info.Env().Undefined();
         }
 
-        //Napi::Function callback = info[0].As<Napi::Function>();
+        // Napi::Function callback = info[0].As<Napi::Function>();
 
         //(new StopAsync(callback, this))->Queue();
 
@@ -403,13 +403,13 @@ namespace node_rfc
 
         if (errorInfo.code != RFC_OK)
         {
-            free(func_name);
+            delete[] func_name;
             callback.Call({rfcSdkError(&errorInfo)});
             return scope.Escape(info.Env().Undefined());
         }
 
         ServerFunctionStruct sfs = ServerFunctionStruct(func_name, func_desc_handle, jsFunction);
-        free(func_name);
+        delete[] func_name;
 
         serverFunctions[functionName.Utf8Value()] = sfs;
         DEBUG("Server::AddFunction added ", functionName.Utf8Value(), ": ", (pointer_t)func_desc_handle);
@@ -462,9 +462,9 @@ namespace node_rfc
             {
                 break;
             }
-            it++;
+            ++it;
         }
-        free(func_name);
+        delete[] func_name;
 
         if (it == serverFunctions.end())
         {
