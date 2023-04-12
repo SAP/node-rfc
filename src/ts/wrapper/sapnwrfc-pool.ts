@@ -36,7 +36,7 @@ export interface RfcPoolConfiguration {
     poolOptions?: RfcPoolOptions;
 }
 export interface RfcPoolBinding {
-    /* eslint-disable @typescript-eslint/no-misused-new */
+    /* _eslint-disable @typescript-eslint/no-misused-new */
     new(poolConfiguration: RfcPoolConfiguration): RfcPoolBinding;
     (poolConfiguration: RfcPoolConfiguration): RfcPoolBinding;
     acquire(

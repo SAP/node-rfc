@@ -592,7 +592,7 @@ namespace node_rfc
                 delete[] byteValue;
                 break;
             }
-            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, reinterpret_cast<SAP_RAW *>(byteValue), cLen, [](Env env, SAP_RAW *byteValue)
+            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, byteValue, cLen, [](void *, SAP_RAW *byteValue)
                                                      { delete[] byteValue; });
             break;
         }
@@ -612,7 +612,7 @@ namespace node_rfc
                 delete[] byteValue;
                 break;
             }
-            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, reinterpret_cast<SAP_RAW *>(byteValue), resultLen, [](Env env, SAP_RAW *byteValue)
+            resultValue = Napi::Buffer<SAP_RAW>::New(node_rfc::__env, byteValue, resultLen, [](void *, SAP_RAW *byteValue)
                                                      { delete[] byteValue; });
             break;
         }
@@ -741,7 +741,7 @@ namespace node_rfc
             {
                 break;
             }
-            resultValue = Napi::Number::New(node_rfc::__env, (double)intValue);
+            resultValue = Napi::Number::New(node_rfc::__env, intValue);
             break;
         }
         case RFCTYPE_UTCLONG:

@@ -85,7 +85,7 @@ namespace node_rfc
 
     Napi::Value Client::ConnectionHandleGetter(const Napi::CallbackInfo &info)
     {
-        return Napi::Number::New(info.Env(), (double)(unsigned long long)this->connectionHandle);
+        return Napi::Number::New(info.Env(), (uintptr_t)this->connectionHandle);
     }
 
     Napi::Value Client::ConfigGetter(const Napi::CallbackInfo &info)

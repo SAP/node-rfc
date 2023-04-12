@@ -3,9 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Server.h"
-
 #include <node_api.h>
-#include <assert.h>
+
 namespace node_rfc
 {
     extern Napi::Env __env;

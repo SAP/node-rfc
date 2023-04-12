@@ -38,7 +38,6 @@ namespace node_rfc
         void closeConnections();
         void releaseClient(RFC_CONNECTION_HANDLE connectionHandle);
         std::string updateLeasedHandle(RFC_CONNECTION_HANDLE old_handle, RFC_CONNECTION_HANDLE new_handle);
-        Napi::Value Refill(const Napi::CallbackInfo &info);
         Napi::ObjectReference poolConfiguration;
         Napi::ObjectReference connectionParameters;
         Napi::ObjectReference clientOptions;

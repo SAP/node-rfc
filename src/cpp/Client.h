@@ -8,6 +8,7 @@
 #include <tuple>
 #include <uv.h>
 #include "nwrfcsdk.h"
+
 namespace node_rfc
 {
     extern Napi::Env __env;

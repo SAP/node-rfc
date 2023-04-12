@@ -8,6 +8,7 @@
 #include <uv.h>
 #include <map>
 #include "Client.h"
+
 typedef struct _ServerFunctionStruct
 {
     RFC_ABAP_NAME func_name;
