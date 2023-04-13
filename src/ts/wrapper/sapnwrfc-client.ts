@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import Decimal from "decimal.js";
+
 import {
     //Promise,
     noderfc_binding,
@@ -211,12 +213,20 @@ interface RfcConnectionInfo {
     //reserved: string;
 }
 
-export type RfcVariable = string | number | Buffer;
+export type RfcVariable =
+    | string
+    | number
+    | Buffer
+    | Date
+    | Decimal
+    | Uint8Array
+    | Uint16Array
+    | Uint32Array;
 export type RfcArray = Array<RfcVariable>;
 export type RfcStructure = {
     [key: string]: RfcVariable | RfcStructure | RfcTable;
 };
-export type RfcTable = Array<RfcStructure>;
+export type RfcTable = Array<RfcStructure | RfcVariable>;
 export type RfcParameterValue =
     | RfcVariable
     | RfcArray
@@ -231,7 +241,7 @@ export type RfcClientConfig = {
 
 /* eslint-disable @typescript-eslint/no-misused-new */
 export interface RfcClientBinding {
-    new(
+    new (
         connectionParameters: RfcConnectionParameters,
         clientOptions?: RfcClientOptions
     ): RfcClientBinding;
@@ -274,9 +284,9 @@ export class Client {
         } else {
             this.__client = clientOptions
                 ? new noderfc_binding.Client(
-                    arg1 as RfcConnectionParameters,
-                    clientOptions
-                )
+                      arg1 as RfcConnectionParameters,
+                      clientOptions
+                  )
                 : new noderfc_binding.Client(arg1 as RfcConnectionParameters);
         }
     }
@@ -314,11 +324,13 @@ export class Client {
     }
 
     get _id(): string {
-        return `${this.__client._id} handle: ${this.__client._connectionHandle
-            } ${this.__client._pool_id
+        return `${this.__client._id} handle: ${
+            this.__client._connectionHandle
+        } ${
+            this.__client._pool_id
                 ? "[m] pool: " + this.__client._pool_id
                 : "[d]"
-            }`;
+        }`;
     }
 
     get connectionInfo(): RfcConnectionInfo {

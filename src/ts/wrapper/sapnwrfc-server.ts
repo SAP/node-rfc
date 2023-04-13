@@ -16,7 +16,7 @@ import { RfcConnectionParameters, RfcClientOptions } from "./sapnwrfc-client";
 
 export interface RfcServerBinding {
     /* eslint-disable @typescript-eslint/no-misused-new */
-    new(
+    new (
         serverParams: RfcConnectionParameters,
         clientParams: RfcConnectionParameters,
         clientOptions?: RfcClientOptions
@@ -125,13 +125,16 @@ export class Server {
     ): void | Promise<void> {
         if (callback === undefined) {
             return new Promise((resolve, reject) => {
-                this.__server.removeFunction(abapFunctionName, (err: unknown) => {
-                    if (err === undefined) {
-                        resolve();
-                    } else {
-                        reject(err);
+                this.__server.removeFunction(
+                    abapFunctionName,
+                    (err: unknown) => {
+                        if (err === undefined) {
+                            resolve();
+                        } else {
+                            reject(err);
+                        }
                     }
-                });
+                );
             });
         }
 

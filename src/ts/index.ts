@@ -35,7 +35,7 @@ export function setIniFileDirectory(iniFileDirectory: string) {
 export function reloadIniFile() {
     const err = noderfc_binding.reloadIniFile();
     if (err && err.message) {
-        throw new Error(err.message)
+        throw new Error(err.message);
     }
 }
 
@@ -94,15 +94,15 @@ export function cancelClient(
 export function languageIsoToSap(langIso: string): string {
     const langSap = noderfc_binding.languageIsoToSap(langIso);
     if (typeof langSap === "string") {
-        return langSap
+        return langSap;
     }
-    throw new Error(`Language ISO code not found: ${langIso}`)
+    throw new Error(`Language ISO code not found: ${langIso}`);
 }
 
 export function languageSapToIso(langSap: string): string {
     const langIso = noderfc_binding.languageSapToIso(langSap);
     if (typeof langIso === "string") {
-        return langIso
+        return langIso;
     }
-    throw new Error(`Language SAP code not found: ${langSap}`)
+    throw new Error(`Language SAP code not found: ${langSap}`);
 }

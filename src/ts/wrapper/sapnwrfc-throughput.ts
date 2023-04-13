@@ -10,7 +10,7 @@ import {
 import { Client } from "./sapnwrfc-client";
 export interface RfcThroughputBinding {
     /* eslint-disable @typescript-eslint/no-misused-new */
-    new(): RfcThroughputBinding;
+    new (): RfcThroughputBinding;
     (): RfcThroughputBinding;
     clients: Set<Client>;
     status: RfcThroughputStatus;
