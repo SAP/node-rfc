@@ -328,7 +328,7 @@ export class Client {
             this.__client._connectionHandle
         } ${
             this.__client._pool_id
-                ? "[m] pool: " + this.__client._pool_id
+                ? `[m] pool: ${this.__client._pool_id} `
                 : "[d]"
         }`;
     }
@@ -612,11 +612,13 @@ export class Client {
             if (timeout > 0) {
                 const cancelTimeout = setTimeout(() => {
                     /* eslint-disable @typescript-eslint/no-unused-vars */
-                    this.cancel((_err: unknown, _res: unknown) => {
-                        // _res like
-                        // { connectionHandle: 140414048978432, result: 'cancelled' }
-                    });
-                }, (timeout as number) * 1000);
+                    (this.cancel as Function)(
+                        (_err: unknown, _res: unknown) => {
+                            // _res like
+                            // { connectionHandle: 140414048978432, result: 'cancelled' }
+                        }
+                    );
+                }, timeout * 1000);
                 callbackFunction = (err: unknown, res: unknown) => {
                     clearTimeout(cancelTimeout);
                     callback(err, res);

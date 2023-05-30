@@ -57,7 +57,7 @@ export class Throughput {
         connections.forEach((c) => {
             if (c.connectionHandle === 0)
                 throw new Error(
-                    "Throughput can't be set on closed client: " + c.id
+                    `Throughput can't be set on closed client: ${c.id}`
                 );
             const e = this.__throughput.setOnConnection(c.connectionHandle);
             if (e === undefined) {

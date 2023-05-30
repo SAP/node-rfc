@@ -48,7 +48,7 @@ export function loadCryptoLibrary(libAbsolutePath: string) {
 
 export const sapnwrfcEvents = new EventEmitter();
 
-function terminate(workerData) {
+function terminate(workerData: unknown) {
     return new Promise((resolve, reject) => {
         const terminator = new Worker(
             path.join(__dirname, "./wrapper/cancel.js"),
@@ -66,7 +66,7 @@ function terminate(workerData) {
 export function cancelClient(
     client: Client,
     callback?: Function
-): void | Promise<any> {
+): void | Promise<unknown> {
     if (callback !== undefined && typeof callback !== "function") {
         throw new TypeError(
             `cancelClient 2nd argument, if provided, must be a Function. Received: ${typeof callback}`

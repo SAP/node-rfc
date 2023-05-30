@@ -1,0 +1,21 @@
+{
+  "extends": "@tsconfig/node16/tsconfig.json",
+  "compileOnSave": false,
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
+    "declaration": true,
+    "removeComments": true,
+    "resolveJsonModule": true,
+    "noImplicitAny": false,
+    "allowJs": false,
+    "stripInternal": true,
+    "listFiles": true,
+    "outDir": "./lib"
+  },
+  "include": [
+    "**/*.ts"
+  ]
+}

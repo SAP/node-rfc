@@ -10,6 +10,6 @@ export declare function setIniFileDirectory(iniFileDirectory: string): void;
 export declare function reloadIniFile(): void;
 export declare function loadCryptoLibrary(libAbsolutePath: string): void;
 export declare const sapnwrfcEvents: EventEmitter;
-export declare function cancelClient(client: Client, callback?: Function): void | Promise<any>;
+export declare function cancelClient(client: Client, callback?: Function): void | Promise<unknown>;
 export declare function languageIsoToSap(langIso: string): string;
 export declare function languageSapToIso(langSap: string): string;

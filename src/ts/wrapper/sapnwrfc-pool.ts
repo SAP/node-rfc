@@ -36,7 +36,7 @@ export interface RfcPoolConfiguration {
     poolOptions?: RfcPoolOptions;
 }
 export interface RfcPoolBinding {
-    /* _eslint-disable @typescript-eslint/no-misused-new */
+    /* eslint-disable @typescript-eslint/no-misused-new */
     new (poolConfiguration: RfcPoolConfiguration): RfcPoolBinding;
     (poolConfiguration: RfcPoolConfiguration): RfcPoolBinding;
     acquire(
@@ -77,7 +77,7 @@ export class Pool {
     acquire(
         arg1?: number | Function,
         arg2?: number | Function
-    ): void | Promise<Client> {
+    ): void | Promise<Client | Client[]> {
         let clients_requested = 1;
         let callback: Function | undefined;
         if (typeof arg1 === "number") {
@@ -155,7 +155,7 @@ export class Pool {
                     clientBindings: RfcClientBinding | Array<RfcClientBinding>
                 ) => {
                     if (err !== undefined) {
-                        return (callback as Function)(err);
+                        return (callback as Function)(err) as unknown;
                     }
 
                     if (Array.isArray(clientBindings)) {
@@ -171,7 +171,7 @@ export class Pool {
                 }
             );
         } catch (ex) {
-            (callback as Function)(ex);
+            callback(ex);
         }
     }
 

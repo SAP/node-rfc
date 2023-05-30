@@ -76,7 +76,8 @@ if (E.platform.name === "win32") {
 let noderfc_binding: NWRfcBinding;
 
 try {
-    noderfc_binding = require("../binding/sapnwrfc");
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    noderfc_binding = require("../binding/sapnwrfc") as NWRfcBinding;
 } catch (ex) {
     const err = ex as Error;
     if (err.message.indexOf("sapnwrfc.node") !== -1)

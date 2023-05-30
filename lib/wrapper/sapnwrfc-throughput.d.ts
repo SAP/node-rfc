@@ -6,9 +6,9 @@ export interface RfcThroughputBinding {
     clients: Set<Client>;
     status: RfcThroughputStatus;
     _handle: number;
-    setOnConnection(_connectionHandle: number): any;
-    removeFromConnection(_connectionHandle: number): any;
-    getFromConnection(_connectionHandle: number): any;
+    setOnConnection(_connectionHandle: number): unknown;
+    removeFromConnection(_connectionHandle: number): unknown;
+    getFromConnection(_connectionHandle: number): unknown;
     reset(): void;
     destroy(): void;
 }
