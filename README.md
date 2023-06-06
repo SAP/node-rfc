@@ -118,7 +118,7 @@ After the SAP NW RFC SDK is installed on your system, the `node-rfc` can be inst
 npm install node-rfc
 ```
 
-Alternatively, when the `node-rfc` package is not provided for your platform for example, you can build the package from source:
+Alternatively, when the `node-rfc` package is not provided for your platform for example, the package shall be built from source. This installation method is highly recommended on Linux platforms:
 
 ```shell
 git clone --single-branch https://github.com/SAP/node-rfc.git
@@ -247,10 +247,6 @@ and more:
 - **[ABAP Connectors](https://support.sap.com/en/product/connectors.html)**
 - **[SAP NWRFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html)**
 - **[node-addon-api](https://github.com/nodejs/node-addon-api)**
-
-## Known Issues
-
-- NAPI Type checks [nodejs/node-addon-api/#265](https://github.com/nodejs/node-addon-api/issues/265)
 
 ## How to obtain support
 

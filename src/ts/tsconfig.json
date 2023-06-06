@@ -1,0 +1,18 @@
+{
+    "extends": "@tsconfig/node16/tsconfig.json",
+    "compileOnSave": false,
+    "compilerOptions": {
+        "outDir": "../../lib",
+        "noImplicitAny": false,
+        "sourceMap": true,
+        "declaration": true,
+        "allowJs": false,
+        "stripInternal": true,
+        "removeComments": true,
+        "listFiles": true,
+        "allowSyntheticDefaultImports": true
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}
