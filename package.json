@@ -28,9 +28,11 @@
     "test": "test"
   },
   "files": [
-    "lib",
+    "lib/index*",
+    "lib/wrapper/",
     "src",
-    "CMakeLists.txt"
+    "CMakeLists.txt",
+    "tsconfig.json"
   ],
   "binary": {
     "module_name": "sapnwrfc",
@@ -43,8 +45,6 @@
   },
   "scripts": {
     "addon": "prebuild --backend cmake-js -r napi --force --strip --verbose",
-    "devDpd": "npm install --save-dev cmake-js cz-conventional-changelog ts-node typescript async decimal.js eslint jest prebuild random-bytes @tsconfig/node16 @types/node @types/bluebird @babel/core @typescript-eslint/eslint-plugin @typescript-eslint/parser",
-    "dpd": "npm install --save bluebird node-addon-api prebuild-install",
     "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
     "install": "prebuild-install -r napi || cmake-js rebuild",
     "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
@@ -53,7 +53,7 @@
     "lintts": "eslint src/ts/wrapper --ext ts",
     "prepublishOnly": "npm ls --depth=0",
     "test": "npm audit --omit=dev && reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000",
-    "ts": "tsc -p src/ts",
+    "ts": "tsc",
     "upload": "prebuild -r napi -u --verbose"
   },
   "config": {
