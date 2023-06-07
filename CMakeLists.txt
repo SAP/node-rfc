@@ -120,13 +120,13 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
     SAPwithTHREADS
     NAPI_CPP_EXCEPTIONS)
 
+target_compile_options(${PROJECT_NAME} PUBLIC -std=c++17 -pedantic -Wall)
+
 # target_compile_options(${PROJECT_NAME} PUBLIC -fexceptions)
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     # show SAP NWRFC SDK version
     execute_process(COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/ci/utils/nwrfcsdk-version-linux.sh OUTPUT_VARIABLE SAPNWRFCSDK_VERSION)
     message("SAP NWRFC SDK: " ${SAPNWRFCSDK_VERSION})
-
-    target_compile_options(${PROJECT_NAME} PUBLIC -std=c++17 -Wall)
 
     add_compile_definitions(
         SAPonLIN
@@ -203,7 +203,7 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
         OUTPUT_VARIABLE SAPNWRFCSDK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
     message("SAP NWRFC SDK: " ${SAPNWRFCSDK_VERSION})
 
-    target_compile_options(${PROJECT_NAME} PUBLIC  -pedantic-errors -stdlib=libc++ -std=c++17 -Wall -mmacosx-version-min=10.10 -fvisibility=hidden)
+    target_compile_options(${PROJECT_NAME} PUBLIC -pedantic-errors -stdlib=libc++ -mmacosx-version-min=10.10 -fvisibility=hidden)
 
     add_compile_definitions(
         SAPonDARW
