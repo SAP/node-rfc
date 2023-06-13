@@ -29,23 +29,20 @@
 #endif
 
 template <typename... Args>
-void log(Args &&...args)
-{
-    (std::cerr << ... << args);
-    std::cerr << std::endl;
+void log(Args&&... args) {
+  (std::cerr << ... << args);
+  std::cerr << std::endl;
 }
 
 // conditional logging
 #ifdef LOG_RFC_CLIENT
-#define DEBUG(...) \
-    log(__VA_ARGS__);
+#define DEBUG(...) log(__VA_ARGS__);
 #else
 #define DEBUG(...) ;
 #endif
 
 // always active logging
-#define EDEBUG(...) \
-    log(__VA_ARGS__);
+#define EDEBUG(...) log(__VA_ARGS__);
 
 // surpress unused parameter warnings
 #define UNUSED(x) (void)(x)
