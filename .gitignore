@@ -17,13 +17,11 @@ build/
 node_modules*/
 doc/_build/
 release/
-lib/binding/
 issues/
 examples/dist/
 # https://github.com/Microsoft/vscode-cpptools/issues/3347
 .vscode/ipch
 prebuilds/
-.prebuildrc
 Makefile
 cmake_install.cmake
 CMakeCache.txt
@@ -31,4 +29,5 @@ CMakeFiles
 ci/test
 ci/test/
 sapnwrfc.ini
+tmp
 

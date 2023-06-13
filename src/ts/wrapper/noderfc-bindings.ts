@@ -76,15 +76,10 @@ if (E.platform.name === "win32") {
 let noderfc_binding: NWRfcBinding;
 
 try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    noderfc_binding = require("../binding/sapnwrfc") as NWRfcBinding;
+    // eslint-disable-next-line
+    noderfc_binding = require("node-gyp-build")();
 } catch (ex) {
     const err = ex as Error;
-    if (err.message.indexOf("sapnwrfc.node") !== -1)
-        err.message +=
-            ["win32", "linux", "darwin"].indexOf(process.platform) !== -1
-                ? "\n\n The SAP NW RFC SDK could not be loaded, check the installation: https://github.com/SAP/node-rfc/blob/master/doc/installation.md#sap-nwrfc-sdk-installation"
-                : `\n\nPlatform not supported: ${process.platform}`;
     err.message += `\nenvironment: ${JSON.stringify(E, null, 2)}\n`;
     throw err;
 }

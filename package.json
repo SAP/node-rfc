@@ -28,33 +28,20 @@
     "test": "test"
   },
   "files": [
-    "lib/index*",
-    "lib/wrapper/",
+    "prebuilds",
     "src",
     "CMakeLists.txt",
     "tsconfig.json"
   ],
-  "binary": {
-    "module_name": "sapnwrfc",
-    "module_path": "./lib/binding/",
-    "remote_path": "v{version}",
-    "host": "https://github.com/sap/node-rfc/releases/download/",
-    "napi_versions": [
-      8
-    ]
-  },
   "scripts": {
-    "addon": "prebuild --backend cmake-js -r napi --force --strip --verbose",
-    "preinstall": "npm install cmake-js prebuild-install prebuild node-addon-api",
-    "install": "prebuild-install -r napi || cmake-js rebuild",
-    "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
+    "install": "node-gyp-build",
     "lint": "npm run lintts && npm run lintcpp",
     "lintcpp": "cppcheck -I node_modules/node-addon_api --enable=all --inline-suppr src/cpp",
     "lintts": "eslint src/ts/wrapper --ext ts",
-    "prepublishOnly": "npm ls --depth=0",
-    "test": "npm audit --omit=dev && reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000",
+    "cpp": "prebuildify --napi --force --strip --verbose",
     "ts": "tsc",
-    "upload": "prebuild -r napi -u --verbose"
+    "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
+    "test": "npm audit --omit=dev && reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000"
   },
   "config": {
     "commitizen": {
@@ -65,7 +52,7 @@
     "bluebird": "^3.7.2",
     "decimal.js": "^10.4.3",
     "node-addon-api": "^6.1.0",
-    "prebuild-install": "^7.1.1"
+    "node-gyp-build": "^4.6.0"
   },
   "devDependencies": {
     "@babel/core": "^7.21.3",
@@ -79,8 +66,9 @@
     "cmake-js": "^7.2.1",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.37.0",
+    "eslint-config-prettier": "^8.8.0",
     "jest": "^29.5.0",
-    "prebuild": "^11.0.4",
+    "prebuildify": "^5.0.1",
     "random-bytes": "^1.0.0",
     "ts-jest": "^29.1.0",
     "typescript": "^5.0.2"

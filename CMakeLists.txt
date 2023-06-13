@@ -78,8 +78,8 @@ else()
 endif()
 
 # build and binding path
-string(CONCAT ADDON_BINDING_PATH "node-v" ${NODE_ABI_VERSION} "-" ${NODE_PLATFORM} "-" ${NODE_ARCH})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib/binding/)
+string(CONCAT MODULE_PATH ${NODE_PLATFORM} "-" ${NODE_ARCH})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib/binding/${MODULE_PATH})
 
 # sapnwrfc dependencies
 set(SAPNWRFC_INCLUDE_DIR $ENV{SAPNWRFC_HOME}/include)
@@ -214,7 +214,7 @@ endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 17
     PREFIX ""
-    SUFFIX ".node")
+    SUFFIX ".node" )
 
 set(${PROJECT_NAME}_USE_STATIC_LIBS OFF)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake")

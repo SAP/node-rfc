@@ -7,23 +7,24 @@ import os from "os";
 
 import { version } from "../../package.json";
 export { version, dependencies } from "../../package.json";
+import { Client } from "../../lib/index";
+import * as binding from "../../lib/index";
+export * as binding from "../../lib/index";
 
-import * as binding from "../../lib";
-export * as binding from "../../lib";
 export {
-    Client,
-    Pool,
-    Throughput,
-    Promise,
-    setIniFileDirectory,
-    loadCryptoLibrary,
-    cancelClient,
-    RfcVariable,
-    RfcArray,
-    RfcTable,
-    RfcStructure,
-    NWRfcSdkError,
-} from "../../lib";
+  Client,
+  Pool,
+  Throughput,
+  Promise,
+  setIniFileDirectory,
+  loadCryptoLibrary,
+  cancelClient,
+  RfcVariable,
+  RfcArray,
+  RfcTable,
+  RfcStructure,
+  NWRfcSdkError,
+} from "../../lib/index";
 
 import { abapSystem } from "./abapSystem";
 export { abapSystem } from "./abapSystem";
@@ -33,47 +34,47 @@ export const UNICODETEST2 = "Hällü ßärÖÄ อกครั้งที่".r
 
 export const sapnwrfcIniPath = path.join(process.cwd(), "test");
 export const CryptoLibPath =
-    process.platform === "darwin"
-        ? "/Applications/Secure Login Client.app/Contents/MacOS/lib/libsapcrypto.dylib"
-        : process.platform === "linux"
-        ? "/usr/local/sap/cryptolib/libsapcrypto.so"
-        : process.platform === "win32"
-        ? //"C:\\Program Files\\SAP\\FrontEnd\\SecureLogin\\libsapcrypto.dll",
-          "C:\\Tools\\cryptolib\\sapcrypto.dll"
-        : "";
+  process.platform === "darwin"
+    ? "/Applications/Secure Login Client.app/Contents/MacOS/lib/libsapcrypto.dylib"
+    : process.platform === "linux"
+    ? "/usr/local/sap/cryptolib/libsapcrypto.so"
+    : process.platform === "win32"
+    ? //"C:\\Program Files\\SAP\\FrontEnd\\SecureLogin\\libsapcrypto.dll",
+      "C:\\Tools\\cryptolib\\sapcrypto.dll"
+    : "";
 
 export const ClientPSEPath = {
-    darwin: "/Users/d037732/dotfiles/sec/rfctest.pse",
-    linux: "/home/www-admin/sec/rfctest.pse",
-    win32: "C:\\Tools\\sec\\rfctest.pse",
+  darwin: "/Users/d037732/dotfiles/sec/rfctest.pse",
+  linux: "/home/www-admin/sec/rfctest.pse",
+  win32: "C:\\Tools\\sec\\rfctest.pse",
 };
 
 export const refEnvironment = {
-    platform: {
-        name: os.platform(),
-        arch: os.arch(),
-        release: os.release(),
-    },
-    env: {
-        SAPNWRFC_HOME: process.env.SAPNWRFC_HOME || "",
-        RFC_INI: process.env.RFC_INI || "",
-    },
-    noderfc: {
-        //version: "Deactivate logging: LOG_RFC_CLIENT",
-        version: version,
-        nwrfcsdk: { major: 7500, minor: 0, patchLevel: 11 },
-    },
-    versions: process.versions,
+  platform: {
+    name: os.platform(),
+    arch: os.arch(),
+    release: os.release(),
+  },
+  env: {
+    SAPNWRFC_HOME: process.env.SAPNWRFC_HOME || "",
+    RFC_INI: process.env.RFC_INI || "",
+  },
+  noderfc: {
+    //version: "Deactivate logging: LOG_RFC_CLIENT",
+    version: version,
+    nwrfcsdk: { major: 7500, minor: 0, patchLevel: 11 },
+  },
+  versions: process.versions,
 };
 
 export const CONNECTIONS = 0x20;
 
-export function direct_client(system = "MME", options = {}) {
-    return new binding.Client(abapSystem(system), options);
+export function direct_client(system = "MME", options = {}): Client {
+  return new Client(abapSystem(system), options);
 }
 
 export const poolConfiguration = {
-    connectionParameters: abapSystem(),
+  connectionParameters: abapSystem(),
 };
 
 binding.setIniFileDirectory(sapnwrfcIniPath);

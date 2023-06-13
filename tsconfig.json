@@ -12,10 +12,9 @@
     "noImplicitAny": false,
     "allowJs": false,
     "stripInternal": true,
-    "listFiles": true,
     "outDir": "./lib"
   },
   "files": [
-    "src/ts/index.ts"
+    "src/ts/index"
   ]
 }
