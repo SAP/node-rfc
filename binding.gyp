@@ -1,14 +1,87 @@
+# https://github.com/nodejs/node-addon-api/blob/main/doc/setup.md
 # https://github.com/nodejs/node-gyp/blob/main/addon.gypi
 # https://github.com/nodejs/node/blob/eaaee92d9b0be82d7f40b2abb67f30ce525d4bc4/common.gypi
 # https://github.com/chromium/gyp/blob/md-pages/docs/InputFormatReference.md
 
 {
-    'includes': [ 'common.gypi' ], # brings in a default set of options that are inherited from gyp
+
+    'variables': {
+        'nwrfcsdk_dir': '$(SAPNWRFC_HOME)',
+        'napi_include_dir': "<!(node -p \"require('node-addon-api').include_dir\")",
+        'nwrfcsdk_include_dir': "<(nwrfcsdk_dir)/include",
+        'nwrfcsdk_lib_dir': "<(nwrfcsdk_dir)/lib",
+        'target_name': 'sapnwrfc',
+        'conditions': 
+        [
+            ['OS=="win"',
+                {
+                    'nwrfcsdk_dir': '<!(echo %SAPNWRFC_HOME%)',
+                }
+            ]
+        ],
+    },
+
+    'target_defaults': {
+        'type': 'loadable_module',
+        'win_delay_load_hook': 'false',
+        'product_prefix': '',
+        'default_configuration': 'Release',
+        'include_dirs': ['<(napi_include_dir)', '<(nwrfcsdk_include_dir)'],
+
+        'cflags_cc' : [
+            '-fno-rtti', '-fno-exceptions', '-std=gnu++0y',
+            '-std=c++17',
+            '-Wc++17-extensions',
+        ],
+        'cflags_cc!': [
+            '-fno-rtti', '-fno-exceptions', '-std=gnu++0y',
+            '-std=c++17',
+            '-Wc++17-extensions',
+        ],
+
+        'configurations': {
+            'Debug': {
+                'defines!': [
+                    'NDEBUG'
+                ],
+                'cflags_cc!': [
+                    '-O2',
+                    '-Os',
+                    '-DNDEBUG'
+                ],
+                'xcode_settings': {
+                    'OTHER_CPLUSPLUSFLAGS!': [
+                        '-O2',
+                        '-Os',
+                        '-DDEBUG'
+                    ],
+                    'GCC_OPTIMIZATION_LEVEL': '-1',
+                    'GCC_GENERATE_DEBUGGING_SYMBOLS': 'YES'
+                }
+            },
+
+            'Release': {
+                'defines': [
+                    'NDEBUG'
+                ],
+
+                'xcode_settings': {
+                    'OTHER_CPLUSPLUSFLAGS!': [
+                        '-Os',
+                        '-O1'
+                    ],
+                    'GCC_OPTIMIZATION_LEVEL': '2',
+                    'GCC_GENERATE_DEBUGGING_SYMBOLS': 'NO',
+                    'DEAD_CODE_STRIPPING': 'YES',
+                    'GCC_INLINES_ARE_PRIVATE_EXTERN': 'YES'
+                }
+            }
+        }
+    },
 
     "targets": [
         {
             "target_name": "<(target_name)",
-            'type': 'loadable_module',
             "sources": [
                 'src/cpp/addon.cc',
                 'src/cpp/nwrfcsdk.cc',
@@ -28,16 +101,14 @@
                 'NAPI_VERSION=8',
                 'sapnwrfc_EXPORTS'
             ],
-            'include_dirs': ['<(napi_include_dir)/', '<(nwrfcsdk_dir)/include'],
             'conditions': [
-                ['OS=="mac"',
+                [
+                    'OS=="mac"',
                     {
                         'cflags+': ['-fvisibility=hidden'],
-                        'cflags_cc!': [
+                        'cflags_cc': [
                             '-Wpedantic', '-Wall', '-Wextra', '-Werror', '-Wnocompound-token-split-by-macro'
                             '-stdlib=libc++',
-                            '-std=c++17',
-                            '-Wc++17-extensions',
                             '-mmacosx-version-min=10.10',
                             '-fvisibility=hidden',
                             '-fPIC',
@@ -50,12 +121,12 @@
                         ],
                         'link_settings': {
                             'library_dirs': [
-                                '<(nwrfcsdk_dir)/lib'
+                                '<(nwrfcsdk_lib_dir)'
                             ],
                             'libraries': [
                                 '-lsapnwrfc',
                                 '-lsapucum',
-                                '-Wl,-rpath,<(nwrfcsdk_dir)/lib'
+                                '-Wl,-rpath,<(nwrfcsdk_lib_dir)'
                             ],
                         },
                         'xcode_settings': {
@@ -75,11 +146,9 @@
                         #     '-std=c++14',
                         #     '-Wno-unused-variable'
                         #     ],
-                        'cflags_cc!': [
+                        'cflags_cc': [
                             '-Wpedantic', '-Wall', '-Wextra', '-Werror', '-Wnocompound-token-split-by-macro'
                             '-stdlib=libc++',
-                            '-std=c++17',
-                            '-Wc++17-extensions',
                             '-mmacosx-version-min=10.10',
                             '-fvisibility=hidden',
                             '-fPIC',
@@ -91,12 +160,12 @@
                         ],
                         'link_settings': {
                             'library_dirs': [
-                                '<(nwrfcsdk_dir)/lib'
+                                '<(nwrfcsdk_lib_dir'
                             ],
                             'libraries': [
                                 '-lsapnwrfc',
                                 '-lsapucum',
-                                '-Wl,-rpath,<(nwrfcsdk_dir)/lib'
+                                '-Wl,-rpath,<(nwrfcsdk_lib_dir)'
                             ],
                         },
                     },
@@ -104,7 +173,6 @@
                 [
                     'OS=="win"',
                     {
-                        'type': 'shared_library',
                         'defines': [
                             'PLATFORM="win32"',
                             'WIN32',
@@ -115,14 +183,17 @@
                             'SAPonNT',
                             'UNICODE',
                             '_UNICODE',
+                            "_HAS_EXCEPTIONS=1"
                         ],
-                        # 'msvs_configuration_attributes': {
-                        #     'OutputDirectory': '$(SolutionDir)$(ConfigurationName)',
-                        #     'IntermediateDirectory': '$(OutDir)\\obj',
-                        # },
+                        'msvs_configuration_attributes': {
+                            'OutputDirectory': '$(SolutionDir)$(ConfigurationName)',
+                            'IntermediateDirectory': '$(OutDir)\\obj',
+                        },
                         'msvs_settings': {
                             'VCCLCompilerTool': {
-                                'WholeProgramOptimization': 'true' # /GL, whole program optimization, needed for LTCG
+                                'ExceptionHandling': 1,
+                                'WholeProgramOptimization': 'true', # /GL, whole program optimization, needed for LTCG
+                                'AdditionalOptions': [ '-std:c++17', ],
                             },
                             'VCLibrarianTool': {
                                 'AdditionalOptions': [
@@ -136,23 +207,21 @@
                                 'AdditionalOptions': [
                                 '/LTCG:INCREMENTAL', # incremental link-time code generation
                                 ],
-                                'AdditionalLibraryDirectories': ['<(nwrfcsdk_dir)/lib'],
+                                'AdditionalLibraryDirectories': ['<(nwrfcsdk_lib_dir)'],
                                 'AdditionalDependencies': ['sapnwrfc.lib', 'libsapucum.lib'],
                             },
                         },
-                        'link_settings': {
-                            'library_dirs': [
-                                '<(nwrfcsdk_dir)/lib'
-                            ],
-                            'libraries': [
-                                '-lsapnwrfc.lib',
-                                '-lsapucum.lib',
-                            ],
-                        },
-                        # 'libraries': [ '-lsapnwrfc.lib', '-llibsapucum.lib' ],
+                    #     'link_settings': {
+                    #         'library_dirs': [
+                    #             '<(nwrfcsdk_dir)/lib'
+                    #         ],
+                    #         'libraries': [
+                    #             '-lsapnwrfc.lib',
+                    #         ],
+                    #     },
                     },
                 ],
             ],
         }
-    ],
+    ]
 }

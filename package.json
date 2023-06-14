@@ -63,7 +63,6 @@
     "@typescript-eslint/eslint-plugin": "^5.57.0",
     "@typescript-eslint/parser": "^5.57.0",
     "async": "^3.2.4",
-    "cmake-js": "^7.2.1",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.37.0",
     "eslint-config-prettier": "^8.8.0",
