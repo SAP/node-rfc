@@ -4,14 +4,13 @@
 # https://github.com/chromium/gyp/blob/md-pages/docs/InputFormatReference.md
 
 {
-
     'variables': {
         'nwrfcsdk_dir': '$(SAPNWRFC_HOME)',
         'napi_include_dir': "<!(node -p \"require('node-addon-api').include_dir\")",
         'nwrfcsdk_include_dir': "<(nwrfcsdk_dir)/include",
         'nwrfcsdk_lib_dir': "<(nwrfcsdk_dir)/lib",
         'target_name': 'sapnwrfc',
-        'conditions': 
+        'conditions':
         [
             ['OS=="win"',
                 {
@@ -35,8 +34,8 @@
         ],
         'cflags_cc!': [
             '-fno-rtti', '-fno-exceptions', '-std=gnu++0y',
-            '-std=c++17',
-            '-Wc++17-extensions',
+            # '-std=c++17',
+            # '-Wc++17-extensions',
         ],
 
         'configurations': {
