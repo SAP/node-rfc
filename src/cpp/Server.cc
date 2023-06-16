@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2014 SAP SE Srdjan Boskovic <srdjan.boskovic@sap.com>
 //
 // SPDX-License-Identifier: Apache-2.0
-
 #include "Server.h"
 #include <node_api.h>
 

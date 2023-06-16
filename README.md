@@ -78,13 +78,13 @@ Other platforms and frameworks:
 
 ## Requirements
 
+### node-gyp
+
+Build toolchain is based on `node-gyp` and for target platform requirepements check: [node-gyp#Installation](https://github.com/nodejs/node-gyp#installation)
+
 ### SAP NW RFC SDK 7.50.11
 
 - SAP NW RFC SDK C++ binaries must be downloaded (SAP partner or customer account required) and locally installed. Check [installation instructions](doc/installation.md#sap-nwrfc-sdk-installation) and [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html). Using the latest version is reccomended as SAP NW RFC SDK is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.6C.
-
-- Build toolchain requires [CMake](https://cmake.org/)
-
-- Build from source on older Linux systems, may require `uchar.h` file, attached to [SAP OSS Note 2573953](https://launchpad.support.sap.com/#/notes/2573953), to be copied to SAP NW RFC SDK include directory.
 
 ### Docker
 
@@ -92,7 +92,7 @@ Docker container examples for Linux, Intel and ARM based Darwin: [SAP/fundamenta
 
 ### Linux
 
-- Build toolchain is based on Centos 7 with devtools-8, following the [standard NodeJS build toolchain](https://github.com/nodejs/node/blob/master/BUILDING.md#official-binary-platforms-and-toolchains)
+- Build toolchain is based on Ubuntu 20.04, for node-rfc binaries compatible with glibc >= 2.28 and libstdc++ >= 6.0.25 (GLIBCXX_3.4.25). The build toolchain follows is defined by [standard NodeJS build toolchain configuration](https://github.com/nodejs/node/blob/master/BUILDING.md#official-binary-platforms-and-toolchains)
 
 ### Windows
 

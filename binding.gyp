@@ -5,10 +5,14 @@
 
 {
     'variables': {
-        'nwrfcsdk_dir': '$(SAPNWRFC_HOME)',
+        'nwrfcsdk_dir': '<!(echo $SAPNWRFC_HOME)',
         'napi_include_dir': "<!(node -p \"require('node-addon-api').include_dir\")",
         'nwrfcsdk_include_dir': "<(nwrfcsdk_dir)/include",
         'nwrfcsdk_lib_dir': "<(nwrfcsdk_dir)/lib",
+        'napi_version': "<!(node -p \"require('./package.json').config.napi_version\")",
+        'node_abi_version': "<!(node -p 'process.versions.modules')",
+        # per NodeJS build requirements: https://github.com/nodejs/node/blob/main/BUILDING.md
+        'macosx_version_min': '10.15',
         'target_name': 'sapnwrfc',
         'conditions':
         [
@@ -18,25 +22,24 @@
                 }
             ]
         ],
+        'ccflags_defaults': [
+            '-std=c++17',
+            '-std=gnu++17',
+            '-fno-rtti',
+            '-Wno-unused-variable',
+        ]
     },
 
     'target_defaults': {
         'type': 'loadable_module',
-        'win_delay_load_hook': 'false',
+        'win_delay_load_hook': 'true',
         'product_prefix': '',
         'default_configuration': 'Release',
         'include_dirs': ['<(napi_include_dir)', '<(nwrfcsdk_include_dir)'],
 
-        'cflags_cc' : [
-            '-fno-rtti', '-fno-exceptions', '-std=gnu++0y',
-            '-std=c++17',
-            '-Wc++17-extensions',
-        ],
-        'cflags_cc!': [
-            '-fno-rtti', '-fno-exceptions', '-std=gnu++0y',
-            # '-std=c++17',
-            # '-Wc++17-extensions',
-        ],
+        # C++ exceptions are enabled: https://github.com/nodejs/node-addon-api/blob/main/doc/setup.md
+        'cflags!': [ '-fno-exceptions' ],
+        'cflags_cc!': [ '-fno-exceptions'],
 
         'configurations': {
             'Debug': {
@@ -97,21 +100,27 @@
                 'NDEBUG',
                 'SAPwithTHREADS',
                 'NAPI_CPP_EXCEPTIONS',
-                'NAPI_VERSION=8',
+                'NAPI_VERSION=<(napi_version)',
                 'sapnwrfc_EXPORTS'
             ],
             'conditions': [
                 [
                     'OS=="mac"',
                     {
-                        'cflags+': ['-fvisibility=hidden'],
+                        'variables': {
+                            'ccflags_mac': [
+                                '-Wpedantic', '-Wall', '-Wextra', '-Werror',
+                                '-stdlib=libc++',
+                                '-mmacosx-version-min=<(macosx_version_min)',
+                                '-fvisibility=hidden',
+                                '-fPIC',
+                                '-MD', '-MT'
+                            ]
+                        },
+
                         'cflags_cc': [
-                            '-Wpedantic', '-Wall', '-Wextra', '-Werror', '-Wnocompound-token-split-by-macro'
-                            '-stdlib=libc++',
-                            '-mmacosx-version-min=10.10',
-                            '-fvisibility=hidden',
-                            '-fPIC',
-                            '-MD', '-MT'
+                            '<@(ccflags_defaults)'
+                            '<@(ccflags_mac)'
                         ],
                         'defines': [
                             '_DARWIN_USE_64_BIT_INODE=1',
@@ -129,26 +138,28 @@
                             ],
                         },
                         'xcode_settings': {
+                            'CLANG_CXX_LANGUAGE_STANDARD':'c++17',
                             'DYLIB_INSTALL_NAME_BASE': '@rpath',
                             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
+                            'GCC_WARN_PEDANTIC': 'YES',
                             'CLANG_CXX_LIBRARY': 'libc++',
-                            'MACOSX_DEPLOYMENT_TARGET': '10.10',
+                            'MACOSX_DEPLOYMENT_TARGET': '<(macosx_version_min)',
                             'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES', # -fvisibility=hidden
+                            # 'OTHER_CFLAGS': [ '-std=c++17'],
+                            # 'OTHER_LDFLAGS':[ ],
+                            'OTHER_CPLUSPLUSFLAGS': [
+                                '<@(ccflags_defaults)',
+                                '<@(ccflags_mac)'
+                            ],
                         },
                     },
                 ],
                 [
                     'OS=="linux"',
                     {
-                        # 'cflags_cc!': [
-                        #     # '-Wall',
-                        #     '-std=c++14',
-                        #     '-Wno-unused-variable'
-                        #     ],
-                        'cflags_cc': [
-                            '-Wpedantic', '-Wall', '-Wextra', '-Werror', '-Wnocompound-token-split-by-macro'
-                            '-stdlib=libc++',
-                            '-mmacosx-version-min=10.10',
+                        'cflags_cc+': [
+                            '-std=c++17',
+                            '-Wall', '-Wextra', '-Werror',
                             '-fvisibility=hidden',
                             '-fPIC',
                             '-MD', '-MT'
@@ -159,7 +170,7 @@
                         ],
                         'link_settings': {
                             'library_dirs': [
-                                '<(nwrfcsdk_lib_dir'
+                                '<(nwrfcsdk_lib_dir)'
                             ],
                             'libraries': [
                                 '-lsapnwrfc',
@@ -210,14 +221,7 @@
                                 'AdditionalDependencies': ['sapnwrfc.lib', 'libsapucum.lib'],
                             },
                         },
-                    #     'link_settings': {
-                    #         'library_dirs': [
-                    #             '<(nwrfcsdk_dir)/lib'
-                    #         ],
-                    #         'libraries': [
-                    #             '-lsapnwrfc.lib',
-                    #         ],
-                    #     },
+
                     },
                 ],
             ],

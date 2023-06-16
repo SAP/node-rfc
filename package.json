@@ -34,19 +34,21 @@
     "tsconfig.json"
   ],
   "scripts": {
+    "cpp": "prebuildify --napi  -t 16.13.1 --force --strip --verbose",
     "install": "node-gyp-build",
+    "rebuild": "npm run install --build-from-source",
+    "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
     "lint": "npm run lintts && npm run lintcpp",
     "lintcpp": "cppcheck -I node_modules/node-addon_api --enable=all --inline-suppr src/cpp",
     "lintts": "eslint src/ts/wrapper --ext ts",
-    "cpp": "prebuildify --napi --force --strip --verbose",
-    "ts": "tsc",
-    "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
-    "test": "npm audit --omit=dev && reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000"
+    "test": "npm audit --omit=dev && reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000",
+    "ts": "tsc"
   },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
-    }
+    },
+    "napi_version": 8
   },
   "dependencies": {
     "bluebird": "^3.7.2",
@@ -67,6 +69,7 @@
     "eslint": "^8.37.0",
     "eslint-config-prettier": "^8.8.0",
     "jest": "^29.5.0",
+    "node-gyp": "^9.4.0",
     "prebuildify": "^5.0.1",
     "random-bytes": "^1.0.0",
     "ts-jest": "^29.1.0",

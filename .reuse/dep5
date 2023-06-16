@@ -30,7 +30,7 @@ Copyright: 2014 SAP SE Srdjan Boskovic <srdjan.boskovic@sap.com>
 License: Apache-2.0
 
 # Documentation, metadata, compiled sources, configuration
-Files: doc/** lib/** *.md .gitignore .editorconfig .prettierignore .eslintrc.js CHANGES .github/**
+Files: doc/** lib/** *.md .gitignore .clang-format binding.gyp .editorconfig .prettierignore .eslintrc.js CHANGES .github/**
 Copyright: 2014 SAP SE Srdjan Boskovic <srdjan.boskovic@sap.com>
 License: Apache-2.0
 
