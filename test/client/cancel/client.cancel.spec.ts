@@ -19,7 +19,7 @@ describe("Connection terminate by client", () => {
     test("Non-managed, client.cancel() callback", function (done) {
         const client = direct_client();
         expect.assertions(2);
-        client.open(() => {
+        void client.open(() => {
             // call function
             client.invoke(
                 "RFC_PING_AND_WAIT",
@@ -33,7 +33,7 @@ describe("Connection terminate by client", () => {
             );
             // cancel
             setTimeout(() => {
-                client.cancel((err) => {
+                void client.cancel((err: unknown) => {
                     expect(err).toBeUndefined();
                 });
             }, CANCEL * 1000);

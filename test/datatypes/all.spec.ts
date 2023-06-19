@@ -2,13 +2,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { randomBytes } from "crypto";
 import Decimal from "decimal.js";
-import { randomBytes } from "random-bytes";
 import {
     direct_client,
     RfcVariable,
     RfcStructure,
     RfcTable,
+    RfcObject,
 } from "../utils/setup";
 import { RFC_MATH } from "../utils/config";
 import { toABAPdate, fromABAPdate, XBYTES_TEST } from "../utils/utils";
@@ -17,14 +18,14 @@ describe("Datatypes: all", () => {
     const client = direct_client();
 
     beforeAll(function (done) {
-        client.open((err) => {
-            return done(err);
+        void client.open((err) => {
+            return done(err) as unknown;
         });
     });
 
     afterAll(function (done) {
-        client.close((err) => {
-            return done(err);
+        void client.close((err) => {
+            return done(err) as unknown;
         });
     });
 
@@ -46,9 +47,9 @@ describe("Datatypes: all", () => {
             {
                 IS_INPUT: isInput,
             },
-            function (err, res) {
+            function (err: unknown, res: RfcObject) {
                 expect(res).toHaveProperty("ES_OUTPUT");
-                const output = res.ES_OUTPUT;
+                const output = res.ES_OUTPUT as RfcStructure;
 
                 expect(typeof output.ZFLTP_MIN).toEqual("number");
                 expect(output.ZFLTP_MIN).toEqual(parseFloat(isInput.ZFLTP_MIN));
@@ -91,9 +92,9 @@ describe("Datatypes: all", () => {
             {
                 IS_INPUT: isInput,
             },
-            function (err, res) {
+            function (err: unknown, res: RfcObject) {
                 expect(res).toHaveProperty("ES_OUTPUT");
-                const output = res.ES_OUTPUT;
+                const output = res.ES_OUTPUT as RfcStructure;
 
                 expect(typeof output.ZFLTP_MIN).toEqual("number");
                 expect(output.ZFLTP_MIN).toEqual(parseFloat(isInput.ZFLTP_MIN));
@@ -124,7 +125,7 @@ describe("Datatypes: all", () => {
                 QUERY_TABLE: "MARA",
                 OPTIONS: "A string instead of an array",
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -167,23 +168,23 @@ describe("Datatypes: all", () => {
         };
         const xclient = direct_client("MME", { bcd: "number" });
         expect(xclient.config.clientOptions?.bcd).toEqual("number");
-        xclient.connect((err) => {
+        void xclient.connect((err) => {
             expect(err).not.toBeDefined();
             xclient.invoke(
                 "/COE/RBP_FE_DATATYPES",
                 {
                     IS_INPUT: isInput,
                 },
-                function (err, res) {
+                function (err: unknown, res: RfcObject) {
                     expect(res).toHaveProperty("ES_OUTPUT");
-                    for (const k in isInput) {
-                        const inVal = isInput[k];
-                        const outVal = res.ES_OUTPUT[k];
+                    const es_output = res.ES_OUTPUT as RfcStructure;
+                    for (const [k, inVal] of Object.entries(isInput)) {
+                        const outVal = es_output[k];
                         const outTyp = typeof outVal;
                         expect(outTyp).toEqual(EXPECTED_TYPES[k]);
                         expect(outVal).toEqual(inVal);
                     }
-                    xclient.close(() => {
+                    void xclient.close(() => {
                         done(err);
                     });
                 }
@@ -219,11 +220,11 @@ describe("Datatypes: all", () => {
             {
                 IS_INPUT: isInput,
             },
-            function (err, res) {
+            function (err: unknown, res: RfcObject) {
                 expect(res).toHaveProperty("ES_OUTPUT");
+                const es_output = res.ES_OUTPUT as RfcStructure;
                 for (const k in isInput) {
-                    // const inVal = isInput[k];
-                    const outVal = res.ES_OUTPUT[k];
+                    const outVal = es_output[k];
                     const outTyp = typeof outVal;
                     expect(outTyp).toEqual(EXPECTED_TYPES[k]);
                 }
@@ -256,24 +257,24 @@ describe("Datatypes: all", () => {
         };
         const xclient = direct_client("MME", { bcd: Decimal });
         expect(xclient.config.clientOptions?.bcd).toEqual(Decimal);
-        xclient.connect(() => {
+        void xclient.connect(() => {
             xclient.invoke(
                 "/COE/RBP_FE_DATATYPES",
                 {
                     IS_INPUT: isInput,
                 },
-                function (err, res) {
+                function (err: unknown, res: RfcObject) {
                     expect(res).toHaveProperty("ES_OUTPUT");
-                    for (const k in isInput) {
-                        const inVal = isInput[k];
-                        const outVal = res.ES_OUTPUT[k];
+                    const es_output = res.ES_OUTPUT as RfcStructure;
+                    for (const [k, inVal] of Object.entries(isInput)) {
+                        const outVal = es_output[k];
                         const outTyp = typeof outVal;
                         expect(outTyp).toEqual(EXPECTED_TYPES[k]);
                         if (k == "ZFLTP")
                             expect(inVal.toString()).toEqual(outVal.toString());
                         else expect(inVal).toEqual(outVal);
                     }
-                    xclient.close(() => {
+                    void xclient.close(() => {
                         done(err);
                     });
                 }
@@ -291,8 +292,13 @@ describe("Datatypes: all", () => {
             {
                 IS_INPUT: isInput,
             },
-            function (err, res) {
-                expect(Buffer.compare(isInput.ZRAW, res.ES_OUTPUT.ZRAW)).toBe(
+            function (err: unknown, res: RfcObject) {
+                expect(
+                    Buffer.compare(
+                        isInput.ZRAW,
+                        (res.ES_OUTPUT as RfcStructure).ZRAW as Buffer
+                    )
+                ).toBe(
                     -1 // because the ZRAW is 17 bytes long and padded with zeroes
                 );
                 expect(
@@ -301,7 +307,7 @@ describe("Datatypes: all", () => {
                             isInput.ZRAW,
                             Buffer.from([0, 0, 0, 0]),
                         ]),
-                        res.ES_OUTPUT.ZRAW
+                        (res.ES_OUTPUT as RfcStructure).ZRAW as Buffer
                     )
                 ).toBe(0); // ok
                 done(err);
@@ -319,9 +325,12 @@ describe("Datatypes: all", () => {
             {
                 IS_INPUT: isInput,
             },
-            function (err, res) {
+            function (err: unknown, res: RfcObject) {
                 expect(
-                    Buffer.compare(isInput.ZRAWSTRING, res.ES_OUTPUT.ZRAWSTRING)
+                    Buffer.compare(
+                        isInput.ZRAWSTRING,
+                        (res.ES_OUTPUT as RfcStructure).ZRAWSTRING as Buffer
+                    )
                 ).toBe(0);
                 done(err);
             }
@@ -329,7 +338,7 @@ describe("Datatypes: all", () => {
     });
 
     test("CHAR with zero bytes in the middle", function (done) {
-        client.invoke("ZLONG_STRING", {}, (err, res) => {
+        client.invoke("ZLONG_STRING", {}, (err: unknown, res: RfcObject) => {
             const expres = "TESTUSER3 \x00\x00\x00\x0c 1000329";
             expect(res.EV_LONGCHAR).toEqual(expres);
             done(err);
@@ -345,31 +354,29 @@ describe("Datatypes: all", () => {
         for (let i = 0; i < COUNT; i++) {
             // array -> unnamed structure
             IT_SXMSMGUIDT.push(XBYTES_TEST);
-            IT_SXMSMGUIDT.push(Buffer.from(randomBytes.sync(16)));
-            IT_SXMSMGUIDT.push(
-                Buffer.from(new Uint8Array(randomBytes.sync(16)))
-            );
+            IT_SXMSMGUIDT.push(Buffer.from(randomBytes(16)));
+            IT_SXMSMGUIDT.push(Buffer.from(new Uint8Array(randomBytes(16))));
 
             // structure -> unnamed structure
             IT_SXMSMGUIDT.push({
                 "": XBYTES_TEST,
             });
             IT_SXMSMGUIDT.push({
-                "": Buffer.from(randomBytes.sync(16)),
+                "": Buffer.from(randomBytes(16)),
             });
             IT_SXMSMGUIDT.push({
-                "": new Uint8Array(randomBytes.sync(16)),
+                "": new Uint8Array(randomBytes(16)),
             });
 
             // named structure
-            (IT_SDOKCNTBINS as RfcTable).push({
+            IT_SDOKCNTBINS.push({
                 LINE: XBYTES_TEST,
             });
             IT_SDOKCNTBINS.push({
-                LINE: Buffer.from(randomBytes.sync(1022)),
+                LINE: Buffer.from(randomBytes(1022)),
             });
             IT_SDOKCNTBINS.push({
-                LINE: new Uint8Array(randomBytes.sync(1022)),
+                LINE: new Uint8Array(randomBytes(1022)),
             });
         }
 
@@ -377,28 +384,40 @@ describe("Datatypes: all", () => {
             IT_SXMSMGUIDT: IT_SXMSMGUIDT,
             IT_SDOKCNTBINS: IT_SDOKCNTBINS,
         };
-        client.invoke("/COE/RBP_FE_DATATYPES", inp, function (err, result) {
-            expect(result).toHaveProperty("ES_OUTPUT");
+        client.invoke(
+            "/COE/RBP_FE_DATATYPES",
+            inp,
+            function (err: unknown, result: RfcObject) {
+                expect(result).toHaveProperty("ES_OUTPUT");
 
-            expect(IT_SXMSMGUIDT.length).toBe(result.ET_SXMSMGUIDT.length);
-            expect(IT_SDOKCNTBINS.length).toBe(result.ET_SDOKCNTBINS.length);
+                expect(IT_SXMSMGUIDT.length).toBe(
+                    (result.ET_SXMSMGUIDT as RfcTable).length
+                );
+                expect(IT_SDOKCNTBINS.length).toBe(
+                    (result.ET_SDOKCNTBINS as RfcTable).length
+                );
 
-            for (let i = 0; i < IT_SXMSMGUIDT.length; i++) {
-                let lineIn = IT_SXMSMGUIDT[i];
-                if ("" in (lineIn as RfcStructure)) {
-                    lineIn = lineIn[""] as RfcVariable;
+                for (let i = 0; i < IT_SXMSMGUIDT.length; i++) {
+                    let lineIn = IT_SXMSMGUIDT[i];
+                    if ("" in (lineIn as RfcStructure)) {
+                        lineIn = lineIn[""] as RfcVariable;
+                    }
+                    const lineOut = (result.ET_SXMSMGUIDT as RfcTable)[
+                        i
+                    ] as Buffer;
+                    expect(Buffer.compare(lineIn as Buffer, lineOut)).toBe(0);
                 }
-                const lineOut = result.ET_SXMSMGUIDT[i];
-                expect(Buffer.compare(lineIn as Buffer, lineOut)).toBe(0);
-            }
 
-            for (let i = 0; i < IT_SDOKCNTBINS.length; i++) {
-                const lineIn = IT_SDOKCNTBINS[i]["LINE"];
-                const lineOut = result.ET_SDOKCNTBINS[i]["LINE"];
-                expect(Buffer.compare(lineIn, lineOut)).toBe(0);
+                for (let i = 0; i < IT_SDOKCNTBINS.length; i++) {
+                    const lineIn = IT_SDOKCNTBINS[i]["LINE"] as Buffer;
+                    const lineOut = (result.ET_SDOKCNTBINS as RfcTable)[i][
+                        "LINE"
+                    ] as Buffer;
+                    expect(Buffer.compare(lineIn, lineOut)).toBe(0);
+                }
+                done(err);
             }
-            done(err);
-        });
+        );
     });
 
     test("DATE accepts string", function (done) {
@@ -413,10 +432,14 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err, res) {
+            function (err: unknown, res: RfcObject) {
                 expect(res).toHaveProperty("ECHOSTRUCT");
-                expect(res.ECHOSTRUCT.RFCDATE).toEqual(testDate);
-                expect(res.RFCTABLE[0].RFCDATE).toEqual(testDate);
+                expect((res.ECHOSTRUCT as RfcStructure).RFCDATE).toEqual(
+                    testDate
+                );
+                expect(
+                    ((res.RFCTABLE as RfcTable)[0] as RfcStructure).RFCDATE
+                ).toEqual(testDate);
                 done(err);
             }
         );
@@ -450,13 +473,13 @@ describe("Datatypes: all", () => {
             xClientOptions
         );
 
-        xclient.connect(() => {
+        void xclient.connect(() => {
             const abapDate = "20180725";
             const jsDate = fromABAPdate(abapDate);
             const importStruct = {
                 RFCDATE: jsDate,
             };
-            const importTable = [] as RfcTable;
+            const importTable = [] as Array<RfcStructure>; // RfcTable;
             let count = 1;
             for (const month of Months) {
                 importTable.push({
@@ -476,19 +499,20 @@ describe("Datatypes: all", () => {
                     IMPORTSTRUCT: importStruct,
                     RFCTABLE: importTable,
                 },
-                (err, res) => {
+                (err: unknown, res: RfcObject) => {
                     if (err) {
-                        return done(err);
+                        return done(err) as unknown;
                     }
                     expect(res).toHaveProperty("ECHOSTRUCT");
                     expect(res).toHaveProperty("RFCTABLE");
-                    expect(res.ECHOSTRUCT.RFCDATE.toString()).toEqual(
-                        jsDate.toString()
-                    );
+                    expect(
+                        (res.ECHOSTRUCT as RfcStructure).RFCDATE.toString()
+                    ).toEqual(jsDate.toString());
 
-                    for (let i = 0; i < res.RFCTABLE.length - 1; i++) {
-                        expect(res.RFCTABLE[i].RFCDATE.toString()).toEqual(
-                            importTable[i]["RFCDATE"].toString()
+                    const rfc_table = res.RFCTABLE as Array<RfcStructure>;
+                    for (let i = 0; i < rfc_table.length - 1; i++) {
+                        expect(rfc_table[i].RFCDATE.toString()).toEqual(
+                            importTable[i].RFCDATE.toString()
                         );
                     }
                     done();
@@ -508,7 +532,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -538,7 +562,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -568,7 +592,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         code: 22,
@@ -594,7 +618,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -625,7 +649,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -656,7 +680,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -686,7 +710,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -716,7 +740,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -746,7 +770,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -778,21 +802,27 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err, res) {
+            function (err: unknown, res: RfcObject) {
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty("ECHOSTRUCT");
                 expect(res).toHaveProperty("RFCTABLE");
-                expect(res.ECHOSTRUCT.RFCINT1).toBe(254);
-                expect(res.RFCTABLE[0].RFCINT1).toBe(254);
-                expect(res.RFCTABLE[1].RFCINT1).toBe(255);
+                expect((res.ECHOSTRUCT as RfcStructure).RFCINT1).toBe(254);
+                expect((res.RFCTABLE as RfcStructure[])[0].RFCINT1).toBe(254);
+                expect((res.RFCTABLE as RfcStructure[])[1].RFCINT1).toBe(255);
 
-                expect(res.ECHOSTRUCT.RFCINT2).toBe(32766);
-                expect(res.RFCTABLE[0].RFCINT2).toBe(32766);
-                expect(res.RFCTABLE[1].RFCINT2).toBe(32767);
+                expect((res.ECHOSTRUCT as RfcStructure).RFCINT2).toBe(32766);
+                expect((res.RFCTABLE as RfcStructure[])[0].RFCINT2).toBe(32766);
+                expect((res.RFCTABLE as RfcStructure[])[1].RFCINT2).toBe(32767);
 
-                expect(res.ECHOSTRUCT.RFCINT4).toBe(2147483646);
-                expect(res.RFCTABLE[0].RFCINT4).toBe(2147483646);
-                expect(res.RFCTABLE[1].RFCINT4).toBe(2147483647);
+                expect((res.ECHOSTRUCT as RfcStructure).RFCINT4).toBe(
+                    2147483646
+                );
+                expect((res.RFCTABLE[0] as RfcStructure).RFCINT4).toBe(
+                    2147483646
+                );
+                expect((res.RFCTABLE[1] as RfcStructure).RFCINT4).toBe(
+                    2147483647
+                );
                 done(err);
             }
         );
@@ -811,21 +841,31 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err, res) {
+            function (err: unknown, res: RfcObject) {
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty("ECHOSTRUCT");
                 expect(res).toHaveProperty("RFCTABLE");
-                expect(res.ECHOSTRUCT.RFCINT1).toBe(0);
-                expect(res.RFCTABLE[0].RFCINT1).toBe(0);
-                expect(res.RFCTABLE[1].RFCINT1).toBe(1);
+                expect((res.ECHOSTRUCT as RfcStructure).RFCINT1).toBe(0);
+                expect((res.RFCTABLE as RfcStructure[])[0].RFCINT1).toBe(0);
+                expect((res.RFCTABLE as RfcStructure[])[1].RFCINT1).toBe(1);
 
-                expect(res.ECHOSTRUCT.RFCINT2).toBe(-32768);
-                expect(res.RFCTABLE[0].RFCINT2).toBe(-32768);
-                expect(res.RFCTABLE[1].RFCINT2).toBe(-32767);
+                expect((res.ECHOSTRUCT as RfcStructure).RFCINT2).toBe(-32768);
+                expect((res.RFCTABLE as RfcStructure[])[0].RFCINT2).toBe(
+                    -32768
+                );
+                expect((res.RFCTABLE as RfcStructure[])[1].RFCINT2).toBe(
+                    -32767
+                );
 
-                expect(res.ECHOSTRUCT.RFCINT4).toBe(-2147483648);
-                expect(res.RFCTABLE[0].RFCINT4).toBe(-2147483648);
-                expect(res.RFCTABLE[1].RFCINT4).toBe(-2147483647);
+                expect((res.ECHOSTRUCT as RfcStructure).RFCINT4).toBe(
+                    -2147483648
+                );
+                expect((res.RFCTABLE as RfcStructure[])[0].RFCINT4).toBe(
+                    -2147483648
+                );
+                expect((res.RFCTABLE as RfcStructure[])[1].RFCINT4).toBe(
+                    -2147483647
+                );
                 done(err);
             }
         );
@@ -844,7 +884,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -874,7 +914,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -904,7 +944,7 @@ describe("Datatypes: all", () => {
                 IMPORTSTRUCT: importStruct,
                 RFCTABLE: importTable,
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:

@@ -19,14 +19,14 @@ describe("Errors: ABAP", () => {
     const client = direct_client();
 
     beforeEach((done) => {
-        (client.connect as Function)((err) => {
+        void client.connect((err: unknown) => {
             done(err);
         });
     });
 
     afterEach((done) => {
         if (client.alive) {
-            (client.close as Function)((err) => {
+            void client.close((err: unknown) => {
                 done(err);
             });
         } else {
@@ -47,7 +47,7 @@ describe("Errors: ABAP", () => {
                 METHOD: "3",
                 MESSAGETYPE: "E",
             },
-            function (err) {
+            function (err: unknown) {
                 expect(client.alive).toBe(true);
                 expect(client.connectionHandle).not.toBe(old_handle);
                 expect(err).toMatchObject({
@@ -72,7 +72,7 @@ describe("Errors: ABAP", () => {
                 METHOD: "51",
                 MESSAGETYPE: "E",
             },
-            (err) => {
+            (err: unknown) => {
                 expect(client.alive).toBe(true);
                 expect(client.connectionHandle).not.toBe(old_handle);
                 expect(err).toMatchObject({
@@ -120,7 +120,7 @@ describe("Errors: ABAP", () => {
     test("error: invoke() SAP GUI in background", function (done) {
         expect.assertions(3);
         const old_handle = client.connectionHandle;
-        client.invoke("STFC_SAPGUI", {}, function (err) {
+        client.invoke("STFC_SAPGUI", {}, function (err: unknown) {
             expect(client.alive).toBe(true);
             expect(client.connectionHandle).not.toBe(old_handle);
             expect(err).toMatchObject({
@@ -144,7 +144,7 @@ describe("Errors: ABAP", () => {
                 METHOD: "5",
                 MESSAGETYPE: "E",
             },
-            function (err) {
+            function (err: unknown) {
                 expect(client.alive).toBe(true);
                 expect(client.connectionHandle).not.toBe(old_handle);
                 expect(err).toMatchObject({
@@ -174,7 +174,7 @@ describe("Errors: ABAP", () => {
                 METHOD: "0",
                 MESSAGETYPE: "E",
             },
-            function (err) {
+            function (err: unknown) {
                 expect(client.alive).toBe(true);
                 expect(client.connectionHandle).not.toBe(old_handle);
                 expect(err).toMatchObject({
@@ -203,7 +203,7 @@ describe("Errors: ABAP", () => {
                 METHOD: "36",
                 MESSAGETYPE: "E",
             },
-            function (err) {
+            function (err: unknown) {
                 expect(client.alive).toBe(true);
                 expect(client.connectionHandle).not.toBe(old_handle);
                 expect(err).toMatchObject({
@@ -234,7 +234,7 @@ describe("Errors: ABAP", () => {
             {
                 MESSAGETYPE: "A",
             },
-            function (err) {
+            function (err: unknown) {
                 expect(client.alive).toBe(true);
                 expect(client.connectionHandle).not.toBe(old_handle);
                 expect(err).toMatchObject({
@@ -262,7 +262,7 @@ describe("Errors: ABAP", () => {
             {
                 MESSAGETYPE: "X",
             },
-            function (err) {
+            function (err: unknown) {
                 expect(client.alive).toBe(true);
                 expect(client.connectionHandle).not.toBe(old_handle);
                 expect(err).toMatchObject({
@@ -298,7 +298,7 @@ describe("Errors: ABAP", () => {
                 METHOD: "1",
                 MESSAGETYPE: "E",
             },
-            function (err) {
+            function (err: unknown) {
                 expect(client.alive).toBe(true);
                 expect(err).toMatchObject({
                     abapMsgClass: "SR",
@@ -328,7 +328,7 @@ describe("Errors: ABAP", () => {
                 METHOD: "2",
                 MESSAGETYPE: "E",
             },
-            function (err) {
+            function (err: unknown) {
                 expect(client.alive).toBe(true);
                 expect(err).toMatchObject({
                     code: 5,

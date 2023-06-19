@@ -30,13 +30,17 @@ describe("Concurrency: Promises", () => {
                         )
                         .then((res) => {
                             expect(res).toBeDefined();
-                            client.close(() => {
+                            void client.close(() => {
                                 if (++callbackCount === CONNECTIONS) done();
                             });
                         })
-                        .catch((ex) => done(ex));
+                        .catch((ex) => {
+                            done(ex);
+                        });
                 })
-                .catch((ex) => done(ex));
+                .catch((ex) => {
+                    done(ex);
+                });
         }
     }, 20000);
 
@@ -51,13 +55,17 @@ describe("Concurrency: Promises", () => {
                     (client.ping() as Promise<boolean>)
                         .then((res) => {
                             expect(res).toBeTruthy();
-                            client.close(() => {
+                            void client.close(() => {
                                 if (++callbackCount === CLIENTS) done();
                             });
                         })
-                        .catch((ex) => done(ex))
+                        .catch((ex) => {
+                            done(ex);
+                        })
                 )
-                .catch((ex) => done(ex));
+                .catch((ex) => {
+                    done(ex);
+                });
         }
     }, 20000);
 });

@@ -8,20 +8,20 @@ describe("Errors: Invoke", () => {
     const client = direct_client();
 
     beforeEach(function (done) {
-        client.open(function (err) {
+        void client.open((err: unknown) => {
             done(err);
         });
     });
 
     afterEach(function (done) {
-        client.close(function () {
+        void client.close(() => {
             done();
         });
     });
 
     test("error: invoke() rfm parameter name must not be empty", function (done) {
         expect.assertions(1);
-        client.invoke("STFC_CONNECTION", { "": "" }, function (err) {
+        client.invoke("STFC_CONNECTION", { "": "" }, function (err: unknown) {
             expect(err).toMatchObject(
                 new TypeError(
                     `Empty RFM parameter name when calling "STFC_CONNECTION"`
@@ -33,7 +33,7 @@ describe("Errors: Invoke", () => {
 
     test("error: invoke() rfm parameter name must be a valid string", function (done) {
         expect.assertions(1);
-        client.invoke("STFC_CONNECTION", { "%$": "" }, function (err) {
+        client.invoke("STFC_CONNECTION", { "%$": "" }, function (err: unknown) {
             expect(err).toMatchObject(
                 new TypeError(
                     `RFM parameter name invalid: "%$" when calling "STFC_CONNECTION"`
@@ -77,7 +77,7 @@ describe("Errors: Invoke", () => {
             {
                 XXX: "wrong param",
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toMatchObject({
                     code: 20,
                     key: "RFC_INVALID_PARAMETER",
@@ -100,7 +100,7 @@ describe("Errors: Invoke", () => {
             {
                 IMPORTSTRUCT: importStruct,
             },
-            function (err) {
+            function (err: unknown) {
                 expect(err).toMatchObject({
                     name: "RfcLibError",
                     code: 20,
@@ -140,10 +140,10 @@ describe("Errors: Invoke", () => {
 
     test("error: close() closed connection", function (done) {
         expect.assertions(3);
-        client.close((err) => {
+        void client.close((err: unknown) => {
             expect(err).not.toBeDefined();
             expect(client.alive).toBe(false);
-            client.close((err) => {
+            void client.close((err: unknown) => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
@@ -158,12 +158,12 @@ describe("Errors: Invoke", () => {
 
     test("error: invoke() over closed connection", function (done) {
         expect.assertions(2);
-        client.close(() => {
+        void client.close(() => {
             expect(client.alive).toBe(false);
             client.invoke(
                 "STFC_CONNECTION",
                 { REQUTEXT: UNICODETEST },
-                function (err) {
+                function (err: unknown) {
                     expect(err).toEqual(
                         expect.objectContaining({
                             message:

@@ -34,7 +34,7 @@
     "tsconfig.json"
   ],
   "scripts": {
-    "cpp": "prebuildify --napi  -t 16.13.1 --force --strip --verbose",
+    "cpp": "prebuildify --napi  -t 16.20.0 --force --strip --verbose",
     "install": "node-gyp-build",
     "rebuild": "npm run install --build-from-source",
     "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
@@ -71,7 +71,6 @@
     "jest": "^29.5.0",
     "node-gyp": "^9.4.0",
     "prebuildify": "^5.0.1",
-    "random-bytes": "^1.0.0",
     "ts-jest": "^29.1.0",
     "typescript": "^5.0.2"
   },

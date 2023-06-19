@@ -12,8 +12,8 @@ module.exports = () => {
         expect.assertions(3);
 
         let count = 0;
-        (direct_client().open() as Promise<Client>).then((client) => {
-            client
+        void (direct_client().open() as Promise<Client>).then((client) => {
+            void client
                 .call("RFC_PING_AND_WAIT", {
                     SECONDS: WAIT_SECONDS,
                 })
@@ -23,7 +23,7 @@ module.exports = () => {
             // Call not blocking
             //expect(client.runningRFCCalls).toEqual(1);
 
-            client
+            void client
                 .call("RFC_PING_AND_WAIT", {
                     SECONDS: WAIT_SECONDS,
                 })
@@ -32,7 +32,7 @@ module.exports = () => {
                 });
             //expect(client.runningRFCCalls).toEqual(1);
 
-            client
+            void client
                 .call("RFC_PING_AND_WAIT", {
                     SECONDS: WAIT_SECONDS,
                 })
@@ -43,7 +43,9 @@ module.exports = () => {
             //expect(client.runningRFCCalls).toEqual(1);
 
             (client.close() as Promise<void>)
-                .then(() => done("error!"))
+                .then(() => {
+                    done("error!");
+                })
                 .catch((ex) => {
                     expect(ex).toEqual(
                         "Close rejected because 3 RFC calls still running"
@@ -59,8 +61,8 @@ module.exports = () => {
         expect.assertions(5);
         let count = 0;
 
-        (direct_client().open() as Promise<Client>).then((client) => {
-            client
+        void (direct_client().open() as Promise<Client>).then((client) => {
+            void client
                 .call("RFC_PING_AND_WAIT", {
                     SECONDS: WAIT_SECONDS,
                 })
@@ -68,7 +70,7 @@ module.exports = () => {
 
             expect(count).toEqual(0);
 
-            (client.ping() as Promise<boolean>).then((res) => {
+            void (client.ping() as Promise<boolean>).then((res) => {
                 expect(res).toBeTruthy();
                 count++;
             });
@@ -90,22 +92,22 @@ module.exports = () => {
         expect.assertions(8);
         let count = 0;
 
-        (direct_client().open() as Promise<Client>).then((client) => {
-            (client.ping() as Promise<boolean>).then((res) => {
+        void (direct_client().open() as Promise<Client>).then((client) => {
+            void (client.ping() as Promise<boolean>).then((res) => {
                 expect(res).toBeTruthy();
                 count++;
             });
 
             expect(count).toEqual(0);
 
-            (client.ping() as Promise<boolean>).then((res) => {
+            void (client.ping() as Promise<boolean>).then((res) => {
                 expect(res).toBeTruthy();
                 count++;
             });
 
             expect(count).toEqual(0);
 
-            (client.ping() as Promise<boolean>).then((res) => {
+            void (client.ping() as Promise<boolean>).then((res) => {
                 expect(res).toBeTruthy();
                 count++;
             });
@@ -113,7 +115,7 @@ module.exports = () => {
             // Ping not blocking
             expect(count).toEqual(0);
 
-            (client.close() as Promise<void>).then(() => {
+            void (client.close() as Promise<void>).then(() => {
                 // Close scheduled after invoke() and ping()
                 expect(count).toEqual(3);
                 done();
@@ -127,8 +129,8 @@ module.exports = () => {
 
         let count = 0;
 
-        (direct_client().open() as Promise<Client>).then((client) => {
-            client
+        void (direct_client().open() as Promise<Client>).then((client) => {
+            void client
                 .call("RFC_PING_AND_WAIT", {
                     SECONDS: WAIT_SECONDS,
                 })
@@ -155,8 +157,8 @@ module.exports = () => {
 
         let count = 0;
 
-        (direct_client().open() as Promise<Client>).then((client) => {
-            (client.ping() as Promise<boolean>).then((res) => {
+        void (direct_client().open() as Promise<Client>).then((client) => {
+            void (client.ping() as Promise<boolean>).then((res) => {
                 expect(res).toBeTruthy();
                 count++;
             });
@@ -164,7 +166,7 @@ module.exports = () => {
             // Call not blocking
             expect(count).toEqual(0);
 
-            (client.close() as Promise<void>).then(() => {
+            void (client.close() as Promise<void>).then(() => {
                 // Close scheduled after invokes completed
                 expect(count).toEqual(1);
                 done();

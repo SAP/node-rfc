@@ -8,13 +8,13 @@ describe("RFC Call options - promise", () => {
     const client = direct_client();
 
     beforeEach(function (done) {
-        client.open(function (err) {
+        void client.open(function (err) {
             done(err);
         });
     });
 
     afterEach(function (done) {
-        client.close(function (err) {
+        void client.close(function (err) {
             done(err);
         });
     });

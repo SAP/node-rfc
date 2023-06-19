@@ -52,7 +52,9 @@ function terminate(workerData: unknown) {
     return new Promise((resolve, reject) => {
         const terminator = new Worker(
             path.join(__dirname, "./wrapper/cancel.js"),
-            { workerData }
+            {
+                workerData,
+            }
         );
         terminator.on("message", resolve);
         terminator.on("error", reject);

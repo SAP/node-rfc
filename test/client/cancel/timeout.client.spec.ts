@@ -19,7 +19,7 @@ describe("Connection terminate timeout", () => {
     test("Client options timeout", function (done) {
         const client = new Client({ dest: "MME" }, { timeout: TIMEOUT });
         expect.assertions(3);
-        client.open(() => {
+        void client.open(() => {
             // call function
             const handle = client.connectionHandle;
             client.invoke(
@@ -31,8 +31,9 @@ describe("Connection terminate timeout", () => {
                     expect(client.alive).toEqual(true);
                     expect(err).toMatchObject(RfcCanceledError);
                     expect(client.connectionHandle).not.toEqual(handle);
-                    client.close();
-                    done();
+                    void client.close(() => {
+                        done();
+                    });
                 }
             );
         });

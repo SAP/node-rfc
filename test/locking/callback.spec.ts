@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { direct_client } from "../utils/setup";
+import { RfcObject, direct_client } from "../utils/setup";
 
 describe("Locking: Callbacks", () => {
     const WAIT_SECONDS = 1;
@@ -13,8 +13,8 @@ describe("Locking: Callbacks", () => {
 
         let count = 0;
         const client = direct_client();
-        client.connect((err) => {
-            if (err) return done(err);
+        void client.connect((err: unknown) => {
+            if (err) return done(err) as unknown;
 
             client.invoke(
                 "RFC_PING_AND_WAIT",
@@ -22,7 +22,21 @@ describe("Locking: Callbacks", () => {
                     SECONDS: WAIT_SECONDS,
                 },
                 function (err) {
-                    if (err) return done(err);
+                    if (err) return done(err) as unknown;
+                    count++;
+                }
+            );
+
+            // Invoke not blocking
+            expect(count).toEqual(0);
+
+            client.invoke(
+                "RFC_PING_AND_WAIT",
+                {
+                    SECONDS: WAIT_SECONDS,
+                },
+                function (err: unknown) {
+                    if (err) return done(err) as unknown;
                     count++;
                 }
             );
@@ -36,21 +50,7 @@ describe("Locking: Callbacks", () => {
                     SECONDS: WAIT_SECONDS,
                 },
                 function (err) {
-                    if (err) return done(err);
-                    count++;
-                }
-            );
-
-            // Invoke not blocking
-            expect(count).toEqual(0);
-
-            client.invoke(
-                "RFC_PING_AND_WAIT",
-                {
-                    SECONDS: WAIT_SECONDS,
-                },
-                function (err) {
-                    if (err) return done(err);
+                    if (err) return done(err) as unknown;
                     count++;
                     done();
                 }
@@ -82,8 +82,8 @@ describe("Locking: Callbacks", () => {
         let count = 0;
 
         const client = direct_client();
-        client.connect((err) => {
-            if (err) return done(err);
+        void client.connect((err: unknown) => {
+            if (err) return done(err) as unknown;
             client.invoke(
                 "RFC_PING_AND_WAIT",
                 {
@@ -96,7 +96,7 @@ describe("Locking: Callbacks", () => {
             // Invoke not blocking
             expect(count).toEqual(0);
 
-            client.ping((err, res) => {
+            void client.ping((err: unknown, res: boolean) => {
                 expect(res).toBe(true);
                 count++;
                 done();
@@ -126,15 +126,15 @@ describe("Locking: Callbacks", () => {
         let count = 0;
 
         const client = direct_client();
-        client.connect((err) => {
-            if (err) return done(err);
+        void client.connect((err: unknown) => {
+            if (err) return done(err) as unknown;
             for (let i = 0; i < COUNT; i++) {
-                client.ping((err, res) => {
-                    if (err) return done(err);
+                void client.ping((err: unknown, res: RfcObject) => {
+                    if (err) return done(err) as unknown;
                     expect(res).toBe(true);
                     count++;
                     if (count === COUNT) {
-                        client.close((err) => {
+                        void client.close((err) => {
                             // Close after all ping calls completed
                             expect(err).toBeUndefined();
                             expect(count).toEqual(COUNT);
@@ -153,8 +153,8 @@ describe("Locking: Callbacks", () => {
         let count = 0;
 
         const client = direct_client();
-        client.connect((err) => {
-            if (err) return done(err);
+        void client.connect((err: unknown) => {
+            if (err) return done(err) as unknown;
             client.invoke(
                 "RFC_PING_AND_WAIT",
                 {
@@ -176,7 +176,7 @@ describe("Locking: Callbacks", () => {
             // Invoke not blocking
             expect(count).toEqual(0);
 
-            client.close(() => {
+            void client.close(() => {
                 count++;
             });
 
@@ -190,16 +190,16 @@ describe("Locking: Callbacks", () => {
         let count = 0;
 
         const client = direct_client();
-        client.connect((err) => {
-            if (err) return done(err);
+        void client.connect((err: unknown) => {
+            if (err) return done(err) as unknown;
 
-            client.ping((err, res) => {
+            void client.ping((err: unknown, res: boolean) => {
                 expect(res).toBeTruthy();
                 count++;
             });
             expect(count).toEqual(0);
 
-            client.close((err) => {
+            void client.close((err: unknown) => {
                 expect(err).toBeUndefined();
                 // Close scheduled after ping()
                 expect(count).toEqual(1);

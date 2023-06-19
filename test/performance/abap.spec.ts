@@ -2,19 +2,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { direct_client } from "../utils/setup";
+import { RfcObject, RfcTable, direct_client } from "../utils/setup";
 
 describe("Performance: ABAP", () => {
     const client = direct_client();
 
     beforeEach(function (done) {
-        client.open((err) => {
+        void client.open((err: unknown) => {
             done(err);
         });
     });
 
     afterEach(function (done) {
-        client.close(() => {
+        void client.close(() => {
             done();
         });
     });
@@ -28,8 +28,8 @@ describe("Performance: ABAP", () => {
                 {
                     USERNAME: "DEMO",
                 },
-                function (err, res) {
-                    if (err) return done(err);
+                function (err: unknown, res: RfcObject) {
+                    if (err) return done(err) as unknown;
                     expect(res).toBeDefined();
                     expect(Object.keys(res).sort()).toEqual(
                         expect.arrayContaining([
@@ -44,7 +44,9 @@ describe("Performance: ABAP", () => {
                             "RETURN",
                         ])
                     );
-                    client.close(() => done());
+                    void client.close(() => {
+                        done();
+                    });
                 }
             );
         },
@@ -63,11 +65,13 @@ describe("Performance: ABAP", () => {
                     LGET1000: COUNT.toString(),
                 },
 
-                function (err, res) {
-                    if (err) return done(err);
-                    expect(res.ETAB0332.length).toBe(COUNT);
-                    expect(res.ETAB1000.length).toBe(COUNT);
-                    client.close(() => done());
+                function (err: unknown, res: RfcObject) {
+                    if (err) return done(err) as unknown;
+                    expect((res.ETAB0332 as RfcTable).length).toBe(COUNT);
+                    expect((res.ETAB1000 as RfcTable).length).toBe(COUNT);
+                    void client.close(() => {
+                        done();
+                    });
                 }
             );
         },

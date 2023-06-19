@@ -2,19 +2,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { direct_client } from "../utils/setup";
+import { direct_client, RfcStructure, RfcTable } from "../utils/setup";
 
 describe("RFC Call options - callback", () => {
     const client = direct_client();
 
     beforeEach(function (done) {
-        client.open(function (err) {
+        void client.open(function (err) {
             done(err);
         });
     });
 
     afterEach(function (done) {
-        client.close(function (err) {
+        void client.close(function (err) {
             done(err);
         });
     });
@@ -42,7 +42,9 @@ describe("RFC Call options - callback", () => {
                     expect(err).toBeUndefined();
                     expect(res).toBeDefined();
                     expect(res).toHaveProperty("ET_RETURN");
-                    expect(res.ET_RETURN.length).toBe(0);
+                    const et_return_table = (res as RfcStructure)
+                        .ET_RETURN as RfcTable;
+                    expect(et_return_table.length).toBe(0);
                     done();
                 },
                 {
@@ -60,13 +62,15 @@ describe("RFC Call options - callback", () => {
                 IV_PLNTY: "A",
                 IV_PLNNR: "00100000",
             },
-            function (err, res) {
+            function (err: unknown, res) {
                 // ET_RETURN error if all params requested
                 expect(err).toBeUndefined();
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty("ET_RETURN");
-                expect(res.ET_RETURN.length).toBe(1);
-                expect(res.ET_RETURN[0]).toEqual(
+                const et_return_table = (res as RfcStructure)
+                    .ET_RETURN as RfcTable;
+                expect(et_return_table.length).toBe(1);
+                expect(et_return_table[0]).toEqual(
                     expect.objectContaining({
                         TYPE: "E",
                         ID: "DIWP1",

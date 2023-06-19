@@ -2,29 +2,23 @@
 # https://github.com/nodejs/node-gyp/blob/main/addon.gypi
 # https://github.com/nodejs/node/blob/eaaee92d9b0be82d7f40b2abb67f30ce525d4bc4/common.gypi
 # https://github.com/chromium/gyp/blob/md-pages/docs/InputFormatReference.md
+# Darwin: https://developer.apple.com/library/archive/documentation/DeveloperTools/Reference/XcodeBuildSettingRef/1-Build_Setting_Reference/build_setting_ref.html#//apple_ref/doc/uid/TP40003931-CH3-SW105
 
 {
     'variables': {
         'nwrfcsdk_dir': '<!(echo $SAPNWRFC_HOME)',
         'napi_include_dir': "<!(node -p \"require('node-addon-api').include_dir\")",
+        'node_include_dir': '<!(echo "$(npm -g prefix)/include")',
         'nwrfcsdk_include_dir': "<(nwrfcsdk_dir)/include",
         'nwrfcsdk_lib_dir': "<(nwrfcsdk_dir)/lib",
         'napi_version': "<!(node -p \"require('./package.json').config.napi_version\")",
         'node_abi_version': "<!(node -p 'process.versions.modules')",
         # per NodeJS build requirements: https://github.com/nodejs/node/blob/main/BUILDING.md
         'macosx_version_min': '10.15',
+        'cpp_standard': 'c++17',
         'target_name': 'sapnwrfc',
-        'conditions':
-        [
-            ['OS=="win"',
-                {
-                    'nwrfcsdk_dir': '<!(echo %SAPNWRFC_HOME%)',
-                }
-            ]
-        ],
         'ccflags_defaults': [
-            '-std=c++17',
-            '-std=gnu++17',
+            '-std=<(cpp_standard)',
             '-fno-rtti',
             '-Wno-unused-variable',
         ]
@@ -81,10 +75,10 @@
         }
     },
 
-    "targets": [
+    'targets': [
         {
-            "target_name": "<(target_name)",
-            "sources": [
+            'target_name': '<(target_name)',
+            'sources': [
                 'src/cpp/addon.cc',
                 'src/cpp/nwrfcsdk.cc',
                 'src/cpp/Client.cc',
@@ -138,7 +132,7 @@
                             ],
                         },
                         'xcode_settings': {
-                            'CLANG_CXX_LANGUAGE_STANDARD':'c++17',
+                            'CLANG_CXX_LANGUAGE_STANDARD': '<(cpp_standard)',
                             'DYLIB_INSTALL_NAME_BASE': '@rpath',
                             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
                             'GCC_WARN_PEDANTIC': 'YES',
@@ -157,8 +151,8 @@
                 [
                     'OS=="linux"',
                     {
-                        'cflags_cc+': [
-                            '-std=c++17',
+                        'cflags_cc': [
+                            '-std=<(cpp_standard)',
                             '-Wall', '-Wextra', '-Werror',
                             '-fvisibility=hidden',
                             '-fPIC',
@@ -183,6 +177,10 @@
                 [
                     'OS=="win"',
                     {
+                        'variables': {
+                            'node_include_dir': '<!(npm -g prefix)/include"',
+                            'nwrfcsdk_dir': '<!(echo %SAPNWRFC_HOME%)',
+                        },
                         'defines': [
                             'PLATFORM="win32"',
                             'WIN32',
@@ -203,7 +201,7 @@
                             'VCCLCompilerTool': {
                                 'ExceptionHandling': 1,
                                 'WholeProgramOptimization': 'true', # /GL, whole program optimization, needed for LTCG
-                                'AdditionalOptions': [ '-std:c++17', ],
+                                'AdditionalOptions': [ '-std:<cpp_standard)', ],
                             },
                             'VCLibrarianTool': {
                                 'AdditionalOptions': [
@@ -215,7 +213,7 @@
                                 'EnableCOMDATFolding': 2, # /OPT:ICF
                                 'LinkIncremental': 1, # disable incremental linking
                                 'AdditionalOptions': [
-                                '/LTCG:INCREMENTAL', # incremental link-time code generation
+                                    '/LTCG:INCREMENTAL', # incremental link-time code generation
                                 ],
                                 'AdditionalLibraryDirectories': ['<(nwrfcsdk_lib_dir)'],
                                 'AdditionalDependencies': ['sapnwrfc.lib', 'libsapucum.lib'],

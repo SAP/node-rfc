@@ -19,7 +19,7 @@ describe.skip("Connection terminate by addon", () => {
     test("Non-managed, addon.cancelClient() callback", function (done) {
         const client = direct_client();
         expect.assertions(3);
-        client.open(() => {
+        void client.open(() => {
             // call function
             const handle = client.connectionHandle;
             client.invoke(
@@ -35,7 +35,7 @@ describe.skip("Connection terminate by addon", () => {
             // cancel
 
             setTimeout(() => {
-                cancelClient(client, (err, res) => {
+                void cancelClient(client, (err, res) => {
                     expect(err).toBeUndefined();
                     expect(res).toMatchObject({
                         connectionHandle: handle,

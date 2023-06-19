@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { direct_client, CONNECTIONS } from "../utils/setup";
+import { direct_client, CONNECTIONS, RfcObject } from "../utils/setup";
 
 describe("Concurrency: Callbacks", () => {
     const WAIT_SECONDS = 1;
@@ -14,8 +14,8 @@ describe("Concurrency: Callbacks", () => {
 
         for (let i = 0; i < CONNECTIONS; i++) {
             const c = direct_client();
-            c.connect((err) => {
-                if (err) return done(err);
+            void c.connect((err: unknown) => {
+                if (err) return done(err) as unknown;
                 c.invoke(
                     i % 2 === 0 ? "BAPI_USER_GET_DETAIL" : "RFC_PING_AND_WAIT",
                     i % 2 === 0
@@ -25,10 +25,10 @@ describe("Concurrency: Callbacks", () => {
                         : {
                               SECONDS: WAIT_SECONDS,
                           },
-                    (err, res) => {
-                        if (err) return done(err);
+                    (err: unknown, res: RfcObject) => {
+                        if (err) return done(err) as unknown;
                         expect(res).toBeDefined();
-                        c.close(() => {
+                        void c.close(() => {
                             if (++callbackCount === CONNECTIONS) done();
                         });
                     }
@@ -43,12 +43,12 @@ describe("Concurrency: Callbacks", () => {
 
         for (let i = 0; i < CONNECTIONS; i++) {
             const c = direct_client();
-            c.connect((err) => {
-                if (err) return done(err);
+            void c.connect((err: unknown) => {
+                if (err) return done(err) as unknown;
 
-                c.ping((err, res) => {
+                void c.ping((err: unknown, res: boolean) => {
                     expect(res).toBeTruthy();
-                    c.close(() => {
+                    void c.close(() => {
                         if (++callbackCount === CONNECTIONS) done();
                     });
                 });

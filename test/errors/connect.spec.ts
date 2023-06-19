@@ -18,7 +18,7 @@ describe("Errors: Connect", () => {
         expect.assertions(2);
 
         const wrongClient = direct_client("MME_NO_ASHOST");
-        wrongClient.connect(function (err) {
+        void wrongClient.connect(function (err) {
             expect(err).toBeDefined();
             expect(err).toMatchObject({
                 code: 20,
@@ -35,7 +35,7 @@ describe("Errors: Connect", () => {
     test("error: conect() rejects invalid credentials", function (done) {
         expect.assertions(2);
         const wrongClient = direct_client("MME_WRONG_USER");
-        wrongClient.connect(function (err) {
+        void wrongClient.connect(function (err) {
             expect(err).toBeDefined();
             expect(err).toMatchObject({
                 message: "Name or password is incorrect (repeat logon)",
@@ -48,7 +48,7 @@ describe("Errors: Connect", () => {
 
     test("error: close() over closed connection", function (done) {
         expect.assertions(2);
-        client.close((err) => {
+        void client.close((err) => {
             expect(err).toMatchObject({
                 name: "nodeRfcError",
                 message: "RFM client request over closed connection: close()",

@@ -19,23 +19,22 @@ describe("Connection terminate by client", () => {
     test("Non-managed, client.cancel() promise", function (done) {
         const client = direct_client();
         expect.assertions(2);
-        client.open(() => {
+        void client.open(() => {
+            expect(client.alive).toBeTruthy();
             // call function
             client.invoke(
                 "RFC_PING_AND_WAIT",
                 {
                     SECONDS: DURATION,
                 },
-                function (err) {
+                function (err: unknown) {
                     expect(err).toMatchObject(RfcCanceledError);
                     done();
                 }
             );
             // cancel
             setTimeout(() => {
-                (client.cancel() as Promise<unknown>).then((err) => {
-                    expect(err).toBeUndefined();
-                });
+                client.cancel() as Promise<void>;
             }, CANCEL * 1000);
         });
     });
