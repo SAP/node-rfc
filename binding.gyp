@@ -8,7 +8,6 @@
     'variables': {
         'nwrfcsdk_dir': '<!(echo $SAPNWRFC_HOME)',
         'napi_include_dir': "<!(node -p \"require('node-addon-api').include_dir\")",
-        'node_include_dir': '<!(echo "$(npm -g prefix)/include")',
         'nwrfcsdk_include_dir': "<(nwrfcsdk_dir)/include",
         'nwrfcsdk_lib_dir': "<(nwrfcsdk_dir)/lib",
         'napi_version': "<!(node -p \"require('./package.json').config.napi_version\")",
