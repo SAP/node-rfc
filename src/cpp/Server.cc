@@ -153,12 +153,12 @@ RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle,
 
   printf("genericHandler for: ");
   printfU(func_name);
-  printf(" func_handle: %lu\n", (pointer_t)func_handle);
+  printf(" func_handle: %p\n", (void *)func_handle);
 
   ServerFunctionsMap::iterator it = server->serverFunctions.begin();
   while (it != server->serverFunctions.end()) {
     if (strcmpU(func_name, it->second.func_name) == 0) {
-      printf("found func_desc %lu\n", (pointer_t)it->second.func_desc_handle);
+      printf("found func_desc %p\n", (void *)it->second.func_desc_handle);
       break;
     }
     ++it;
