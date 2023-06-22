@@ -7,18 +7,18 @@
 import { EventEmitter } from "events";
 
 import { Worker } from "worker_threads";
-import { Client } from "./wrapper/sapnwrfc-client";
+import { Client } from "./sapnwrfc-client";
 
 import fs from "fs";
 import path from "path";
 
-export * from "./wrapper/noderfc-bindings";
-export * from "./wrapper/sapnwrfc-client";
-export * from "./wrapper/sapnwrfc-pool";
-export * from "./wrapper/sapnwrfc-throughput";
-export * from "./wrapper/sapnwrfc-server";
+export * from "./noderfc-bindings";
+export * from "./sapnwrfc-client";
+export * from "./sapnwrfc-pool";
+export * from "./sapnwrfc-throughput";
+export * from "./sapnwrfc-server";
 
-import { noderfc_binding } from "./wrapper/noderfc-bindings";
+import { noderfc_binding } from "./noderfc-bindings";
 
 //
 // Addon functions
@@ -50,12 +50,9 @@ export const sapnwrfcEvents = new EventEmitter();
 
 function terminate(workerData: unknown) {
     return new Promise((resolve, reject) => {
-        const terminator = new Worker(
-            path.join(__dirname, "./wrapper/cancel.js"),
-            {
-                workerData,
-            }
-        );
+        const terminator = new Worker(path.join(__dirname, "./cancel.js"), {
+            workerData,
+        });
         terminator.on("message", resolve);
         terminator.on("error", reject);
         terminator.on("exit", (code) => {

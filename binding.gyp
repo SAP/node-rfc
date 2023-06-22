@@ -17,6 +17,7 @@
         'macosx_version_min': '10.15',
         'cpp_standard': 'c++17',
         'target_name': 'sapnwrfc',
+
         'ccflags_defaults': [
             '-std=<(cpp_standard)',
             '-fno-rtti',
@@ -139,8 +140,9 @@
                             'CLANG_CXX_LIBRARY': 'libc++',
                             'MACOSX_DEPLOYMENT_TARGET': '<(macosx_version_min)',
                             'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES', # -fvisibility=hidden
-                            # 'OTHER_CFLAGS': [ '-std=c++17'],
-                            # 'OTHER_LDFLAGS':[ ],
+                            'OTHER_CFLAGS': [
+                                '-std=<(cpp_standard)',
+                            ],
                             'OTHER_CPLUSPLUSFLAGS': [
                                 '<@(ccflags_defaults)',
                                 '<@(ccflags_mac)'

@@ -845,6 +845,8 @@ describe("Datatypes: all", () => {
                 expect(res).toBeDefined();
                 expect(res).toHaveProperty("ECHOSTRUCT");
                 expect(res).toHaveProperty("RFCTABLE");
+                const ECHOSTRUCT = (res as RfcObject)
+                    .ECHOSTRUCT as RfcStructure;
                 expect((res.ECHOSTRUCT as RfcStructure).RFCINT1).toBe(0);
                 expect((res.RFCTABLE as RfcStructure[])[0].RFCINT1).toBe(0);
                 expect((res.RFCTABLE as RfcStructure[])[1].RFCINT1).toBe(1);

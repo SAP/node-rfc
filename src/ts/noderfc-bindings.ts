@@ -11,7 +11,6 @@ import { RfcPoolBinding } from "./sapnwrfc-pool";
 import { RfcThroughputBinding } from "./sapnwrfc-throughput";
 import { RfcServerBinding } from "./sapnwrfc-server";
 
-export const USAGE_URL = "https://github.com/SAP/node-rfc#usage";
 export interface NodeRfcBindingVersions {
     version: string;
     nwrfcsdk: { major: number; minor: number; patchLevel: number };
@@ -76,8 +75,7 @@ if (E.platform.name === "win32") {
 let noderfc_binding: NWRfcBinding;
 
 try {
-    // eslint-disable-next-line
-    noderfc_binding = require("node-gyp-build")();
+    noderfc_binding = require("node-gyp-build")(__dirname);
 } catch (ex) {
     const err = ex as Error;
     err.message += `\nenvironment: ${JSON.stringify(E, null, 2)}\n`;

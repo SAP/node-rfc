@@ -28,21 +28,23 @@
     "test": "test"
   },
   "files": [
-    "prebuilds",
+    "binding.gyp",
+    "lib",
     "src",
-    "CMakeLists.txt",
     "tsconfig.json"
   ],
   "scripts": {
-    "cpp": "prebuildify --napi  -t 16.20.0 --force --strip --verbose",
     "install": "node-gyp-build",
-    "rebuild": "npm run install --build-from-source",
     "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
     "lint": "npm run lintts && npm run lintcpp",
     "lintcpp": "cppcheck -I node_modules/node-addon_api --enable=all --inline-suppr src/cpp",
-    "lintts": "eslint src/ts/wrapper --ext ts",
+    "lintts": "eslint src/ts--ext ts",
     "test": "npm audit --omit=dev && reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000",
-    "ts": "tsc"
+    "cpp": "prebuildify --napi -t 16.20.0 --force --strip --verbose",
+    "ts": "tsc",
+    "build": "npm run ts && npm run cpp",
+    "_rebuild": "node-gyp rebuild",
+    "rebuild": "npm run install --build-from-source"
   },
   "config": {
     "commitizen": {
@@ -76,5 +78,6 @@
   },
   "engines": {
     "node": ">=16.0.0"
-  }
+  },
+  "gypfile": true
 }
