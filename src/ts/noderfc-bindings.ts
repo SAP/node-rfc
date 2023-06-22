@@ -4,6 +4,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import path from "path";
 import os from "os";
 import { Promise } from "bluebird";
 import { RfcClientBinding } from "./sapnwrfc-client";
@@ -75,7 +76,7 @@ if (E.platform.name === "win32") {
 let noderfc_binding: NWRfcBinding;
 
 try {
-    noderfc_binding = require("node-gyp-build")(__dirname);
+    noderfc_binding = require("node-gyp-build")(path.join(__dirname, "../"));
 } catch (ex) {
     const err = ex as Error;
     err.message += `\nenvironment: ${JSON.stringify(E, null, 2)}\n`;
