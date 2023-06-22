@@ -76,7 +76,7 @@ if (E.platform.name === "win32") {
 let noderfc_binding: NWRfcBinding;
 
 try {
-    noderfc_binding = require("node-gyp-build")(path.join(__dirname, "../"));
+    noderfc_binding = require("node-gyp-build")(path.resolve(__dirname, ".."));
 } catch (ex) {
     const err = ex as Error;
     err.message += `\nenvironment: ${JSON.stringify(E, null, 2)}\n`;

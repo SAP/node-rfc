@@ -7,9 +7,9 @@ import os from "os";
 
 import { version } from "../../package.json";
 export { version, dependencies } from "../../package.json";
-import { Client } from "../../lib/index";
-import * as binding from "../../lib/index";
-export * as binding from "../../lib/index";
+import { Client } from "../../prebuilds";
+import * as binding from "../../prebuilds";
+export * as binding from "../../prebuilds";
 
 export {
     Client,
@@ -25,7 +25,7 @@ export {
     RfcStructure,
     RfcObject,
     NWRfcSdkError,
-} from "../../lib/index";
+} from "../../prebuilds";
 
 import { abapSystem } from "./abapSystem";
 export { abapSystem } from "./abapSystem";
