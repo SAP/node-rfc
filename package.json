@@ -21,15 +21,15 @@
     "name": "Srdjan Boskovic",
     "email": "srdjan.boskovic@sap.com"
   },
-  "main": "./lib/index.js",
-  "types": "./lib/index.d.ts",
+  "main": "./prebuilds/index.js",
+  "types": "./prebuilds/index.d.ts",
   "directories": {
     "doc": "doc",
     "test": "test"
   },
   "files": [
     "binding.gyp",
-    "lib",
+    "prebuilds",
     "src",
     "tsconfig.json"
   ],
