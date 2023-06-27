@@ -101,7 +101,7 @@
                     {
                         'variables': {
                             'ccflags_mac': [
-                                '-Wpedantic', '-Wall', '-Wextra', '-Werror',
+                                '-Wpedantic', '-Wall', '-Wextra', '-Werror', '-Wuninitialized', '-Wunreachable-code',
                                 '-stdlib=libc++',
                                 '-std=<(cpp_standard)',
                                 '-mmacosx-version-min=<(macosx_version_min)',
@@ -132,14 +132,15 @@
                         },
                         'xcode_settings': {
                             'CLANG_CXX_LANGUAGE_STANDARD': '<(cpp_standard)',
+                            'CLANG_CXX_LIBRARY': 'libc++',
                             'DYLIB_INSTALL_NAME_BASE': '@rpath',
                             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
-                            'GCC_WARN_PEDANTIC': 'YES',
-                            'CLANG_CXX_LIBRARY': 'libc++',
-                            'MACOSX_DEPLOYMENT_TARGET': '<(macosx_version_min)',
                             'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES', # -fvisibility=hidden
+                            'GCC_WARN_PEDANTIC': 'YES',
+                            'MACOSX_DEPLOYMENT_TARGET': '<(macosx_version_min)',
                             'OTHER_CFLAGS': [
                                 '-std=<(cpp_standard)',
+                                '-Wl,-bind_at_load'
                             ],
                             'OTHER_CPLUSPLUSFLAGS': [
                                 '<@(ccflags_defaults)',
@@ -155,7 +156,7 @@
                         'cflags_cc': [
                             '-std=<(cpp_standard)',
                             '-std=<(cpp_standard)',
-                            '-Wall', '-Wextra', '-Werror',
+                            '-Wall', '-Wextra', '-Werror', '-Wuninitialized', '-Wunreachable-code',
                             '-fvisibility=hidden',
                             '-fPIC',
                             '-MD', '-MT'
@@ -182,7 +183,7 @@
                         'variables': {
                             'nwrfcsdk_dir': '<!(echo %SAPNWRFC_HOME%)',
                             'nwrfcsdk_include_dir': "<(nwrfcsdk_dir)/include",
-                            'nwrfcsdk_lib_dir': "<(nwrfcsdk_dir)/lib",                            
+                            'nwrfcsdk_lib_dir': "<(nwrfcsdk_dir)/lib",
                         },
                         'include_dirs': ['<(napi_include_dir)', '<(nwrfcsdk_include_dir)'],
                         'defines': [
