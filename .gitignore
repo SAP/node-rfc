@@ -22,6 +22,7 @@ examples/dist/
 # https://github.com/Microsoft/vscode-cpptools/issues/3347
 .vscode/ipch
 prebuilds/
+lib/
 Makefile
 cmake_install.cmake
 CMakeCache.txt

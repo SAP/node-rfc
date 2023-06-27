@@ -1,6 +1,6 @@
 {
   "name": "node-rfc",
-  "version": "2.7.2-rc.5",
+  "version": "2.7.2-rc.6",
   "description": "nodejs bindings for SAP NW RFC SDK",
   "keywords": [
     "sap",
@@ -29,22 +29,22 @@
   },
   "files": [
     "binding.gyp",
-    "prebuilds",
+    "tsconfig.json",
     "src",
-    "tsconfig.json"
+    "lib",
+    "prebuilds"
   ],
   "scripts": {
     "install": "node-gyp-build",
     "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
-    "lint": "npm run lintts && npm run lintcpp",
+    "lint": "npm run lintts && npm run lintcpp && npm audit --omit=dev && reuse lint",
     "lintcpp": "cppcheck -I node_modules/node-addon_api --enable=all --inline-suppr src/cpp",
-    "lintts": "eslint src/ts--ext ts",
-    "test": "npm audit --omit=dev && reuse lint && jest --testPathIgnorePatterns throughput --testTimeout 30000",
+    "lintts": "eslint src/ts test --ext ts",
+    "test": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
     "cpp": "prebuildify --napi -t 16.20.0 --force --strip --verbose",
     "ts": "tsc",
     "build": "npm run ts && npm run cpp",
-    "_rebuild": "node-gyp rebuild",
-    "rebuild": "npm run install --build-from-source"
+    "rebuild": "npm install --build-from-source"
   },
   "config": {
     "commitizen": {

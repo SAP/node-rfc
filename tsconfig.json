@@ -12,9 +12,9 @@
     "noImplicitAny": false,
     "allowJs": false,
     "stripInternal": true,
-    "outDir": "./prebuilds"
+    "outDir": "./lib",
   },
-  "files": [
-    "src/ts/index"
+  "include": [
+    "src/**/*"
   ]
 }
