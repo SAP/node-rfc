@@ -1,6 +1,6 @@
 {
   "name": "node-rfc",
-  "version": "3.0.0-rc.1",
+  "version": "3.0.0-rc.2",
   "description": "nodejs bindings for SAP NW RFC SDK",
   "keywords": [
     "sap",
@@ -21,8 +21,8 @@
     "name": "Srdjan Boskovic",
     "email": "srdjan.boskovic@sap.com"
   },
-  "main": "./prebuilds/index.js",
-  "types": "./prebuilds/index.d.ts",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "directories": {
     "doc": "doc",
     "test": "test"
