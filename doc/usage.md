@@ -51,9 +51,9 @@
 
 ## Data Types
 
-NodeJS data types are automatically converted to ABAP data types and vice versa:
+Node.js data types are automatically converted to ABAP data types and vice versa:
 
-| NodeJS to ABAP                 | ABAP    | ABAP to NodeJS                   | Client Option                                             |
+| Node.js to ABAP                | ABAP    | ABAP to Node.js                  | Client Option                                             |
 | :----------------------------- | :------ | :------------------------------- | :-------------------------------------------------------- |
 | Number                         | INT     | Number                           |                                                           |
 | String                         | CHAR    | String                           |                                                           |
@@ -81,31 +81,31 @@ References:
 
 ABAP built-in numeric types are mapped to JavaScript Number Objects.
 
-Binary ABAP float type, FLOAT, is converted to NodeJS Number Object. Number, String, or Number Object can be sent from NodeJS to ABAP.
+Binary ABAP float type, FLOAT, is converted to Node.js Number Object. Number, String, or Number Object can be sent from Node.js to ABAP.
 
-Decimal ABAP float types, BCD, DECF16 and DECF34, are represented as NodeJS Strings by default.
+Decimal ABAP float types, BCD, DECF16 and DECF34, are represented as Node.js Strings by default.
 
 Optionally represented as the Number Object, or custom decimal number object like [Decimal](https://github.com/MikeMcl/decimal.js/), see [client option "bcd"](#decimal-data-conversion-option-bcd).
 
 ### Binary types
 
-ABAP binary types, BYTE and XSTRING, are mapped to NodeJS Buffer objects.
+ABAP binary types, BYTE and XSTRING, are mapped to Node.js Buffer objects.
 
 ### Date/Time types
 
-ABAP date and time types, DATS and TIMS, are character types in ABAP, represented as NodeJS String by default.
+ABAP date and time types, DATS and TIMS, are character types in ABAP, represented as Node.js String by default.
 
 Optionally represented as custom Date/Time objects, see [client options "date" and "time"](#date-and-time-conversion-options-date-and-time).
 
 ### UTCLONG
 
-ABAP UTCLONG type is mapped to NodeJS string, with initial value `0000-00-00T00:00:00.0000000`.
+ABAP UTCLONG type is mapped to Node.js string, with initial value `0000-00-00T00:00:00.0000000`.
 
 ## ABAP Function Module
 
 Remote enabled ABAP function modules (RFM) parameters can be ABAP variables, structures and tables.
 
-ABAP variables are mapped to NodeJS variables, ABAP structures to NodeJS objects (simple key-value pairs) and ABAP tables to NodeJS arrays of objects, representing ABAP structures.
+ABAP variables are mapped to Node.js variables, ABAP structures to Node.js objects (simple key-value pairs) and ABAP tables to Node.js arrays of objects, representing ABAP structures.
 
 Taking ABAP RFM `STFC_STRUCTURE` as example, we see four parameters:
 
@@ -132,7 +132,7 @@ FUNCTION STFC_STRUCTURE.
 
 Using ABAP transaction SE37 in ABAP backend system, you can enter the input data, run the function module and inspect results.
 
-To consume this function module from NodeJS, first the node-rfc client connection shall be instantiated, using ABAP backend system connection parameters.
+To consume this function module from Node.js, first the node-rfc client connection shall be instantiated, using ABAP backend system connection parameters.
 
 ## Addon
 
@@ -216,12 +216,12 @@ const langSAP = noderfc.languageSapToIso("E");
 
 API: [api/client](api.md#client)
 
-Using the client instance, ABAP RFMs can be consumed from NodeJS. The client constructor requires
+Using the client instance, ABAP RFMs can be consumed from Node.js. The client constructor requires
 [connection parameters](#connection-parameters) to ABAP backend system and, optionally, [client options](#client-options).
 
 ### Connection Parameters
 
-Connection parameters are provided as simple NodeJS object. The complete list of supported parameters is given in `sapnwrfc.ini` file, located in SAP NWRFC SDK `demo` folder.
+Connection parameters are provided as simple Node.js object. The complete list of supported parameters is given in `sapnwrfc.ini` file, located in SAP NWRFC SDK `demo` folder.
 
 ```javascript
 const abapConnection = {
@@ -323,7 +323,7 @@ Of course, the application could simply close the connection and open a fresh on
 
 With `bcd`, set to `number`, or to conversion function like [Decimal](https://github.com/MikeMcl/decimal.js/), decimal ABAP float types, BCD, DECF16 and DECF34 are represented as Number object or custom decimal number object.
 
-:exclamation: Using `number` option is **not recommended** here, can lead to rounding errors during ABAP to NodeJS conversion.
+:exclamation: Using `number` option is **not recommended** here, can lead to rounding errors during ABAP to Node.js conversion.
 
 ```javascript
 let clientOptions = {
@@ -334,14 +334,14 @@ let clientOptions = {
 
 #### Date and time conversion options "date" and "time"
 
-The client option `date` shall provide `fromABAP()` function, for ABAP date string (YYYYMMDD) conversion to NodeJS date object and the `toABAP()` function, for the other way around.
+The client option `date` shall provide `fromABAP()` function, for ABAP date string (YYYYMMDD) conversion to Node.js date object and the `toABAP()` function, for the other way around.
 
 3rd party libraries like [Moment](https://momentjs.com/) or standard JavaScript Date Object can be used, like shown below:
 
 ```javascript
 const clientOptions = {
     date: {
-        // NodeJS Date() to ABAP YYYYMMDD
+        // Node.js Date() to ABAP YYYYMMDD
         toABAP: function (date) {
             if (!(date instanceof Date))
                 return new TypeError(`Date object required: ${date}`);
@@ -355,7 +355,7 @@ const clientOptions = {
         },
 
         fromABAP: function (dats) {
-            // ABAP YYYYMMDD to NodeJS Date()
+            // ABAP YYYYMMDD to Node.js Date()
             return new Date(
                 0 | dats.substring(0, 4),
                 (0 | dats.substring(4, 6)) - 1,
@@ -442,11 +442,11 @@ client.call(
 
 ### Error Handling
 
-Three types of errors can be returned to NodeJS application:
+Three types of errors can be returned to Node.js application:
 
 - JavaScript exceptions, thrown when wrong parameters are provided to `Client`, `Pool` or `Throughput` constructor
 - Error objects from NWRFC SDK, like logon error or calling a non-existing RFM
-- Error objects from node node-rfc, like catching a string passed from NodeJS to ABAP RFM integer parameter field
+- Error objects from node node-rfc, like catching a string passed from Node.js to ABAP RFM integer parameter field
 
 After certain critical errors, the connection can be automatically re-opened: **[Closing connections](#closing-connections)**.
 
@@ -467,7 +467,7 @@ client.invoke(
         if (err) console.error("error:", err);
         //error: {
         //  name: 'nodeRfcError',
-        //  message: 'Integer number expected from NodeJS for the field of type 10',
+        //  message: 'Integer number expected from Node.js for the field of type 10',
         //  rfmPath: {
         //    rfm: 'STFC_STRUCTURE',
         //    parameter: 'RFCTABLE',
@@ -506,7 +506,7 @@ The `node-rfc` is using one exception class and exception class names are expose
 
 ### Invocation patterns
 
-After getting a direct or managed client instance, the ABAP function module can be consumed from NodeJS using Async/await, Promise or callback pattern.
+After getting a direct or managed client instance, the ABAP function module can be consumed from Node.js using Async/await, Promise or callback pattern.
 
 #### Async/await
 
@@ -718,18 +718,18 @@ const result = await client.call("BAPI_USER_GET_DETAIL", {USERNAME: "DEMO"}, {ti
 
 API: [api/server](api.md#server)
 
-Using the node-rfc Server instance, NodeJS functions can be exposed and consumed from ABAP, using `CALL FUNCTION DESTINATION` ABAP statement. Just the same way like standard RFMs from ABAP systems.
+Using the node-rfc Server instance, Node.js functions can be exposed and consumed from ABAP, using `CALL FUNCTION DESTINATION` ABAP statement. Just the same way like standard RFMs from ABAP systems.
 
-To expose one NodeJS function for ABAP clients, the ABAP function definition must be provided, defining ABAP parameters through which the ABAP client can invoke the NodeJS function. When ABAP clients calls the NodeJS function, ABAP input parameters are automatically converted to NodeJS function input and the function is invoked. The function output is automatically converted to ABAP output parameters, returned back to ABAP client.
+To expose one Node.js function for ABAP clients, the ABAP function definition must be provided, defining ABAP parameters through which the ABAP client can invoke the Node.js function. When ABAP clients calls the Node.js function, ABAP input parameters are automatically converted to Node.js function input and the function is invoked. The function output is automatically converted to ABAP output parameters, returned back to ABAP client.
 
 ABAP function definition defines ABAP parameters and data definitions for all variables, structures and tables used in ABAP parameers. Coding these metadata down to field level is not very exciting task and node-rfc Server provides a more elegant solution here:
 
-- Create an empty ABAP RFM in ABAP client system, with the same parameters that ABAP client shall use to invoke the NodeJS function
-- Tell the node server that the function definition for NodeJS function X shall be the taken from the ABAP RFM Y, in ABAP client system
+- Create an empty ABAP RFM in ABAP client system, with the same parameters that ABAP client shall use to invoke the Node.js function
+- Tell the node server that the function definition for Node.js function X shall be the taken from the ABAP RFM Y, in ABAP client system
 
-When invoked by ABAP, the NodeJS function will automatically fetch the function definition from ABAP RFM and expose itself as exactly such RFM to ABAP
+When invoked by ABAP, the Node.js function will automatically fetch the function definition from ABAP RFM and expose itself as exactly such RFM to ABAP
 
-As an example, let make the `STFC_CONNECTION` available as NodeJS RFM and call it from ABAP.
+As an example, let make the `STFC_CONNECTION` available as Node.js RFM and call it from ABAP.
 
 ### Function Definition
 
@@ -747,16 +747,16 @@ FUNCTION STFC_CONNECTION.
 *"----------------------------------------------------------------------
 ```
 
-### NodeJS function
+### Node.js function
 
-Let provide the NodeJS function, mimicking the ABAP `STFC_CONNECTION` logic. Of course any other logic can be implemented here.
+Let provide the Node.js function, mimicking the ABAP `STFC_CONNECTION` logic. Of course any other logic can be implemented here.
 
 ```node
 function my_stfc_connection(
     request_context,
     abap_parameters: { REQUTEXT: "" }
 ) {
-    console.log("NodeJS stfc invoked ", request_context);
+    console.log("Node.js stfc invoked ", request_context);
 
     return {
         ECHOTEXT: abap_parameters.REQUTEXT,
@@ -767,7 +767,7 @@ function my_stfc_connection(
 
 When invoked from ABAP, the first argument `request_context` provides some information about ABAP consumer and the second argument `abap_parameters` provides input parameters sent from ABAP.
 
-### ABAP calls NodeJS RFM
+### ABAP calls Node.js RFM
 
 ABAP call looks like this:
 
@@ -803,7 +803,7 @@ For this particular example, the configuration includes:
 
 The `client` connection parameters are required for RFM function definition retrival, just like in Client scenario.
 
-The `gateway` parameters are for the NodeJS server regitration in ABAP system.
+The `gateway` parameters are for the Node.js server regitration in ABAP system.
 
 ```ini
 DEST=client
@@ -824,7 +824,7 @@ REG_COUNT=1
 
 **SM59**
 
-The NodeJS destination is in SM59 looks like
+The Node.js destination is in SM59 looks like
 
 ![sm59](assets/sm59node.png)
 
@@ -907,7 +907,7 @@ The Throughput object can be attached to one or more clients, providing the RFM 
 
 ## Environment
 
-The `environment` object provides info on node-rfc, SAP NWRFC SDK and NodeJS platform.
+The `environment` object provides info on node-rfc, SAP NWRFC SDK and Node.js platform.
 
 It is exposed at package level, replicated at Pool and Client class and instance levels:
 

@@ -20,7 +20,7 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 - Async/await, promise and callback API
 - ECMAScript, TypeScript
 - Sequential and parallel calls, using one or more clients
-- Automatic conversion between NodeJS and ABAP datatypes
+- Automatic conversion between Node.js and ABAP datatypes
 - Direct and managed connections (connection pool)
 - Throughput monitoring: number of calls, bytes sent/received, application/total time; SAP NWRFC SDK >= 7.53 required
 - Usage examples & code-snippets: [SAP-samples/node-rfc-samples](https://github.com/SAP-samples/node-rfc-samples)
@@ -49,22 +49,19 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 
 ## Supported platforms
 
-- [Current and active nodejs LTS releases](https://github.com/nodejs/LTS)
+- Operating systems: the _node-rfc_ connector can be built from source([build instructions](#download-and-installation)) on all platforms supported by both [SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [Node.js](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1)
 
-- The _node-rfc_ connector can be built from source([build instructions](#download-and-installation)) on all platforms supported by both [SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and [nodejs](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1)
-
-- In addition, pre-built wheels are provided for [active nodejs LTS releases](https://github.com/nodejs/LTS), for Windows, Darwin and Ubuntu Linux, attached to node-rfc GitHub [release](https://github.com/SAP/node-rfc/releases/latest).
+- Node.js: [current and active LTS releases](https://github.com/nodejs/LTS)
 
 - Docker containers: [SAP fundamental-tools/docker](https://github.com/SAP/fundamental-tools/tree/main/docker)
+
+- Electron: current release, see [SAP-samples/node-rfc-samples/frameworks/electron-quick-start](https://github.com/SAP-samples/node-rfc-samples/tree/main/frameworks/electron-quick-start) and #144
 
 Other platforms and frameworks:
 
 - SAP Cloud Platform, AWS Lambdas, heroku ...
+  - Create GitHub issue to get up-to-date information
   - Create SAP feature request for `Security Services` category of the [SAP Cloud Platform – Platform Foundation](https://influence.sap.com/sap/ino/#/campaign/2277)
-
-- Electron
-  - Feature request: #144
-  - Experimental work: [SAP-samples/node-rfc-samples/frameworks/electron-quick-start](https://github.com/SAP-samples/node-rfc-samples/tree/main/frameworks/electron-quick-start)
 
 - NW.js
   - Feature request: #144
@@ -80,7 +77,7 @@ Other platforms and frameworks:
 
 ### node-gyp
 
-Build toolchain is based on `node-gyp` and for target platform requirepements check: [node-gyp#Installation](https://github.com/nodejs/node-gyp#installation)
+Build toolchain is based on `node-gyp` and requires Python. For build platform requirepements details check: [node-gyp#Installation](https://github.com/nodejs/node-gyp#installation)
 
 ### SAP NW RFC SDK 7.50.11
 
@@ -92,7 +89,7 @@ Docker container examples for Linux, Intel and ARM based Darwin: [SAP/fundamenta
 
 ### Linux
 
-- Build toolchain is based on Ubuntu 20.04, for node-rfc binaries compatible with glibc >= 2.28 and libstdc++ >= 6.0.25 (GLIBCXX_3.4.25). The build toolchain follows is defined by [standard NodeJS build toolchain configuration](https://github.com/nodejs/node/blob/master/BUILDING.md#official-binary-platforms-and-toolchains)
+- Build toolchain is based on Ubuntu 20.04, for node-rfc binaries compatible with glibc >= 2.28 and libstdc++ >= 6.0.25 (GLIBCXX_3.4.25). The build toolchain follows is defined by [standard Node.js build toolchain configuration](https://github.com/nodejs/node/blob/master/BUILDING.md#official-binary-platforms-and-toolchains)
 
 ### Windows
 
@@ -110,7 +107,7 @@ Docker container examples for Linux, Intel and ARM based Darwin: [SAP/fundamenta
 
 More info: **[Installation](doc/installation.md)**
 
-:exclamation: The build from source requires NodeJS release with minimum N-API version given in `package.json` property "napi_versions": [NodeJS/N-API version matrix](https://nodejs.org/api/n-api.html#node-api-version-matrix).
+:exclamation: The build from source requires Node.js release with minimum N-API version given in `package.json` property "napi_versions": [Node-API version matrix](https://nodejs.org/api/n-api.html#node-api-version-matrix).
 
 After the SAP NW RFC SDK is installed on your system, the `node-rfc` can be installed from npm:
 

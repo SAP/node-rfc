@@ -108,7 +108,7 @@ constructor(
 ```
 
 Another constructor is used by the Connection Pool only. The client instance is already created by Connection Pool
-and passed to NodeJS for NodeJS Client instance creation:
+and passed to Node.js for Node.js Client instance creation:
 
 ```ts
 constructor(

@@ -15,10 +15,10 @@ First check if your host system platform is supported and install prerequisites,
 
 Information on where to download the SAP NWRFC SDK you may find at: https://support.sap.com/en/product/connectors/nwrfcsdk.html
 
-The NodeJS RFC connector relies on SAP NWRFC SDK and must be able to find the library
+The Node.js RFC connector relies on SAP NWRFC SDK and must be able to find the library
 files at runtime. Therefore, you might either install the SAP NWRFC SDK
 in the standard library paths of your system or install it in any location and tell the
-NodeJS connector where to look.
+Node.js connector where to look.
 
 Here are configuration examples for Windows, Linux and macOS operating systems.
 
@@ -107,11 +107,11 @@ Verify:
 
 1. `SAPNWRFC_HOME\lib` directory is in your PATH environment variable
 2. SAP NWRFC SDK for your platform is installed, not Linux SDK for example on Windows system
-3. SAP NWRFC SDK 32bit is installed when runnung 32bit NodeJS, not 64bit SDK
+3. SAP NWRFC SDK 32bit is installed when runnung 32bit Node.js, not 64bit SDK
 
 `ImportError: DLL load failed: %1 is not a valid Win32 application`
 
-(Windows) This error occurs when SAP NWRFC Library 64bit version is installed on a system with 32bit version NodeJS.
+(Windows) This error occurs when SAP NWRFC Library 64bit version is installed on a system with 32bit version Node.js.
 
 ## Verify SAP NWRFC SDK release
 
@@ -175,8 +175,8 @@ npx: installed 1 in 1.399s
     Memory: 1.27 GB / 16.00 GB
     Shell: 5.8 - /usr/local/bin/zsh
   Binaries:
-    Node: 14.13.1 - ~/.NodeJS/nvm/versions/node/v14.13.1/bin/node
-    npm: 6.14.8 - ~/.NodeJS/nvm/versions/node/v14.13.1/bin/npm
+    Node: 14.13.1 - ~/.Node.js/nvm/versions/node/v14.13.1/bin/node
+    npm: 6.14.8 - ~/.Node.js/nvm/versions/node/v14.13.1/bin/npm
 ```
 
 and/or noderfc `environment` object:
