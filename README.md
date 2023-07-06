@@ -1,17 +1,15 @@
 # node-rfc
 
-:tada: Darwin on ARM supported with SAP NW RFC SDK 7.50 PL11 :tada:
-
 Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html) client bindings for [Node.js](http://nodejs.org/), providing convenient ABAP business logic consumption from Node.js.
 
-[![NPM](https://nodei.co/npm/node-rfc.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-rfc/)
-
-[![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![N-API v6 Badge](https://github.com/nodejs/abi-stable-node/raw/doc/assets/N-API%20v6%20Badge.svg?sanitize=true)](https://github.com/nodejs/abi-stable-node/)
-[![release](https://img.shields.io/npm/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
+[![node-rfc release](https://img.shields.io/npm/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
+[![Node.js engines](https://img.shields.io/node/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
+[![N-API version](https://img.shields.io/badge/N--API-v8-green.svg)](https://img.shields.io/badge/N--API-v8-green.svg)
+![Electron.js](https://img.shields.io/badge/Electron-191970?style=for-the-badge&logo=Electron&logoColor=white)
 [![dpm](https://img.shields.io/npm/dm/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/node-rfc)](https://api.reuse.software/info/github.com/SAP/node-rfc)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4350/badge)](https://bestpractices.coreinfrastructure.org/projects/4350)
+[![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Key features
 
