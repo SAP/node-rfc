@@ -4,8 +4,9 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 
 [![node-rfc release](https://img.shields.io/npm/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![Node.js engines](https://img.shields.io/node/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
-[![N-API version](https://img.shields.io/badge/N--API-v8-green.svg)](https://img.shields.io/badge/N--API-v8-green.svg)
+[![N-API version](https://img.shields.io/badge/N--API-v8-green.svg)](https://github.com/nodejs/node-addon-api)
 [<img src="https://img.shields.io/badge/Electron-191970?style=for-the-badge&logo=Electron&logoColor=white" height="20"/>](https://www.electronjs.org/)
+[![deno version supported](https://shield.deno.dev/deno/latest)](https://deno.land/)
 [![dpm](https://img.shields.io/npm/dm/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/node-rfc)](https://api.reuse.software/info/github.com/SAP/node-rfc)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4350/badge)](https://bestpractices.coreinfrastructure.org/projects/4350)
@@ -54,6 +55,8 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 - Docker containers: [SAP fundamental-tools/docker](https://github.com/SAP/fundamental-tools/tree/main/docker)
 
 - Electron: current release, see [SAP-samples/node-rfc-samples/frameworks/electron-quick-start](https://github.com/SAP-samples/node-rfc-samples/tree/main/frameworks/electron-quick-start) and #144
+
+- Deno: latest release
 
 Other platforms and frameworks:
 

@@ -5,7 +5,7 @@
 #ifndef NodeRfc_Pool_H
 #define NodeRfc_Pool_H
 
-#include <uv.h>
+#include <mutex>
 #include <set>
 #include "Client.h"
 #include "nwrfcsdk.h"
@@ -56,7 +56,6 @@ class Pool : public Napi::ObjectWrap<Pool> {
     ready_high = POOL_READY_HIGH;
     fill_requests = 0;
 
-    uv_sem_init(&leaseMutex, 1);
     connReady = {};
     connLeased = {};
   };
@@ -70,7 +69,7 @@ class Pool : public Napi::ObjectWrap<Pool> {
   uint_t fill_requests;
 
   // Connections pool
-  uv_sem_t leaseMutex;
+  std::mutex leaseMutex;
   void lockMutex();
   void unlockMutex();
   ConnectionSetType connReady;

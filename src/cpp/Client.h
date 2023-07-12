@@ -5,7 +5,6 @@
 #ifndef NodeRfc_Client_H
 #define NodeRfc_Client_H
 
-#include <uv.h>
 #include <tuple>
 #include "nwrfcsdk.h"
 
@@ -65,11 +64,11 @@ class Client : public Napi::ObjectWrap<Client> {
 
     pool = NULL;
     connectionHandle = NULL;
-
-    uv_sem_init(&invocationMutex, 1);
   };
 
   static uint_t _id;
+  static std::mutex invocationMutex;
+
   uint_t id;
   Pool* pool;
   RFC_CONNECTION_HANDLE connectionHandle;
@@ -79,7 +78,6 @@ class Client : public Napi::ObjectWrap<Client> {
 
   void LockMutex();
   void UnlockMutex();
-  uv_sem_t invocationMutex;
 };
 
 }  // namespace node_rfc

@@ -160,7 +160,7 @@ describe("Locking: Callbacks", () => {
                 {
                     SECONDS: WAIT_SECONDS,
                 },
-                function (err) {
+                function (err: unknown) {
                     // Close not blocking
                     expect(err).toMatchObject(
                         expect.objectContaining({

@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <mutex>
 #include "Client.h"
 #include "Pool.h"
 #include "Server.h"
@@ -9,6 +10,7 @@
 
 namespace node_rfc {
 Napi::Env __env = NULL;
+std::mutex invocationMutex;
 
 Napi::Value BindingVersions(Napi::Env env) {
   uint_t major, minor, patchLevel;

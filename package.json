@@ -42,6 +42,7 @@
     "lintts": "eslint src/ts test --ext ts",
     "test": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
     "cpp": "prebuildify --napi -t 16.20.0 -t electron@25.2.0 --force --strip --verbose",
+    "dev": "prebuildify --napi -t 16.20.0 --force --strip --verbose",
     "ts": "tsc",
     "build": "npm run ts && npm run cpp",
     "rebuild": "npm install --build-from-source"

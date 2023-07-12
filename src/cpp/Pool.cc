@@ -7,6 +7,7 @@
 
 namespace node_rfc {
 uint_t Pool::_id = 1;
+std::mutex leaseMutex;
 
 class CheckPoolAsync : public Napi::AsyncWorker {
  public:
@@ -91,6 +92,7 @@ class SetPoolAsync : public Napi::AsyncWorker {
   RFC_ERROR_INFO errorInfo;
   uint_t ready_low;
 };
+
 class AcquireAsync : public Napi::AsyncWorker {
  public:
   AcquireAsync(Napi::Function& callback,
@@ -704,17 +706,14 @@ Pool::~Pool(void) {
     poolConfiguration.Unref();
     DEBUG("~ Pool::Pool unref poolConfiguration");
   }
-
-  // Close mutex
-  uv_sem_destroy(&leaseMutex);
 }
 
 void Pool::lockMutex() {
-  uv_sem_wait(&leaseMutex);
+  leaseMutex.lock();
 }
 
 void Pool::unlockMutex() {
-  uv_sem_post(&leaseMutex);
+  leaseMutex.unlock();
 }
 
 Napi::Value Pool::ConfigGetter(const Napi::CallbackInfo& info) {

@@ -5,7 +5,6 @@
 #ifndef NodeRfc_Server_H
 #define NodeRfc_Server_H
 
-#include <uv.h>
 #include <map>
 #include "Client.h"
 
@@ -90,7 +89,7 @@ class Server : public Napi::ObjectWrap<Server> {
     client_conn_handle = NULL;
     serverHandle = NULL;
 
-    uv_sem_init(&invocationMutex, 1);
+    // uv_sem_init(&invocationMutex, 1);
 
     addon_data = new AddonData;
     addon_data->work = NULL;
@@ -101,7 +100,7 @@ class Server : public Napi::ObjectWrap<Server> {
 
   void LockMutex();
   void UnlockMutex();
-  uv_sem_t invocationMutex;
+  // uv_sem_t invocationMutex;
 };
 
 }  // namespace node_rfc

@@ -2,15 +2,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <thread>
-
 #include "Client.h"
+#include <mutex>
+#include <thread>
 #include "Pool.h"
 
 namespace node_rfc {
 extern Napi::Env __env;
 
 uint_t Client::_id = 1;
+std::mutex Client::invocationMutex;
 
 ErrorPair connectionCheckErrorInit() {
   RFC_ERROR_INFO errorInfo;
@@ -217,8 +218,6 @@ Client::~Client(void) {
       pool->releaseClient(connectionHandle);
     }
   }
-
-  uv_sem_destroy(&invocationMutex);
 }
 
 Napi::Value Client::connectionClosedError(const char* suffix) {
@@ -432,6 +431,7 @@ class InvokeAsync : public Napi::AsyncWorker {
   bool conn_closed = false;
   ErrorPair connectionCheckError = connectionCheckErrorInit();
 };
+
 class PrepareAsync : public Napi::AsyncWorker {
  public:
   PrepareAsync(Napi::Function& callback,
@@ -799,11 +799,11 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo& info) {
 }
 
 void Client::LockMutex() {
-  uv_sem_wait(&invocationMutex);
+  Client::invocationMutex.lock();
 }
 
 void Client::UnlockMutex() {
-  uv_sem_post(&invocationMutex);
+  Client::invocationMutex.unlock();
 }
 
 }  // namespace node_rfc

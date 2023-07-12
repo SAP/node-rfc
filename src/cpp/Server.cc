@@ -153,12 +153,12 @@ RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle,
 
   printf("genericHandler for: ");
   printfU(func_name);
-  printf(" func_handle: %p\n", (void *)func_handle);
+  printf(" func_handle: %p\n", (void*)func_handle);
 
   ServerFunctionsMap::iterator it = server->serverFunctions.begin();
   while (it != server->serverFunctions.end()) {
     if (strcmpU(func_name, it->second.func_name) == 0) {
-      printf("found func_desc %p\n", (void *)it->second.func_desc_handle);
+      printf("found func_desc %p\n", (void*)it->second.func_desc_handle);
       break;
     }
     ++it;
@@ -506,7 +506,6 @@ Napi::Value Server::GetFunctionDescription(const Napi::CallbackInfo& info) {
 Server::~Server(void) {
   DEBUG("~ Server ", id);
 
-  uv_sem_destroy(&invocationMutex);
   if (serverHandle != NULL) {
     RfcShutdownServer(serverHandle, 60, NULL);
     RfcDestroyServer(serverHandle, NULL);
@@ -518,11 +517,11 @@ Server::~Server(void) {
 }
 
 void Server::LockMutex() {
-  uv_sem_wait(&invocationMutex);
+  // uv_sem_wait(&invocationMutex);
 }
 
 void Server::UnlockMutex() {
-  uv_sem_post(&invocationMutex);
+  // uv_sem_post(&invocationMutex);
 }
 
 }  // namespace node_rfc
