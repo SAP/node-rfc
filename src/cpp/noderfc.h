@@ -25,7 +25,7 @@
 #define NODERFC_VERSION "Deactivate logging: LOG_RFC_CLIENT"
 #else
 // client binding version
-#define NODERFC_VERSION "3.0.0"
+#define NODERFC_VERSION "3.1.0"
 #endif
 
 template <typename... Args>

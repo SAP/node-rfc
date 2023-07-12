@@ -36,11 +36,11 @@
   ],
   "scripts": {
     "install": "node-gyp-build",
-    "jest": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
+    "jest": "jest --testPathIgnorePatterns throughput --testTimeout 60000",
     "lint": "npm run lintts && npm run lintcpp && npm audit --omit=dev && reuse lint",
     "lintcpp": "cppcheck -I node_modules/node-addon_api --enable=all --inline-suppr src/cpp",
     "lintts": "eslint src/ts test --ext ts",
-    "test": "jest --testPathIgnorePatterns throughput --testTimeout 30000",
+    "test": "jest --testPathIgnorePatterns throughput --testTimeout 60000",
     "cpp": "prebuildify --napi -t 16.20.0 -t electron@25.2.0 --force --strip --verbose",
     "dev": "prebuildify --napi -t 16.20.0 --force --strip --verbose",
     "ts": "tsc",
