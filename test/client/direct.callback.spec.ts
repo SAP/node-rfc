@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    binding,
+    addon,
     dependencies,
     direct_client,
     refEnvironment,
@@ -31,10 +31,10 @@ describe("Client: direct callback", () => {
         done();
     });
 
-    test("environment @ binding and Client", function () {
+    test("environment of addon and Client", function () {
         expect.assertions(3);
-        expect(binding.environment).toMatchObject(refEnvironment);
-        expect(binding.Client.environment).toMatchObject(refEnvironment);
+        expect(addon.environment).toMatchObject(refEnvironment);
+        expect(addon.Client.environment).toMatchObject(refEnvironment);
         expect(client.environment).toMatchObject(refEnvironment);
     });
 

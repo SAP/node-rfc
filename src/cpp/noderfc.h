@@ -9,8 +9,6 @@
 #include <sapnwrfc.h>
 #include <iostream>
 
-#define USAGE_URL ": https://github.com/SAP/node-rfc#usage"
-
 // Unsigned and pointer types
 #define uint_t uint32_t
 #define pointer_t uintptr_t

@@ -9,6 +9,7 @@
 
 namespace node_rfc {
 extern Napi::Env __env;
+extern char const* USAGE_URL;
 
 uint_t Client::_id = 1;
 std::mutex Client::invocationMutex;
@@ -602,7 +603,7 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
         return ErrorPair(errorInfoOpen, updateError);
       }
 
-      DEBUG("// assign new handle to managed client");
+      DEBUG("new handle assigned to managed client");
       this->connectionHandle = new_handle;
     } else {
       // assign new handle to direct client

@@ -6,6 +6,7 @@
 
 namespace node_rfc {
 extern Napi::Env __env;
+extern char const* USAGE_URL;
 
 uint_t Server::_id = 1;
 

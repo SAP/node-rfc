@@ -6,6 +6,7 @@
 #include "Throughput.h"
 
 namespace node_rfc {
+extern char const* USAGE_URL;
 uint_t Pool::_id = 1;
 std::mutex leaseMutex;
 

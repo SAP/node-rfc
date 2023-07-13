@@ -7,6 +7,7 @@
 
 namespace node_rfc {
 extern Napi::Env __env;
+extern char const* USAGE_URL;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Set Parameters (to SDK)
@@ -1082,7 +1083,7 @@ void checkClientOptions(Napi::Object clientOptionsObject,
                ERRMSG_LENGTH - 1,
                "Client option not allowed: \"%s\"; see %s",
                key.c_str(),
-               USAGE_URL);
+               node_rfc::USAGE_URL);
       Napi::TypeError::New(node_rfc::__env, errmsg)
           .ThrowAsJavaScriptException();
     }

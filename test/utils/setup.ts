@@ -8,8 +8,8 @@ import os from "os";
 import { version } from "../../package.json";
 export { version, dependencies } from "../../package.json";
 import { Client } from "../../lib";
-import * as binding from "../../lib";
-export * as binding from "../../lib";
+import * as addon from "../../lib";
+export * as addon from "../../lib";
 
 export {
     Client,
@@ -78,5 +78,5 @@ export const poolConfiguration = {
     connectionParameters: abapSystem(),
 };
 
-binding.setIniFileDirectory(sapnwrfcIniPath);
-// binding.loadCryptoLibrary(_CryptoLibPath[process.platform]);
+addon.setIniFileDirectory(sapnwrfcIniPath);
+// addon.loadCryptoLibrary(_CryptoLibPath[process.platform]);

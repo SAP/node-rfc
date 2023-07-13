@@ -11,6 +11,7 @@
 namespace node_rfc {
 Napi::Env __env = NULL;
 std::mutex invocationMutex;
+char const* USAGE_URL = ": https://github.com/SAP/node-rfc#usage";
 
 Napi::Value BindingVersions(Napi::Env env) {
   uint_t major, minor, patchLevel;
