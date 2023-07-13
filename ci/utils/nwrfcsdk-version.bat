@@ -3,4 +3,4 @@
 :: SPDX-License-Identifier: Apache-2.0
 
 @echo off
-findstr Patch %SAPNWRFC_HOME%\lib\sapnwrfc.dll
+findstr Patch $env:SAPNWRFC_HOME\lib\sapnwrfc.dll
