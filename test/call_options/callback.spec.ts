@@ -8,13 +8,13 @@ describe("RFC Call options - callback", () => {
     const client = direct_client();
 
     beforeEach(function (done) {
-        void client.open(function (err) {
+        void client.open(function (err:unknown) {
             done(err);
         });
     });
 
     afterEach(function (done) {
-        void client.close(function (err) {
+        void client.close(function (err:unknown) {
             done(err);
         });
     });

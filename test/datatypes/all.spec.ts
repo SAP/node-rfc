@@ -24,7 +24,7 @@ describe("Datatypes: all", () => {
     });
 
     afterAll(function (done) {
-        void client.close((err) => {
+        void client.close((err:unknown) => {
             return done(err) as unknown;
         });
     });

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Client } from "../../utils/setup";
+import { Client } from "../utils/setup";
 
 describe("Connection terminate timeout", () => {
     const WAIT = 3;

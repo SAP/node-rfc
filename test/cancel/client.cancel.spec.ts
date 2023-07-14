@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { direct_client } from "../../utils/setup";
+import { direct_client } from "../utils/setup";
 
 describe("Connection terminate by client", () => {
     const DURATION = 3;
@@ -16,25 +16,26 @@ describe("Connection terminate by client", () => {
         message: "Connection was canceled.",
     };
 
-    test("Non-managed, client.cancel() promise", function (done) {
+    test("Non-managed, client.cancel() callback", function (done) {
         const client = direct_client();
         expect.assertions(2);
         void client.open(() => {
-            expect(client.alive).toBeTruthy();
             // call function
             client.invoke(
                 "RFC_PING_AND_WAIT",
                 {
                     SECONDS: DURATION,
                 },
-                function (err: unknown) {
+                function (err) {
                     expect(err).toMatchObject(RfcCanceledError);
                     done();
                 }
             );
             // cancel
             setTimeout(() => {
-                client.cancel() as Promise<void>;
+                void client.cancel((err: unknown) => {
+                    expect(err).toBeUndefined();
+                });
             }, CANCEL * 1000);
         });
     });

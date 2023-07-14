@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { direct_client } from "../../utils/setup";
+import { direct_client, cancelClient } from "../utils/setup";
 
-describe("Connection terminate by client", () => {
+describe.skip("Connection terminate by addon", () => {
     const DURATION = 3;
     const CANCEL = 1;
     const RfcCanceledError = {
@@ -16,11 +16,12 @@ describe("Connection terminate by client", () => {
         message: "Connection was canceled.",
     };
 
-    test("Non-managed, client.cancel() callback", function (done) {
+    test("Non-managed, addon.cancelClient() callback", function (done) {
         const client = direct_client();
-        expect.assertions(2);
+        expect.assertions(3);
         void client.open(() => {
             // call function
+            const handle = client.connectionHandle;
             client.invoke(
                 "RFC_PING_AND_WAIT",
                 {
@@ -32,9 +33,14 @@ describe("Connection terminate by client", () => {
                 }
             );
             // cancel
+
             setTimeout(() => {
-                void client.cancel((err: unknown) => {
+                void cancelClient(client, (err, res) => {
                     expect(err).toBeUndefined();
+                    expect(res).toMatchObject({
+                        connectionHandle: handle,
+                        result: "cancelled",
+                    });
                 });
             }, CANCEL * 1000);
         });

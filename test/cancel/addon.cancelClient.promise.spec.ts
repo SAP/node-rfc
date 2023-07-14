@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { direct_client, cancelClient } from "../../utils/setup";
+import { direct_client, cancelClient } from "../utils/setup";
 
 describe.skip("Connection terminate by addon", () => {
     const DURATION = 3;

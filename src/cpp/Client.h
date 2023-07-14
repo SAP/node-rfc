@@ -67,7 +67,7 @@ class Client : public Napi::ObjectWrap<Client> {
   };
 
   static uint_t _id;
-  static std::mutex invocationMutex;
+  std::mutex invocationMutex;
 
   uint_t id;
   Pool* pool;

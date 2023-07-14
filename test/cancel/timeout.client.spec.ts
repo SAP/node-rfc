@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Client } from "../../utils/setup";
+import { Client } from "../utils/setup";
 
 describe("Connection terminate timeout", () => {
     const WAIT = 3;
@@ -16,7 +16,7 @@ describe("Connection terminate timeout", () => {
         message: "Connection was canceled.",
     };
 
-    test("Client options timeout", function (done) {
+    test.only("Client options timeout", function (done) {
         const client = new Client({ dest: "MME" }, { timeout: TIMEOUT });
         expect.assertions(3);
         void client.open(() => {

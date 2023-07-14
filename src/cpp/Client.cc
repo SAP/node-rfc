@@ -12,7 +12,6 @@ extern Napi::Env __env;
 extern char const* USAGE_URL;
 
 uint_t Client::_id = 1;
-std::mutex Client::invocationMutex;
 
 ErrorPair connectionCheckErrorInit() {
   RFC_ERROR_INFO errorInfo;
@@ -800,11 +799,11 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo& info) {
 }
 
 void Client::LockMutex() {
-  Client::invocationMutex.lock();
+  invocationMutex.lock();
 }
 
 void Client::UnlockMutex() {
-  Client::invocationMutex.unlock();
+  invocationMutex.unlock();
 }
 
 }  // namespace node_rfc
