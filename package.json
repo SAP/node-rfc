@@ -1,6 +1,6 @@
 {
   "name": "node-rfc",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "nodejs bindings for SAP NW RFC SDK",
   "keywords": [
     "sap",
