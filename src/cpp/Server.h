@@ -11,6 +11,7 @@
 #include "Client.h"
 
 struct ServerRequestBaton {
+  RFC_CONNECTION_HANDLE request_connection_handle = NULL;
   RFC_FUNCTION_DESC_HANDLE func_desc_handle;
   RFC_FUNCTION_HANDLE func_handle;
   RFC_ERROR_INFO* errorInfo;
@@ -45,8 +46,7 @@ struct ServerRequestBaton {
 void ServerCallJs(Napi::Env env,
                   Napi::Function callback,
                   std::nullptr_t* context,
-                  ServerRequestBaton* data);  // handles calling the JS callback
-void ServerDoneCallback(const CallbackInfo& info);
+                  ServerRequestBaton* data);
 
 using ServerRequestTsfn = Napi::
     TypedThreadSafeFunction<std::nullptr_t, ServerRequestBaton, ServerCallJs>;

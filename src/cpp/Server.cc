@@ -127,6 +127,40 @@ RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
   return rc;
 }
 
+Napi::Value wrapUnitIdentifier(RFC_UNIT_IDENTIFIER* uIdentifier) {
+  Napi::Object unitIdentifier = Napi::Object::New(node_rfc::__env);
+  unitIdentifier.Set("queued", wrapString(&uIdentifier->unitType, 1));
+  unitIdentifier.Set("id", wrapString(uIdentifier->unitID));
+  return unitIdentifier;
+}
+
+Napi::Value getServerRequestContext(RFC_CONNECTION_HANDLE conn_handle,
+                                    RFC_ERROR_INFO* serverErrorInfo) {
+  Napi::Object requestContext = Napi::Object::New(node_rfc::__env);
+
+  RFC_SERVER_CONTEXT context;
+
+  RFC_RC rc = RfcGetServerContext(conn_handle, &context, serverErrorInfo);
+
+  if (rc != RFC_OK || serverErrorInfo->code != RFC_OK) return requestContext;
+
+  requestContext.Set("callType",
+                     Napi::Number::New(node_rfc::__env, context.type));
+  // [ "synchronous", "transactional", "queued", "background_unit" ];
+  requestContext.Set(
+      "isStateful",
+      Napi::Boolean::New(node_rfc::__env, context.isStateful != 0));
+  if (context.type != RFC_SYNCHRONOUS) {
+    requestContext.Set("unitIdentifier",
+                       wrapUnitIdentifier(context.unitIdentifier));
+  }
+  // if (context.type == RFC_BACKGROUND_UNIT) {
+  //   requestContext.Set("unitAttributes",
+  //       wrapUnitAttributes(context.unitAttributes);
+  // }
+  return requestContext;
+}
+
 RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
                                      RFC_FUNCTION_HANDLE func_handle,
                                      RFC_ERROR_INFO* errorInfo) {
@@ -168,6 +202,7 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
   ServerRequestBaton* requestBaton = new ServerRequestBaton();
   auto errorPath = node_rfc::RfmErrorPath();
 
+  requestBaton->request_connection_handle = conn_handle;
   requestBaton->client_options = server->client_options;
   requestBaton->func_handle = func_handle;
   requestBaton->func_desc_handle = it->second->func_desc_handle;
@@ -506,6 +541,7 @@ void Server::LockMutex() {
 void Server::UnlockMutex() {
   // uv_sem_post(&invocationMutex);
 }
+
 }  // namespace node_rfc
 
 void ServerCallJs(Napi::Env env,
@@ -516,23 +552,29 @@ void ServerCallJs(Napi::Env env,
 
   UNUSED(context);
 
+  RFC_ERROR_INFO errorInfo;
+
+  // set server context
+  Napi::Value requestContext = node_rfc::getServerRequestContext(
+      requestBaton->request_connection_handle, &errorInfo);
+
   //
   // ABAP -> JS parameters
   //
-
-  RFC_FUNCTION_DESC_HANDLE func_desc_handle = requestBaton->func_desc_handle;
-  RFC_FUNCTION_HANDLE func_handle = requestBaton->func_handle;
-
   DEBUG("[NODE RFC] ServerCallJs ABAP -> JS parameters\n");
 
-  node_rfc::ValuePair jsContainer =
-      getRfmParameters(func_desc_handle,
-                       func_handle,
+  node_rfc::ValuePair jsParameters =
+      getRfmParameters(requestBaton->func_desc_handle,
+                       requestBaton->func_handle,
                        &requestBaton->errorPath,
                        &requestBaton->client_options);
 
-  Napi::Object errorObj = jsContainer.first.As<Napi::Object>();
-  Napi::Object abapArgs = jsContainer.second.As<Napi::Object>();
+  Napi::Value errorObj = jsParameters.first.As<Napi::Object>();
+  Napi::Object abapArgs = jsParameters.second.As<Napi::Object>();
+
+  if (!errorObj.IsUndefined()) {
+    // todo
+  }
 
   // set parameter count and names in request baton
   RfcGetParameterCount(requestBaton->func_desc_handle,
@@ -540,98 +582,41 @@ void ServerCallJs(Napi::Env env,
                        requestBaton->errorInfo);
   requestBaton->paramNames = Napi::Persistent(abapArgs.GetPropertyNames());
 
-  // Is the JavaScript environment still available to call into, eg. the TSFN is
-  // not aborted
-  if (env != nullptr) {
-    if (callback != nullptr) {
-      DEBUG("[NODE RFC] callback.Call() begin\n");
-      callback.Call({errorObj,
-                     abapArgs,
-                     Napi::Function::New<ServerDoneCallback>(
-                         env, nullptr, requestBaton)});
-      DEBUG("[NODE RFC] callback.Call() end\n");
-    }
-  }
-  DEBUG("[NODE RFC] ServerCallJs end\n");
-}
-
-void ServerDoneCallback(const CallbackInfo& info) {
-  DEBUG("[NODE RFC] ServerDoneCallback begin\n");
-  Env env = info.Env();
-  ServerRequestBaton* requestBaton = (ServerRequestBaton*)info.Data();
+  DEBUG("[NODE RFC] callback.Call() begin\n");
+  Napi::Value result = callback.Call({requestContext, abapArgs});
+  DEBUG("[NODE RFC] callback.Call() end\n");
 
   //
   // JS -> ABAP parameters
   //
-  DEBUG("[NODE RFC] ServerDoneCallback JS -> ABAP parameters\n");
 
-  Napi::Value err = env.Undefined();
-  Napi::Function callback;
+  Napi::Object params = result.ToObject();
+  Napi::Array paramNames = params.GetPropertyNames();
+  uint_t paramSize = paramNames.Length();
 
-  if (info.Length() > 0) {
-    Napi::Object params = info[0].As<Napi::Object>();
-    if (info.Length() > 1) callback = info[1].As<Napi::Function>();
+  DEBUG(
+      "[NODE RFC] ServerDoneCallback JS -> ABAP parameters: ", paramSize, "\n");
 
-    if (requestBaton->errorInfo->code == RFC_OK) {
-      for (uint_t i = 0; i < requestBaton->paramCount; i++) {
-        Napi::String name = requestBaton->paramNames.Value().Get(i).ToString();
+  errorObj = env.Undefined();
+  for (uint_t i = 0; i < paramSize; i++) {
+    Napi::String name = paramNames.Get(i).ToString();
+    Napi::Value value = params.Get(name);
+    printf("\n%s", value.ToString().Utf8Value().c_str());
 
-        Napi::Value value = params.Get(name);
-        err = node_rfc::setRfmParameter(requestBaton->func_desc_handle,
-                                        requestBaton->func_handle,
-                                        name,
-                                        value,
-                                        &requestBaton->errorPath,
-                                        &requestBaton->client_options);
+    errorObj = node_rfc::setRfmParameter(requestBaton->func_desc_handle,
+                                         requestBaton->func_handle,
+                                         name,
+                                         value,
+                                         &requestBaton->errorPath,
+                                         &requestBaton->client_options);
 
-        if (!err.IsUndefined()) {
-          break;
-        }
-      }
+    if (!errorObj.IsUndefined()) {
+      break;
     }
   }
 
   requestBaton->done();
 
-  if (info.Length() > 1) callback.Call({err});
+  DEBUG("[NODE RFC] callback.Call() end, paramSize: ", paramSize, "\n");
+  DEBUG("[NODE RFC] ServerCallJs end\n");
 }
-
-// RFC_FUNCTION_DESC_HANDLE func_desc_handle = uint_t paramCount;
-
-//
-// ABAP -> JS parameters
-//
-// RfmErrorPath errorPath;
-// ClientOptionsStruct client_options;
-// ValuePair jsContainer = getRfmParameters(func_desc_handle, func_handle,
-// &errorPath, &client_options);
-
-//
-// JS Call
-//
-// it->second.callback.Call({jsContainer});
-
-//
-// JS -> ABAP parameters
-//
-
-// RfcGetParameterCount(func_desc_handle, &paramCount, errorInfo);
-// if (errorInfo->code != RFC_OK) {
-//   return errorInfo->code;
-// }
-
-// printf("\nparamCount: %u\n", paramCount);
-
-// Napi::Value err = Undefined();
-// for (uint_t i = 0; i < paramCount; i++)
-//{
-//     Napi::String name = paramNames.Get(i).ToString();
-//     Napi::Value value = params.Get(name);
-//     err = client->setRfmParameter(functionDescHandle, functionHandle, name,
-//     value);
-//
-//     if (!err.IsUndefined())
-//     {
-//         break;
-//     }
-// }
