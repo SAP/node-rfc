@@ -10,7 +10,7 @@
 #include <thread>
 #include "Client.h"
 
-struct ServerCallbackContainer {
+struct ServerRequestBaton {
   RFC_FUNCTION_DESC_HANDLE func_desc_handle;
   RFC_FUNCTION_HANDLE func_handle;
   RFC_ERROR_INFO* errorInfo;
@@ -25,60 +25,45 @@ struct ServerCallbackContainer {
   std::unique_lock<std::mutex> lock;
   std::condition_variable server_call_condition;
 
-  void block() {
-    std::thread::id this_tid = std::this_thread::get_id();
-    DEBUG("[ServerCallbackContainer [MUTEX] blocking ", this_tid, "\n");
-    std::unique_lock<std::mutex> lock(server_call_mutex);
-
-    DEBUG("[ServerCallbackContainer [MUTEX] waiting...\n");
-    server_call_condition.wait(lock, [this] { return server_call_completed; });
-    DEBUG("[ServerCallbackContainer [MUTEX] waiting completed\n");
-
-    DEBUG("[ServerCallbackContainer [MUTEX] blocked",
-          server_call_completed,
-          "\n");
-  }
-
   void wait() {
-    //
+    std::thread::id this_tid = std::this_thread::get_id();
+    DEBUG("[ServerRequestBaton wait ", this_tid, "\n");
+    std::unique_lock<std::mutex> lock(server_call_mutex);
+    server_call_condition.wait(lock, [this] { return server_call_completed; });
+    DEBUG("[ServerRequestBaton completed", server_call_completed, "\n");
   }
 
-  void unblock() {
+  void done() {
     std::thread::id this_tid = std::this_thread::get_id();
-    DEBUG("[ServerCallbackContainer [MUTEX] unblocking ", this_tid, "\n");
+    DEBUG("[ServerRequestBaton unblock ", this_tid, "\n");
     server_call_completed = true;
     server_call_condition.notify_one();
-    DEBUG("[ServerCallbackContainer [MUTEX] unblocked ",
-          server_call_completed,
-          "\n");
+    DEBUG("[ServerRequestBaton unblocked ", server_call_completed, "\n");
   }
 };
 
-void ServerCallJs(
-    Napi::Env env,
-    Napi::Function callback,
-    std::nullptr_t* context,
-    ServerCallbackContainer* data);  // handles calling the JS callback
+void ServerCallJs(Napi::Env env,
+                  Napi::Function callback,
+                  std::nullptr_t* context,
+                  ServerRequestBaton* data);  // handles calling the JS callback
 void ServerDoneCallback(const CallbackInfo& info);
 
-using ServerCallbackTsfn =
-    Napi::TypedThreadSafeFunction<std::nullptr_t,
-                                  ServerCallbackContainer,
-                                  ServerCallJs>;
+using ServerRequestTsfn = Napi::
+    TypedThreadSafeFunction<std::nullptr_t, ServerRequestBaton, ServerCallJs>;
 
 typedef struct _ServerFunctionStruct {
   RFC_ABAP_NAME func_name;
   RFC_FUNCTION_DESC_HANDLE func_desc_handle = NULL;
-  ServerCallbackTsfn tsfnCallback;
+  ServerRequestTsfn tsfnRequest;
 
   _ServerFunctionStruct() { func_name[0] = 0; }
 
   _ServerFunctionStruct(RFC_ABAP_NAME name,
                         RFC_FUNCTION_DESC_HANDLE desc_handle,
-                        ServerCallbackTsfn tsFunction) {
+                        ServerRequestTsfn tsFunction) {
     strcpyU(func_name, name);
     func_desc_handle = desc_handle;
-    tsfnCallback = tsFunction;
+    tsfnRequest = tsFunction;
   }
 
   _ServerFunctionStruct& operator=(
@@ -86,13 +71,13 @@ typedef struct _ServerFunctionStruct {
   {
     strcpyU(func_name, src.func_name);
     func_desc_handle = src.func_desc_handle;
-    tsfnCallback = src.tsfnCallback;
+    tsfnRequest = src.tsfnRequest;
     return *this;
   }
 
   ~_ServerFunctionStruct() {
-    printf("\n~_ServerFunctionStruct\n");
-    tsfnCallback.Release();
+    DEBUG("\n~_ServerFunctionStruct\n");
+    tsfnRequest.Release();
   }
 } ServerFunctionStruct;
 
@@ -104,9 +89,9 @@ extern Napi::Env __env;
 RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
                               RFC_ATTRIBUTES rfc_attributes,
                               RFC_FUNCTION_DESC_HANDLE* func_handle);
-RFC_RC SAP_API genericHandler(RFC_CONNECTION_HANDLE conn_handle,
-                              RFC_FUNCTION_HANDLE func_handle,
-                              RFC_ERROR_INFO* errorInfo);
+RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
+                                     RFC_FUNCTION_HANDLE func_handle,
+                                     RFC_ERROR_INFO* errorInfo);
 
 class Server : public Napi::ObjectWrap<Server> {
  public:
