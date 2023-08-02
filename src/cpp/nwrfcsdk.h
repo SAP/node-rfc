@@ -22,7 +22,7 @@ Napi::Value wrapString(const SAP_UC* uc, int length = -1);
 //
 typedef struct _ConnectionParamsStruct {
   uint_t paramSize = 0;
-  RFC_CONNECTION_PARAMETER* connectionParams = NULL;
+  RFC_CONNECTION_PARAMETER* connectionParams = nullptr;
   //_ConnectionParamsStruct(uint_t paramSize, RFC_CONNECTION_PARAMETER
   //*connectionParams)
   //    : paramSize(paramSize), connectionParams(connectionParams)
@@ -32,13 +32,13 @@ typedef struct _ConnectionParamsStruct {
 
   ~_ConnectionParamsStruct() {
     // DEBUG("~ConnectionParamsStruct ", paramSize);
-    if (connectionParams != NULL) {
+    if (connectionParams != nullptr) {
       for (uint_t i = 0; i < this->paramSize; i++) {
         delete[] connectionParams[i].name;
         delete[] connectionParams[i].value;
       }
       delete[] connectionParams;
-      connectionParams = NULL;
+      connectionParams = nullptr;
     }
   }
 } ConnectionParamsStruct;
@@ -283,13 +283,16 @@ ValuePair getRfmParameters(RFC_FUNCTION_DESC_HANDLE functionDescHandle,
                            RFC_FUNCTION_HANDLE functionHandle,
                            RfmErrorPath* errorPath,
                            ClientOptionsStruct* client_options);
+Napi::Value getConnectionAttributes(Napi::Env env,
+                                    RFC_CONNECTION_HANDLE connectionHandle);
 
 // RFC ERRORS
 Napi::Object RfcLibError(RFC_ERROR_INFO* errorInfo);
 Napi::Object AbapError(RFC_ERROR_INFO* errorInfo);
 Napi::Value rfcSdkError(RFC_ERROR_INFO* errorInfo,
-                        RfmErrorPath* errorPath = NULL);
-Napi::Value nodeRfcError(std::string message, RfmErrorPath* errorPath = NULL);
+                        RfmErrorPath* errorPath = nullptr);
+Napi::Value nodeRfcError(std::string message,
+                         RfmErrorPath* errorPath = nullptr);
 
 // Connection parameters and client options parsers
 void getConnectionParams(Napi::Object clientParamsObject,
@@ -298,4 +301,9 @@ void checkClientOptions(Napi::Object clientOptionsObject,
                         ClientOptionsStruct* clientOptions);
 
 }  // namespace node_rfc
+
+#define CONNECTION_INFO_SET(property)                                          \
+  infoObj.Set(#property,                                                       \
+              wrapString(connInfo.property, strlenU(connInfo.property)));
+
 #endif

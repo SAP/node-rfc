@@ -36,10 +36,10 @@ Throughput::Throughput(const Napi::CallbackInfo& info)
 Throughput::~Throughput(void) {
   RFC_ERROR_INFO errorInfo;
 
-  if (this->throughput_handle != NULL) {
+  if (this->throughput_handle != nullptr) {
     RfcDestroyThroughput(this->throughput_handle, &errorInfo);
     // if (errorInfo.code != RFC_OK) ...
-    this->throughput_handle = NULL;
+    this->throughput_handle = nullptr;
   }
 }
 
@@ -79,9 +79,9 @@ Napi::Value Throughput::Reset(const Napi::CallbackInfo& info) {
 Napi::Value Throughput::Destroy(const Napi::CallbackInfo& info) {
   Napi::EscapableHandleScope scope(info.Env());
   RFC_ERROR_INFO errorInfo;
-  if (this->throughput_handle != NULL) {
+  if (this->throughput_handle != nullptr) {
     RFC_RC rc = RfcDestroyThroughput(this->throughput_handle, &errorInfo);
-    this->throughput_handle = NULL;
+    this->throughput_handle = nullptr;
     if (rc != RFC_OK) return scope.Escape(rfcSdkError(&errorInfo));
   }
   return info.Env().Undefined();
@@ -111,7 +111,7 @@ Napi::Value Throughput::StatusGetter(const Napi::CallbackInfo& info) {
 
   Napi::Object status = Napi::Object::New(info.Env());
 
-  if (this->throughput_handle == NULL)
+  if (this->throughput_handle == nullptr)
     Napi::Error::New(info.Env(),
                      "node-rfc internal error: Throughput without handle!")
         .ThrowAsJavaScriptException();

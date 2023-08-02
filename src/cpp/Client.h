@@ -62,8 +62,8 @@ class Client : public Napi::ObjectWrap<Client> {
   void init() {
     id = Client::_id++;
 
-    pool = NULL;
-    connectionHandle = NULL;
+    pool = nullptr;
+    connectionHandle = nullptr;
   };
 
   static uint_t _id;
@@ -82,7 +82,4 @@ class Client : public Napi::ObjectWrap<Client> {
 
 }  // namespace node_rfc
 
-#define CONNECTION_INFO_SET(property)                                          \
-  infoObj.Set(#property,                                                       \
-              wrapString(connInfo.property, strlenU(connInfo.property)));
 #endif

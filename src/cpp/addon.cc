@@ -9,8 +9,7 @@
 #include "Throughput.h"
 
 namespace node_rfc {
-Napi::Env __env = NULL;
-char const* USAGE_URL = ": https://github.com/SAP/node-rfc#usage";
+Napi::Env __env = nullptr;
 
 Napi::Value BindingVersions(Napi::Env env) {
   uint_t major, minor, patchLevel;
@@ -35,7 +34,7 @@ Napi::Value LoadCryptoLibrary(const Napi::CallbackInfo& info) {
     std::ostringstream errmsg;
     errmsg << "Client setIniPath() requires the directory in which to search "
               "for the sapnwrfc.ini file, received: ";
-    errmsg << info[0].As<Napi::String>().Utf8Value() << "; see" << USAGE_URL;
+    errmsg << info[0].As<Napi::String>().Utf8Value();
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
@@ -59,7 +58,7 @@ Napi::Value SetIniFileDirectory(const Napi::CallbackInfo& info) {
     std::ostringstream errmsg;
     errmsg << "Client setIniPath() requires the directory in which to search "
               "for the sapnwrfc.ini file, received: ";
-    errmsg << info[0].As<Napi::String>().Utf8Value() << "; see" << USAGE_URL;
+    errmsg << info[0].As<Napi::String>().Utf8Value();
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
@@ -93,7 +92,7 @@ Napi::Value LanguageIsoToSap(const Napi::CallbackInfo& info) {
     std::ostringstream errmsg;
     errmsg << "Client languageISOtoSAP() requires iso language parameter "
               "string, received: ";
-    errmsg << info[0].As<Napi::String>().Utf8Value() << "; see" << USAGE_URL;
+    errmsg << info[0].As<Napi::String>().Utf8Value();
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
@@ -120,7 +119,7 @@ Napi::Value LanguageSapToIso(const Napi::CallbackInfo& info) {
     std::ostringstream errmsg;
     errmsg << "Client languageSAPtoISO() requires iso language parameter "
               "string, received: ";
-    errmsg << info[0].As<Napi::String>().Utf8Value() << "; see" << USAGE_URL;
+    errmsg << info[0].As<Napi::String>().Utf8Value();
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
@@ -142,7 +141,7 @@ Napi::Value LanguageSapToIso(const Napi::CallbackInfo& info) {
 }
 
 Napi::Object RegisterModule(Napi::Env env, Napi::Object exports) {
-  if (node_rfc::__env == NULL) {
+  if (node_rfc::__env == nullptr) {
     node_rfc::__env = env;
   }
 

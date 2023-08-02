@@ -11,7 +11,7 @@
 #include "Client.h"
 
 struct ServerRequestBaton {
-  RFC_CONNECTION_HANDLE request_connection_handle = NULL;
+  RFC_CONNECTION_HANDLE request_connection_handle = nullptr;
   RFC_FUNCTION_DESC_HANDLE func_desc_handle;
   RFC_FUNCTION_HANDLE func_handle;
   RFC_ERROR_INFO* errorInfo;
@@ -28,18 +28,20 @@ struct ServerRequestBaton {
 
   void wait() {
     std::thread::id this_tid = std::this_thread::get_id();
-    DEBUG("[ServerRequestBaton wait ", this_tid, "\n");
+    DEBUG("requestBaton wait ", this_tid);
     std::unique_lock<std::mutex> lock(server_call_mutex);
     server_call_condition.wait(lock, [this] { return server_call_completed; });
-    DEBUG("[ServerRequestBaton completed", server_call_completed, "\n");
+    DEBUG("requestBaton done ", this_tid, " status ", server_call_completed);
   }
 
   void done() {
     std::thread::id this_tid = std::this_thread::get_id();
-    DEBUG("[ServerRequestBaton unblock ", this_tid, "\n");
     server_call_completed = true;
     server_call_condition.notify_one();
-    DEBUG("[ServerRequestBaton unblocked ", server_call_completed, "\n");
+    DEBUG("requestBaton done requested ",
+          this_tid,
+          " status ",
+          server_call_completed);
   }
 };
 
@@ -51,19 +53,23 @@ void ServerCallJs(Napi::Env env,
 using ServerRequestTsfn = Napi::
     TypedThreadSafeFunction<std::nullptr_t, ServerRequestBaton, ServerCallJs>;
 
+// using ServerRequestTsfn = Napi::ThreadSafeFunction;  // <std::nullptr_t,
+//                                                      // ServerRequestBaton,
+//                                                      // ServerCallJs>;
+
 typedef struct _ServerFunctionStruct {
   RFC_ABAP_NAME func_name;
-  RFC_FUNCTION_DESC_HANDLE func_desc_handle = NULL;
+  RFC_FUNCTION_DESC_HANDLE func_desc_handle = nullptr;
   ServerRequestTsfn tsfnRequest;
 
   _ServerFunctionStruct() { func_name[0] = 0; }
 
-  _ServerFunctionStruct(RFC_ABAP_NAME name,
-                        RFC_FUNCTION_DESC_HANDLE desc_handle,
-                        ServerRequestTsfn tsFunction) {
-    strcpyU(func_name, name);
-    func_desc_handle = desc_handle;
-    tsfnRequest = tsFunction;
+  _ServerFunctionStruct(RFC_ABAP_NAME _func_name,
+                        RFC_FUNCTION_DESC_HANDLE _func_desc_handle,
+                        ServerRequestTsfn _tsfnRequest) {
+    strcpyU(func_name, _func_name);
+    func_desc_handle = _func_desc_handle;
+    tsfnRequest = _tsfnRequest;
   }
 
   _ServerFunctionStruct& operator=(
@@ -96,6 +102,7 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
 class Server : public Napi::ObjectWrap<Server> {
  public:
   friend class StartAsync;
+  friend class StopAsync;
   friend class GetFunctionDescAsync;
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
   // cppcheck-suppress noExplicitConstructor
@@ -107,6 +114,7 @@ class Server : public Napi::ObjectWrap<Server> {
   ClientOptionsStruct client_options;
 
  private:
+  void _stop();
   Napi::Value IdGetter(const Napi::CallbackInfo& info);
   Napi::Value AliveGetter(const Napi::CallbackInfo& info);
   Napi::Value ServerConnectionHandleGetter(const Napi::CallbackInfo& info);
@@ -130,14 +138,14 @@ class Server : public Napi::ObjectWrap<Server> {
   void init() {
     id = Server::_id++;
 
-    server_conn_handle = NULL;
-    client_conn_handle = NULL;
-    serverHandle = NULL;
+    server_conn_handle = nullptr;
+    client_conn_handle = nullptr;
+    serverHandle = nullptr;
 
     // uv_sem_init(&invocationMutex, 1);
 
     // addon_data = new AddonData;
-    // addon_data->work = NULL;
+    // addon_data->work = nullptr;
   };
 
   static uint_t _id;

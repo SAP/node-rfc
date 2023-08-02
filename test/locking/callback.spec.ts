@@ -6,7 +6,6 @@
 import { RfcObject, direct_client } from "../utils/setup";
 
 describe("Locking: Callbacks", () => {
-
     const client = direct_client();
 
     beforeEach(function (done) {
@@ -28,7 +27,6 @@ describe("Locking: Callbacks", () => {
 
         let count = 0;
 
-
         // Invoke not blocking
         client.invoke(
             "RFC_PING_AND_WAIT",
@@ -36,7 +34,7 @@ describe("Locking: Callbacks", () => {
                 SECONDS: WAIT_SECONDS,
             },
             function (err: unknown) {
-                if (err) return done(err);
+                if (err) return done(err) as unknown;
                 count++;
             }
         );
@@ -50,7 +48,7 @@ describe("Locking: Callbacks", () => {
                 SECONDS: WAIT_SECONDS,
             },
             function (err: unknown) {
-                if (err) return done(err);
+                if (err) return done(err) as unknown;
                 count++;
             }
         );
@@ -63,7 +61,7 @@ describe("Locking: Callbacks", () => {
             {
                 SECONDS: WAIT_SECONDS,
             },
-            function (err) {
+            function (err: unknown) {
                 if (err) return done(err) as unknown;
                 count++;
                 done();
@@ -84,7 +82,7 @@ describe("Locking: Callbacks", () => {
                 SECONDS: WAIT_SECONDS,
             },
             function (err: unknown) {
-                if (err !== undefined) return done(err);
+                if (err !== undefined) return done(err) as unknown;
                 count++;
             }
         );
@@ -164,7 +162,6 @@ describe("Locking: Callbacks", () => {
     test("ping() and close ()", function (done) {
         expect.assertions(5);
         let count = 0;
-
 
         void client.ping((err: unknown, res: boolean) => {
             expect(res).toBeTruthy();

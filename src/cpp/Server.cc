@@ -6,11 +6,10 @@
 
 namespace node_rfc {
 extern Napi::Env __env;
-extern char const* USAGE_URL;
 
 uint_t Server::_id = 1;
 
-Server* __server = NULL;
+Server* __server = nullptr;
 
 Napi::Object Server::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
@@ -48,7 +47,7 @@ Napi::Value Server::IdGetter(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Server::AliveGetter(const Napi::CallbackInfo& info) {
-  return Napi::Boolean::New(info.Env(), server_conn_handle != NULL);
+  return Napi::Boolean::New(info.Env(), server_conn_handle != nullptr);
 }
 
 Napi::Value Server::ServerConnectionHandleGetter(
@@ -61,6 +60,15 @@ Napi::Value Server::ClientConnectionHandleGetter(
   return Napi::Number::New(
       info.Env(), (double)(unsigned long long)this->client_conn_handle);
 }
+
+// RFC_RC SAP_API Server::genericHandler(RFC_CONNECTION_HANDLE conn_handle,
+//                                       RFC_FUNCTION_HANDLE func_handle,
+//                                       RFC_ERROR_INFO* errorInfo) {
+//   UNUSED(conn_handle);
+//   UNUSED(func_handle);
+//   UNUSED(errorInfo);
+//   return RFC_OK;
+// }
 
 Server::Server(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<Server>(info) {
@@ -105,10 +113,6 @@ RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
                               RFC_FUNCTION_DESC_HANDLE* func_desc_handle) {
   UNUSED(rfc_attributes);
 
-  printf("Metadata lookup for: ");
-  printfU(func_name);
-  printf("\n");
-
   RFC_RC rc = RFC_NOT_FOUND;
 
   Server* server = node_rfc::__server;  // todo check if null
@@ -118,10 +122,20 @@ RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
     if (strcmpU(func_name, it->second->func_name) == 0) {
       *func_desc_handle = it->second->func_desc_handle;
       rc = RFC_OK;
-      DEBUG("\nmetadataLookup found: ", (pointer_t)*func_desc_handle);
       break;
     }
     ++it;
+  }
+
+  if (rc == RFC_OK) {
+    DEBUG("Function found ",
+          it->first,
+          " descriptor ",
+          (pointer_t)*func_desc_handle);
+  } else {
+    // todo
+    DEBUG("[error] Function not found: ");
+    printfU(func_name);
   }
 
   return rc;
@@ -134,19 +148,35 @@ Napi::Value wrapUnitIdentifier(RFC_UNIT_IDENTIFIER* uIdentifier) {
   return unitIdentifier;
 }
 
-Napi::Value getServerRequestContext(RFC_CONNECTION_HANDLE conn_handle,
-                                    RFC_ERROR_INFO* serverErrorInfo) {
+Napi::Value getServerRequestContext(ServerRequestBaton* requestBaton) {
+  const std::string call_type[4] = {
+      "synchronous", "transactional", "queued", "background_unit"};
+
+  if (requestBaton->request_connection_handle == nullptr) {
+    // todo error ...
+  }
+
   Napi::Object requestContext = Napi::Object::New(node_rfc::__env);
+  requestContext.Set(
+      "client_connection",
+      Napi::Number::New(node_rfc::__env,
+                        (uintptr_t)requestBaton->request_connection_handle));
+  requestContext.Set(
+      "connection_attributes",
+      getConnectionAttributes(node_rfc::__env,
+                              requestBaton->request_connection_handle));
 
   RFC_SERVER_CONTEXT context;
 
-  RFC_RC rc = RfcGetServerContext(conn_handle, &context, serverErrorInfo);
+  RFC_RC rc = RfcGetServerContext(requestBaton->request_connection_handle,
+                                  &context,
+                                  requestBaton->errorInfo);
 
-  if (rc != RFC_OK || serverErrorInfo->code != RFC_OK) return requestContext;
+  if (rc != RFC_OK || requestBaton->errorInfo->code != RFC_OK)
+    return requestContext;
 
-  requestContext.Set("callType",
-                     Napi::Number::New(node_rfc::__env, context.type));
-  // [ "synchronous", "transactional", "queued", "background_unit" ];
+  requestContext.Set(
+      "callType", Napi::String::New(node_rfc::__env, call_type[context.type]));
   requestContext.Set(
       "isStateful",
       Napi::Boolean::New(node_rfc::__env, context.isStateful != 0));
@@ -181,10 +211,6 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
     return errorInfo->code;
   }
 
-  printf("genericRequestHandler for: ");
-  printfU(func_name);
-  printf(" func_handle: %p\n", (void*)func_handle);
-
   ServerFunctionsMap::iterator it = server->serverFunctions.begin();
   while (it != server->serverFunctions.end()) {
     if (strcmpU(func_name, it->second->func_name) == 0) {
@@ -209,13 +235,21 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
   requestBaton->errorInfo = errorInfo;
   requestBaton->errorPath = errorPath;
 
-  DEBUG("genericRequestHandler tsfnRequest.BlockingCall: start");
+  DEBUG("Request for function: ",
+        it->first,
+        " function handle ",
+        (uintptr_t)func_handle,
+        " descriptor: ",
+        (uintptr_t)requestBaton->func_desc_handle,
+        " from client connection: ",
+        (uintptr_t)conn_handle);
 
-  it->second->tsfnRequest.BlockingCall(requestBaton);
+  it->second->tsfnRequest.NonBlockingCall(requestBaton);
+  // it->second->tsfnRequest.BlockingCall(requestBaton);
 
   requestBaton->wait();
 
-  DEBUG("genericRequestHandler tsfnRequest.BlockingCall: done");
+  // DEBUG("genericRequestHandler tsfnRequest.BlockingCall: done");
 
   return RFC_OK;
 }
@@ -287,6 +321,37 @@ class StartAsync : public Napi::AsyncWorker {
   RFC_ERROR_INFO errorInfo;
 };
 
+class StopAsync : public Napi::AsyncWorker {
+ public:
+  StopAsync(Napi::Function& callback, Server* server)
+      : Napi::AsyncWorker(callback), server(server) {}
+  ~StopAsync() {}
+
+  void Execute() {
+    server->LockMutex();
+    DEBUG("Server::stop ", (pointer_t)server->serverHandle);
+    server->_stop();
+    DEBUG("Server:: stopped")
+
+    server->UnlockMutex();
+  }
+
+  void OnOK() {
+    Napi::EscapableHandleScope scope(Env());
+    if (errorInfo.code != RFC_OK) {
+      // Callback().Call({Env().Undefined()});
+      Callback().Call({rfcSdkError(&errorInfo)});
+    } else {
+      Callback().Call({});
+    }
+    Callback().Reset();
+  }
+
+ private:
+  Server* server;
+  RFC_ERROR_INFO errorInfo;
+};
+
 class GetFunctionDescAsync : public Napi::AsyncWorker {
  public:
   GetFunctionDescAsync(Napi::Function& callback, Server* server)
@@ -303,7 +368,7 @@ class GetFunctionDescAsync : public Napi::AsyncWorker {
   }
 
   void OnOK() {
-    if (server->server_conn_handle == NULL) {
+    if (server->server_conn_handle == nullptr) {
       Callback().Call({rfcSdkError(&errorInfo)});
     } else {
       Callback().Call({});
@@ -322,7 +387,7 @@ Napi::Value Server::Start(const Napi::CallbackInfo& info) {
   std::ostringstream errmsg;
 
   if (!info[0].IsFunction()) {
-    errmsg << "Server start() requires a callback function; see" << USAGE_URL;
+    errmsg << "Server start() requires a callback function";
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
@@ -334,20 +399,36 @@ Napi::Value Server::Start(const Napi::CallbackInfo& info) {
   return info.Env().Undefined();
 };
 
+void Server::_stop() {
+  if (serverHandle != nullptr) {
+    DEBUG("Server::_stop destroy ", (pointer_t)serverHandle);
+    RfcShutdownServer(serverHandle, 60, nullptr);
+    RfcDestroyServer(serverHandle, nullptr);
+  }
+
+  if (client_conn_handle != nullptr) {
+    DEBUG("Server::_stop close client connection ",
+          (pointer_t)client_conn_handle);
+    RfcCloseConnection(client_conn_handle, nullptr);
+  }
+  serverHandle = nullptr;
+  client_conn_handle = nullptr;
+}
+
 Napi::Value Server::Stop(const Napi::CallbackInfo& info) {
   DEBUG("Server::Stop");
 
   std::ostringstream errmsg;
 
   if (!info[0].IsFunction()) {
-    errmsg << "Server stop() requires a callback function; see" << USAGE_URL;
+    errmsg << "Server stop() requires a callback function";
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
-  // Napi::Function callback = info[0].As<Napi::Function>();
+  Napi::Function callback = info[0].As<Napi::Function>();
 
-  //(new StopAsync(callback, this))->Queue();
+  (new StopAsync(callback, this))->Queue();
 
   return info.Env().Undefined();
 };
@@ -358,7 +439,7 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
   std::ostringstream errmsg;
 
   if (!info[0].IsString()) {
-    errmsg << "Server addFunction() requires ABAP RFM name; see" << USAGE_URL;
+    errmsg << "Server addFunction() requires ABAP RFM name";
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
@@ -368,17 +449,13 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
   if (functionName.Utf8Value().length() == 0 ||
       functionName.Utf8Value().length() > 30) {
     errmsg << "Server addFunction() accepts max. 30 characters long ABAP RFM "
-              "name; see"
-           << USAGE_URL;
+              "name";
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
-  DEBUG("Server::AddFunction ", functionName.Utf8Value());
-
   if (!info[1].IsFunction()) {
-    errmsg << "Server addFunction() requires a NodeJS handler function; see"
-           << USAGE_URL;
+    errmsg << "Server addFunction() requires a NodeJS handler function";
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
@@ -386,8 +463,7 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
   Napi::Function jsFunction = info[1].As<Napi::Function>();
 
   if (!info[2].IsFunction()) {
-    errmsg << "Server addFunction() requires a callback function; see"
-           << USAGE_URL;
+    errmsg << "Server addFunction() requires a callback function";
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
@@ -409,14 +485,13 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
   }
 
   // Create thread-safe function to be called by genericRequestHandler
-  ServerRequestTsfn tsfnRequest = ServerRequestTsfn::New(
-      info.Env(),
-      jsFunction,           // JavaScript function called asynchronously
-      "ServerRequestTsfn",  // Resource name
-      0,                    // Unlimited queue
-      1,                    // Only one thread will use this initially
-      nullptr               // No context needed
-  );
+  ServerRequestTsfn tsfnRequest =
+      ServerRequestTsfn::New(info.Env(),
+                             jsFunction,           // JavaScript server function
+                             "ServerRequestTsfn",  // Resource name
+                             0,                    // Unlimited queue
+                             1  // Only one thread will use this initially
+      );
 
   serverFunctions[functionName.Utf8Value()] =
       new ServerFunctionStruct(func_name, func_desc_handle, tsfnRequest);
@@ -436,8 +511,7 @@ Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
   std::ostringstream errmsg;
 
   if (!info[0].IsString()) {
-    errmsg << "Server removeFunction() requires ABAP RFM name; see"
-           << USAGE_URL;
+    errmsg << "Server removeFunction() requires ABAP RFM name";
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
@@ -447,8 +521,7 @@ Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
   if (functionName.Utf8Value().length() == 0 ||
       functionName.Utf8Value().length() > 30) {
     errmsg << "Server removeFunction() accepts max. 30 characters long ABAP "
-              "RFM name; see"
-           << USAGE_URL;
+              "RFM name";
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
@@ -456,8 +529,7 @@ Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
   DEBUG("Server::RemoveFunction ", functionName.Utf8Value());
 
   if (!info[1].IsFunction()) {
-    errmsg << "Server removeFunction() requires a callback function; see"
-           << USAGE_URL;
+    errmsg << "Server removeFunction() requires a callback function";
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
@@ -500,16 +572,13 @@ Napi::Value Server::GetFunctionDescription(const Napi::CallbackInfo& info) {
   std::ostringstream errmsg;
 
   if (!info[0].IsString()) {
-    errmsg << "Server getFunctionDescription() requires ABAP RFM name; see"
-           << USAGE_URL;
+    errmsg << "Server getFunctionDescription() requires ABAP RFM name";
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
   if (!info[0].IsFunction()) {
-    errmsg
-        << "Server getFunctionDescription() requires a callback function; see"
-        << USAGE_URL;
+    errmsg << "Server getFunctionDescription() requires a callback function";
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
@@ -523,15 +592,7 @@ Napi::Value Server::GetFunctionDescription(const Napi::CallbackInfo& info) {
 
 Server::~Server(void) {
   DEBUG("~ Server ", id);
-
-  if (serverHandle != NULL) {
-    RfcShutdownServer(serverHandle, 60, NULL);
-    RfcDestroyServer(serverHandle, NULL);
-  }
-
-  if (client_conn_handle != NULL) {
-    RfcCloseConnection(client_conn_handle, NULL);
-  }
+  this->_stop();
 }
 
 void Server::LockMutex() {
@@ -548,20 +609,12 @@ void ServerCallJs(Napi::Env env,
                   Napi::Function callback,
                   std::nullptr_t* context,
                   ServerRequestBaton* requestBaton) {
-  DEBUG("[NODE RFC] ServerCallJs begin\n");
-
   UNUSED(context);
 
-  RFC_ERROR_INFO errorInfo;
-
   // set server context
-  Napi::Value requestContext = node_rfc::getServerRequestContext(
-      requestBaton->request_connection_handle, &errorInfo);
+  Napi::Value requestContext = node_rfc::getServerRequestContext(requestBaton);
 
-  //
   // ABAP -> JS parameters
-  //
-  DEBUG("[NODE RFC] ServerCallJs ABAP -> JS parameters\n");
 
   node_rfc::ValuePair jsParameters =
       getRfmParameters(requestBaton->func_desc_handle,
@@ -582,26 +635,21 @@ void ServerCallJs(Napi::Env env,
                        requestBaton->errorInfo);
   requestBaton->paramNames = Napi::Persistent(abapArgs.GetPropertyNames());
 
-  DEBUG("[NODE RFC] callback.Call() begin\n");
+  DEBUG("NodeJS function call start: ", (uintptr_t)requestBaton->func_handle);
   Napi::Value result = callback.Call({requestContext, abapArgs});
-  DEBUG("[NODE RFC] callback.Call() end\n");
+  DEBUG("NodeJS function call end: ", (uintptr_t)requestBaton->func_handle);
 
-  //
   // JS -> ABAP parameters
-  //
 
   Napi::Object params = result.ToObject();
   Napi::Array paramNames = params.GetPropertyNames();
   uint_t paramSize = paramNames.Length();
 
-  DEBUG(
-      "[NODE RFC] ServerDoneCallback JS -> ABAP parameters: ", paramSize, "\n");
-
   errorObj = env.Undefined();
   for (uint_t i = 0; i < paramSize; i++) {
     Napi::String name = paramNames.Get(i).ToString();
     Napi::Value value = params.Get(name);
-    printf("\n%s", value.ToString().Utf8Value().c_str());
+    // DEBUG(name, value);
 
     errorObj = node_rfc::setRfmParameter(requestBaton->func_desc_handle,
                                          requestBaton->func_handle,
@@ -616,7 +664,4 @@ void ServerCallJs(Napi::Env env,
   }
 
   requestBaton->done();
-
-  DEBUG("[NODE RFC] callback.Call() end, paramSize: ", paramSize, "\n");
-  DEBUG("[NODE RFC] ServerCallJs end\n");
 }

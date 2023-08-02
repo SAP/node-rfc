@@ -6,7 +6,6 @@
 #include "Throughput.h"
 
 namespace node_rfc {
-extern char const* USAGE_URL;
 uint_t Pool::_id = 1;
 std::mutex leaseMutex;
 
@@ -210,7 +209,7 @@ class ReleaseAsync : public Napi::AsyncWorker {
 
     // check if all clients open
     while (client != clients.end()) {
-      if ((*client)->connectionHandle == NULL) {
+      if ((*client)->connectionHandle == nullptr) {
         closed_client_id = (*client)->id;
         break;
       }
@@ -228,7 +227,7 @@ class ReleaseAsync : public Napi::AsyncWorker {
 
         if (pool->connReady.size() < pool->ready_high) {
           (*client)->LockMutex();
-          (*client)->connectionHandle = NULL;
+          (*client)->connectionHandle = nullptr;
           // DEBUG("ReleaseAsync ResetServerContext client: %u handle: %lu",
           // (*client)->id, (pointer_t)connectionHandle);
           RfcResetServerContext(connectionHandle, &errorInfo);
@@ -238,7 +237,7 @@ class ReleaseAsync : public Napi::AsyncWorker {
           }
         } else {
           (*client)->LockMutex();
-          (*client)->connectionHandle = NULL;
+          (*client)->connectionHandle = nullptr;
           // DEBUG("ReleaseAsync Close client: %u handle: %lu", (*client)->id,
           // (pointer_t)connectionHandle);
           RfcCloseConnection(connectionHandle, &errorInfo);
@@ -276,14 +275,14 @@ uint_t checkArgsAcquire(const Napi::CallbackInfo& info) {
   uint_t clients_requested = 0;
 
   if (info.Length() != 2) {
-    errmsg << "Pool acquire() expects two arguments; see: " << USAGE_URL;
+    errmsg << "Pool acquire() expects two arguments";
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return clients_requested;
   }
 
   if (!info[0].IsNumber()) {
     errmsg << "Pool acquire() first argument must be a number, got "
-           << info[0].ToString().Utf8Value() << "; see: " << USAGE_URL;
+           << info[0].ToString().Utf8Value();
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return clients_requested;
   }
@@ -291,14 +290,14 @@ uint_t checkArgsAcquire(const Napi::CallbackInfo& info) {
   double arg = info[0].As<Napi::Number>().DoubleValue();
   if (arg < 1) {
     errmsg << "Pool acquire() first argument must be greater or equal 1, got "
-           << arg << "; see: " << USAGE_URL;
+           << arg;
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return clients_requested;
   }
 
   if (!info[1].IsFunction()) {
     errmsg << "Pool acquire() second argument must be a callback function, got "
-           << info[1].ToString().Utf8Value() << "; see: " << USAGE_URL;
+           << info[1].ToString().Utf8Value();
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return clients_requested;
   }
@@ -328,15 +327,14 @@ std::set<Client*> argsCheckRelease(const Napi::CallbackInfo& info) {
   std::ostringstream errmsg;
 
   if (info.Length() != 2) {
-    errmsg << "Pool release() expects two arguments; see: " << USAGE_URL;
+    errmsg << "Pool release() expects two arguments";
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return clients;
   }
 
   if (!info[0].IsArray()) {
-    errmsg << "Pool release() first argument must be an array of Client "
-              "instances; see: "
-           << USAGE_URL;
+    errmsg
+        << "Pool release() first argument must be an array of Client instances";
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return clients;
   }
@@ -350,8 +348,7 @@ std::set<Client*> argsCheckRelease(const Napi::CallbackInfo& info) {
 
   if (!info[1].IsFunction()) {
     errmsg << "Pool release() 2nd argument, if provided, must be a callback "
-              "function; see: "
-           << USAGE_URL;
+              "function";
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return clients;
   }
@@ -418,9 +415,8 @@ bool argsCheckReady(const Napi::CallbackInfo& info,
         snprintf(errmsg,
                  ERRMSG_LENGTH - 1,
                  "Pool ready() number of connections argument must be "
-                 "positive, received %d; see: %s",
-                 n,
-                 USAGE_URL);
+                 "positive, received %d",
+                 n);
         Napi::Error::New(info.Env(), errmsg).ThrowAsJavaScriptException();
         return false;
       }
@@ -428,11 +424,9 @@ bool argsCheckReady(const Napi::CallbackInfo& info,
     } else if (info[ii].IsFunction()) {
       *callback = info[ii].As<Napi::Function>();
     } else if (!info[ii].IsUndefined()) {
-      snprintf(
-          errmsg,
-          ERRMSG_LENGTH - 1,
-          "Pool ready() argument is neiter a number, nor a function; see: %s",
-          USAGE_URL);
+      snprintf(errmsg,
+               ERRMSG_LENGTH - 1,
+               "Pool ready() argument is neiter a number, nor a function");
       Napi::Error::New(info.Env(), errmsg).ThrowAsJavaScriptException();
       return false;
     }
@@ -461,11 +455,9 @@ Napi::Value Pool::CloseAll(const Napi::CallbackInfo& info) {
       info[0].As<Napi::Function>().Call({});
     } else {
       char errmsg[ERRMSG_LENGTH];
-      snprintf(
-          errmsg,
-          ERRMSG_LENGTH - 1,
-          "Pool closeAll argument, if provided, must be a function; see: %s",
-          USAGE_URL);
+      snprintf(errmsg,
+               ERRMSG_LENGTH - 1,
+               "Pool closeAll argument, if provided, must be a function");
       Napi::Error::New(info.Env(), errmsg).ThrowAsJavaScriptException();
     }
   }
@@ -512,19 +504,19 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
 
   DEBUG("Pool::Pool ", ready_low, ready_high);
   if (info.Length() < 1) {
-    errmsg << "Pool initialization argument missing; see: " << USAGE_URL;
+    errmsg << "Pool initialization argument missing";
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return;
   }
 
   if (info.Length() > 1) {
-    errmsg << "Too many Pool initialization arguments; see: " << USAGE_URL;
+    errmsg << "Too many Pool initialization arguments";
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return;
   }
 
   if (!info[0].IsObject()) {
-    errmsg << "Pool initialization argument not an object; see: " << USAGE_URL;
+    errmsg << "Pool initialization argument not an object";
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
   }
 
@@ -532,8 +524,7 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
 
   if (!poolConfiguration.Value().Has(POOL_KEY_CONNECTION_PARAMS)) {
     errmsg << "Pool configuration object must provide "
-              "\"connectionParameters\"; see"
-           << USAGE_URL;
+              "\"connectionParameters\"";
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return;
   }
@@ -548,7 +539,7 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
     if (key.compare(std::string(POOL_KEY_CONNECTION_PARAMS)) == 0) {
       if (!poolConfiguration.Get(key).IsObject()) {
         errmsg << "Pool() \"" << POOL_KEY_CONNECTION_PARAMS
-               << "\" not an object; see: " << USAGE_URL;
+               << "\" not an object";
         Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
         return;
       }
@@ -564,8 +555,7 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
     //
     else if (key.compare(std::string(POOL_KEY_CLIENT_OPTIONS)) == 0) {
       if (!poolConfiguration.Get(key).IsObject()) {
-        errmsg << "Pool() \"" << POOL_KEY_CLIENT_OPTIONS
-               << "\" not an object; see: " << USAGE_URL;
+        errmsg << "Pool() \"" << POOL_KEY_CLIENT_OPTIONS << "\" not an object";
         Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
         return;
       }
@@ -581,8 +571,7 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
     //
     else if (key.compare(std::string(POOL_KEY_POOL_OPTIONS)) == 0) {
       if (!poolConfiguration.Get(POOL_KEY_POOL_OPTIONS).IsObject()) {
-        errmsg << "Pool \"" << POOL_KEY_POOL_OPTIONS
-               << "\"not an object; see: " << USAGE_URL;
+        errmsg << "Pool \"" << POOL_KEY_POOL_OPTIONS << "\"not an object";
         Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
         return;
       }
@@ -593,8 +582,7 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
       for (uint_t n = 0; n < props.Length(); n++) {
         std::string name = props.Get(n).ToString().Utf8Value();
         if (!poolOptions.Get(name).IsNumber()) {
-          errmsg << "Pool() option \"" << name << "\" must be a number; see"
-                 << USAGE_URL;
+          errmsg << "Pool() option \"" << name << "\" must be a number";
           Napi::TypeError::New(env, errmsg.str()).ThrowAsJavaScriptException();
           return;
         }
@@ -604,14 +592,13 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
           ready_high = poolOptions.Get(name).As<Napi::Number>();
           if (ready_high < 1) {
             errmsg << "Pool option \"" << name
-                   << "\" must be greater than zero; see" << USAGE_URL;
+                   << "\" must be greater than zero";
             Napi::TypeError::New(env, errmsg.str())
                 .ThrowAsJavaScriptException();
             return;
           }
         } else {
-          errmsg << "Pool option not allowed: \"" << name << "\"; see"
-                 << USAGE_URL;
+          errmsg << "Pool option not allowed: \"" << name << "\"";
           Napi::TypeError::New(env, errmsg.str()).ThrowAsJavaScriptException();
           return;
         }
@@ -619,7 +606,7 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
       if (ready_low > ready_high) {
         errmsg << "Pool option \"" << POOL_KEY_OPTION_LOW << "\": " << ready_low
                << ", must not be greater than \"" << POOL_KEY_OPTION_HIGH
-               << "\": " << ready_high << ";see" << ready_high << USAGE_URL;
+               << "\": " << ready_high;
         Napi::TypeError::New(env, errmsg.str()).ThrowAsJavaScriptException();
         return;
       }
@@ -629,8 +616,7 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
     // Unknown option
     //
     else {
-      errmsg << "Pool initialization object key not allowed: \"" << key
-             << "\"; see: " << USAGE_URL;
+      errmsg << "Pool initialization object key not allowed: \"" << key << "\"";
       Napi::TypeError::New(info.Env(), errmsg.str())
           .ThrowAsJavaScriptException();
       return;

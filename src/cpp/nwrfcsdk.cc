@@ -7,7 +7,6 @@
 
 namespace node_rfc {
 extern Napi::Env __env;
-extern char const* USAGE_URL;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Set Parameters (to SDK)
@@ -440,11 +439,11 @@ ValuePair getRfmParameters(RFC_FUNCTION_DESC_HANDLE functionDescHandle,
 
   uint_t paramCount = 0;
 
-  RfcGetParameterCount(functionDescHandle, &paramCount, NULL);
+  RfcGetParameterCount(functionDescHandle, &paramCount, nullptr);
   Napi::Object resultObj = Napi::Object::New(node_rfc::__env);
 
   for (uint_t i = 0; i < paramCount; i++) {
-    RfcGetParameterDescByIndex(functionDescHandle, i, &paramDesc, NULL);
+    RfcGetParameterDescByIndex(functionDescHandle, i, &paramDesc, nullptr);
     if ((paramDesc.direction & client_options->filter_param_type) == 0) {
       Napi::String name = wrapString(paramDesc.name).As<Napi::String>();
       errorPath->setParameterName(paramDesc.name);
@@ -560,7 +559,7 @@ ValuePair getVariable(RFCTYPE typ,
 
       while (rowCount-- > 0) {
         errorPath->table_line = rowCount;
-        RfcMoveTo(tableHandle, rowCount, NULL);
+        RfcMoveTo(tableHandle, rowCount, nullptr);
         ValuePair result =
             getStructure(typeDesc, tableHandle, errorPath, client_options);
         if (!result.first.IsUndefined()) {
@@ -835,7 +834,7 @@ Napi::Value nodeRfcError(std::string message, RfmErrorPath* errorPath) {
   Napi::Object errorObj = Napi::Object::New(node_rfc::__env);
   errorObj.Set("name", "nodeRfcError");
   errorObj.Set("message", message);
-  if (errorPath != NULL) {
+  if (errorPath != nullptr) {
     errorObj.Set("rfmPath", errorPath->getpath());
   }
   return scope.Escape(errorObj);
@@ -914,7 +913,7 @@ Napi::Value rfcSdkError(RFC_ERROR_INFO* errorInfo, RfmErrorPath* errorPath) {
       errorObj = nodeRfcError(err.str()).As<Napi::Object>();
   }
 
-  if (errorPath != NULL) {
+  if (errorPath != nullptr) {
     errorObj.Set("rfmPath", errorPath->getpath());
   }
   return scope.Escape(errorObj);
@@ -968,10 +967,9 @@ void checkClientOptions(Napi::Object clientOptionsObject,
         } else {
           snprintf(errmsg,
                    ERRMSG_LENGTH - 1,
-                   "Client option \"%s\" value not allowed: \"%s\"; see %s",
+                   "Client option \"%s\" value not allowed: \"%s\"",
                    CLIENT_OPTION_KEY_BCD,
-                   &bcdString[0],
-                   USAGE_URL);
+                   &bcdString[0]);
           Napi::TypeError::New(node_rfc::__env, errmsg)
               .ThrowAsJavaScriptException();
         }
@@ -989,9 +987,8 @@ void checkClientOptions(Napi::Object clientOptionsObject,
           snprintf(errmsg,
                    ERRMSG_LENGTH - 1,
                    "Client option \"%s\" is not an object with toABAP() and "
-                   "fromABAP() functions; see %s",
-                   CLIENT_OPTION_KEY_DATE,
-                   USAGE_URL);
+                   "fromABAP() functions",
+                   CLIENT_OPTION_KEY_DATE);
           Napi::TypeError::New(node_rfc::__env, errmsg)
               .ThrowAsJavaScriptException();
         } else {
@@ -1014,9 +1011,8 @@ void checkClientOptions(Napi::Object clientOptionsObject,
           snprintf(errmsg,
                    ERRMSG_LENGTH - 1,
                    "Client option \"%s\" is not an object with toABAP() and "
-                   "fromABAP() functions; see %s",
-                   CLIENT_OPTION_KEY_TIME,
-                   USAGE_URL);
+                   "fromABAP() functions",
+                   CLIENT_OPTION_KEY_TIME);
           Napi::TypeError::New(node_rfc::__env, errmsg)
               .ThrowAsJavaScriptException();
           ;
@@ -1039,10 +1035,9 @@ void checkClientOptions(Napi::Object clientOptionsObject,
           ((int)client_options->filter_param_type) > 4) {
         snprintf(errmsg,
                  ERRMSG_LENGTH - 1,
-                 "Client option \"%s\" value allowed: \"%u\"; see %s",
+                 "Client option \"%s\" value allowed: \"%u\"",
                  CLIENT_OPTION_KEY_FILTER,
-                 (uint_t)client_options->filter_param_type,
-                 USAGE_URL);
+                 (uint_t)client_options->filter_param_type);
         Napi::TypeError::New(node_rfc::__env, errmsg)
             .ThrowAsJavaScriptException();
       }
@@ -1053,9 +1048,8 @@ void checkClientOptions(Napi::Object clientOptionsObject,
       if (!clientOptionsObject.Get(key).IsBoolean()) {
         snprintf(errmsg,
                  ERRMSG_LENGTH - 1,
-                 "Client option \"%s\" requires a boolean value; see %s",
-                 CLIENT_OPTION_KEY_STATELESS,
-                 USAGE_URL);
+                 "Client option \"%s\" requires a boolean value",
+                 CLIENT_OPTION_KEY_STATELESS);
         Napi::TypeError::New(node_rfc::__env, errmsg)
             .ThrowAsJavaScriptException();
       }
@@ -1068,9 +1062,8 @@ void checkClientOptions(Napi::Object clientOptionsObject,
       if (!clientOptionsObject.Get(key).IsNumber()) {
         snprintf(errmsg,
                  ERRMSG_LENGTH - 1,
-                 "Client option \"%s\" requires a number of seconds; see %s",
-                 CLIENT_OPTION_KEY_TIMEOUT,
-                 USAGE_URL);
+                 "Client option \"%s\" requires a number of seconds",
+                 CLIENT_OPTION_KEY_TIMEOUT);
         Napi::TypeError::New(node_rfc::__env, errmsg)
             .ThrowAsJavaScriptException();
       }
@@ -1081,13 +1074,55 @@ void checkClientOptions(Napi::Object clientOptionsObject,
     else {
       snprintf(errmsg,
                ERRMSG_LENGTH - 1,
-               "Client option not allowed: \"%s\"; see %s",
-               key.c_str(),
-               node_rfc::USAGE_URL);
+               "Client option not allowed: \"%s\"",
+               key.c_str());
       Napi::TypeError::New(node_rfc::__env, errmsg)
           .ThrowAsJavaScriptException();
     }
   }
+}
+
+Napi::Value getConnectionAttributes(Napi::Env env,
+                                    RFC_CONNECTION_HANDLE connectionHandle) {
+  // if (connectionHandle == nullptr) {
+  //   return connectionClosedError("connectionInfo");
+  // }
+
+  Napi::Object infoObj = Napi::Object::New(env);
+  RFC_ERROR_INFO errorInfo;
+  RFC_ATTRIBUTES connInfo;
+  RFC_RC rc =
+      RfcGetConnectionAttributes(connectionHandle, &connInfo, &errorInfo);
+
+  if (rc != RFC_OK || errorInfo.code != RFC_OK) {
+    return rfcSdkError(&errorInfo);
+  }
+  CONNECTION_INFO_SET(dest);
+  CONNECTION_INFO_SET(host);
+  CONNECTION_INFO_SET(partnerHost)
+  CONNECTION_INFO_SET(sysNumber);
+  CONNECTION_INFO_SET(sysId);
+  CONNECTION_INFO_SET(client);
+  CONNECTION_INFO_SET(user);
+  CONNECTION_INFO_SET(language);
+  CONNECTION_INFO_SET(trace);
+  CONNECTION_INFO_SET(isoLanguage);
+  CONNECTION_INFO_SET(codepage);
+  CONNECTION_INFO_SET(partnerCodepage);
+  CONNECTION_INFO_SET(rfcRole);
+  CONNECTION_INFO_SET(type);
+  CONNECTION_INFO_SET(partnerType);
+  CONNECTION_INFO_SET(rel);
+  CONNECTION_INFO_SET(partnerRel);
+  CONNECTION_INFO_SET(kernelRel);
+  CONNECTION_INFO_SET(cpicConvId);
+  CONNECTION_INFO_SET(progName);
+  CONNECTION_INFO_SET(partnerBytesPerChar);
+  CONNECTION_INFO_SET(partnerSystemCodepage);
+  CONNECTION_INFO_SET(partnerIP);
+  CONNECTION_INFO_SET(partnerIPv6);
+
+  return infoObj;
 }
 
 }  // namespace node_rfc
