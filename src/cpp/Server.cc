@@ -74,6 +74,8 @@ Server::Server(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<Server>(info) {
   node_rfc::__server = this;
 
+  RFC_ERROR_INFO errorInfo;
+
   init();
 
   DEBUG("Server::Server ", id);
@@ -106,6 +108,24 @@ Server::Server(const Napi::CallbackInfo& info)
     clientOptionsRef = Napi::Persistent(info[2].As<Napi::Object>());
     checkClientOptions(clientOptionsRef.Value(), &client_options);
   }
+
+  // open client connection
+
+  client_conn_handle = RfcOpenConnection(
+      client_params.connectionParams, client_params.paramSize, &errorInfo);
+  if (errorInfo.code != RFC_OK) {
+    Napi::Error::New(info.Env(), rfcSdkError(&errorInfo).ToString())
+        .ThrowAsJavaScriptException();
+  }
+  DEBUG("Server:: client connection open:", (uintptr_t)client_conn_handle);
+
+  // create server
+  serverHandle = RfcCreateServer(server_params.connectionParams, 1, &errorInfo);
+  if (errorInfo.code != RFC_OK) {
+    Napi::Error::New(info.Env(), rfcSdkError(&errorInfo).ToString())
+        .ThrowAsJavaScriptException();
+  }
+  DEBUG("Server:: created ", (uintptr_t)serverHandle);
 };
 
 RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
@@ -214,7 +234,6 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
   ServerFunctionsMap::iterator it = server->serverFunctions.begin();
   while (it != server->serverFunctions.end()) {
     if (strcmpU(func_name, it->second->func_name) == 0) {
-      printf("found func_desc %p\n", (void*)it->second->func_desc_handle);
       break;
     }
     ++it;
@@ -235,7 +254,7 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
   requestBaton->errorInfo = errorInfo;
   requestBaton->errorPath = errorPath;
 
-  DEBUG("Request for function: ",
+  DEBUG("Generic request handler: ",
         it->first,
         " function handle ",
         (uintptr_t)func_handle,
@@ -261,45 +280,11 @@ class StartAsync : public Napi::AsyncWorker {
   ~StartAsync() {}
 
   void Execute() {
+    errorInfo.code = RFC_OK;
     server->LockMutex();
     DEBUG("StartAsync locked");
-    server->client_conn_handle =
-        RfcOpenConnection(server->client_params.connectionParams,
-                          server->client_params.paramSize,
-                          &errorInfo);
-    if (errorInfo.code != RFC_OK) {
-      return;
-    }
-    DEBUG("Server:: client connection ok");
 
-    server->server_conn_handle =
-        RfcRegisterServer(server->server_params.connectionParams,
-                          server->server_params.paramSize,
-                          &errorInfo);
-    if (errorInfo.code != RFC_OK) {
-      return;
-    }
-    DEBUG("Server:: registered");
-
-    RfcInstallGenericServerFunction(
-        genericRequestHandler, metadataLookup, &errorInfo);
-    if (errorInfo.code != RFC_OK) {
-      return;
-    }
-    DEBUG("Server:: installed");
-
-    server->serverHandle =
-        RfcCreateServer(server->server_params.connectionParams, 1, &errorInfo);
-    if (errorInfo.code != RFC_OK) {
-      return;
-    }
-    DEBUG("Server:: created");
-
-    RfcLaunchServer(server->serverHandle, &errorInfo);
-    if (errorInfo.code != RFC_OK) {
-      return;
-    }
-    DEBUG("Server:: launched ", (pointer_t)server->serverHandle)
+    server->st = std::thread(&Server::_start, server, &errorInfo);
 
     server->UnlockMutex();
     DEBUG("StartAsync unlocked");
@@ -399,20 +384,53 @@ Napi::Value Server::Start(const Napi::CallbackInfo& info) {
   return info.Env().Undefined();
 };
 
+// std::thread Server::server_thread(RFC_ERROR_INFO* errorInfo) {
+//   return std::thread([=] { _start(errorInfo); });
+// };
+
+void Server::_start(RFC_ERROR_INFO* errorInfo) {
+  RfcInstallGenericServerFunction(
+      genericRequestHandler, metadataLookup, errorInfo);
+  if (errorInfo->code != RFC_OK) {
+    return;
+  }
+  DEBUG("Server:: generic request handler installed");
+
+  RfcLaunchServer(serverHandle, errorInfo);
+  if (errorInfo->code != RFC_OK) {
+    return;
+  }
+  DEBUG("Server:: launched ", (pointer_t)serverHandle)
+}
+
 void Server::_stop() {
   if (serverHandle != nullptr) {
-    DEBUG("Server::_stop destroy ", (pointer_t)serverHandle);
+    DEBUG("Server stop: destroy ", (pointer_t)serverHandle);
     RfcShutdownServer(serverHandle, 60, nullptr);
     RfcDestroyServer(serverHandle, nullptr);
+    serverHandle = nullptr;
   }
 
   if (client_conn_handle != nullptr) {
-    DEBUG("Server::_stop close client connection ",
+    DEBUG("Server stop: close client connection ",
           (pointer_t)client_conn_handle);
     RfcCloseConnection(client_conn_handle, nullptr);
+    client_conn_handle = nullptr;
   }
-  serverHandle = nullptr;
-  client_conn_handle = nullptr;
+
+  // release tsfn server functions
+  ServerFunctionsMap::iterator it = serverFunctions.begin();
+  while (it != serverFunctions.end()) {
+    if (it->second->tsfnRequest) {
+      it->second->tsfnRequest.Unref(node_rfc::__env);
+    }
+    ++it;
+  }
+
+  if (st.joinable()) {
+    DEBUG("Server stop: serve() thread join")
+    st.join();
+  }
 }
 
 Napi::Value Server::Stop(const Napi::CallbackInfo& info) {
@@ -434,8 +452,6 @@ Napi::Value Server::Stop(const Napi::CallbackInfo& info) {
 };
 
 Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
-  Napi::EscapableHandleScope scope(info.Env());
-
   std::ostringstream errmsg;
 
   if (!info[0].IsString()) {
@@ -460,14 +476,19 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
     return info.Env().Undefined();
   }
 
-  Napi::Function jsFunction = info[1].As<Napi::Function>();
-
   if (!info[2].IsFunction()) {
     errmsg << "Server addFunction() requires a callback function";
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
+  if (client_conn_handle == nullptr) {
+    errmsg << "Server addFunction() requires an open client connection";
+    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    return info.Env().Undefined();
+  }
+
+  Napi::Function jsFunction = info[1].As<Napi::Function>();
   Napi::Function callback = info[2].As<Napi::Function>();
 
   // Install function
@@ -481,33 +502,33 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
   if (errorInfo.code != RFC_OK) {
     delete[] func_name;
     callback.Call({rfcSdkError(&errorInfo)});
-    return scope.Escape(info.Env().Undefined());
+    return info.Env().Undefined();
   }
 
   // Create thread-safe function to be called by genericRequestHandler
-  ServerRequestTsfn tsfnRequest =
+  serverFunctions[functionName.Utf8Value()] = new ServerFunctionStruct(
+      func_name,
+      func_desc_handle,
       ServerRequestTsfn::New(info.Env(),
-                             jsFunction,           // JavaScript server function
+                             jsFunction,           // JavaScript server
                              "ServerRequestTsfn",  // Resource name
                              0,                    // Unlimited queue
                              1  // Only one thread will use this initially
-      );
+                             )
 
-  serverFunctions[functionName.Utf8Value()] =
-      new ServerFunctionStruct(func_name, func_desc_handle, tsfnRequest);
+  );
+
   delete[] func_name;
-  DEBUG("Server::AddFunction ",
+  DEBUG("Function added ",
         functionName.Utf8Value(),
-        ": ",
+        " descriptor: ",
         (pointer_t)func_desc_handle);
 
   callback.Call({});
-  return scope.Escape(info.Env().Undefined());
+  return info.Env().Undefined();
 };
 
 Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
-  Napi::EscapableHandleScope scope(info.Env());
-
   std::ostringstream errmsg;
 
   if (!info[0].IsString()) {
@@ -553,7 +574,7 @@ Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
     errmsg << "Server removeFunction() did not find function: "
            << functionName.Utf8Value();
     callback.Call({nodeRfcError(errmsg.str())});
-    return scope.Escape(info.Env().Undefined());
+    return info.Env().Undefined();
   }
 
   DEBUG("Server::RemoveFunction removed ",
@@ -563,7 +584,7 @@ Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
   serverFunctions.erase(it);
 
   callback.Call({});
-  return scope.Escape(info.Env().Undefined());
+  return info.Env().Undefined();
 };
 
 Napi::Value Server::GetFunctionDescription(const Napi::CallbackInfo& info) {

@@ -115,6 +115,13 @@ class Server : public Napi::ObjectWrap<Server> {
 
  private:
   void _stop();
+  void _start(RFC_ERROR_INFO* errorInfo);
+  std::thread server_thread(RFC_ERROR_INFO* errorInfo) {
+    return std::thread([=] { _start(errorInfo); });
+  };
+
+  std::thread st;
+
   Napi::Value IdGetter(const Napi::CallbackInfo& info);
   Napi::Value AliveGetter(const Napi::CallbackInfo& info);
   Napi::Value ServerConnectionHandleGetter(const Napi::CallbackInfo& info);
