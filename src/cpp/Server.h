@@ -6,8 +6,8 @@
 #define NodeRfc_Server_H
 
 #include <condition_variable>
-#include <map>
 #include <thread>
+#include <unordered_map>
 #include "Client.h"
 
 namespace node_rfc {
@@ -26,35 +26,31 @@ struct ServerRequestBaton {
 
   bool server_call_completed = false;
   std::mutex server_call_mutex;
-  std::unique_lock<std::mutex> lock;
   std::condition_variable server_call_condition;
 
   void wait() {
     std::thread::id this_tid = std::this_thread::get_id();
-    DEBUG("requestBaton wait ", this_tid);
-    std::unique_lock<std::mutex> xlock(server_call_mutex);
-    server_call_condition.wait(xlock, [this] { return server_call_completed; });
-    DEBUG("requestBaton done ", this_tid, " status ", server_call_completed);
+    DEBUG("JavaScript call lock ", this_tid, " ", server_call_completed);
+    std::unique_lock<std::mutex> lock(server_call_mutex);
+    server_call_condition.wait(lock, [this] { return server_call_completed; });
+    DEBUG("JavaScript call unlock ", this_tid, " ", server_call_completed);
   }
 
   void done() {
     std::thread::id this_tid = std::this_thread::get_id();
     server_call_completed = true;
     server_call_condition.notify_one();
-    DEBUG("requestBaton done requested ",
-          this_tid,
-          " status ",
-          server_call_completed);
+    DEBUG("JavaScript call completed ", this_tid, " ", server_call_completed);
   }
 };
 
-void ServerCallJs(Napi::Env env,
-                  Napi::Function callback,
-                  std::nullptr_t* context,
-                  ServerRequestBaton* data);
+void JSFunctionCall(Napi::Env env,
+                    Napi::Function callback,
+                    std::nullptr_t* context,
+                    ServerRequestBaton* data);
 
 using ServerRequestTsfn = Napi::
-    TypedThreadSafeFunction<std::nullptr_t, ServerRequestBaton, ServerCallJs>;
+    TypedThreadSafeFunction<std::nullptr_t, ServerRequestBaton, JSFunctionCall>;
 
 class Server;
 typedef struct _ServerFunctionStruct {
@@ -91,7 +87,8 @@ typedef struct _ServerFunctionStruct {
   }
 } ServerFunctionStruct;
 
-typedef std::map<std::string, ServerFunctionStruct*> ServerFunctionsMap;
+typedef std::unordered_map<std::string, ServerFunctionStruct*>
+    ServerFunctionsMap;
 
 extern Napi::Env __env;
 
