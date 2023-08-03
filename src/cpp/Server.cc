@@ -171,8 +171,10 @@ Napi::Value getServerRequestContext(ServerRequestBaton* requestBaton) {
                                   &context,
                                   requestBaton->errorInfo);
 
-  if (rc != RFC_OK || requestBaton->errorInfo->code != RFC_OK)
+  if (rc != RFC_OK || requestBaton->errorInfo->code != RFC_OK) {
+    DEBUG("[error] Request context not set", requestContext)
     return requestContext;
+  }
 
   requestContext.Set(
       "callType", Napi::String::New(node_rfc::__env, call_type[context.type]));
@@ -186,6 +188,7 @@ Napi::Value getServerRequestContext(ServerRequestBaton* requestBaton) {
   if (context.type == RFC_BACKGROUND_UNIT) {
     requestContext.Set("unitAttr", wrapUnitAttributes(context.unitAttributes));
   }
+  DEBUG("Request context set", requestContext);
   return requestContext;
 }
 
@@ -720,8 +723,8 @@ void JSFunctionCall(Napi::Env env,
     }
   }
 
-  // Release the mutex, so that genericRequestHandler can return the result to
-  // ABAP
+  // Release the mutex, so that genericRequestHandler can return the result
+  // to ABAP
   requestBaton->done();
 }
 
