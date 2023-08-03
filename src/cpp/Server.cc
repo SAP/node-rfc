@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2014 SAP SE Srdjan Boskovic <srdjan.boskovic@sap.com>
 //
 // SPDX-License-Identifier: Apache-2.0
+
 #include "Server.h"
 #include <node_api.h>
 
@@ -8,8 +9,7 @@ namespace node_rfc {
 extern Napi::Env __env;
 
 uint_t Server::_id = 1;
-
-Server* __server = nullptr;
+ServerFunctionsMap serverFunctions;
 
 Napi::Object Server::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
@@ -61,19 +61,8 @@ Napi::Value Server::ClientConnectionHandleGetter(
       info.Env(), (double)(unsigned long long)this->client_conn_handle);
 }
 
-// RFC_RC SAP_API Server::genericHandler(RFC_CONNECTION_HANDLE conn_handle,
-//                                       RFC_FUNCTION_HANDLE func_handle,
-//                                       RFC_ERROR_INFO* errorInfo) {
-//   UNUSED(conn_handle);
-//   UNUSED(func_handle);
-//   UNUSED(errorInfo);
-//   return RFC_OK;
-// }
-
 Server::Server(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<Server>(info) {
-  node_rfc::__server = this;
-
   RFC_ERROR_INFO errorInfo;
 
   init();
@@ -135,10 +124,8 @@ RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
 
   RFC_RC rc = RFC_NOT_FOUND;
 
-  Server* server = node_rfc::__server;  // todo check if null
-
-  ServerFunctionsMap::iterator it = server->serverFunctions.begin();
-  while (it != server->serverFunctions.end()) {
+  ServerFunctionsMap::iterator it = serverFunctions.begin();
+  while (it != serverFunctions.end()) {
     if (strcmpU(func_name, it->second->func_name) == 0) {
       *func_desc_handle = it->second->func_desc_handle;
       rc = RFC_OK;
@@ -214,10 +201,6 @@ Napi::Value getServerRequestContext(ServerRequestBaton* requestBaton) {
 RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
                                      RFC_FUNCTION_HANDLE func_handle,
                                      RFC_ERROR_INFO* errorInfo) {
-  UNUSED(conn_handle);
-
-  Server* server = node_rfc::__server;
-
   RFC_RC rc = RFC_NOT_FOUND;
 
   RFC_FUNCTION_DESC_HANDLE func_desc =
@@ -231,15 +214,15 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
     return errorInfo->code;
   }
 
-  ServerFunctionsMap::iterator it = server->serverFunctions.begin();
-  while (it != server->serverFunctions.end()) {
+  ServerFunctionsMap::iterator it = serverFunctions.begin();
+  while (it != serverFunctions.end()) {
     if (strcmpU(func_name, it->second->func_name) == 0) {
       break;
     }
     ++it;
   }
 
-  if (it == server->serverFunctions.end()) {
+  if (it == serverFunctions.end()) {
     printf("not found!\n");
     return rc;
   }
@@ -248,7 +231,7 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
   auto errorPath = node_rfc::RfmErrorPath();
 
   requestBaton->request_connection_handle = conn_handle;
-  requestBaton->client_options = server->client_options;
+  requestBaton->client_options = it->second->server->client_options;
   requestBaton->func_handle = func_handle;
   requestBaton->func_desc_handle = it->second->func_desc_handle;
   requestBaton->errorInfo = errorInfo;
@@ -264,11 +247,8 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
         (uintptr_t)conn_handle);
 
   it->second->tsfnRequest.NonBlockingCall(requestBaton);
-  // it->second->tsfnRequest.BlockingCall(requestBaton);
 
   requestBaton->wait();
-
-  // DEBUG("genericRequestHandler tsfnRequest.BlockingCall: done");
 
   return RFC_OK;
 }
@@ -496,6 +476,7 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
 
   SAP_UC* func_name = setString(functionName);
 
+  // Obtain ABAP function description from ABAP system
   RFC_FUNCTION_DESC_HANDLE func_desc_handle =
       RfcGetFunctionDesc(client_conn_handle, func_name, &errorInfo);
 
@@ -505,8 +486,10 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
     return info.Env().Undefined();
   }
 
-  // Create thread-safe function to be called by genericRequestHandler
+  // ABAP function description found.
+  // Create thread-safe JS function to be called by genericRequestHandler
   serverFunctions[functionName.Utf8Value()] = new ServerFunctionStruct(
+      this,
       func_name,
       func_desc_handle,
       ServerRequestTsfn::New(info.Env(),
@@ -517,6 +500,17 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
                              )
 
   );
+
+  // Napi::ThreadSafeFunction tsfn = Napi::ThreadSafeFunction::New(
+  //     info.Env(),
+  //     jsFunction,           // JavaScript server
+  //     "ServerRequestTsfn",  // Resource name
+  //     0,                    // Unlimited queue
+  //     1                     // Only one thread will use this initially
+  // );
+
+  // ServerRequestBaton* sbn = new ServerRequestBaton();
+  // tsfn.NonBlockingCall((void*)sbn);
 
   delete[] func_name;
   DEBUG("Function added ",
@@ -624,8 +618,6 @@ void Server::UnlockMutex() {
   // uv_sem_post(&invocationMutex);
 }
 
-}  // namespace node_rfc
-
 void ServerCallJs(Napi::Env env,
                   Napi::Function callback,
                   std::nullptr_t* context,
@@ -633,15 +625,14 @@ void ServerCallJs(Napi::Env env,
   UNUSED(context);
 
   // set server context
-  Napi::Value requestContext = node_rfc::getServerRequestContext(requestBaton);
+  Napi::Value requestContext = getServerRequestContext(requestBaton);
 
   // ABAP -> JS parameters
 
-  node_rfc::ValuePair jsParameters =
-      getRfmParameters(requestBaton->func_desc_handle,
-                       requestBaton->func_handle,
-                       &requestBaton->errorPath,
-                       &requestBaton->client_options);
+  ValuePair jsParameters = getRfmParameters(requestBaton->func_desc_handle,
+                                            requestBaton->func_handle,
+                                            &requestBaton->errorPath,
+                                            &requestBaton->client_options);
 
   Napi::Value errorObj = jsParameters.first.As<Napi::Object>();
   Napi::Object abapArgs = jsParameters.second.As<Napi::Object>();
@@ -671,13 +662,12 @@ void ServerCallJs(Napi::Env env,
     Napi::String name = paramNames.Get(i).ToString();
     Napi::Value value = params.Get(name);
     // DEBUG(name, value);
-
-    errorObj = node_rfc::setRfmParameter(requestBaton->func_desc_handle,
-                                         requestBaton->func_handle,
-                                         name,
-                                         value,
-                                         &requestBaton->errorPath,
-                                         &requestBaton->client_options);
+    errorObj = setRfmParameter(requestBaton->func_desc_handle,
+                               requestBaton->func_handle,
+                               name,
+                               value,
+                               &requestBaton->errorPath,
+                               &requestBaton->client_options);
 
     if (!errorObj.IsUndefined()) {
       break;
@@ -686,3 +676,5 @@ void ServerCallJs(Napi::Env env,
 
   requestBaton->done();
 }
+
+}  // namespace node_rfc

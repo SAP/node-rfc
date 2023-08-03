@@ -10,6 +10,9 @@
 #include <thread>
 #include "Client.h"
 
+namespace node_rfc {
+
+//
 struct ServerRequestBaton {
   RFC_CONNECTION_HANDLE request_connection_handle = nullptr;
   RFC_FUNCTION_DESC_HANDLE func_desc_handle;
@@ -29,8 +32,8 @@ struct ServerRequestBaton {
   void wait() {
     std::thread::id this_tid = std::this_thread::get_id();
     DEBUG("requestBaton wait ", this_tid);
-    std::unique_lock<std::mutex> lock(server_call_mutex);
-    server_call_condition.wait(lock, [this] { return server_call_completed; });
+    std::unique_lock<std::mutex> xlock(server_call_mutex);
+    server_call_condition.wait(xlock, [this] { return server_call_completed; });
     DEBUG("requestBaton done ", this_tid, " status ", server_call_completed);
   }
 
@@ -53,20 +56,20 @@ void ServerCallJs(Napi::Env env,
 using ServerRequestTsfn = Napi::
     TypedThreadSafeFunction<std::nullptr_t, ServerRequestBaton, ServerCallJs>;
 
-// using ServerRequestTsfn = Napi::ThreadSafeFunction;  // <std::nullptr_t,
-//                                                      // ServerRequestBaton,
-//                                                      // ServerCallJs>;
-
+class Server;
 typedef struct _ServerFunctionStruct {
+  Server* server = nullptr;
   RFC_ABAP_NAME func_name;
   RFC_FUNCTION_DESC_HANDLE func_desc_handle = nullptr;
-  ServerRequestTsfn tsfnRequest;
+  ServerRequestTsfn tsfnRequest = nullptr;
 
   _ServerFunctionStruct() { func_name[0] = 0; }
 
-  _ServerFunctionStruct(RFC_ABAP_NAME _func_name,
+  _ServerFunctionStruct(Server* _server,
+                        RFC_ABAP_NAME _func_name,
                         RFC_FUNCTION_DESC_HANDLE _func_desc_handle,
                         ServerRequestTsfn _tsfnRequest) {
+    server = _server;
     strcpyU(func_name, _func_name);
     func_desc_handle = _func_desc_handle;
     tsfnRequest = _tsfnRequest;
@@ -75,6 +78,7 @@ typedef struct _ServerFunctionStruct {
   _ServerFunctionStruct& operator=(
       _ServerFunctionStruct& src)  // note: passed by copy
   {
+    server = src.server;
     strcpyU(func_name, src.func_name);
     func_desc_handle = src.func_desc_handle;
     tsfnRequest = src.tsfnRequest;
@@ -89,7 +93,6 @@ typedef struct _ServerFunctionStruct {
 
 typedef std::map<std::string, ServerFunctionStruct*> ServerFunctionsMap;
 
-namespace node_rfc {
 extern Napi::Env __env;
 
 RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
@@ -108,8 +111,6 @@ class Server : public Napi::ObjectWrap<Server> {
   // cppcheck-suppress noExplicitConstructor
   Server(const Napi::CallbackInfo& info);
   ~Server(void);
-  ServerFunctionsMap serverFunctions;
-  // AddonData* addon_data;
 
   ClientOptionsStruct client_options;
 
