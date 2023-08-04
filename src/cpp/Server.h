@@ -9,15 +9,17 @@
 #include <thread>
 #include <unordered_map>
 #include "Client.h"
+#include "Log.h"
 
 namespace node_rfc {
 
-//
+// Created in genericRequestHandler to set ABAP data for JSFunctionCall
 struct ServerRequestBaton {
   RFC_CONNECTION_HANDLE request_connection_handle = nullptr;
   RFC_FUNCTION_DESC_HANDLE func_desc_handle;
   RFC_FUNCTION_HANDLE func_handle;
   RFC_ERROR_INFO* errorInfo;
+  std::string jsFunctionName;
 
   node_rfc::RfmErrorPath errorPath;
   node_rfc::ClientOptionsStruct client_options;
@@ -30,17 +32,38 @@ struct ServerRequestBaton {
 
   void wait() {
     std::thread::id this_tid = std::this_thread::get_id();
-    DEBUG("JavaScript call lock ", this_tid, " ", server_call_completed);
+    _log(logClass::server,
+         logSeverity::info,
+         "JS call lock ",
+         jsFunctionName,
+         " thread ",
+         this_tid,
+         " ",
+         server_call_completed);
     std::unique_lock<std::mutex> lock(server_call_mutex);
     server_call_condition.wait(lock, [this] { return server_call_completed; });
-    DEBUG("JavaScript call unlock ", this_tid, " ", server_call_completed);
+    _log(logClass::server,
+         logSeverity::info,
+         "JS call unlock ",
+         jsFunctionName,
+         " thread ",
+         this_tid,
+         " ",
+         server_call_completed);
   }
 
   void done() {
     std::thread::id this_tid = std::this_thread::get_id();
     server_call_completed = true;
     server_call_condition.notify_one();
-    DEBUG("JavaScript call completed ", this_tid, " ", server_call_completed);
+    _log(logClass::server,
+         logSeverity::info,
+         "JS call completed ",
+         jsFunctionName,
+         " thread ",
+         this_tid,
+         " ",
+         server_call_completed);
   }
 };
 
@@ -58,17 +81,20 @@ typedef struct _ServerFunctionStruct {
   RFC_ABAP_NAME func_name;
   RFC_FUNCTION_DESC_HANDLE func_desc_handle = nullptr;
   ServerRequestTsfn tsfnRequest = nullptr;
+  std::string jsFunctionName;
 
   _ServerFunctionStruct() { func_name[0] = 0; }
 
   _ServerFunctionStruct(Server* _server,
                         RFC_ABAP_NAME _func_name,
                         RFC_FUNCTION_DESC_HANDLE _func_desc_handle,
-                        ServerRequestTsfn _tsfnRequest) {
+                        ServerRequestTsfn _tsfnRequest,
+                        std::string _jsFunctionName) {
     server = _server;
     strcpyU(func_name, _func_name);
     func_desc_handle = _func_desc_handle;
     tsfnRequest = _tsfnRequest;
+    jsFunctionName = _jsFunctionName;
   }
 
   _ServerFunctionStruct& operator=(
@@ -78,6 +104,7 @@ typedef struct _ServerFunctionStruct {
     strcpyU(func_name, src.func_name);
     func_desc_handle = src.func_desc_handle;
     tsfnRequest = src.tsfnRequest;
+    jsFunctionName = src.jsFunctionName;
     return *this;
   }
 

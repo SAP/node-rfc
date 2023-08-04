@@ -5,6 +5,7 @@
 #include "Client.h"
 #include <mutex>
 #include <thread>
+#include "Log.h"
 #include "Pool.h"
 
 namespace node_rfc {
@@ -122,8 +123,6 @@ Client::Client(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<Client>(info) {
   init();
 
-  DEBUG("Client::Client ", id);
-
   if (!info[0].IsUndefined() && (info[0].IsFunction() || !info[0].IsObject())) {
     Napi::TypeError::New(Env(), "Client connection parameters missing")
         .ThrowAsJavaScriptException();
@@ -148,25 +147,35 @@ Client::Client(const Napi::CallbackInfo& info)
              info.Length());
     Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
   }
+
+  _log(logClass::client, logSeverity::info, "client created: ", id);
 };
 
 Client::~Client(void) {
-  DEBUG("~ Client ", id);
-
   if (pool == nullptr) {
     // Close own connection
     if (connectionHandle != nullptr) {
       RFC_ERROR_INFO errorInfo;
-      DEBUG("Closing direct connection ", (pointer_t)connectionHandle);
+      _log(logClass::client,
+           logSeverity::info,
+           id,
+           " closing connection ",
+           (pointer_t)connectionHandle);
       RFC_RC rc = RfcCloseConnection(connectionHandle, &errorInfo);
       if (rc != RFC_OK) {
         EDEBUG("Warning: Error closing the direct connection handle ",
-               (pointer_t)connectionHandle,
+               (uintptr_t)connectionHandle,
                " client ",
                id);
       }
     } else {
-      DEBUG("Client ", id, " handle already closed");
+      _log(logClass::client,
+           logSeverity::warning,
+           "Client ",
+           id,
+           " connection ",
+           (uintptr_t)connectionHandle,
+           " already closed");
     }
 
     // Unref client config
@@ -190,7 +199,6 @@ Napi::Value Client::connectionClosedError(const char* suffix) {
 }
 
 Napi::Object Client::NewInstance(Napi::Env env) {
-  // DEBUG("Client::NewInstance");
   Napi::EscapableHandleScope scope(env);
   Napi::Object obj = env.GetInstanceData<Napi::FunctionReference>()->New({});
   return scope.Escape(napi_value(obj)).ToObject();
@@ -537,7 +545,10 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
       )                             // closed
   {
     if (errorInfo->code == RFC_CANCELED) {
-      EDEBUG("Connection canceled ", (pointer_t)this->connectionHandle);
+      _log(logClass::client,
+           logSeverity::warning,
+           "connection cancelled ",
+           (pointer_t)this->connectionHandle);
     }
 
     RFC_CONNECTION_HANDLE new_handle;
@@ -565,22 +576,32 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
         return ErrorPair(errorInfoOpen, updateError);
       }
 
-      DEBUG("new handle assigned to managed client");
+      _log(logClass::pool,
+           logSeverity::info,
+           "closed connection handle ",
+           (uintptr_t)old_handle,
+           " replaced with ",
+           (uintptr_t)new_handle);
       this->connectionHandle = new_handle;
     } else {
       // assign new handle to direct client
       this->connectionHandle = new_handle;
     }
-    DEBUG("Critical connection error: group ",
-          errorInfo->group,
-          " code ",
-          errorInfo->code,
-          " closed handle ",
-          (pointer_t)old_handle,
-          " new handle ",
-          (pointer_t)new_handle);
+    _log(logClass::client,
+         logSeverity::warning,
+         "Critical ABAP error: group ",
+         errorInfo->group,
+         " code ",
+         errorInfo->code,
+         " closed connection handle ",
+         (pointer_t)old_handle,
+         " replaced with ",
+         (pointer_t)new_handle);
   } else {
-    DEBUG("Non-critical ABAP error: ", (pointer_t)this->connectionHandle);
+    _log(logClass::client,
+         logSeverity::warning,
+         "Non-critical ABAP error: ",
+         (pointer_t)this->connectionHandle);
   }
 
   return ErrorPair(errorInfoOpen, "");
@@ -612,7 +633,10 @@ Napi::Value Client::Release(const Napi::CallbackInfo& info) {
 void cancelConnection(RFC_RC* rc,
                       RFC_CONNECTION_HANDLE connectionHandle,
                       RFC_ERROR_INFO* errorInfo) {
-  EDEBUG("Cancel connection ", (pointer_t)connectionHandle);
+  _log(logClass::client,
+       logSeverity::info,
+       "connection cancelled ",
+       (pointer_t)connectionHandle);
   *rc = RfcCancel(connectionHandle, errorInfo);
 }
 

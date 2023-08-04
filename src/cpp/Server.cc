@@ -67,8 +67,6 @@ Server::Server(const Napi::CallbackInfo& info)
 
   init();
 
-  DEBUG("Server::Server ", id);
-
   if (!info[0].IsObject()) {
     Napi::TypeError::New(Env(), "Server constructor requires server parameters")
         .ThrowAsJavaScriptException();
@@ -106,7 +104,6 @@ Server::Server(const Napi::CallbackInfo& info)
     Napi::Error::New(info.Env(), rfcSdkError(&errorInfo).ToString())
         .ThrowAsJavaScriptException();
   }
-  DEBUG("Server:: client connection open:", (uintptr_t)client_conn_handle);
 
   // create server
   serverHandle = RfcCreateServer(server_params.connectionParams, 1, &errorInfo);
@@ -114,7 +111,12 @@ Server::Server(const Napi::CallbackInfo& info)
     Napi::Error::New(info.Env(), rfcSdkError(&errorInfo).ToString())
         .ThrowAsJavaScriptException();
   }
-  DEBUG("Server:: created ", (uintptr_t)serverHandle);
+  _log(logClass::server,
+       logSeverity::info,
+       "created; server handle",
+       (uintptr_t)serverHandle,
+       " client connection ",
+       (uintptr_t)client_conn_handle);
 };
 
 Napi::Value wrapUnitIdentifier(RFC_UNIT_IDENTIFIER* uIdentifier) {
@@ -151,11 +153,8 @@ Napi::Value getServerRequestContext(ServerRequestBaton* requestBaton) {
   const std::string call_type[4] = {
       "synchronous", "transactional", "queued", "background_unit"};
 
-  if (requestBaton->request_connection_handle == nullptr) {
-    // todo error ...
-  }
-
   Napi::Object requestContext = Napi::Object::New(node_rfc::__env);
+
   requestContext.Set(
       "client_connection",
       Napi::Number::New(node_rfc::__env,
@@ -172,7 +171,10 @@ Napi::Value getServerRequestContext(ServerRequestBaton* requestBaton) {
                                   requestBaton->errorInfo);
 
   if (rc != RFC_OK || requestBaton->errorInfo->code != RFC_OK) {
-    DEBUG("[error] Request context not set", requestContext)
+    _log(logClass::server,
+         logSeverity::error,
+         "Request context not set",
+         requestContext);
     return requestContext;
   }
 
@@ -188,7 +190,6 @@ Napi::Value getServerRequestContext(ServerRequestBaton* requestBaton) {
   if (context.type == RFC_BACKGROUND_UNIT) {
     requestContext.Set("unitAttr", wrapUnitAttributes(context.unitAttributes));
   }
-  DEBUG("Request context set", requestContext);
   return requestContext;
 }
 
@@ -212,14 +213,24 @@ RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
   }
 
   if (rc == RFC_OK) {
-    DEBUG("Function found ",
-          it->first,
-          " descriptor ",
-          (pointer_t)*func_desc_handle);
+    _log(logClass::server,
+         logSeverity::info,
+         "Function found ",
+         it->first,
+         " description ",
+         (pointer_t)*func_desc_handle);
   } else {
-    // todo
-    DEBUG("[error] Function not found: ");
-    printfU(func_name);
+    _log(logClass::server,
+         logSeverity::error,
+         "Function not found ",
+         it->first,
+         " description ",
+         (pointer_t)*func_desc_handle);
+    // No access to JS and wrapString and ABAP function name
+    // can't be converted to unicode here.
+    // Write therefore to stdout
+    printf("\nserver [error] Function not found: ");
+    printfU(func_name, "\n");
   }
 
   return rc;
@@ -274,15 +285,20 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
   requestBaton->func_desc_handle = it->second->func_desc_handle;
   requestBaton->errorInfo = errorInfo;
   requestBaton->errorPath = errorPath;
+  requestBaton->jsFunctionName = it->second->jsFunctionName;
 
-  DEBUG("Generic request handler: ",
-        it->first,
-        " function handle ",
-        (uintptr_t)func_handle,
-        " descriptor: ",
-        (uintptr_t)requestBaton->func_desc_handle,
-        " from client connection: ",
-        (uintptr_t)conn_handle);
+  _log(logClass::server,
+       logSeverity::info,
+       "Client request for JS function ",
+       it->second->jsFunctionName,
+       " as ABAP function ",
+       it->first,
+       " using function handle ",
+       (uintptr_t)func_handle,
+       ", descriptor ",
+       (uintptr_t)requestBaton->func_desc_handle,
+       " client connection: ",
+       (uintptr_t)conn_handle);
 
   it->second->tsfnRequest.NonBlockingCall(requestBaton);
 
@@ -334,9 +350,11 @@ class StopAsync : public Napi::AsyncWorker {
 
   void Execute() {
     server->LockMutex();
-    DEBUG("Server::stop ", (pointer_t)server->serverHandle);
+    _log(logClass::server,
+         logSeverity::info,
+         "stop: ",
+         (pointer_t)server->serverHandle);
     server->_stop();
-    DEBUG("Server:: stopped")
 
     server->UnlockMutex();
   }
@@ -395,8 +413,6 @@ class GetFunctionDescAsync : public Napi::AsyncWorker {
 };
 
 Napi::Value Server::Start(const Napi::CallbackInfo& info) {
-  DEBUG("Server::Serve");
-
   std::ostringstream errmsg;
 
   if (!info[0].IsFunction()) {
@@ -418,26 +434,36 @@ void Server::_start(RFC_ERROR_INFO* errorInfo) {
   if (errorInfo->code != RFC_OK) {
     return;
   }
-  DEBUG("Server:: generic request handler installed");
+  _log(logClass::server,
+       logSeverity::info,
+       "start: generic request handler installed");
 
   RfcLaunchServer(serverHandle, errorInfo);
   if (errorInfo->code != RFC_OK) {
     return;
   }
-  DEBUG("Server:: launched ", (pointer_t)serverHandle)
+  _log(logClass::server,
+       logSeverity::info,
+       "start: launched ",
+       (pointer_t)serverHandle);
 }
 
 void Server::_stop() {
   if (serverHandle != nullptr) {
-    DEBUG("Server stop: destroy ", (pointer_t)serverHandle);
+    _log(logClass::server,
+         logSeverity::info,
+         "stop: shutdown and destroy ",
+         (pointer_t)serverHandle);
     RfcShutdownServer(serverHandle, 60, nullptr);
     RfcDestroyServer(serverHandle, nullptr);
     serverHandle = nullptr;
   }
 
   if (client_conn_handle != nullptr) {
-    DEBUG("Server stop: close client connection ",
-          (pointer_t)client_conn_handle);
+    _log(logClass::server,
+         logSeverity::info,
+         "stop: close client connection ",
+         (pointer_t)client_conn_handle);
     RfcCloseConnection(client_conn_handle, nullptr);
     client_conn_handle = nullptr;
   }
@@ -452,14 +478,12 @@ void Server::_stop() {
   }
 
   if (st.joinable()) {
-    DEBUG("Server stop: serve() thread join")
+    _log(logClass::server, logSeverity::info, "stop: serve() thread join");
     st.join();
   }
 }
 
 Napi::Value Server::Stop(const Napi::CallbackInfo& info) {
-  DEBUG("Server::Stop");
-
   std::ostringstream errmsg;
 
   if (!info[0].IsFunction()) {
@@ -545,6 +569,9 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
 
   // ABAP function description found.
   // Create thread-safe JS function to be called by genericRequestHandler
+  std::string jsFunctionName =
+      jsFunction.As<Napi::Object>().Get("name").As<Napi::String>().Utf8Value();
+
   serverFunctions[functionName.Utf8Value()] = new ServerFunctionStruct(
       this,
       func_name,
@@ -554,15 +581,19 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
                              "ServerRequestTsfn",  // Resource name
                              0,                    // Unlimited queue
                              1  // Only one thread will use this initially
-                             )
-
-  );
+                             ),
+      // Save JS function name for server logging later on
+      jsFunctionName);
 
   delete[] func_name;
-  DEBUG("Function added ",
-        functionName.Utf8Value(),
-        " descriptor: ",
-        (pointer_t)func_desc_handle);
+  _log(logClass::server,
+       logSeverity::info,
+       "Function added ",
+       jsFunctionName,
+       " as ABAP function ",
+       functionName.Utf8Value(),
+       " description: ",
+       (pointer_t)func_desc_handle);
 
   callback.Call({});
   return info.Env().Undefined();
@@ -587,8 +618,6 @@ Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
     return info.Env().Undefined();
   }
 
-  DEBUG("Server::RemoveFunction ", functionName.Utf8Value());
-
   if (!info[1].IsFunction()) {
     errmsg << "Server removeFunction() requires a callback function";
     Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
@@ -596,8 +625,6 @@ Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
   }
 
   Napi::Function callback = info[1].As<Napi::Function>();
-
-  // Remove function
 
   SAP_UC* func_name = setString(functionName);
 
@@ -617,10 +644,14 @@ Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
     return info.Env().Undefined();
   }
 
-  DEBUG("Server::RemoveFunction removed ",
-        functionName.Utf8Value(),
-        ": ",
-        (pointer_t)it->second->func_desc_handle);
+  _log(logClass::server,
+       logSeverity::info,
+       "Function removed ",
+       it->second->jsFunctionName,
+       " as ABAP function ",
+       functionName.Utf8Value(),
+       " description: ",
+       (pointer_t)it->second->func_desc_handle);
   serverFunctions.erase(it);
 
   callback.Call({});
@@ -628,8 +659,6 @@ Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
 };
 
 Napi::Value Server::GetFunctionDescription(const Napi::CallbackInfo& info) {
-  DEBUG("Server::GetFunctionDescription");
-
   std::ostringstream errmsg;
 
   if (!info[0].IsString()) {
@@ -653,7 +682,6 @@ Napi::Value Server::GetFunctionDescription(const Napi::CallbackInfo& info) {
 };
 
 Server::~Server(void) {
-  DEBUG("~ Server ", id);
   this->_stop();
 }
 
@@ -697,9 +725,19 @@ void JSFunctionCall(Napi::Env env,
   requestBaton->paramNames = Napi::Persistent(abapArgs.GetPropertyNames());
 
   // Call JavaScript handler
-  DEBUG("ServerCallJs start: ", (uintptr_t)requestBaton->func_handle);
+  _log(logClass::server,
+       logSeverity::info,
+       "JS call start ",
+       requestBaton->jsFunctionName,
+       " with ABAP function handle ",
+       (uintptr_t)requestBaton->func_handle);
   Napi::Value result = callback.Call({requestContext, abapArgs});
-  DEBUG("ServerCallJs end: ", (uintptr_t)requestBaton->func_handle);
+  _log(logClass::server,
+       logSeverity::info,
+       "JS call end ",
+       requestBaton->jsFunctionName,
+       " with ABAP function handle ",
+       (uintptr_t)requestBaton->func_handle);
 
   // Transform JavaScript parameters' data to ABAP
   Napi::Object params = result.ToObject();
