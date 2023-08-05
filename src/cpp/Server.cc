@@ -693,13 +693,46 @@ void Server::UnlockMutex() {
   // uv_sem_post(&invocationMutex);
 }
 
+using DataType = ServerRequestBaton*;
+
+// Transform JavaScript parameters' data to ABAP
+Napi::Value processResult(Napi::Env env,
+                          Napi::Value jsResult,
+                          DataType requestBaton) {
+  Napi::Value errorObj = env.Undefined();
+  Napi::Object params = jsResult.As<Napi::Object>();
+  Napi::Array paramNames = params.GetPropertyNames();
+  uint_t paramSize = paramNames.Length();
+
+  for (uint_t i = 0; i < paramSize; i++) {
+    Napi::String name = paramNames.Get(i).ToString();
+    Napi::Value value = params.Get(name);
+    // DEBUG(name, value);
+    errorObj = setRfmParameter(requestBaton->func_desc_handle,
+                               requestBaton->func_handle,
+                               name,
+                               value,
+                               &requestBaton->errorPath,
+                               &requestBaton->client_options);
+
+    if (!errorObj.IsUndefined()) {
+      break;
+    }
+  }
+  // Let genericRequestHandler return result to ABAP
+  requestBaton->done();
+
+  // Return error, if any
+  return errorObj;
+}
+
 // Thread safe call of JavaScript handler.
-// Request "baton" is used to pass ABAP data and for
-// waiting until JavaScript handler processing completed
+// Request "baton" is used to pass ABAP data and
+// wait until JavaScript handler processing completed
 void JSFunctionCall(Napi::Env env,
                     Napi::Function callback,
                     std::nullptr_t* context,
-                    ServerRequestBaton* requestBaton) {
+                    DataType requestBaton) {
   UNUSED(context);
 
   // set server context
@@ -727,43 +760,46 @@ void JSFunctionCall(Napi::Env env,
   // Call JavaScript handler
   _log(logClass::server,
        logSeverity::info,
-       "JS call start ",
+       "JS call ",
        requestBaton->jsFunctionName,
        " with ABAP function handle ",
-       (uintptr_t)requestBaton->func_handle);
-  Napi::Value result = callback.Call({requestContext, abapArgs});
+       (uintptr_t)requestBaton->func_handle,
+       " started");
+
+  Napi::Value jsResult = callback.Call({requestContext, abapArgs});
+
   _log(logClass::server,
        logSeverity::info,
-       "JS call end ",
+       "JS call ",
        requestBaton->jsFunctionName,
        " with ABAP function handle ",
-       (uintptr_t)requestBaton->func_handle);
+       (uintptr_t)requestBaton->func_handle,
+       " returned ",
+       (jsResult.IsPromise()) ? "promise" : "data");
 
-  // Transform JavaScript parameters' data to ABAP
-  Napi::Object params = result.ToObject();
-  Napi::Array paramNames = params.GetPropertyNames();
-  uint_t paramSize = paramNames.Length();
+  if (jsResult.IsPromise()) {
+    // JS server function returned promise
+    Napi::Promise jsPromise = jsResult.As<Napi::Promise>();
+    Napi::Function jsThen = jsPromise.Get("then").As<Napi::Function>();
+    jsThen.Call(jsPromise,
+                {Napi::Function::New(env,
+                                     [=](const CallbackInfo& info) {
+                                       Object result = info[0].As<Object>();
+                                       processResult(env, result, requestBaton);
+                                     }),
+                 Napi::Function::New(env,
+                                     [=](const CallbackInfo& info) {
+                                       Object result = info[0].As<Object>();
+                                       UNUSED(result);
+                                       // todo error handling
+                                     })
 
-  errorObj = env.Undefined();
-  for (uint_t i = 0; i < paramSize; i++) {
-    Napi::String name = paramNames.Get(i).ToString();
-    Napi::Value value = params.Get(name);
-    // DEBUG(name, value);
-    errorObj = setRfmParameter(requestBaton->func_desc_handle,
-                               requestBaton->func_handle,
-                               name,
-                               value,
-                               &requestBaton->errorPath,
-                               &requestBaton->client_options);
+                });
 
-    if (!errorObj.IsUndefined()) {
-      break;
-    }
+  } else {
+    // JS server function returned data
+    processResult(env, jsResult, requestBaton);
   }
-
-  // Release the mutex, so that genericRequestHandler can return the result
-  // to ABAP
-  requestBaton->done();
 }
 
 }  // namespace node_rfc

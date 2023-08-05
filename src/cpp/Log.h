@@ -13,8 +13,8 @@ namespace node_rfc {
 
 #define SERVER_LOGFILE "_noderfc.log"
 
-enum class logClass { client, pool, server, throughput };
-enum class logSeverity { info, warning, error };
+enum logClass { client = 0, pool, server, throughput };
+enum logSeverity { info = 0, warning, error };
 
 long long timestamp() {
   using namespace std;
@@ -24,44 +24,16 @@ long long timestamp() {
 }
 
 template <typename... Args>
-void _log(logClass component, logSeverity severity, Args&&... args) {
+void _log(logClass component_id, logSeverity severity_id, Args&&... args) {
   using namespace std;
-  string component_name;
-  string severity_name;
-  switch (component) {
-    case logClass::client:
-      component_name = "client";
-      break;
-    case logClass::server:
-      component_name = "server";
-      break;
-    case logClass::pool:
-      component_name = "pool";
-      break;
-    case logClass::throughput:
-      component_name = "throughput";
-      break;
-    default:
-      component_name = "component?";
-  }
-  switch (severity) {
-    case logSeverity::info:
-      severity_name = "info";
-      break;
-    case logSeverity::warning:
-      severity_name = "warning";
-      break;
-    case logSeverity::error:
-      severity_name = "error";
-      break;
-    default:
-      severity_name = "severity?";
-  }
+  const string component_names[4] = {"client", "pool", "server", "throughput"};
+  const string severity_names[3] = {"info", "warning", "error"};
   ofstream ofs;
   ofs.open(SERVER_LOGFILE, ofstream::out | ios::app);
   time_t now = time(nullptr);
   ofs << put_time(localtime(&now), "%F %T [") << timestamp() << "] ";
-  ofs << component_name << " (" << severity_name << ") ";
+  ofs << component_names[component_id] << " (" << severity_names[severity_id]
+      << ") ";
   (ofs << ... << args);
   ofs << endl;
   ofs.close();
