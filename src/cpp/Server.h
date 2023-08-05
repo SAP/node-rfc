@@ -60,11 +60,9 @@ struct ServerRequestBaton {
 
   void done(std::string errorObj) {
     std::thread::id this_tid = std::this_thread::get_id();
-    server_call_completed = true;
-    server_call_condition.notify_one();
     _log(logClass::server,
          logSeverity::info,
-         "JS function call completed ",
+         "JS function call done ",
          jsFunctionName,
          (errorObj.length() > 0) ? " with error: " + errorObj : "",
          " thread ",
@@ -72,6 +70,8 @@ struct ServerRequestBaton {
          " ",
          server_call_completed);
     this->jsHandlerError = errorObj;
+    server_call_completed = true;
+    server_call_condition.notify_one();
   }
 };
 

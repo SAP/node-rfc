@@ -804,13 +804,12 @@ void JSFunctionCall(Napi::Env env,
                              }),
          Napi::Function::New(env,
                              [=](const CallbackInfo& info) {
-                               std::string jsHandlerError =
-                                   "NodeJS handler error";
+                               std::string jsHandlerError = "";
                                if (info.Length() > 0) {
                                  jsHandlerError =
                                      info[0].ToString().Utf8Value();
                                }
-                               requestBaton->done(jsHandlerError);
+                               requestBaton->done("##" + jsHandlerError);
                              })
 
         });
