@@ -306,6 +306,16 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
   // and mutex released in JSFunctionCall
   requestBaton->wait();
 
+  // In case of error
+  if (requestBaton->jsHandlerError.length() > 0) {
+    _log(logClass::server,
+         logSeverity::error,
+         "JS handler ",
+         requestBaton->jsFunctionName,
+         " returned error ",
+         requestBaton->jsHandlerError);
+    return RFC_EXTERNAL_FAILURE;
+  }
   return RFC_OK;
 }
 
@@ -696,9 +706,9 @@ void Server::UnlockMutex() {
 using DataType = ServerRequestBaton*;
 
 // Transform JavaScript parameters' data to ABAP
-Napi::Value processResult(Napi::Env env,
-                          Napi::Value jsResult,
-                          DataType requestBaton) {
+void setABAPParameters(Napi::Env env,
+                       Napi::Value jsResult,
+                       DataType requestBaton) {
   Napi::Value errorObj = env.Undefined();
   Napi::Object params = jsResult.As<Napi::Object>();
   Napi::Array paramNames = params.GetPropertyNames();
@@ -719,11 +729,9 @@ Napi::Value processResult(Napi::Env env,
       break;
     }
   }
-  // Let genericRequestHandler return result to ABAP
-  requestBaton->done();
 
-  // Return error, if any
-  return errorObj;
+  // genericRequestHandler will check for error and return result to ABAP
+  requestBaton->done(errorObj.ToString().Utf8Value());
 }
 
 // Thread safe call of JavaScript handler.
@@ -760,45 +768,55 @@ void JSFunctionCall(Napi::Env env,
   // Call JavaScript handler
   _log(logClass::server,
        logSeverity::info,
-       "JS call ",
+       "JS function start ",
        requestBaton->jsFunctionName,
        " with ABAP function handle ",
        (uintptr_t)requestBaton->func_handle,
-       " started");
+       " start");
 
-  Napi::Value jsResult = callback.Call({requestContext, abapArgs});
+  Napi::Value jsResult;
+  try {
+    jsResult = callback.Call({requestContext, abapArgs});
+  } catch (const Error& e) {
+    requestBaton->done(e.Message());
+    return;
+  }
 
   _log(logClass::server,
        logSeverity::info,
-       "JS call ",
+       "JS function end ",
        requestBaton->jsFunctionName,
        " with ABAP function handle ",
        (uintptr_t)requestBaton->func_handle,
        " returned ",
        (jsResult.IsPromise()) ? "promise" : "data");
 
+  // Check if JS handler result is promise or data
   if (jsResult.IsPromise()) {
-    // JS server function returned promise
     Napi::Promise jsPromise = jsResult.As<Napi::Promise>();
     Napi::Function jsThen = jsPromise.Get("then").As<Napi::Function>();
-    jsThen.Call(jsPromise,
-                {Napi::Function::New(env,
-                                     [=](const CallbackInfo& info) {
-                                       Object result = info[0].As<Object>();
-                                       processResult(env, result, requestBaton);
-                                     }),
-                 Napi::Function::New(env,
-                                     [=](const CallbackInfo& info) {
-                                       Object result = info[0].As<Object>();
-                                       UNUSED(result);
-                                       // todo error handling
-                                     })
+    jsThen.Call(
+        jsPromise,
+        {Napi::Function::New(env,
+                             [=](const CallbackInfo& info) {
+                               Napi::Object result = info[0].As<Napi::Object>();
+                               setABAPParameters(env, result, requestBaton);
+                             }),
+         Napi::Function::New(env,
+                             [=](const CallbackInfo& info) {
+                               std::string jsHandlerError =
+                                   "NodeJS handler error";
+                               if (info.Length() > 0) {
+                                 jsHandlerError =
+                                     info[0].ToString().Utf8Value();
+                               }
+                               requestBaton->done(jsHandlerError);
+                             })
 
-                });
+        });
 
   } else {
-    // JS server function returned data
-    processResult(env, jsResult, requestBaton);
+    setABAPParameters(env, jsResult, requestBaton);
   }
 }
 

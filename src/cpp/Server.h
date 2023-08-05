@@ -13,16 +13,18 @@
 
 namespace node_rfc {
 
-// Created in genericRequestHandler to set ABAP data for JSFunctionCall
+// Created in genericRequestHandler, to wait for JS handler response,
+// check for errors and send response to ABAP system
 struct ServerRequestBaton {
   RFC_CONNECTION_HANDLE request_connection_handle = nullptr;
   RFC_FUNCTION_DESC_HANDLE func_desc_handle;
   RFC_FUNCTION_HANDLE func_handle;
   RFC_ERROR_INFO* errorInfo;
   std::string jsFunctionName;
+  std::string jsHandlerError = "";
 
-  node_rfc::RfmErrorPath errorPath;
-  node_rfc::ClientOptionsStruct client_options;
+  RfmErrorPath errorPath;
+  ClientOptionsStruct client_options;
   uint_t paramCount;
   Napi::Reference<Napi::Array> paramNames;
 
@@ -34,8 +36,10 @@ struct ServerRequestBaton {
     std::thread::id this_tid = std::this_thread::get_id();
     _log(logClass::server,
          logSeverity::info,
-         "JS call lock ",
+         "JS function call lock ",
          jsFunctionName,
+         " with ABAP function handle ",
+         (uintptr_t)func_handle,
          " thread ",
          this_tid,
          " ",
@@ -44,26 +48,30 @@ struct ServerRequestBaton {
     server_call_condition.wait(lock, [this] { return server_call_completed; });
     _log(logClass::server,
          logSeverity::info,
-         "JS call unlock ",
+         "JS function call unlock ",
          jsFunctionName,
+         " with ABAP function handle ",
+         (uintptr_t)func_handle,
          " thread ",
          this_tid,
          " ",
          server_call_completed);
   }
 
-  void done() {
+  void done(std::string errorObj) {
     std::thread::id this_tid = std::this_thread::get_id();
     server_call_completed = true;
     server_call_condition.notify_one();
     _log(logClass::server,
          logSeverity::info,
-         "JS call completed ",
+         "JS function call completed ",
          jsFunctionName,
+         (errorObj.length() > 0) ? " with error: " + errorObj : "",
          " thread ",
          this_tid,
          " ",
          server_call_completed);
+    this->jsHandlerError = errorObj;
   }
 };
 
