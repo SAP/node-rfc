@@ -9,6 +9,8 @@ namespace node_rfc {
 extern Napi::Env __env;
 
 uint_t Server::_id = 1;
+uint_t Server::request_id = 0;
+
 ServerFunctionsMap serverFunctions;
 
 Napi::Object Server::Init(Napi::Env env, Napi::Object exports) {
@@ -113,7 +115,7 @@ Server::Server(const Napi::CallbackInfo& info)
   }
   _log(logClass::server,
        logSeverity::info,
-       "created; server handle",
+       "created; server handle ",
        (uintptr_t)serverHandle,
        " client connection ",
        (uintptr_t)client_conn_handle);
@@ -286,10 +288,15 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
   requestBaton->errorInfo = errorInfo;
   requestBaton->errorPath = errorPath;
   requestBaton->jsFunctionName = it->second->jsFunctionName;
+  requestBaton->request_id = it->second->server->get_request_id();
 
   _log(logClass::server,
        logSeverity::info,
-       "Client request for JS function ",
+       "Client request ",
+       " [",
+       requestBaton->request_id,
+       "] ",
+       " for JS function ",
        it->second->jsFunctionName,
        " as ABAP function ",
        it->first,
@@ -731,7 +738,8 @@ void setABAPParameters(Napi::Env env,
   }
 
   // genericRequestHandler will check for error and return result to ABAP
-  requestBaton->done(errorObj.ToString().Utf8Value());
+  requestBaton->done(errorObj.IsUndefined() ? ""
+                                            : errorObj.ToString().Utf8Value());
 }
 
 // Thread safe call of JavaScript handler.
@@ -768,7 +776,9 @@ void JSFunctionCall(Napi::Env env,
   // Call JavaScript handler
   _log(logClass::server,
        logSeverity::info,
-       "JS function start ",
+       "JS function call [",
+       requestBaton->request_id,
+       "] start ",
        requestBaton->jsFunctionName,
        " with ABAP function handle ",
        (uintptr_t)requestBaton->func_handle,
@@ -784,7 +794,9 @@ void JSFunctionCall(Napi::Env env,
 
   _log(logClass::server,
        logSeverity::info,
-       "JS function end ",
+       "JS function call [",
+       requestBaton->request_id,
+       "] end ",
        requestBaton->jsFunctionName,
        " with ABAP function handle ",
        (uintptr_t)requestBaton->func_handle,
@@ -804,12 +816,12 @@ void JSFunctionCall(Napi::Env env,
                              }),
          Napi::Function::New(env,
                              [=](const CallbackInfo& info) {
-                               std::string jsHandlerError = "";
+                               std::string jsHandlerError = "internal error";
                                if (info.Length() > 0) {
                                  jsHandlerError =
                                      info[0].ToString().Utf8Value();
                                }
-                               requestBaton->done("##" + jsHandlerError);
+                               requestBaton->done(jsHandlerError);
                              })
 
         });

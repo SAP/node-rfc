@@ -22,6 +22,7 @@ struct ServerRequestBaton {
   RFC_ERROR_INFO* errorInfo;
   std::string jsFunctionName;
   std::string jsHandlerError = "";
+  uint_t request_id;
 
   RfmErrorPath errorPath;
   ClientOptionsStruct client_options;
@@ -36,7 +37,11 @@ struct ServerRequestBaton {
     std::thread::id this_tid = std::this_thread::get_id();
     _log(logClass::server,
          logSeverity::info,
-         "JS function call lock ",
+         "JS function call ",
+         "[",
+         request_id,
+         "]",
+         " lock ",
          jsFunctionName,
          " with ABAP function handle ",
          (uintptr_t)func_handle,
@@ -48,7 +53,11 @@ struct ServerRequestBaton {
     server_call_condition.wait(lock, [this] { return server_call_completed; });
     _log(logClass::server,
          logSeverity::info,
-         "JS function call unlock ",
+         "JS function call ",
+         "[",
+         request_id,
+         "]",
+         " unlock ",
          jsFunctionName,
          " with ABAP function handle ",
          (uintptr_t)func_handle,
@@ -62,7 +71,11 @@ struct ServerRequestBaton {
     std::thread::id this_tid = std::this_thread::get_id();
     _log(logClass::server,
          logSeverity::info,
-         "JS function call done ",
+         "JS function call ",
+         "[",
+         request_id,
+         "]",
+         " done ",
          jsFunctionName,
          (errorObj.length() > 0) ? " with error: " + errorObj : "",
          " thread ",
@@ -139,6 +152,7 @@ class Server : public Napi::ObjectWrap<Server> {
   friend class StartAsync;
   friend class StopAsync;
   friend class GetFunctionDescAsync;
+  uint_t get_request_id() { return ++Server::request_id; }
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
   // cppcheck-suppress noExplicitConstructor
   Server(const Napi::CallbackInfo& info);
@@ -190,6 +204,7 @@ class Server : public Napi::ObjectWrap<Server> {
 
   static uint_t _id;
   uint_t id;
+  static uint_t request_id;
 
   void LockMutex();
   void UnlockMutex();

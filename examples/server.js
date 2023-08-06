@@ -17,14 +17,14 @@ async function my_stfc_connection(request_context, abap_input) {
   );
   console.log("[js] stfc request :", abap_input);
   //for (let i = 1; i < 1000000000; i++) x = i / 3;
-  await delay(3);
+  await delay(10);
   abap_output = {
     REQUTEXT: abap_input.REQUTEXT,
     ECHOTEXT: abap_input.REQUTEXT,
     RESPTEXT: `~~~ ${abap_input.REQUTEXT} ~~~`,
   };
   console.log("[js] stfc response:", abap_output);
-  throw new Error("some error");
+  //throw new Error("some error");
   return abap_output;
 }
 
@@ -55,6 +55,6 @@ setTimeout(() => {
     clearInterval(si);
     console.log("bye!");
   });
-}, 10 * 1000);
+}, 30 * 1000);
 
 // my_stfc_connection({}, {});
