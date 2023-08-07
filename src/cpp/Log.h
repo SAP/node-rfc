@@ -23,6 +23,12 @@ long long timestamp() {
       .count();
 }
 
+void _log(SAP_UC const* message) {
+  FILE* fp = fopen(SERVER_LOGFILE, "a");
+  fprintfU(fp, message);
+  fclose(fp);
+}
+
 template <typename... Args>
 void _log(logClass component_id, logSeverity severity_id, Args&&... args) {
   using namespace std;
@@ -30,12 +36,12 @@ void _log(logClass component_id, logSeverity severity_id, Args&&... args) {
   const string severity_names[3] = {"info", "warning", "error"};
   ofstream ofs;
   ofs.open(SERVER_LOGFILE, ofstream::out | ios::app);
+  ofs << endl;
   time_t now = time(nullptr);
   ofs << put_time(localtime(&now), "%F %T [") << timestamp() << "] ";
   ofs << component_names[component_id] << " (" << severity_names[severity_id]
       << ") ";
   (ofs << ... << args);
-  ofs << endl;
   ofs.close();
 }
 

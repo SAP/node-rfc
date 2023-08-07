@@ -13,136 +13,14 @@
 
 namespace node_rfc {
 
-// Created in genericRequestHandler, to wait for JS handler response,
-// check for errors and send response to ABAP system
-struct ServerRequestBaton {
-  RFC_CONNECTION_HANDLE request_connection_handle = nullptr;
-  RFC_FUNCTION_DESC_HANDLE func_desc_handle;
-  RFC_FUNCTION_HANDLE func_handle;
-  RFC_ERROR_INFO* errorInfo;
-  std::string jsFunctionName;
-  std::string jsHandlerError = "";
-  uint_t request_id;
-
-  RfmErrorPath errorPath;
-  ClientOptionsStruct client_options;
-  uint_t paramCount;
-  Napi::Reference<Napi::Array> paramNames;
-
-  bool server_call_completed = false;
-  std::mutex server_call_mutex;
-  std::condition_variable server_call_condition;
-
-  void wait() {
-    std::thread::id this_tid = std::this_thread::get_id();
-    _log(logClass::server,
-         logSeverity::info,
-         "JS function call ",
-         "[",
-         request_id,
-         "]",
-         " lock ",
-         jsFunctionName,
-         " with ABAP function handle ",
-         (uintptr_t)func_handle,
-         " thread ",
-         this_tid,
-         " ",
-         server_call_completed);
-    std::unique_lock<std::mutex> lock(server_call_mutex);
-    server_call_condition.wait(lock, [this] { return server_call_completed; });
-    _log(logClass::server,
-         logSeverity::info,
-         "JS function call ",
-         "[",
-         request_id,
-         "]",
-         " unlock ",
-         jsFunctionName,
-         " with ABAP function handle ",
-         (uintptr_t)func_handle,
-         " thread ",
-         this_tid,
-         " ",
-         server_call_completed);
-  }
-
-  void done(std::string errorObj) {
-    std::thread::id this_tid = std::this_thread::get_id();
-    _log(logClass::server,
-         logSeverity::info,
-         "JS function call ",
-         "[",
-         request_id,
-         "]",
-         " done ",
-         jsFunctionName,
-         (errorObj.length() > 0) ? " with error: " + errorObj : "",
-         " thread ",
-         this_tid,
-         " ",
-         server_call_completed);
-    this->jsHandlerError = errorObj;
-    server_call_completed = true;
-    server_call_condition.notify_one();
-  }
-};
-
-void JSFunctionCall(Napi::Env env,
-                    Napi::Function callback,
-                    std::nullptr_t* context,
-                    ServerRequestBaton* data);
-
-using ServerRequestTsfn = Napi::
-    TypedThreadSafeFunction<std::nullptr_t, ServerRequestBaton, JSFunctionCall>;
-
-class Server;
-typedef struct _ServerFunctionStruct {
-  Server* server = nullptr;
-  RFC_ABAP_NAME func_name;
-  RFC_FUNCTION_DESC_HANDLE func_desc_handle = nullptr;
-  ServerRequestTsfn tsfnRequest = nullptr;
-  std::string jsFunctionName;
-
-  _ServerFunctionStruct() { func_name[0] = 0; }
-
-  _ServerFunctionStruct(Server* _server,
-                        RFC_ABAP_NAME _func_name,
-                        RFC_FUNCTION_DESC_HANDLE _func_desc_handle,
-                        ServerRequestTsfn _tsfnRequest,
-                        std::string _jsFunctionName) {
-    server = _server;
-    strcpyU(func_name, _func_name);
-    func_desc_handle = _func_desc_handle;
-    tsfnRequest = _tsfnRequest;
-    jsFunctionName = _jsFunctionName;
-  }
-
-  _ServerFunctionStruct& operator=(
-      _ServerFunctionStruct& src)  // note: passed by copy
-  {
-    server = src.server;
-    strcpyU(func_name, src.func_name);
-    func_desc_handle = src.func_desc_handle;
-    tsfnRequest = src.tsfnRequest;
-    jsFunctionName = src.jsFunctionName;
-    return *this;
-  }
-
-  ~_ServerFunctionStruct() {
-    DEBUG("\n~_ServerFunctionStruct\n");
-    tsfnRequest.Release();
-  }
-} ServerFunctionStruct;
-
-typedef std::unordered_map<std::string, ServerFunctionStruct*>
-    ServerFunctionsMap;
+class ServerRequestBaton;
 
 extern Napi::Env __env;
 
 RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
                               RFC_ATTRIBUTES rfc_attributes,
                               RFC_FUNCTION_DESC_HANDLE* func_handle);
+
 RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
                                      RFC_FUNCTION_HANDLE func_handle,
                                      RFC_ERROR_INFO* errorInfo);
@@ -152,7 +30,15 @@ class Server : public Napi::ObjectWrap<Server> {
   friend class StartAsync;
   friend class StopAsync;
   friend class GetFunctionDescAsync;
-  uint_t get_request_id() { return ++Server::request_id; }
+  friend class ServerFunction;
+  friend class ServerRequestBaton;
+
+  std::string get_request_id() {
+    return std::to_string(id) + ":" + std::to_string(Server::request_id);
+  }
+  std::string next_request_id() {
+    return std::to_string(id) + ":" + std::to_string(++Server::request_id);
+  }
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
   // cppcheck-suppress noExplicitConstructor
   Server(const Napi::CallbackInfo& info);
@@ -168,6 +54,8 @@ class Server : public Napi::ObjectWrap<Server> {
   };
 
   std::thread st;
+
+  Napi::Env env = nullptr;
 
   Napi::Value IdGetter(const Napi::CallbackInfo& info);
   Napi::Value AliveGetter(const Napi::CallbackInfo& info);
@@ -189,17 +77,16 @@ class Server : public Napi::ObjectWrap<Server> {
   Napi::ObjectReference clientParamsRef;
   Napi::ObjectReference clientOptionsRef;
 
-  void init() {
+  void init(Napi::Env env) {
     id = Server::_id++;
+    request_id = 0;
+    this->env = env;
 
     server_conn_handle = nullptr;
     client_conn_handle = nullptr;
     serverHandle = nullptr;
 
     // uv_sem_init(&invocationMutex, 1);
-
-    // addon_data = new AddonData;
-    // addon_data->work = nullptr;
   };
 
   static uint_t _id;

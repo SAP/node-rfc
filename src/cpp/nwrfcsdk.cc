@@ -52,14 +52,6 @@ SAP_UC* setString(std::string sstr) {
                       &sapucSize,
                       &resultLen,
                       &errorInfo);
-  EDEBUG("fill: ",
-         sstr,
-         " sapucSize: ",
-         sapucSize,
-         " resultLen: ",
-         resultLen,
-         " code: ",
-         errorInfo.code);
 
   if (rc != RFC_OK) {
     Napi::Error::Fatal("setString",
