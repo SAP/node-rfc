@@ -14,6 +14,8 @@ using namespace Napi;
 
 namespace node_rfc {
 extern Napi::Env __env;
+extern Log _log;
+
 typedef std::set<RFC_CONNECTION_HANDLE> ConnectionSetType;
 class Pool : public Napi::ObjectWrap<Pool> {
  public:

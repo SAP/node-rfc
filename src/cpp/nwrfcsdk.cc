@@ -4,9 +4,11 @@
 // language governing permissions and limitations under the License.
 
 #include "nwrfcsdk.h"
+#include "Log.h"
 
 namespace node_rfc {
 extern Napi::Env __env;
+extern Log _log;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Set Parameters (to SDK)
@@ -925,14 +927,12 @@ void getConnectionParams(Napi::Object clientParamsObject,
         .ThrowAsJavaScriptException();
     return;
   }
-  DEBUG("getConnectionParams ", clientParams->paramSize);
   clientParams->connectionParams =
       new RFC_CONNECTION_PARAMETER[clientParams->paramSize *
                                    sizeof(RFC_CONNECTION_PARAMETER)];
   for (uint_t ii = 0; ii < clientParams->paramSize; ii++) {
     Napi::String name = paramNames.Get(ii).ToString();
     Napi::String value = clientParamsObject.Get(name).ToString();
-    DEBUG("getConnectionParams ", name.Utf8Value(), ": ", value.Utf8Value());
     clientParams->connectionParams[ii].name = setString(name);
     clientParams->connectionParams[ii].value = setString(value);
   }

@@ -8,8 +8,6 @@
 
 namespace node_rfc {
 
-extern Napi::Env __env;
-
 uint_t Throughput::_id = 0;
 
 Napi::FunctionReference Throughput::constructor;

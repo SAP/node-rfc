@@ -2,14 +2,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <mutex>
 #include "Client.h"
+#include "Log.h"
 #include "Pool.h"
 #include "Server.h"
 #include "Throughput.h"
 
 namespace node_rfc {
+// Instantiate global namespace instances
 Napi::Env __env = nullptr;
+Log _log = Log();
 
 Napi::Value BindingVersions(Napi::Env env) {
   uint_t major, minor, patchLevel;

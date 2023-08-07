@@ -6,7 +6,6 @@
 #include <node_api.h>
 
 namespace node_rfc {
-extern Napi::Env __env;
 
 uint_t Server::_id = 1;
 uint_t Server::request_id = 0;
@@ -31,6 +30,7 @@ using ServerRequestTsfn = Napi::
 class ServerFunction {
  public:
   Server* server;
+  // Parameters from metadataLookup
   RFC_ABAP_NAME abap_func_name;
   RFC_FUNCTION_DESC_HANDLE func_desc_handle;
   ServerRequestTsfn tsfnRequest;
@@ -72,27 +72,21 @@ class ServerFunction {
     }
 
     if (rc == RFC_OK) {
-      _log(logClass::server,
-           logSeverity::info,
-           "Function found ",
-           it->first,
-           " description ",
-           (pointer_t)*func_desc_handle),
-          " for ABAP function ";
-      // Handle scope not available for SAP unicode to Napi::String
-      // conversion. Use log helper method instead
-      _log(abap_func_name);
+      _log.write(logClass::server,
+                 logSeverity::info,
+                 "metadataLookup: Function description set ",
+                 (pointer_t)*func_desc_handle,
+                 " for ABAP function '",
+                 it->first,
+                 "'");
+
     } else {
-      _log(logClass::server,
-           logSeverity::error,
-           "Function not found ",
-           it->first,
-           " description ",
-           (pointer_t)*func_desc_handle),
-          " for ABAP function ";
-      // Handle scope not available for SAP unicode to Napi::String
-      // conversion. Use log helper method instead
-      _log(abap_func_name);
+      _log.write(
+          logClass::server,
+          logSeverity::error,
+          "metadataLookup: Function description not set for ABAP function '",
+          it->first,
+          "'");
     }
 
     return rc;
@@ -126,29 +120,29 @@ class ServerFunction {
     }
 
     if (it != ServerFunction::installed_functions.end()) {
-      _log(logClass::server,
-           logSeverity::info,
-           "JS handler function '",
-           it->second->jsFunctionName,
-           "' found for function handle ",
-           (uintptr_t)func_handle,
-           " of ABAP function ");
+      _log.write(logClass::server,
+                 logSeverity::info,
+                 "genericRequestHandler: JS handler function '",
+                 it->second->jsFunctionName,
+                 "' found for function handle ",
+                 (uintptr_t)func_handle,
+                 " of ABAP function ");
       // Handle scope not available for SAP unicode to Napi::String
-      // conversion. Use log helper method instead
-      _log(abap_func_name);
+      // conversion here. Use log helper method instead
+      _log.write(abap_func_name);
 
       return it->second;
 
     } else {
-      _log(logClass::server,
-           logSeverity::info,
-           "[error] JS handler function not found for",
-           " function handle ",
-           (uintptr_t)func_handle,
-           " of ABAP function ");
+      _log.write(logClass::server,
+                 logSeverity::info,
+                 "genericRequestHandler: JS handler function not found for "
+                 "function handle ",
+                 (uintptr_t)func_handle,
+                 " of ABAP function ");
       // Handle scope not available for SAP unicode to Napi::String
-      // conversion. Use log helper method instead
-      _log(abap_func_name);
+      // conversion here. Use log helper method instead
+      _log.write(abap_func_name);
 
       return nullptr;
     }
@@ -171,7 +165,7 @@ class ServerFunction {
     }
 
     // ABAP function description found.
-    // Create thread-safe JS function to be called by genericRequestHandler
+    // Create thread-safe JS function for genericRequestHandler
     std::string jsFunctionName = jsFunction.As<Napi::Object>()
                                      .Get("name")
                                      .As<Napi::String>()
@@ -185,14 +179,15 @@ class ServerFunction {
                                1  // Only one thread will use this initially
         );
 
-    _log(logClass::server,
-         logSeverity::info,
-         "Function added ",
-         jsFunctionName,
-         " as ABAP function ",
-         abapFunctionName.Utf8Value(),
-         " description: ",
-         (pointer_t)func_desc_handle);
+    _log.write(logClass::server,
+               logSeverity::info,
+               "Function description ",
+               (pointer_t)func_desc_handle,
+               " added for JS handler '",
+               jsFunctionName,
+               "' as ABAP function '",
+               abapFunctionName.Utf8Value(),
+               "'");
 
     ServerFunction::installed_functions[abapFunctionName.Utf8Value()] =
         new ServerFunction(server,
@@ -221,14 +216,14 @@ class ServerFunction {
     Napi::Value rc = jsFunction.Env().Undefined();
     if (it != ServerFunction::installed_functions.end()) {
       ServerFunction::installed_functions.erase(it);
-      _log(logClass::server,
-           logSeverity::info,
-           "JS function removed ",
-           jsFunctionName,
-           " as ABAP function ",
-           it->first,
-           " description: ",
-           (pointer_t)it->second->func_desc_handle);
+      _log.write(logClass::server,
+                 logSeverity::info,
+                 "JS function removed ",
+                 jsFunctionName,
+                 " as ABAP function ",
+                 it->first,
+                 " description: ",
+                 (pointer_t)it->second->func_desc_handle);
     } else {
       std::ostringstream errmsg;
       errmsg << "Server removeFunction() did not find function: "
@@ -244,24 +239,19 @@ class ServerFunction {
     while (it != ServerFunction::installed_functions.end()) {
       if (server == it->second->server) {
         it->second->tsfnRequest.Unref(server->env);
-        _log(logClass::server,
-             logSeverity::info,
-             "unref ",
-             it->second->jsFunctionName,
-             " ABAP "  // it->second->abapFunctionName
-        );
+        _log.write(logClass::server,
+                   logSeverity::info,
+                   "unref '" + it->second->jsFunctionName,
+                   "' with ABAP function '" + it->first + "'");
       }
       ++it;
     }
   }
 };
 
-// JS handler functions registered by all Server instances
+// JS handler functions registered by Server instances
 std::unordered_map<std::string, ServerFunction*>
     ServerFunction::installed_functions;
-//
-// ServerRequestBaton
-//
 
 // Created in genericRequestHandler, to wait for JS handler response,
 // check for errors and send response to ABAP system
@@ -272,14 +262,13 @@ class ServerRequestBaton {
   std::condition_variable server_call_condition;
 
  public:
-  // parsmeters from genericRequestHandler
+  // Parameters from genericRequestHandler
   RFC_CONNECTION_HANDLE request_connection_handle;
   RFC_FUNCTION_HANDLE func_handle;
   RFC_ERROR_INFO* errorInfo;
-  // ABAP function name
-  std::string abapFunctionName;
-  // Server function to handle the request
+  // JS server function to handle the request
   ServerFunction* serverFunction;
+  // JS server function result
   std::string jsHandlerError;
 
   RfmErrorPath errorPath;
@@ -292,85 +281,64 @@ class ServerRequestBaton {
   ServerRequestBaton(RFC_CONNECTION_HANDLE conn_handle,
                      RFC_FUNCTION_HANDLE func_handle,
                      RFC_ERROR_INFO* errorInfo,
-                     // std::string abapFunctionName,
                      ServerFunction* serverFunction)
       : request_connection_handle(conn_handle),
         func_handle(func_handle),
         errorInfo(errorInfo),
-        // abapFunctionName(abapFunctionName),
         serverFunction(serverFunction) {
     request_id = this->serverFunction->next_request_id();
     errorPath = RfmErrorPath();
     jsHandlerError = "";
 
-    _log(logClass::server,
-         logSeverity::info,
-         "Client request ",
-         " [",
-         request_id,
-         "] ",
-         " for JS function ",
-         serverFunction->jsFunctionName,
-         " as ABAP function ",
-         abapFunctionName,
-         " using function handle ",
-         (uintptr_t)func_handle,
-         ", descriptor ",
-         (uintptr_t)serverFunction->func_desc_handle,
-         " client connection: ",
-         (uintptr_t)conn_handle);
+    _log.write(logClass::server,
+               logSeverity::info,
+               "Client request [" + request_id + "]",
+               " for JS function '",
+               serverFunction->jsFunctionName,
+               "' using function handle ",
+               (uintptr_t)func_handle,
+               " and descriptor ",
+               (uintptr_t)serverFunction->func_desc_handle,
+               "\n\tClient connection ",
+               (uintptr_t)conn_handle,
+               ", ABAP function ");
+    _log.write(serverFunction->abap_func_name);
   }
 
   void wait() {
-    std::thread::id this_tid = std::this_thread::get_id();
-    _log(logClass::server,
-         logSeverity::info,
-         "JS function call ",
-         "[",
-         request_id,
-         "]",
-         " lock ",
-         serverFunction->jsFunctionName,
-         " with ABAP function handle ",
-         (uintptr_t)func_handle,
-         " thread ",
-         this_tid,
-         " ",
-         server_call_completed);
+    _log.write(logClass::server,
+               logSeverity::info,
+               "JS function call [" + request_id,
+               "] lock '",
+               serverFunction->jsFunctionName,
+               "' with ABAP function handle ",
+               (uintptr_t)func_handle,
+               " ",
+               server_call_completed);
     std::unique_lock<std::mutex> lock(server_call_mutex);
     server_call_condition.wait(lock, [this] { return server_call_completed; });
-    _log(logClass::server,
-         logSeverity::info,
-         "JS function call ",
-         "[",
-         request_id,
-         "]",
-         " unlock ",
-         serverFunction->jsFunctionName,
-         " with ABAP function handle ",
-         (uintptr_t)func_handle,
-         " thread ",
-         this_tid,
-         " ",
-         server_call_completed);
+    _log.write(logClass::server,
+               logSeverity::info,
+               "JS function call [" + request_id,
+               "] unlock '",
+               serverFunction->jsFunctionName,
+               "' with ABAP function handle ",
+               (uintptr_t)func_handle,
+               " ",
+               server_call_completed);
   }
 
   void done(const std::string& errorObj) {
     jsHandlerError = errorObj;
-    std::thread::id this_tid = std::this_thread::get_id();
-    _log(logClass::server,
-         logSeverity::info,
-         "JS function call ",
-         "[",
-         request_id,
-         "]",
-         " done ",
-         serverFunction->jsFunctionName,
-         (jsHandlerError.length() > 0) ? " with error: " + jsHandlerError : "",
-         " thread ",
-         this_tid,
-         " ",
-         server_call_completed);
+    _log.write(
+        logClass::server,
+        (jsHandlerError.length() > 0) ? logSeverity::error : logSeverity::info,
+        "JS function call [" + request_id,
+        " done '",
+        serverFunction->jsFunctionName,
+        (jsHandlerError.length() > 0) ? "', error: " + jsHandlerError : "'",
+        " ",
+        server_call_completed);
 
     server_call_completed = true;
     server_call_condition.notify_one();
@@ -469,6 +437,29 @@ Server::Server(const Napi::CallbackInfo& info)
     return;
   }
 
+  // todo - new server parameters
+  // char errmsg[ERRMSG_LENGTH];
+  // Napi::Object serverParams = info[0].As<Napi::Object>();
+
+  // Napi::Array paramNames = serverParams.GetPropertyNames();
+  // for (uint_t ii = 0; ii < paramNames.Length(); ii++) {
+  //   std::string key = paramNames.Get(ii).ToString().Utf8Value();
+  //   Napi::Value opt = serverParams.Get(key).As<Napi::Value>();
+
+  //   if (key.compare(std::string("serverConnection"))) {
+  //   } else if (key.compare(std::string("clientConnection"))) {
+  //   } else if (key.compare(std::string("serverOptions"))) {
+  //   } else if (key.compare(std::string("clientOptions"))) {
+  //   } else {
+  //     snprintf(errmsg,
+  //              ERRMSG_LENGTH - 1,
+  //              "Server parameter allowed: \"%s\"",
+  //              key.c_str());
+  //     Napi::TypeError::New(node_rfc::__env, errmsg)
+  //         .ThrowAsJavaScriptException();
+  //   }
+  // }
+
   serverParamsRef = Napi::Persistent(info[0].As<Napi::Object>());
   getConnectionParams(serverParamsRef.Value(), &server_params);
 
@@ -493,7 +484,6 @@ Server::Server(const Napi::CallbackInfo& info)
   }
 
   // open client connection
-
   client_conn_handle = RfcOpenConnection(
       client_params.connectionParams, client_params.paramSize, &errorInfo);
   if (errorInfo.code != RFC_OK) {
@@ -508,12 +498,12 @@ Server::Server(const Napi::CallbackInfo& info)
         .ThrowAsJavaScriptException();
   }
 
-  _log(logClass::server,
-       logSeverity::info,
-       "created; server handle ",
-       (uintptr_t)serverHandle,
-       " client connection ",
-       (uintptr_t)client_conn_handle);
+  _log.write(logClass::server,
+             logSeverity::info,
+             "created: server handle ",
+             (uintptr_t)serverHandle,
+             " client connection ",
+             (uintptr_t)client_conn_handle);
 };
 
 Napi::Value wrapUnitIdentifier(RFC_UNIT_IDENTIFIER* uIdentifier) {
@@ -568,10 +558,10 @@ Napi::Value getServerRequestContext(ServerRequestBaton* requestBaton) {
                                   requestBaton->errorInfo);
 
   if (rc != RFC_OK || requestBaton->errorInfo->code != RFC_OK) {
-    _log(logClass::server,
-         logSeverity::error,
-         "Request context not set",
-         requestContext);
+    _log.write(logClass::server,
+               logSeverity::error,
+               "Request context not set",
+               requestContext);
     return requestContext;
   }
 
@@ -646,9 +636,7 @@ class StartAsync : public Napi::AsyncWorker {
     errorInfo.code = RFC_OK;
     server->LockMutex();
     DEBUG("StartAsync locked");
-
-    server->st = std::thread(&Server::_start, server, &errorInfo);
-
+    server->server_thread = std::thread(&Server::_start, server, &errorInfo);
     server->UnlockMutex();
     DEBUG("StartAsync unlocked");
   }
@@ -677,10 +665,10 @@ class StopAsync : public Napi::AsyncWorker {
 
   void Execute() {
     server->LockMutex();
-    _log(logClass::server,
-         logSeverity::info,
-         "stop: ",
-         (pointer_t)server->serverHandle);
+    _log.write(logClass::server,
+               logSeverity::info,
+               "stop: server handle ",
+               (pointer_t)server->serverHandle);
     server->_stop();
 
     server->UnlockMutex();
@@ -761,46 +749,49 @@ void Server::_start(RFC_ERROR_INFO* errorInfo) {
   if (errorInfo->code != RFC_OK) {
     return;
   }
-  _log(logClass::server,
-       logSeverity::info,
-       "start: generic request handler installed");
+  _log.write(logClass::server,
+             logSeverity::info,
+             "start: generic request handler installed");
 
   RfcLaunchServer(serverHandle, errorInfo);
   if (errorInfo->code != RFC_OK) {
     return;
   }
-  _log(logClass::server,
-       logSeverity::info,
-       "start: launched ",
-       (pointer_t)serverHandle);
+  _log.write(logClass::server,
+             logSeverity::info,
+             "start: launched server handle ",
+             (pointer_t)serverHandle);
 }
 
 void Server::_stop() {
   if (serverHandle != nullptr) {
-    _log(logClass::server,
-         logSeverity::info,
-         "stop: shutdown and destroy ",
-         (pointer_t)serverHandle);
+    _log.write(logClass::server,
+               logSeverity::info,
+               "stop: shutdown server handle ",
+               (pointer_t)serverHandle);
     RfcShutdownServer(serverHandle, 60, nullptr);
     RfcDestroyServer(serverHandle, nullptr);
     serverHandle = nullptr;
   }
 
   if (client_conn_handle != nullptr) {
-    _log(logClass::server,
-         logSeverity::info,
-         "stop: close client connection ",
-         (pointer_t)client_conn_handle);
+    _log.write(logClass::server,
+               logSeverity::info,
+               "stop: close client connection ",
+               (pointer_t)client_conn_handle);
     RfcCloseConnection(client_conn_handle, nullptr);
     client_conn_handle = nullptr;
   }
 
-  // release tsfn server functions
+  // release registered tsfn functions
   ServerFunction::release(this);
 
-  if (st.joinable()) {
-    _log(logClass::server, logSeverity::info, "stop: serve() thread join");
-    st.join();
+  if (server_thread.joinable()) {
+    _log.write(logClass::server,
+               logSeverity::info,
+               "stop: server thread join ",
+               server_thread.get_id());
+    server_thread.join();
   }
 }
 
@@ -969,15 +960,13 @@ void JSFunctionCall(Napi::Env env,
   }
 
   // Call JavaScript handler
-  _log(logClass::server,
-       logSeverity::info,
-       "JS function call [",
-       requestBaton->request_id,
-       "] start ",
-       requestBaton->serverFunction->jsFunctionName,
-       " with ABAP function handle ",
-       (uintptr_t)requestBaton->func_handle,
-       " start");
+  _log.write(logClass::server,
+             logSeverity::info,
+             "JS function call [" + requestBaton->request_id,
+             "] start '",
+             requestBaton->serverFunction->jsFunctionName,
+             "' with ABAP function handle ",
+             (uintptr_t)requestBaton->func_handle);
 
   Napi::Value jsResult;
   try {
@@ -987,16 +976,15 @@ void JSFunctionCall(Napi::Env env,
     return;
   }
 
-  _log(logClass::server,
-       logSeverity::info,
-       "JS function call [",
-       requestBaton->request_id,
-       "] end ",
-       requestBaton->serverFunction->jsFunctionName,
-       " with ABAP function handle ",
-       (uintptr_t)requestBaton->func_handle,
-       " returned ",
-       (jsResult.IsPromise()) ? "promise" : "data");
+  _log.write(logClass::server,
+             logSeverity::info,
+             "JS function call [" + requestBaton->request_id,
+             "] end '",
+             requestBaton->serverFunction->jsFunctionName,
+             "' with ABAP function handle ",
+             (uintptr_t)requestBaton->func_handle,
+             " returned ",
+             (jsResult.IsPromise()) ? "promise" : "data");
 
   // Check if JS handler result is promise or data
   if (jsResult.IsPromise()) {

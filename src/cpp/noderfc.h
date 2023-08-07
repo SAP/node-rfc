@@ -16,7 +16,7 @@
 //
 // Logging
 //
-#define LOG_RFC_CLIENT 1
+// #define LOG_RFC_CLIENT 1
 
 #ifdef LOG_RFC_CLIENT
 // Version unit test will fail, preventing the release with activated logging

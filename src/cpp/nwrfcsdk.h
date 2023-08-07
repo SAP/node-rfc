@@ -6,14 +6,18 @@
 #define NodeRfc_SDK_H_
 
 #include <sstream>
+#include "Log.h"
 #include "noderfc.h"
 
 using namespace Napi;
 
 #define ERRMSG_LENGTH 255
 #define ERROR_PATH_NAME_LEN 48
+
 namespace node_rfc {
+
 extern Napi::Env __env;
+extern Log _log;
 
 Napi::Value wrapString(const SAP_UC* uc, int length = -1);
 

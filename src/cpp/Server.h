@@ -9,13 +9,13 @@
 #include <thread>
 #include <unordered_map>
 #include "Client.h"
-#include "Log.h"
 
 namespace node_rfc {
 
 class ServerRequestBaton;
 
 extern Napi::Env __env;
+extern Log _log;
 
 RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
                               RFC_ATTRIBUTES rfc_attributes,
@@ -45,15 +45,14 @@ class Server : public Napi::ObjectWrap<Server> {
   ~Server(void);
 
   ClientOptionsStruct client_options;
+  std::thread server_thread;
 
  private:
   void _stop();
   void _start(RFC_ERROR_INFO* errorInfo);
-  std::thread server_thread(RFC_ERROR_INFO* errorInfo) {
-    return std::thread([=] { _start(errorInfo); });
-  };
-
-  std::thread st;
+  // std::thread server_thread(RFC_ERROR_INFO* errorInfo) {
+  //   return std::thread([=] { _start(errorInfo); });
+  // };
 
   Napi::Env env = nullptr;
 

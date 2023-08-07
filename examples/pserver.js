@@ -63,42 +63,35 @@ async function my_stfc_structure(request_context, abap_input) {
   return abap_output;
 }
 
-server.start((err) => {
-  if (err) return console.error("error:", err);
+(async () => {
+  await server.start();
   console.log(
     `[js] Server alive: ${server.alive} client handle: ${server.client_connection} server handle: ${server.server_connection}`
   );
 
-  // Expose the my_stfc_connection function as RFM with STFC_CONNECTION pararameters (function definition)
-  const RFM1 = "STFC_CONNECTION";
-  server.addFunction(RFM1, my_stfc_connection, (err) => {
-    if (err) return console.error(`error adding ${RFM1}: ${err}`);
+  // Register JS server functions as ABAP functions
+  const serverFunctions = [
+    { abap: "STFC_CONNECTION", js: my_stfc_connection },
+    { abap: "STFC_STRUCTURE", js: my_stfc_structure },
+  ];
+  serverFunctions.forEach(async (func_name) => {
+    await server.addFunction(func_name.abap, func_name.js);
     console.log(
-      `[js] Node.js function '${my_stfc_connection.name}' registered as ABAP '${RFM1}' function`
+      `[js] '${func_name.js.name}' registered as ABAP function '${func_name.abap}'`
     );
   });
 
-  // Expose the my_stfc_connection function as RFM with STFC_CONNECTION pararameters (function definition)
-  RFM2 = "STFC_STRUCTURE";
-  server.addFunction(RFM2, my_stfc_structure, (err) => {
-    if (err) return console.error(`error adding ${RFM2}: ${err}`);
-    console.log(
-      `[js] Node.js function '${my_stfc_structure.name}' registered as ABAP '${RFM2}' function`
-    );
-  });
-});
+  i = 0;
 
-i = 0;
+  const si = setInterval(() => {
+    console.log("tick", i++);
+  }, 1000);
 
-const si = setInterval(() => {
-  console.log("tick", i++);
-}, 1000);
-
-setTimeout(() => {
-  server.stop(() => {
-    clearInterval(si);
-    console.log("bye!");
-  });
-}, 10 * 1000);
-
+  setTimeout(() => {
+    server.stop(() => {
+      clearInterval(si);
+      console.log("bye!");
+    });
+  }, 10 * 1000);
+})();
 // my_stfc_connection({}, {});

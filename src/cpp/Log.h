@@ -1,49 +1,65 @@
-// SPDX-FileCopyrightText: 2014 SAP SE Srdjan Boskovic <srdjan.boskovic@sap.com>
-//
-// SPDX-License-Identifier: Apache-2.0
+
 
 #ifndef NodeRfc_Log_H
 #define NodeRfc_Log_H
 
+#include <sapnwrfc.h>
 #include <chrono>
 #include <fstream>
 #include <string>
 
-namespace node_rfc {
-
-#define SERVER_LOGFILE "_noderfc.log"
+#define LOG_FILE_NAME "_noderfc.log"
 
 enum logClass { client = 0, pool, server, throughput };
 enum logSeverity { info = 0, warning, error };
 
-long long timestamp() {
-  using namespace std;
-  return chrono::duration_cast<chrono::milliseconds>(
-             chrono::system_clock::now().time_since_epoch())
-      .count();
-}
+class Log {
+ private:
+  std::string log_fname;
 
-void _log(SAP_UC const* message) {
-  FILE* fp = fopen(SERVER_LOGFILE, "a");
-  fprintfU(fp, message);
-  fclose(fp);
-}
+ public:
+  long long timestamp() {
+    using namespace std;
+    return chrono::duration_cast<chrono::milliseconds>(
+               chrono::system_clock::now().time_since_epoch())
+        .count();
+  }
 
-template <typename... Args>
-void _log(logClass component_id, logSeverity severity_id, Args&&... args) {
-  using namespace std;
-  const string component_names[4] = {"client", "pool", "server", "throughput"};
-  const string severity_names[3] = {"info", "warning", "error"};
-  ofstream ofs;
-  ofs.open(SERVER_LOGFILE, ofstream::out | ios::app);
-  ofs << endl;
-  time_t now = time(nullptr);
-  ofs << put_time(localtime(&now), "%F %T [") << timestamp() << "] ";
-  ofs << component_names[component_id] << " (" << severity_names[severity_id]
-      << ") ";
-  (ofs << ... << args);
-  ofs.close();
-}
+  Log(std::string log_fname = LOG_FILE_NAME) : log_fname(log_fname) {
+    std::ofstream ofs;
+    ofs.open(log_fname, std::ofstream::out | std::ofstream::trunc);
+    ofs.close();
+  }
 
-}  // namespace node_rfc
+  ~Log() {}
+
+  // for regular arguments
+  template <typename... Args>
+  void write(logClass component_id, logSeverity severity_id, Args&&... args) {
+    using namespace std;
+    const string component_names[4] = {
+        "client", "pool", "server", "throughput"};
+    const string severity_names[3] = {"info", "warning", "error"};
+    ofstream ofs;
+    ofs.open(log_fname.c_str(), ofstream::out | ios::app);
+    ofs << endl << endl;
+    time_t now = time(nullptr);
+    ofs << put_time(localtime(&now), "%F %T [") << timestamp() << "] >> ";
+    ofs << component_names[component_id] << " [" << severity_names[severity_id]
+        << "] thread " << std::this_thread::get_id() << endl
+        << "\t";
+    (ofs << ... << args);
+    ofs.close();
+  }
+
+  // for SAP unicode string, only as the last one in log oputput line
+  void write(SAP_UC const* message) {
+    FILE* fp = fopen(log_fname.c_str(), "a");
+    fprintf(fp, "'");
+    fprintfU(fp, message);
+    fprintf(fp, "'");
+    fclose(fp);
+  }
+};
+
 #endif

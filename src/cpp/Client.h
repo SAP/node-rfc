@@ -6,10 +6,12 @@
 #define NodeRfc_Client_H
 
 #include <tuple>
+#include "Log.h"
 #include "nwrfcsdk.h"
 
 namespace node_rfc {
 extern Napi::Env __env;
+extern Log _log;
 
 class Pool;
 

@@ -11,6 +11,8 @@ using namespace Napi;
 
 namespace node_rfc {
 extern Napi::Env __env;
+extern Log _log;
+
 class Throughput : public Napi::ObjectWrap<Throughput> {
  public:
   static Napi::FunctionReference constructor;
