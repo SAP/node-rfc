@@ -63,7 +63,7 @@ export const refEnvironment = {
     noderfc: {
         //version: "Deactivate logging: LOG_RFC_CLIENT",
         version: version,
-        nwrfcsdk: { major: 7500, minor: 0, patchLevel: 11 },
+        nwrfcsdk: { major: 7500, minor: 0, patchLevel: 12 },
     },
     versions: process.versions,
 };
