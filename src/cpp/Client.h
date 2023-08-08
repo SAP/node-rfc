@@ -75,7 +75,7 @@ class Client : public Napi::ObjectWrap<Client> {
   Pool* pool;
   RFC_CONNECTION_HANDLE connectionHandle;
 
-  ConnectionParamsStruct client_params;
+  ConnectionParamsStruct client_params = ConnectionParamsStruct(0, nullptr);
   ClientOptionsStruct client_options;
 
   void LockMutex();

@@ -375,6 +375,14 @@ class ServerRequestBaton {
 //
 // Server
 //
+
+void getServerOptions(Napi::Object serverOptions,
+                      ServerOptions* server_options) {
+  UNUSED(serverOptions);
+  server_options->logging.log_class = {logClass::server};
+  server_options->logging.log_severity = logSeverity::info;
+}
+
 Napi::Object Server::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
@@ -428,67 +436,69 @@ Napi::Value Server::ClientConnectionHandleGetter(
 Server::Server(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<Server>(info) {
   RFC_ERROR_INFO errorInfo;
+  char errmsg[ERRMSG_LENGTH] =
+      "Server configuration parameters must be an object";
+
+  if (info.Length() == 0) {
+    Napi::TypeError::New(Env(), errmsg).ThrowAsJavaScriptException();
+    return;
+  }
+  if (!info[0].IsObject()) {
+    Napi::TypeError::New(Env(), errmsg).ThrowAsJavaScriptException();
+    return;
+  }
 
   init(info.Env());
 
-  if (!info[0].IsObject()) {
-    Napi::TypeError::New(Env(), "Server constructor requires server parameters")
+  Napi::Object infoObj = info[0].As<Napi::Object>();
+
+  if (!infoObj.Get("serverConnection").IsObject()) {
+    Napi::TypeError::New(Env(),
+                         "Server connection parameters must be an object  "
+                         "'serverConnection'")
         .ThrowAsJavaScriptException();
     return;
   }
 
-  // todo - new server parameters
-  // char errmsg[ERRMSG_LENGTH];
-  // Napi::Object serverParams = info[0].As<Napi::Object>();
-
-  // Napi::Array paramNames = serverParams.GetPropertyNames();
-  // for (uint_t ii = 0; ii < paramNames.Length(); ii++) {
-  //   std::string key = paramNames.Get(ii).ToString().Utf8Value();
-  //   Napi::Value opt = serverParams.Get(key).As<Napi::Value>();
-
-  //   if (key.compare(std::string("serverConnection"))) {
-  //   } else if (key.compare(std::string("clientConnection"))) {
-  //   } else if (key.compare(std::string("serverOptions"))) {
-  //   } else if (key.compare(std::string("clientOptions"))) {
-  //   } else {
-  //     snprintf(errmsg,
-  //              ERRMSG_LENGTH - 1,
-  //              "Server parameter allowed: \"%s\"",
-  //              key.c_str());
-  //     Napi::TypeError::New(node_rfc::__env, errmsg)
-  //         .ThrowAsJavaScriptException();
-  //   }
-  // }
-
-  serverParamsRef = Napi::Persistent(info[0].As<Napi::Object>());
-  getConnectionParams(serverParamsRef.Value(), &server_params);
-
-  if (!info[1].IsObject()) {
-    Napi::TypeError::New(Env(), "Server constructor requires client parameters")
+  if (!infoObj.Get("clientConnection").IsObject()) {
+    Napi::TypeError::New(Env(),
+                         "Client connection parameters must be an object "
+                         "'clientConnection'")
         .ThrowAsJavaScriptException();
     return;
   }
 
-  clientParamsRef = Napi::Persistent(info[1].As<Napi::Object>());
-  getConnectionParams(clientParamsRef.Value(), &client_params);
+  serverConfigurationRef = Napi::Persistent(info[0].As<Napi::Object>());
 
-  if (!info[2].IsUndefined()) {
-    if (!info[2].IsObject()) {
-      Napi::TypeError::New(
-          Env(), "Server constructor client options must be an object")
+  Napi::Array paramNames = infoObj.GetPropertyNames();
+  for (uint_t ii = 0; ii < paramNames.Length(); ii++) {
+    std::string key = paramNames.Get(ii).ToString().Utf8Value();
+    Napi::Object value = infoObj.Get(key).As<Napi::Object>();
+
+    if (key == std::string("serverConnection")) {
+      getConnectionParams(value, &server_params);
+    } else if (key == std::string("clientConnection")) {
+      getConnectionParams(value, &client_params);
+    } else if (key == std::string("serverOptions")) {
+      getServerOptions(value, &server_options);
+      //
+    } else {
+      snprintf(errmsg,
+               ERRMSG_LENGTH - 1,
+               "Server parameter not allowed: \"%s\"",
+               key.c_str());
+      Napi::TypeError::New(node_rfc::__env, errmsg)
           .ThrowAsJavaScriptException();
       return;
     }
-    clientOptionsRef = Napi::Persistent(info[2].As<Napi::Object>());
-    checkClientOptions(clientOptionsRef.Value(), &client_options);
   }
-
   // open client connection
   client_conn_handle = RfcOpenConnection(
       client_params.connectionParams, client_params.paramSize, &errorInfo);
   if (errorInfo.code != RFC_OK) {
     Napi::Error::New(info.Env(), rfcSdkError(&errorInfo).ToString())
         .ThrowAsJavaScriptException();
+    return;
   }
 
   // create server
@@ -496,6 +506,7 @@ Server::Server(const Napi::CallbackInfo& info)
   if (errorInfo.code != RFC_OK) {
     Napi::Error::New(info.Env(), rfcSdkError(&errorInfo).ToString())
         .ThrowAsJavaScriptException();
+    return;
   }
 
   _log.write(logClass::server,
@@ -782,6 +793,10 @@ void Server::_stop() {
     RfcCloseConnection(client_conn_handle, nullptr);
     client_conn_handle = nullptr;
   }
+
+  if (!serverConfigurationRef.IsEmpty()) {
+    // serverConfigurationRef.Reset();
+  };
 
   // release registered tsfn functions
   ServerFunction::release(this);

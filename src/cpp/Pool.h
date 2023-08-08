@@ -62,7 +62,7 @@ class Pool : public Napi::ObjectWrap<Pool> {
     connLeased = {};
   };
 
-  ConnectionParamsStruct client_params;
+  ConnectionParamsStruct client_params = ConnectionParamsStruct(0, nullptr);
   ClientOptionsStruct client_options;
 
   // Pool options

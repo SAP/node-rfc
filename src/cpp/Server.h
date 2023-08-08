@@ -50,9 +50,6 @@ class Server : public Napi::ObjectWrap<Server> {
  private:
   void _stop();
   void _start(RFC_ERROR_INFO* errorInfo);
-  // std::thread server_thread(RFC_ERROR_INFO* errorInfo) {
-  //   return std::thread([=] { _start(errorInfo); });
-  // };
 
   Napi::Env env = nullptr;
 
@@ -70,11 +67,11 @@ class Server : public Napi::ObjectWrap<Server> {
   RFC_CONNECTION_HANDLE server_conn_handle;
   RFC_CONNECTION_HANDLE client_conn_handle;
   RFC_SERVER_HANDLE serverHandle;
-  ConnectionParamsStruct server_params;
-  ConnectionParamsStruct client_params;
-  Napi::ObjectReference serverParamsRef;
-  Napi::ObjectReference clientParamsRef;
-  Napi::ObjectReference clientOptionsRef;
+  ConnectionParamsStruct server_params = ConnectionParamsStruct(0, nullptr);
+  ConnectionParamsStruct client_params = ConnectionParamsStruct(0, nullptr);
+  ServerOptions server_options = ServerOptions();
+
+  Napi::ObjectReference serverConfigurationRef;
 
   void init(Napi::Env env) {
     id = Server::_id++;

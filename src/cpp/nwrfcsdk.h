@@ -27,12 +27,11 @@ Napi::Value wrapString(const SAP_UC* uc, int length = -1);
 typedef struct _ConnectionParamsStruct {
   uint_t paramSize = 0;
   RFC_CONNECTION_PARAMETER* connectionParams = nullptr;
-  //_ConnectionParamsStruct(uint_t paramSize, RFC_CONNECTION_PARAMETER
-  //*connectionParams)
-  //    : paramSize(paramSize), connectionParams(connectionParams)
-  //{
-  //    DEBUG("ConnectionParamsStruct %u", paramSize);
-  //}
+  _ConnectionParamsStruct(uint_t paramSize,
+                          RFC_CONNECTION_PARAMETER* connectionParams)
+      : paramSize(paramSize), connectionParams(connectionParams) {
+    DEBUG("ConnectionParamsStruct %u", paramSize);
+  }
 
   ~_ConnectionParamsStruct() {
     // DEBUG("~ConnectionParamsStruct ", paramSize);
@@ -41,8 +40,8 @@ typedef struct _ConnectionParamsStruct {
         delete[] connectionParams[i].name;
         delete[] connectionParams[i].value;
       }
-      delete[] connectionParams;
       connectionParams = nullptr;
+      delete[] connectionParams;
     }
   }
 } ConnectionParamsStruct;

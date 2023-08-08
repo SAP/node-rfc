@@ -1,6 +1,10 @@
 const addon = require("../lib/index.js");
 const Server = addon.Server;
-const server = new Server({ dest: "MME_GATEWAY" }, { dest: "MME" });
+const server = new Server({
+  serverConnection: { dest: "MME_GATEWAY" },
+  clientConnection: { dest: "MME" },
+  serverOptions: { logging: true },
+});
 
 const delay = (seconds) =>
   new Promise((resolve) => setTimeout(resolve, seconds * 1000));

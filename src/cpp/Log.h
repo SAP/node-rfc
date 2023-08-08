@@ -6,16 +6,33 @@
 #include <sapnwrfc.h>
 #include <chrono>
 #include <fstream>
+#include <set>
 #include <string>
+#include "noderfc.h"
 
 #define LOG_FILE_NAME "_noderfc.log"
 
-enum logClass { client = 0, pool, server, throughput };
-enum logSeverity { info = 0, warning, error };
+namespace node_rfc {
+
+enum logClass { client = 0, pool, throughput, server };
+enum logSeverity { off = 0, error, warning, info };
+
+typedef struct _LogConfig {
+  std::set<logClass> log_class = {};
+  uint_t log_severity = logSeverity::off;
+
+} LogConfig;
+
+typedef struct _ServerOptions {
+  LogConfig logging = LogConfig();
+
+  ~_ServerOptions() {}
+} ServerOptions;
 
 class Log {
  private:
   std::string log_fname;
+  LogConfig log_config = LogConfig();
 
  public:
   long long timestamp() {
@@ -61,5 +78,7 @@ class Log {
     fclose(fp);
   }
 };
+
+}  // namespace node_rfc
 
 #endif

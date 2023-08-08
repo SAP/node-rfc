@@ -9,23 +9,40 @@ import {
     NodeRfcEnvironment,
 } from "./noderfc-bindings";
 
-import { RfcConnectionParameters, RfcClientOptions } from "./sapnwrfc-client";
+import { RfcConnectionParameters } from "./sapnwrfc-client";
+
 //
 // RfcServer
 //
 
+export enum EnumLogClass {
+    client = 0,
+    pool = 1,
+    throughput = 2,
+    server = 3,
+}
+
+export enum EnumLogSeverity {
+    off = 0,
+    error = 1,
+    warning = 2,
+    info = 3,
+}
+
+export type RfcServerOptions = {
+    logging?: boolean;
+};
+
+export type RfcServerConfiguration = {
+    serverConnection: RfcConnectionParameters;
+    clientConnection: RfcConnectionParameters;
+    serverOptions?: RfcServerOptions;
+};
+
+/* eslint-disable @typescript-eslint/no-misused-new */
 export interface RfcServerBinding {
-    /* eslint-disable @typescript-eslint/no-misused-new */
-    new (
-        serverParams: RfcConnectionParameters,
-        clientParams: RfcConnectionParameters,
-        clientOptions?: RfcClientOptions
-    ): RfcServerBinding;
-    (
-        serverParams: RfcConnectionParameters,
-        clientParams: RfcConnectionParameters,
-        clientOptions?: RfcClientOptions
-    ): RfcServerBinding;
+    new (serverConfiguration: RfcServerConfiguration): RfcServerBinding;
+    (serverConfiguration: RfcServerConfiguration): RfcServerBinding;
     _id: number;
     _alive: boolean;
     _server_conn_handle: number;
@@ -44,23 +61,12 @@ export interface RfcServerBinding {
 export class Server {
     private __server: RfcServerBinding;
 
-    constructor(
-        serverParams: RfcConnectionParameters,
-        clientParams: RfcConnectionParameters,
-        clientOptions?: RfcClientOptions
-    ) {
-        if (clientOptions !== undefined) {
-            this.__server = new noderfc_binding.Server(
-                serverParams,
-                clientParams,
-                clientOptions
-            );
-        } else {
-            this.__server = new noderfc_binding.Server(
-                serverParams,
-                clientParams
-            );
-        }
+    constructor(serverConfiguration: RfcServerConfiguration) {
+        this.__server = new noderfc_binding.Server({
+            serverConnection: serverConfiguration.serverConnection,
+            clientConnection: serverConfiguration.clientConnection,
+            serverOptions: serverConfiguration.serverOptions || {},
+        });
     }
 
     start(callback?: Function): void | Promise<void> {

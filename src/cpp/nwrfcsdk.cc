@@ -925,7 +925,6 @@ void getConnectionParams(Napi::Object clientParamsObject,
     Napi::TypeError::New(node_rfc::__env,
                          "Client connection parameters missing")
         .ThrowAsJavaScriptException();
-    return;
   }
   clientParams->connectionParams =
       new RFC_CONNECTION_PARAMETER[clientParams->paramSize *
@@ -940,6 +939,12 @@ void getConnectionParams(Napi::Object clientParamsObject,
 
 void checkClientOptions(Napi::Object clientOptionsObject,
                         ClientOptionsStruct* client_options) {
+  if (clientOptionsObject.Has("clientOptions")) {
+    // server constructor call
+    clientOptionsObject =
+        clientOptionsObject.Get("clientOptions").As<Napi::Object>();
+  }
+
   char errmsg[ERRMSG_LENGTH];
   Napi::Array props = clientOptionsObject.GetPropertyNames();
   for (uint_t ii = 0; ii < props.Length(); ii++) {
