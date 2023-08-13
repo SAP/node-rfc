@@ -24,13 +24,19 @@ export enum EnumLogClass {
 
 export enum EnumLogSeverity {
     off = 0,
-    error = 1,
+    info = 1,
     warning = 2,
-    info = 3,
+    error = 3,
 }
 
+export type RfcLoggingOptions = {
+    severity?: EnumLogSeverity;
+    class?: Set<EnumLogClass>;
+};
+
 export type RfcServerOptions = {
-    logging?: boolean;
+    logging?: RfcLoggingOptions;
+    port?: number;
 };
 
 export type RfcServerConfiguration = {

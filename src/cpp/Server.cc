@@ -10,10 +10,12 @@ namespace node_rfc {
 uint_t Server::_id = 1;
 uint_t Server::request_id = 0;
 
+using DataType = ServerRequestBaton*;
+
 void JSFunctionCall(Napi::Env env,
                     Napi::Function callback,
                     std::nullptr_t* context,
-                    ServerRequestBaton* data);
+                    DataType requestBaton);
 
 using ServerRequestTsfn = Napi::
     TypedThreadSafeFunction<std::nullptr_t, ServerRequestBaton, JSFunctionCall>;
@@ -944,7 +946,7 @@ void Server::UnlockMutex() {
   // uv_sem_post(&invocationMutex);
 }
 
-using DataType = ServerRequestBaton*;
+// using DataType = ServerRequestBaton*;
 
 // Thread safe call of JavaScript handler.
 // Request "baton" is used to pass ABAP data and

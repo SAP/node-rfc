@@ -15,12 +15,18 @@
 namespace node_rfc {
 
 enum logClass { client = 0, pool, throughput, server };
-enum logSeverity { off = 0, error, warning, info };
+enum logSeverity { off = 0, info, warning, error };
 
 typedef struct _LogConfig {
   std::set<logClass> log_class = {};
-  uint_t log_severity = logSeverity::off;
 
+  logSeverity log_severity = logSeverity::off;
+
+  _LogConfig(std::set<logClass> components = {},
+             logSeverity severity = logSeverity::off) {
+    log_class.insert(components.begin(), components.end());
+    log_severity = severity;
+  }
 } LogConfig;
 
 typedef struct _ServerOptions {
@@ -32,6 +38,7 @@ typedef struct _ServerOptions {
 class Log {
  private:
   std::string log_fname;
+  bool not_active = true;
   LogConfig log_config = LogConfig();
 
  public:
@@ -54,6 +61,11 @@ class Log {
   template <typename... Args>
   void write(logClass component_id, logSeverity severity_id, Args&&... args) {
     using namespace std;
+    not_active = log_config.log_class.count(component_id) == 0 &&
+                 severity_id < log_config.log_severity;
+    if (not_active) {
+      return;
+    }
     const string component_names[4] = {
         "client", "pool", "server", "throughput"};
     const string severity_names[3] = {"info", "warning", "error"};
@@ -71,6 +83,9 @@ class Log {
 
   // for SAP unicode string, only as the last one in log oputput line
   void write(SAP_UC const* message) {
+    if (not_active) {
+      return;
+    }
     FILE* fp = fopen(log_fname.c_str(), "a");
     fprintf(fp, "'");
     fprintfU(fp, message);
