@@ -9,44 +9,28 @@
 #include <sapnwrfc.h>
 #include <iostream>
 
+// Error messages
+#define ERRMSG_LENGTH 255
+#define ERROR_PATH_NAME_LEN 48
+
 // Unsigned and pointer types
 #define uint_t uint32_t
 #define pointer_t uintptr_t
 
-//
-// Logging
-//
-// #define LOG_RFC_CLIENT 1
-
-#ifdef LOG_RFC_CLIENT
-// Version unit test will fail, preventing the release with activated logging
-#define NODERFC_VERSION "Deactivate logging: LOG_RFC_CLIENT"
-#else
 // client binding version
 #define NODERFC_VERSION "3.3.0"
-#endif
-
-template <typename... Args>
-void log(Args&&... args) {
-  (std::cerr << ... << args);
-  std::cerr << std::endl;
-}
-
-// conditional logging
-#ifdef LOG_RFC_CLIENT
-#define DEBUG(...) log(__VA_ARGS__);
-#else
-#define DEBUG(...) ;
-#endif
-
-// always active logging
-#define EDEBUG(...) log(__VA_ARGS__);
 
 // surpress unused parameter warnings
 #define UNUSED(x) (void)(x)
 
 //
-// Client constants
+// Logging options constants
+//
+
+#define LOG_LEVEL_KEY "logLevel"
+
+//
+// Client options constants
 //
 #define CLIENT_OPTION_KEY_BCD "bcd"
 #define CLIENT_OPTION_KEY_DATE "date"
@@ -63,7 +47,7 @@ void log(Args&&... args) {
 #define CLIENT_OPTION_BCD_FUNCTION 2
 
 //
-// Pool constants
+// Pool options constants
 //
 #define POOL_KEY_CONNECTION_PARAMS "connectionParameters"
 #define POOL_KEY_CLIENT_OPTIONS "clientOptions"

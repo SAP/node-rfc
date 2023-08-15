@@ -5,6 +5,7 @@
 #ifndef NodeRfc_Throughput_H_
 #define NodeRfc_Throughput_H_
 
+#include "Log.h"
 #include "nwrfcsdk.h"
 
 using namespace Napi;

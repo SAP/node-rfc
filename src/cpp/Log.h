@@ -6,84 +6,86 @@
 #include <sapnwrfc.h>
 #include <chrono>
 #include <fstream>
-#include <set>
+#include <initializer_list>
+#include <map>
 #include <string>
 #include "noderfc.h"
 
-#define LOG_FILE_NAME "_noderfc.log"
-
 namespace node_rfc {
 
-enum logClass { client = 0, pool, throughput, server };
-enum logSeverity { off = 0, info, warning, error };
-
-typedef struct _LogConfig {
-  std::set<logClass> log_class = {};
-
-  logSeverity log_severity = logSeverity::off;
-
-  _LogConfig(std::set<logClass> components = {},
-             logSeverity severity = logSeverity::off) {
-    log_class.insert(components.begin(), components.end());
-    log_severity = severity;
-  }
-} LogConfig;
-
-typedef struct _ServerOptions {
-  LogConfig logging = LogConfig();
-
-  ~_ServerOptions() {}
-} ServerOptions;
+enum class logClass {
+  client = 0,
+  pool = 1,
+  server = 2,
+  throughput = 3,
+  nwrfc = 4
+};
+enum class logLevel { off = 0, error = 1, warning = 2, debug = 3 };
 
 class Log {
  private:
+  // Log file name
   std::string log_fname;
-  bool not_active = true;
-  LogConfig log_config = LogConfig();
+
+  // Component name, enum map
+  std::map<std::string, logClass> component_name_to_enum = {
+      {"client", logClass::client},
+      {"pool", logClass::pool},
+      {"server", logClass::server},
+      {"throughput", logClass::throughput},
+      {"nwrfc", logClass::nwrfc}};
+
+  // Active logging components
+  std::map<logClass, logLevel> log_config = {
+      {logClass::client, logLevel::off},
+      {logClass::pool, logLevel::off},
+      {logClass::server, logLevel::off},
+      {logClass::throughput, logLevel::off},
+      {logClass::nwrfc, logLevel::off}};
+
+  // Get component name for enum
+  std::string get_component_name(const logClass component_id);
+
+  long long timestamp();
 
  public:
-  long long timestamp() {
-    using namespace std;
-    return chrono::duration_cast<chrono::milliseconds>(
-               chrono::system_clock::now().time_since_epoch())
-        .count();
-  }
+  void set_log_level(const logClass component_id, const logLevel log_level_id);
+  void set_log_level(const logClass component_id,
+                     const Napi::Value logLevelValue);
 
-  Log(std::string log_fname = LOG_FILE_NAME) : log_fname(log_fname) {
-    std::ofstream ofs;
-    ofs.open(log_fname, std::ofstream::out | std::ofstream::trunc);
-    ofs.close();
-  }
-
-  ~Log() {}
+  Log(std::string log_fname = "_noderfc.log");
+  ~Log();
 
   // for regular arguments
   template <typename... Args>
-  void write(logClass component_id, logSeverity severity_id, Args&&... args) {
+  void write(const logClass component_id,
+             const logLevel log_level_id,
+             Args&&... args) {
     using namespace std;
-    not_active = log_config.log_class.count(component_id) == 0 &&
-                 severity_id < log_config.log_severity;
-    if (not_active) {
+    if (log_level_id > log_config[component_id]) {
       return;
     }
-    const string component_names[4] = {
-        "client", "pool", "server", "throughput"};
-    const string severity_names[3] = {"info", "warning", "error"};
+
+    const string severity_names[] = {"off", "error", "warning", "debug"};
     ofstream ofs;
     ofs.open(log_fname.c_str(), ofstream::out | ios::app);
     ofs << endl << endl;
     time_t now = time(nullptr);
     ofs << put_time(localtime(&now), "%F %T [") << timestamp() << "] >> ";
-    ofs << component_names[component_id] << " [" << severity_names[severity_id]
-        << "] thread " << std::this_thread::get_id() << endl
+    ofs << get_component_name(component_id) << " ["
+        << severity_names[static_cast<uint_t>(log_level_id)] << "] thread "
+        << std::this_thread::get_id() << endl
         << "\t";
     (ofs << ... << args);
     ofs.close();
   }
 
-  // for SAP unicode string, only as the last one in log oputput line
-  void write(SAP_UC const* message) {
-    if (not_active) {
+  // Used for SAP unicode strings logging because the handle scope may
+  // not be available for standard SAP unicode to Napi::String conversion
+  void write(const logClass component_id,
+             const logLevel log_level_id,
+             const SAP_UC* message) {
+    if (log_level_id > log_config[component_id]) {
       return;
     }
     FILE* fp = fopen(log_fname.c_str(), "a");

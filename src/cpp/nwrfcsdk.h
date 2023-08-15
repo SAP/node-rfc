@@ -11,9 +11,6 @@
 
 using namespace Napi;
 
-#define ERRMSG_LENGTH 255
-#define ERROR_PATH_NAME_LEN 48
-
 namespace node_rfc {
 
 extern Napi::Env __env;
@@ -30,7 +27,7 @@ typedef struct _ConnectionParamsStruct {
   _ConnectionParamsStruct(uint_t paramSize,
                           RFC_CONNECTION_PARAMETER* connectionParams)
       : paramSize(paramSize), connectionParams(connectionParams) {
-    DEBUG("ConnectionParamsStruct %u", paramSize);
+    // DEBUG("ConnectionParamsStruct %u", paramSize);
   }
 
   ~_ConnectionParamsStruct() {

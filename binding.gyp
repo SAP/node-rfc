@@ -78,6 +78,7 @@
             'target_name': '<(target_name)',
             'sources': [
                 'src/cpp/addon.cc',
+                'src/cpp/Log.cc',
                 'src/cpp/nwrfcsdk.cc',
                 'src/cpp/Client.cc',
                 'src/cpp/Pool.cc',

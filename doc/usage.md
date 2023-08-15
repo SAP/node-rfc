@@ -11,6 +11,7 @@
   - [cancelClient](#cancelclient)
   - [languageIsoToSap](#languageisotosap)
   - [languageSapToIso](#languagesaptoiso)
+- **[Logging](##logging)**
 
 <a name="client-toc"></a>
 
@@ -39,7 +40,6 @@
   - [Pool Options](#pool-options)
 - **[Closing connections](#closing-connections)**
 - **[Cancel connection](#cancel-connection)**
-
 
 <a name="server-toc"></a>
 
@@ -958,4 +958,33 @@ sapnwrfcEvents.on("sapnwrfc:clientCancel", (data) =>
 );
 // event { id: 1, connectionHandle: 140576595093504 }
 
+```
+
+## Logging
+
+Logging can be activated by Client, Pool or Server option `logLevel`, like:
+
+```node
+const client = new Client(
+    { dest: "MME" },
+    {logLevel: RfcLoggingLevel.error });
+
+const pool = new Pool({
+  connectionParameters: { dest: "MME" },
+  poolOptions: { logLevel: RfcLoggingLevel.error },
+});
+
+const server = new Server({
+  serverConnection: { dest: "MME_GATEWAY" },
+  clientConnection: { dest: "MME" },
+  serverOptions: {
+    logLevel: RfcLoggingLevel.debug,
+  },
+});
+```
+
+The default log file name is `_noderfc.log`, in current working directory. The different log file name and destination can be set by invoking addon method `setLogFilePath()`, like:
+
+```node
+addon.setLogFilePath("/usr/local/tmp/mylogfile.log");
 ```

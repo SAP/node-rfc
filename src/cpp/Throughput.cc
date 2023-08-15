@@ -7,7 +7,6 @@
 #include "nwrfcsdk.h"
 
 namespace node_rfc {
-
 uint_t Throughput::_id = 0;
 
 Napi::FunctionReference Throughput::constructor;

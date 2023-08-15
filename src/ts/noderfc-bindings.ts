@@ -46,6 +46,23 @@ export interface NWRfcBinding {
     verbose(): this;
 }
 
+// Logging options
+
+export enum RfcLoggingClass {
+    client = "client",
+    pool = "pool",
+    server = "server",
+    throughput = "throughput",
+    nwrfc = "nwrfc",
+}
+
+export enum RfcLoggingLevel {
+    off = 0,
+    error = 1,
+    warning = 2,
+    debug = 3,
+}
+
 // environment w/o SAP NWRFC SDK
 const E = {
     platform: {

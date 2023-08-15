@@ -7,6 +7,7 @@ import {
     noderfc_binding,
     environment,
     NodeRfcEnvironment,
+    RfcLoggingLevel,
 } from "./noderfc-bindings";
 
 import {
@@ -23,6 +24,7 @@ import {
 export interface RfcPoolOptions {
     low: number;
     high: number;
+    logLevel?: RfcLoggingLevel;
 }
 
 export interface RfcPoolStatus {

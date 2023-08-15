@@ -8,6 +8,7 @@
 #include <mutex>
 #include <set>
 #include "Client.h"
+#include "Log.h"
 #include "nwrfcsdk.h"
 
 using namespace Napi;

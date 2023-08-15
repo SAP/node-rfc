@@ -75,7 +75,7 @@ class ServerFunction {
 
     if (rc == RFC_OK) {
       _log.write(logClass::server,
-                 logSeverity::info,
+                 logLevel::debug,
                  "metadataLookup: Function description set ",
                  (pointer_t)*func_desc_handle,
                  " for ABAP function '",
@@ -85,7 +85,7 @@ class ServerFunction {
     } else {
       _log.write(
           logClass::server,
-          logSeverity::error,
+          logLevel::error,
           "metadataLookup: Function description not set for ABAP function '",
           it->first,
           "'");
@@ -123,28 +123,25 @@ class ServerFunction {
 
     if (it != ServerFunction::installed_functions.end()) {
       _log.write(logClass::server,
-                 logSeverity::info,
+                 logLevel::debug,
                  "genericRequestHandler: JS handler function '",
                  it->second->jsFunctionName,
                  "' found for function handle ",
                  (uintptr_t)func_handle,
-                 " of ABAP function ");
-      // Handle scope not available for SAP unicode to Napi::String
-      // conversion here. Use log helper method instead
-      _log.write(abap_func_name);
+                 " of ABAP function ",
+                 abap_func_name);
+      _log.write(logClass::server, logLevel::debug, abap_func_name);
 
       return it->second;
 
     } else {
       _log.write(logClass::server,
-                 logSeverity::info,
+                 logLevel::debug,
                  "genericRequestHandler: JS handler function not found for "
                  "function handle ",
                  (uintptr_t)func_handle,
                  " of ABAP function ");
-      // Handle scope not available for SAP unicode to Napi::String
-      // conversion here. Use log helper method instead
-      _log.write(abap_func_name);
+      _log.write(logClass::server, logLevel::debug, abap_func_name);
 
       return nullptr;
     }
@@ -182,7 +179,7 @@ class ServerFunction {
         );
 
     _log.write(logClass::server,
-               logSeverity::info,
+               logLevel::debug,
                "Function description ",
                (pointer_t)func_desc_handle,
                " added for JS handler '",
@@ -219,7 +216,7 @@ class ServerFunction {
     if (it != ServerFunction::installed_functions.end()) {
       ServerFunction::installed_functions.erase(it);
       _log.write(logClass::server,
-                 logSeverity::info,
+                 logLevel::debug,
                  "JS function removed ",
                  jsFunctionName,
                  " as ABAP function ",
@@ -242,7 +239,7 @@ class ServerFunction {
       if (server == it->second->server) {
         it->second->tsfnRequest.Unref(server->env);
         _log.write(logClass::server,
-                   logSeverity::info,
+                   logLevel::debug,
                    "unref '" + it->second->jsFunctionName,
                    "' with ABAP function '" + it->first + "'");
       }
@@ -293,7 +290,7 @@ class ServerRequestBaton {
     jsHandlerError = "";
 
     _log.write(logClass::server,
-               logSeverity::info,
+               logLevel::debug,
                "Client request [" + request_id + "]",
                " for JS function '",
                serverFunction->jsFunctionName,
@@ -304,12 +301,13 @@ class ServerRequestBaton {
                "\n\tClient connection ",
                (uintptr_t)conn_handle,
                ", ABAP function ");
-    _log.write(serverFunction->abap_func_name);
+    _log.write(
+        logClass::server, logLevel::debug, serverFunction->abap_func_name);
   }
 
   void wait() {
     _log.write(logClass::server,
-               logSeverity::info,
+               logLevel::debug,
                "JS function call [" + request_id,
                "] lock '",
                serverFunction->jsFunctionName,
@@ -320,7 +318,7 @@ class ServerRequestBaton {
     std::unique_lock<std::mutex> lock(server_call_mutex);
     server_call_condition.wait(lock, [this] { return server_call_completed; });
     _log.write(logClass::server,
-               logSeverity::info,
+               logLevel::debug,
                "JS function call [" + request_id,
                "] unlock '",
                serverFunction->jsFunctionName,
@@ -334,7 +332,7 @@ class ServerRequestBaton {
     jsHandlerError = errorObj;
     _log.write(
         logClass::server,
-        (jsHandlerError.length() > 0) ? logSeverity::error : logSeverity::info,
+        (jsHandlerError.length() > 0) ? logLevel::error : logLevel::debug,
         "JS function call [" + request_id,
         " done '",
         serverFunction->jsFunctionName,
@@ -352,11 +350,11 @@ class ServerRequestBaton {
     Napi::Object params = jsResult.As<Napi::Object>();
     Napi::Array paramNames = params.GetPropertyNames();
     uint_t paramCount = paramNames.Length();
-    for (uint_t i = 0; i < paramCount; i++) {
-      Napi::String name = paramNames.Get(i).ToString();
+    for (uint_t ii = 0; ii < paramCount; ii++) {
+      Napi::String name = paramNames.Get(ii).ToString();
       Napi::Value value = params.Get(name);
 
-      // DEBUG(name, value);
+      // _log.write(logClass::server, logLevel::debug, name, value);
       errorObj = setRfmParameter(serverFunction->func_desc_handle,
                                  func_handle,
                                  name,
@@ -380,9 +378,25 @@ class ServerRequestBaton {
 
 void getServerOptions(Napi::Object serverOptions,
                       ServerOptions* server_options) {
-  UNUSED(serverOptions);
-  server_options->logging.log_class = {logClass::server};
-  server_options->logging.log_severity = logSeverity::info;
+  UNUSED(server_options);
+  char errmsg[ERRMSG_LENGTH];
+  Napi::Array optionNames = serverOptions.GetPropertyNames();
+  uint_t optionCount = optionNames.Length();
+  for (uint_t ii = 0; ii < optionCount; ii++) {
+    std::string name = optionNames.Get(ii).ToString().Utf8Value();
+    Napi::Value value = serverOptions.Get(name);
+    if (name == LOG_LEVEL_KEY) {
+      _log.set_log_level(logClass::server, value);
+    } else {
+      snprintf(errmsg,
+               ERRMSG_LENGTH - 1,
+               "Server option not allowed: \"%s\"",
+               name.c_str());
+      Napi::TypeError::New(node_rfc::__env, errmsg)
+          .ThrowAsJavaScriptException();
+      return;
+    }
+  }
 }
 
 Napi::Object Server::Init(Napi::Env env, Napi::Object exports) {
@@ -494,6 +508,7 @@ Server::Server(const Napi::CallbackInfo& info)
       return;
     }
   }
+
   // open client connection
   client_conn_handle = RfcOpenConnection(
       client_params.connectionParams, client_params.paramSize, &errorInfo);
@@ -510,9 +525,9 @@ Server::Server(const Napi::CallbackInfo& info)
         .ThrowAsJavaScriptException();
     return;
   }
-
+  printf("\nclass: %u level: %u\n", logClass::server, logLevel::debug);
   _log.write(logClass::server,
-             logSeverity::info,
+             logLevel::debug,
              "created: server handle ",
              (uintptr_t)serverHandle,
              " client connection ",
@@ -572,7 +587,7 @@ Napi::Value getServerRequestContext(ServerRequestBaton* requestBaton) {
 
   if (rc != RFC_OK || requestBaton->errorInfo->code != RFC_OK) {
     _log.write(logClass::server,
-               logSeverity::error,
+               logLevel::error,
                "Request context not set",
                requestContext);
     return requestContext;
@@ -648,10 +663,10 @@ class StartAsync : public Napi::AsyncWorker {
   void Execute() {
     errorInfo.code = RFC_OK;
     server->LockMutex();
-    DEBUG("StartAsync locked");
+    _log.write(logClass::server, logLevel::debug, "StartAsync locked");
     server->server_thread = std::thread(&Server::_start, server, &errorInfo);
     server->UnlockMutex();
-    DEBUG("StartAsync unlocked");
+    _log.write(logClass::server, logLevel::debug, "StartAsync unlocked");
   }
 
   void OnOK() {
@@ -679,7 +694,7 @@ class StopAsync : public Napi::AsyncWorker {
   void Execute() {
     server->LockMutex();
     _log.write(logClass::server,
-               logSeverity::info,
+               logLevel::debug,
                "stop: server handle ",
                (pointer_t)server->serverHandle);
     server->_stop();
@@ -763,7 +778,7 @@ void Server::_start(RFC_ERROR_INFO* errorInfo) {
     return;
   }
   _log.write(logClass::server,
-             logSeverity::info,
+             logLevel::debug,
              "start: generic request handler installed");
 
   RfcLaunchServer(serverHandle, errorInfo);
@@ -771,7 +786,7 @@ void Server::_start(RFC_ERROR_INFO* errorInfo) {
     return;
   }
   _log.write(logClass::server,
-             logSeverity::info,
+             logLevel::debug,
              "start: launched server handle ",
              (pointer_t)serverHandle);
 }
@@ -779,7 +794,7 @@ void Server::_start(RFC_ERROR_INFO* errorInfo) {
 void Server::_stop() {
   if (serverHandle != nullptr) {
     _log.write(logClass::server,
-               logSeverity::info,
+               logLevel::debug,
                "stop: shutdown server handle ",
                (pointer_t)serverHandle);
     RfcShutdownServer(serverHandle, 60, nullptr);
@@ -789,7 +804,7 @@ void Server::_stop() {
 
   if (client_conn_handle != nullptr) {
     _log.write(logClass::server,
-               logSeverity::info,
+               logLevel::debug,
                "stop: close client connection ",
                (pointer_t)client_conn_handle);
     RfcCloseConnection(client_conn_handle, nullptr);
@@ -805,7 +820,7 @@ void Server::_stop() {
 
   if (server_thread.joinable()) {
     _log.write(logClass::server,
-               logSeverity::info,
+               logLevel::debug,
                "stop: server thread join ",
                server_thread.get_id());
     server_thread.join();
@@ -978,7 +993,7 @@ void JSFunctionCall(Napi::Env env,
 
   // Call JavaScript handler
   _log.write(logClass::server,
-             logSeverity::info,
+             logLevel::debug,
              "JS function call [" + requestBaton->request_id,
              "] start '",
              requestBaton->serverFunction->jsFunctionName,
@@ -994,7 +1009,7 @@ void JSFunctionCall(Napi::Env env,
   }
 
   _log.write(logClass::server,
-             logSeverity::info,
+             logLevel::debug,
              "JS function call [" + requestBaton->request_id,
              "] end '",
              requestBaton->serverFunction->jsFunctionName,

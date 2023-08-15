@@ -146,7 +146,7 @@ Client::Client(const Napi::CallbackInfo& info)
     Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
   }
 
-  _log.write(logClass::client, logSeverity::info, "client created: ", id);
+  _log.write(logClass::client, logLevel::debug, "client created: ", id);
 };
 
 Client::~Client(void) {
@@ -155,20 +155,23 @@ Client::~Client(void) {
     if (connectionHandle != nullptr) {
       RFC_ERROR_INFO errorInfo;
       _log.write(logClass::client,
-                 logSeverity::info,
+                 logLevel::debug,
+                 "Client ",
                  id,
                  " closing connection ",
                  (pointer_t)connectionHandle);
       RFC_RC rc = RfcCloseConnection(connectionHandle, &errorInfo);
       if (rc != RFC_OK) {
-        EDEBUG("Warning: Error closing the direct connection handle ",
-               (uintptr_t)connectionHandle,
-               " client ",
-               id);
+        _log.write(logClass::client,
+                   logLevel::warning,
+                   "Client ",
+                   id,
+                   " error closing direct connection handle ",
+                   (pointer_t)(connectionHandle));
       }
     } else {
       _log.write(logClass::client,
-                 logSeverity::warning,
+                 logLevel::warning,
                  "Client ",
                  id,
                  " connection ",
@@ -544,7 +547,7 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
   {
     if (errorInfo->code == RFC_CANCELED) {
       _log.write(logClass::client,
-                 logSeverity::warning,
+                 logLevel::warning,
                  "connection cancelled ",
                  (pointer_t)this->connectionHandle);
     }
@@ -575,7 +578,7 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
       }
 
       _log.write(logClass::pool,
-                 logSeverity::info,
+                 logLevel::debug,
                  "closed connection handle ",
                  (uintptr_t)old_handle,
                  " replaced with ",
@@ -586,7 +589,7 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
       this->connectionHandle = new_handle;
     }
     _log.write(logClass::client,
-               logSeverity::warning,
+               logLevel::warning,
                "Critical ABAP error: group ",
                errorInfo->group,
                " code ",
@@ -597,7 +600,7 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
                (pointer_t)new_handle);
   } else {
     _log.write(logClass::client,
-               logSeverity::warning,
+               logLevel::warning,
                "Non-critical ABAP error: ",
                (pointer_t)this->connectionHandle);
   }
@@ -632,7 +635,7 @@ void cancelConnection(RFC_RC* rc,
                       RFC_CONNECTION_HANDLE connectionHandle,
                       RFC_ERROR_INFO* errorInfo) {
   _log.write(logClass::client,
-             logSeverity::info,
+             logLevel::debug,
              "connection cancelled ",
              (pointer_t)connectionHandle);
   *rc = RfcCancel(connectionHandle, errorInfo);

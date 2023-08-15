@@ -12,10 +12,15 @@
 
 namespace node_rfc {
 
-class ServerRequestBaton;
-
 extern Napi::Env __env;
 extern Log _log;
+
+typedef struct _ServerOptions {
+  logLevel log_severity = logLevel::off;
+
+} ServerOptions;
+
+class ServerRequestBaton;
 
 RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
                               RFC_ATTRIBUTES rfc_attributes,

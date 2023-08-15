@@ -7,6 +7,7 @@ import {
     noderfc_binding,
     environment,
     NodeRfcEnvironment,
+    RfcLoggingLevel,
 } from "./noderfc-bindings";
 
 import { RfcConnectionParameters } from "./sapnwrfc-client";
@@ -15,27 +16,8 @@ import { RfcConnectionParameters } from "./sapnwrfc-client";
 // RfcServer
 //
 
-export enum EnumLogClass {
-    client = 0,
-    pool = 1,
-    throughput = 2,
-    server = 3,
-}
-
-export enum EnumLogSeverity {
-    off = 0,
-    info = 1,
-    warning = 2,
-    error = 3,
-}
-
-export type RfcLoggingOptions = {
-    severity?: EnumLogSeverity;
-    class?: Set<EnumLogClass>;
-};
-
 export type RfcServerOptions = {
-    logging?: RfcLoggingOptions;
+    logLevel?: RfcLoggingLevel;
     port?: number;
 };
 

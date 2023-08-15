@@ -4,11 +4,8 @@
 // language governing permissions and limitations under the License.
 
 #include "nwrfcsdk.h"
-#include "Log.h"
 
 namespace node_rfc {
-extern Napi::Env __env;
-extern Log _log;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Set Parameters (to SDK)
@@ -31,8 +28,18 @@ SAP_UC* setString(const Napi::String napistr) {
                       &sapucSize,
                       &resultLen,
                       &errorInfo);
-  // EDEBUG("fill: ", sstr, " sapucSize: ", sapucSize, " resultLen: ",
-  // resultLen, " code: ", errorInfo.code);
+
+  _log.write(logClass::nwrfc,
+             logLevel::debug,
+             "setString: ",
+             sstr,
+             " sapucSize: ",
+             sapucSize,
+             " resultLen ",
+             resultLen,
+             " errorCode: ",
+             errorInfo.code);
+
   if (rc != RFC_OK) {
     Napi::Error::Fatal("setString",
                        "NodeJS string could not be parsed to ABAP string");
@@ -395,8 +402,18 @@ Napi::Value wrapString(const SAP_UC* uc, int length) {
   utf8[0] = '\0';
   uint_t resultLen = 0;
   RfcSAPUCToUTF8(uc, length, utf8, &utf8Size, &resultLen, &errorInfo);
-  // EDEBUG("len: ", length, " utf8Size: ", utf8Size, " resultLen: ", resultLen,
-  // " ", errorInfo.code);
+  // _log.write(logClass::nwrfc,
+  //            logLevel::debug,
+  //            "wrapString len: ",
+  //            length,
+  //            " utf8Size: ",
+  //            utf8Size,
+  //            " resultLen: ",
+  //            resultLen,
+  //            " error group:",
+  //            errorInfo.group,
+  //            " code: ",
+  //            errorInfo.code);
   if (errorInfo.code != RFC_OK) {
     // not enough, try with 5
     delete[] utf8;
@@ -494,7 +511,6 @@ ValuePair getStructure(RFC_TYPE_DESC_HANDLE typeDesc,
     if (!result.first.IsUndefined()) {
       return result;
     }
-    // EDEBUG("F: ", wrapString(fieldDesc.name).As<Napi::String>().Utf8Value());
     (resultObj).Set(wrapString(fieldDesc.name), result.second);
   }
 
@@ -651,10 +667,12 @@ ValuePair getVariable(RFCTYPE typ,
           functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
       if (rc == 23)  // Buffer too small, use returned requried result length
       {
-        EDEBUG("Warning: Buffer for BCD type ",
-               typ,
-               " too small, for ",
-               errorPath->pathstr());
+        _log.write(logClass::nwrfc,
+                   logLevel::warning,
+                   "Buffer for BCD type ",
+                   typ,
+                   " too small, for ",
+                   errorPath->pathstr());
         delete[] sapuc;
         strLen = resultLen;
         sapuc = new SAP_UC[strLen + 1];
@@ -697,10 +715,12 @@ ValuePair getVariable(RFCTYPE typ,
           functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
       if (rc == 23)  // Buffer too small, use returned requried result length
       {
-        EDEBUG("Warning: Buffer for BCD type ",
-               typ,
-               " too small, for ",
-               errorPath->pathstr());
+        _log.write(logClass::nwrfc,
+                   logLevel::warning,
+                   "Buffer for BCD type ",
+                   typ,
+                   " too small, for ",
+                   errorPath->pathstr());
         delete[] sapuc;
         strLen = resultLen;
         sapuc = new SAP_UC[strLen + 1];
@@ -952,14 +972,14 @@ void checkClientOptions(Napi::Object clientOptionsObject,
     Napi::Value opt = clientOptionsObject.Get(key).As<Napi::Value>();
 
     // Client option: "bcd"
-    if (key.compare(std::string(CLIENT_OPTION_KEY_BCD)) == 0) {
+    if (key == CLIENT_OPTION_KEY_BCD) {
       if (opt.IsFunction()) {
         client_options->bcd = CLIENT_OPTION_BCD_FUNCTION;
         client_options->bcdFunction =
             Napi::Persistent(opt.As<Napi::Function>());
       } else if (opt.IsString()) {
         std::string bcdString = opt.ToString().Utf8Value();
-        if (bcdString.compare(std::string("number")) == 0) {
+        if (bcdString == "number") {
           client_options->bcd = CLIENT_OPTION_BCD_NUMBER;
         } else {
           snprintf(errmsg,
@@ -974,7 +994,7 @@ void checkClientOptions(Napi::Object clientOptionsObject,
     }
 
     // Client option: "date"
-    else if (key.compare(std::string(CLIENT_OPTION_KEY_DATE)) == 0) {
+    else if (key == CLIENT_OPTION_KEY_DATE) {
       if (!opt.IsObject()) {
         opt = node_rfc::__env.Null();
       } else {
@@ -998,7 +1018,7 @@ void checkClientOptions(Napi::Object clientOptionsObject,
     }
 
     // Client option: "time"
-    else if (key.compare(std::string(CLIENT_OPTION_KEY_TIME)) == 0) {
+    else if (key == CLIENT_OPTION_KEY_TIME) {
       if (!opt.IsObject()) {
         opt = node_rfc::__env.Null();
       } else {
@@ -1023,7 +1043,7 @@ void checkClientOptions(Napi::Object clientOptionsObject,
     }
 
     // Client option: "filter"
-    else if (key.compare(std::string(CLIENT_OPTION_KEY_FILTER)) == 0) {
+    else if (key == CLIENT_OPTION_KEY_FILTER) {
       client_options->filter_param_type =
           (RFC_DIRECTION)clientOptionsObject.Get(key)
               .As<Napi::Number>()
@@ -1041,8 +1061,8 @@ void checkClientOptions(Napi::Object clientOptionsObject,
     }
 
     // Client option: "stateless"
-    else if (key.compare(std::string(CLIENT_OPTION_KEY_STATELESS)) == 0) {
-      if (!clientOptionsObject.Get(key).IsBoolean()) {
+    else if (key == CLIENT_OPTION_KEY_STATELESS) {
+      if (!opt.IsBoolean()) {
         snprintf(errmsg,
                  ERRMSG_LENGTH - 1,
                  "Client option \"%s\" requires a boolean value",
@@ -1050,13 +1070,12 @@ void checkClientOptions(Napi::Object clientOptionsObject,
         Napi::TypeError::New(node_rfc::__env, errmsg)
             .ThrowAsJavaScriptException();
       }
-      client_options->stateless =
-          clientOptionsObject.Get(key).As<Napi::Boolean>();
+      client_options->stateless = opt.As<Napi::Boolean>();
     }
 
     // Client option: "timeout"
-    else if (key.compare(std::string(CLIENT_OPTION_KEY_TIMEOUT)) == 0) {
-      if (!clientOptionsObject.Get(key).IsNumber()) {
+    else if (key == CLIENT_OPTION_KEY_TIMEOUT) {
+      if (!opt.IsNumber()) {
         snprintf(errmsg,
                  ERRMSG_LENGTH - 1,
                  "Client option \"%s\" requires a number of seconds",
@@ -1064,7 +1083,11 @@ void checkClientOptions(Napi::Object clientOptionsObject,
         Napi::TypeError::New(node_rfc::__env, errmsg)
             .ThrowAsJavaScriptException();
       }
-      client_options->timeout = clientOptionsObject.Get(key).As<Napi::Number>();
+      client_options->timeout = opt.As<Napi::Number>();
+    }
+
+    else if (key == LOG_LEVEL_KEY) {
+      _log.set_log_level(logClass::client, opt);
     }
 
     // Client option: unknown

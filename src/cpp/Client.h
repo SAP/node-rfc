@@ -10,6 +10,7 @@
 #include "nwrfcsdk.h"
 
 namespace node_rfc {
+
 extern Napi::Env __env;
 extern Log _log;
 

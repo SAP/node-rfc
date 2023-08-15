@@ -11,7 +11,6 @@
 namespace node_rfc {
 // Instantiate global namespace instances
 Napi::Env __env = nullptr;
-Log _log = Log();
 
 Napi::Value BindingVersions(Napi::Env env) {
   uint_t major, minor, patchLevel;
