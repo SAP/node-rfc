@@ -9,6 +9,7 @@ import {
     noderfc_binding,
     environment,
     NodeRfcEnvironment,
+    RfcLoggingLevel,
 } from "./noderfc-bindings";
 
 //
@@ -173,11 +174,12 @@ export type RfcConnectionParameters = Partial<
 
 export type RfcClientOptions = {
     bcd?: string | Function;
-    date?: Function;
-    time?: Function;
+    date?: { toABAP: Function; fromABAP: Function };
+    time?: { toABAP: Function; fromABAP: Function };
     filter?: RfcParameterDirection;
     stateless?: boolean;
     timeout?: number;
+    logLevel?: RfcLoggingLevel;
 };
 
 export type RfcCallOptions = {

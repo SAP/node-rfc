@@ -1,4 +1,7 @@
-import { RfcLoggingLevel, Pool, Server } from "../lib/index.js";
+import { RfcLoggingLevel, Client, Pool, Server } from "../lib/index.js";
+
+const client = new Client({ dest: "MME" }, { logLevel: RfcLoggingLevel.debug });
+console.log(client);
 
 const pool = new Pool({
   connectionParameters: { dest: "MME" },

@@ -13,6 +13,7 @@ import {
 } from "../utils/setup";
 import { RFC_MATH } from "../utils/config";
 import { toABAPdate, fromABAPdate, XBYTES_TEST } from "../utils/utils";
+import { RfcClientOptions } from "../../lib";
 
 describe("Datatypes: all", () => {
     const client = direct_client();
@@ -24,7 +25,7 @@ describe("Datatypes: all", () => {
     });
 
     afterAll(function (done) {
-        void client.close((err:unknown) => {
+        void client.close((err: unknown) => {
             return done(err) as unknown;
         });
     });
@@ -465,7 +466,7 @@ describe("Datatypes: all", () => {
                 toABAP: toABAPdate,
                 fromABAP: fromABAPdate,
             },
-        };
+        } as RfcClientOptions;
 
         const xclient = direct_client("MME", xClientOptions);
         expect(xclient.config.clientOptions).toHaveProperty("date");

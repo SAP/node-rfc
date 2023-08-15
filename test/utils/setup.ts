@@ -7,7 +7,7 @@ import os from "os";
 
 import { version } from "../../package.json";
 export { version, dependencies } from "../../package.json";
-import { Client } from "../../lib";
+import { RfcClientOptions, RfcLoggingLevel, Client } from "../../lib";
 import * as addon from "../../lib";
 export * as addon from "../../lib";
 
@@ -61,7 +61,6 @@ export const refEnvironment = {
         RFC_INI: process.env.RFC_INI || "",
     },
     noderfc: {
-        //version: "Deactivate logging: LOG_RFC_CLIENT",
         version: version,
         nwrfcsdk: { major: 7500, minor: 0, patchLevel: 12 },
     },
@@ -70,7 +69,10 @@ export const refEnvironment = {
 
 export const CONNECTIONS = 0x20;
 
-export function direct_client(system = "MME", options = {}): Client {
+export function direct_client(
+    system = "MME",
+    options = { logLevel: RfcLoggingLevel.debug } as RfcClientOptions
+): Client {
     return new Client(abapSystem(system), options);
 }
 
