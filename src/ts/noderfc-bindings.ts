@@ -93,10 +93,13 @@ if (E.platform.name === "win32") {
 let noderfc_binding: NWRfcBinding;
 
 try {
+    const hasEnvValue = typeof process.env.NODE_RFC_MODULE_PATH !== "undefined";
+    const modulePath = hasEnvValue
+        ? process.env.NODE_RFC_MODULE_PATH
+        : path.resolve(__dirname, "..");
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-var-requires
-    noderfc_binding = require("node-gyp-build")(
-        path.resolve(__dirname, "..")
-    ) as NWRfcBinding;
+    noderfc_binding = require("node-gyp-build")(modulePath) as NWRfcBinding;
 } catch (ex) {
     const err = ex as Error;
     err.message += `\nenvironment: ${JSON.stringify(E, null, 2)}\n`;
