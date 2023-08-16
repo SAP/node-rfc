@@ -9,7 +9,10 @@
 #include "Throughput.h"
 
 namespace node_rfc {
-// Instantiate global namespace instances
+
+extern Log _log;
+
+// Instantiate global namespace env
 Napi::Env __env = nullptr;
 
 Napi::Value BindingVersions(Napi::Env env) {
@@ -31,15 +34,6 @@ Napi::Value BindingVersions(Napi::Env env) {
 }
 
 Napi::Value LoadCryptoLibrary(const Napi::CallbackInfo& info) {
-  if (!info[0].IsString()) {
-    std::ostringstream errmsg;
-    errmsg << "Client setIniPath() requires the directory in which to search "
-              "for the sapnwrfc.ini file, received: ";
-    errmsg << info[0].As<Napi::String>().Utf8Value();
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
-    return info.Env().Undefined();
-  }
-
   Napi::String cryptoLibAbsolutePath = info[0].As<Napi::String>();
 
   RFC_ERROR_INFO errorInfo;
@@ -55,15 +49,6 @@ Napi::Value LoadCryptoLibrary(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value SetIniFileDirectory(const Napi::CallbackInfo& info) {
-  if (!info[0].IsString()) {
-    std::ostringstream errmsg;
-    errmsg << "Client setIniPath() requires the directory in which to search "
-              "for the sapnwrfc.ini file, received: ";
-    errmsg << info[0].As<Napi::String>().Utf8Value();
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
-    return info.Env().Undefined();
-  }
-
   Napi::String iniFileDir = info[0].As<Napi::String>();
 
   RFC_ERROR_INFO errorInfo;
@@ -89,15 +74,6 @@ Napi::Value ReloadIniFile(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value LanguageIsoToSap(const Napi::CallbackInfo& info) {
-  if (!info[0].IsString()) {
-    std::ostringstream errmsg;
-    errmsg << "Client languageISOtoSAP() requires iso language parameter "
-              "string, received: ";
-    errmsg << info[0].As<Napi::String>().Utf8Value();
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
-    return info.Env().Undefined();
-  }
-
   Napi::EscapableHandleScope scope(info.Env());
 
   RFC_ERROR_INFO errorInfo;
@@ -116,15 +92,6 @@ Napi::Value LanguageIsoToSap(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value LanguageSapToIso(const Napi::CallbackInfo& info) {
-  if (!info[0].IsString()) {
-    std::ostringstream errmsg;
-    errmsg << "Client languageSAPtoISO() requires iso language parameter "
-              "string, received: ";
-    errmsg << info[0].As<Napi::String>().Utf8Value();
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
-    return info.Env().Undefined();
-  }
-
   Napi::EscapableHandleScope scope(info.Env());
   RFC_ERROR_INFO errorInfo;
 
@@ -141,12 +108,18 @@ Napi::Value LanguageSapToIso(const Napi::CallbackInfo& info) {
   return scope.Escape(wrapString(ucLangISO, 2));
 }
 
+Napi::Value SetLogFileName(const Napi::CallbackInfo& info) {
+  _log.set_log_file_name(info[0].As<Napi::String>().Utf8Value());
+  return info.Env().Undefined();
+}
+
 Napi::Object RegisterModule(Napi::Env env, Napi::Object exports) {
   if (node_rfc::__env == nullptr) {
     node_rfc::__env = env;
   }
 
   exports.Set("bindingVersions", BindingVersions(env));
+  exports.Set("setLogFileName", Napi::Function::New(env, SetLogFileName));
   exports.Set("setIniFileDirectory",
               Napi::Function::New(env, SetIniFileDirectory));
   exports.Set("loadCryptoLibrary", Napi::Function::New(env, LoadCryptoLibrary));

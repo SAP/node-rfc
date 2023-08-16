@@ -16,7 +16,7 @@ extern Napi::Env __env;
 extern Log _log;
 
 typedef struct _ServerOptions {
-  logLevel log_severity = logLevel::off;
+  logLevel log_severity = logLevel::none;
 
 } ServerOptions;
 

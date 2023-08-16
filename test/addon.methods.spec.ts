@@ -16,7 +16,7 @@ describe("Addon methods", () => {
         }
     });
 
-    test.only("Language Conversions Errors", function () {
+    test("Language Conversions Errors", function () {
         expect.assertions(2);
         const errIso = "ŠĐ";
         const errSap = "Š";

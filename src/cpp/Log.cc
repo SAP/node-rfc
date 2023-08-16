@@ -2,20 +2,15 @@
 
 namespace node_rfc {
 
-// Get component name for enum
-std::string Log::get_component_name(const logClass component_id) {
-  for (auto it = component_name_to_enum.begin();
-       it != component_name_to_enum.end();
-       ++it)
-    if (it->second == component_id) return it->first;
-  return "not_found";
-}
-
 long long Log::timestamp() {
   using namespace std;
   return chrono::duration_cast<chrono::milliseconds>(
              chrono::system_clock::now().time_since_epoch())
       .count();
+}
+
+void Log::set_log_file_name(const std::string& file_name) {
+  log_fname = file_name;
 }
 
 void Log::set_log_level(const logClass component_id,
@@ -38,7 +33,7 @@ void Log::set_log_level(const logClass component_id,
 
   uint_t log_level = static_cast<uint_t>(logLevelValue.As<Napi::Number>());
 
-  if (log_level != static_cast<uint_t>(logLevel::off) &&
+  if (log_level != static_cast<uint_t>(logLevel::none) &&
       log_level != static_cast<uint_t>(logLevel::error) &&
       log_level != static_cast<uint_t>(logLevel::warning) &&
       log_level != static_cast<uint_t>(logLevel::debug)) {
@@ -61,6 +56,7 @@ Log::Log(std::string log_fname) : log_fname(log_fname) {
 
 Log::~Log() {}
 
+// Create logger instance
 Log _log = Log();
 
 }  // namespace node_rfc

@@ -1,14 +1,5 @@
 import { RfcLoggingLevel, Client, Pool, Server } from "../lib/index.js";
 
-const client = new Client({ dest: "MME" }, { logLevel: RfcLoggingLevel.debug });
-console.log(client);
-
-const pool = new Pool({
-  connectionParameters: { dest: "MME" },
-  poolOptions: { logLevel: RfcLoggingLevel.error },
-});
-console.log(pool);
-
 const server = new Server({
   serverConnection: { dest: "MME_GATEWAY" },
   clientConnection: { dest: "MME" },
@@ -17,10 +8,10 @@ const server = new Server({
   },
 });
 
-const delay = (seconds) =>
+const delay = (seconds = 1) =>
   new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
-function my_stfc_connection(request_context, abap_input) {
+async function my_stfc_connection(request_context, abap_input) {
   const connection_attributes = request_context["connection_attributes"];
   console.log(
     "[js] stfc context :",
@@ -37,31 +28,15 @@ function my_stfc_connection(request_context, abap_input) {
     RESPTEXT: `~~~ ${abap_input.REQUTEXT} ~~~`,
   };
 
-  const respType = abap_input.REQUTEXT[0];
-  const respWait =
-    respType == "P"
-      ? parseInt(abap_input.REQUTEXT[1])
-      : parseInt(abap_input.REQUTEXT[0]);
-  console.log(
-    "[js] stfc request :",
-    abap_input,
-    " response ",
-    respType == "P" ? "promise" : "callback",
-    " wait",
-    respWait
-  );
+  const respWait = abap_input.REQUTEXT[0];
+  console.log("[js] stfc request :", abap_input, " wait", respWait);
 
-  let n_wait = 4 * respWait * 10 ** 8 - 1;
-  let x = 0;
-  while (n_wait-- > 0) x += n_wait % 3;
-  abap_output.RESPTEXT += ` result: ${x}`;
+  for (let ii = 0; ii < respWait; ii++) {
+    await delay();
+  }
 
   console.log(`[js] stfc_connection response: ${abap_output.RESPTEXT}`);
-  return respType == "P"
-    ? new Promise((resolve) => {
-        resolve(abap_output);
-      })
-    : abap_output;
+  return abap_output;
 }
 
 function my_stfc_structure(request_context, abap_input) {

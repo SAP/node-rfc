@@ -43,27 +43,32 @@ export interface NWRfcBinding {
     languageIsoToSap(langIso: string): string | NWRfcSdkError;
     languageSapToIso(langSap: string): string | NWRfcSdkError;
     reloadIniFile(): undefined | NWRfcSdkError;
+    setLogFileName(fileName: string): unknown;
     verbose(): this;
 }
 
 // Logging options
 
 export enum RfcLoggingClass {
-    client = "client",
-    pool = "pool",
-    server = "server",
-    throughput = "throughput",
-    nwrfc = "nwrfc",
+    client = 0,
+    pool = 1,
+    server = 2,
+    throughput = 3,
+    nwrfc = 4,
 }
 
 export enum RfcLoggingLevel {
-    off = 0,
-    error = 1,
-    warning = 2,
-    debug = 3,
+    none = 0,
+    fatal = 1,
+    error = 2,
+    warning = 3,
+    info = 4,
+    debug = 5,
+    all = 6,
 }
 
-// environment w/o SAP NWRFC SDK
+// Environment w/o SAP NWRFC SDK
+
 const E = {
     platform: {
         name: os.platform(),

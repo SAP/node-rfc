@@ -46,6 +46,10 @@ export function loadCryptoLibrary(libAbsolutePath: string) {
     noderfc_binding.loadCryptoLibrary(libAbsolutePath);
 }
 
+export function setLogFileName(fileName: string) {
+    noderfc_binding.setLogFileName(fileName);
+}
+
 export const sapnwrfcEvents = new EventEmitter();
 
 function terminate(workerData: unknown) {

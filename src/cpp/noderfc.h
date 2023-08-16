@@ -7,7 +7,6 @@
 
 #include <napi.h>
 #include <sapnwrfc.h>
-#include <iostream>
 
 // Error messages
 #define ERRMSG_LENGTH 255

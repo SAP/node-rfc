@@ -146,7 +146,7 @@ Client::Client(const Napi::CallbackInfo& info)
     Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
   }
 
-  _log.write(logClass::client, logLevel::debug, "client created: ", id);
+  _log.record(logClass::client, logLevel::debug, "client created: ", id);
 };
 
 Client::~Client(void) {
@@ -154,29 +154,29 @@ Client::~Client(void) {
     // Close own connection
     if (connectionHandle != nullptr) {
       RFC_ERROR_INFO errorInfo;
-      _log.write(logClass::client,
-                 logLevel::debug,
-                 "Client ",
-                 id,
-                 " closing connection ",
-                 (pointer_t)connectionHandle);
+      _log.record(logClass::client,
+                  logLevel::debug,
+                  "Client ",
+                  id,
+                  " closing connection ",
+                  (pointer_t)connectionHandle);
       RFC_RC rc = RfcCloseConnection(connectionHandle, &errorInfo);
       if (rc != RFC_OK) {
-        _log.write(logClass::client,
-                   logLevel::warning,
-                   "Client ",
-                   id,
-                   " error closing direct connection handle ",
-                   (pointer_t)(connectionHandle));
+        _log.record(logClass::client,
+                    logLevel::warning,
+                    "Client ",
+                    id,
+                    " error closing direct connection handle ",
+                    (pointer_t)(connectionHandle));
       }
     } else {
-      _log.write(logClass::client,
-                 logLevel::warning,
-                 "Client ",
-                 id,
-                 " connection ",
-                 (uintptr_t)connectionHandle,
-                 " already closed");
+      _log.record(logClass::client,
+                  logLevel::warning,
+                  "Client ",
+                  id,
+                  " connection ",
+                  (uintptr_t)connectionHandle,
+                  " already closed");
     }
 
     // Unref client config
@@ -531,11 +531,11 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
                                    // external program (i.e "this" library)
       // error group check, for even more robustness here
       errorInfo->group ==
-          ABAP_RUNTIME_FAILURE ||   // ABAP Message raised in ABAP function
-                                    // modules or in ABAP runtime of the backend
-                                    // (e.g Kernel)
+          ABAP_RUNTIME_FAILURE ||  // ABAP Message raised in ABAP function
+                                   // modules or in ABAP runtime of the backend
+                                   // (e.g Kernel)
       errorInfo->group ==
-          LOGON_FAILURE ||          // Error message raised when logon fails
+          LOGON_FAILURE ||  // Error message raised when logon fails
       errorInfo->group ==
           COMMUNICATION_FAILURE ||  // Problems with the network connection (or
                                     // backend broke down and killed the
@@ -546,10 +546,10 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
       )                             // closed
   {
     if (errorInfo->code == RFC_CANCELED) {
-      _log.write(logClass::client,
-                 logLevel::warning,
-                 "connection cancelled ",
-                 (pointer_t)this->connectionHandle);
+      _log.record(logClass::client,
+                  logLevel::warning,
+                  "connection cancelled ",
+                  (pointer_t)this->connectionHandle);
     }
 
     RFC_CONNECTION_HANDLE new_handle;
@@ -577,32 +577,32 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
         return ErrorPair(errorInfoOpen, updateError);
       }
 
-      _log.write(logClass::pool,
-                 logLevel::debug,
-                 "closed connection handle ",
-                 (uintptr_t)old_handle,
-                 " replaced with ",
-                 (uintptr_t)new_handle);
+      _log.record(logClass::pool,
+                  logLevel::debug,
+                  "closed connection handle ",
+                  (uintptr_t)old_handle,
+                  " replaced with ",
+                  (uintptr_t)new_handle);
       this->connectionHandle = new_handle;
     } else {
       // assign new handle to direct client
       this->connectionHandle = new_handle;
     }
-    _log.write(logClass::client,
-               logLevel::warning,
-               "Critical ABAP error: group ",
-               errorInfo->group,
-               " code ",
-               errorInfo->code,
-               " closed connection handle ",
-               (pointer_t)old_handle,
-               " replaced with ",
-               (pointer_t)new_handle);
+    _log.record(logClass::client,
+                logLevel::warning,
+                "Critical ABAP error: group ",
+                errorInfo->group,
+                " code ",
+                errorInfo->code,
+                " closed connection handle ",
+                (pointer_t)old_handle,
+                " replaced with ",
+                (pointer_t)new_handle);
   } else {
-    _log.write(logClass::client,
-               logLevel::warning,
-               "Non-critical ABAP error: ",
-               (pointer_t)this->connectionHandle);
+    _log.record(logClass::client,
+                logLevel::warning,
+                "Non-critical ABAP error: ",
+                (pointer_t)this->connectionHandle);
   }
 
   return ErrorPair(errorInfoOpen, "");
@@ -634,10 +634,10 @@ Napi::Value Client::Release(const Napi::CallbackInfo& info) {
 void cancelConnection(RFC_RC* rc,
                       RFC_CONNECTION_HANDLE connectionHandle,
                       RFC_ERROR_INFO* errorInfo) {
-  _log.write(logClass::client,
-             logLevel::debug,
-             "connection cancelled ",
-             (pointer_t)connectionHandle);
+  _log.record(logClass::client,
+              logLevel::debug,
+              "connection cancelled ",
+              (pointer_t)connectionHandle);
   *rc = RfcCancel(connectionHandle, errorInfo);
 }
 

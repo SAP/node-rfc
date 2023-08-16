@@ -29,7 +29,7 @@ SAP_UC* setString(const Napi::String napistr) {
                       &resultLen,
                       &errorInfo);
 
-  _log.write(logClass::nwrfc,
+  _log.record(logClass::nwrfc,
              logLevel::debug,
              "setString: ",
              sstr,
@@ -402,7 +402,7 @@ Napi::Value wrapString(const SAP_UC* uc, int length) {
   utf8[0] = '\0';
   uint_t resultLen = 0;
   RfcSAPUCToUTF8(uc, length, utf8, &utf8Size, &resultLen, &errorInfo);
-  // _log.write(logClass::nwrfc,
+  // _log.record(logClass::nwrfc,
   //            logLevel::debug,
   //            "wrapString len: ",
   //            length,
@@ -667,7 +667,7 @@ ValuePair getVariable(RFCTYPE typ,
           functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
       if (rc == 23)  // Buffer too small, use returned requried result length
       {
-        _log.write(logClass::nwrfc,
+        _log.record(logClass::nwrfc,
                    logLevel::warning,
                    "Buffer for BCD type ",
                    typ,
@@ -715,7 +715,7 @@ ValuePair getVariable(RFCTYPE typ,
           functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
       if (rc == 23)  // Buffer too small, use returned requried result length
       {
-        _log.write(logClass::nwrfc,
+        _log.record(logClass::nwrfc,
                    logLevel::warning,
                    "Buffer for BCD type ",
                    typ,
