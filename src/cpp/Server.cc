@@ -20,20 +20,14 @@ void JSFunctionCall(Napi::Env env,
 using ServerRequestTsfn = Napi::
     TypedThreadSafeFunction<std::nullptr_t, ServerRequestBaton, JSFunctionCall>;
 
-// ServerFunction
-//
-// class ServerFunction;
-// using InstalledFunctions std::unordered_map<std::string, ServerFunction*>;
-
 // When JS function handler is registered in Server::AddFunction,
 // the ServerFunction instance is created, with TSFN reference
 // to JS function handler
-
 class ServerFunction {
  public:
   Server* server;
   // Parameters from metadataLookup
-  RFC_ABAP_NAME abap_func_name;
+  RFC_ABAP_NAME abap_func_name_sapuc;
   RFC_FUNCTION_DESC_HANDLE func_desc_handle;
   ServerRequestTsfn tsfnRequest;
   std::string jsFunctionName;
@@ -48,7 +42,7 @@ class ServerFunction {
         func_desc_handle(func_desc_handle),
         tsfnRequest(tsfnRequest),
         jsFunctionName(jsFunctionName) {
-    strcpyU(abap_func_name, func_name);
+    strcpyU(abap_func_name_sapuc, func_name);
   }
   ~ServerFunction() { tsfnRequest.Release(); }
 
@@ -64,7 +58,7 @@ class ServerFunction {
     UNUSED(rfc_attributes);
 
     for (const auto& [key, value] : installed_functions) {
-      if (strcmpU(abap_func_name, value->abap_func_name) == 0) {
+      if (strcmpU(abap_func_name, value->abap_func_name_sapuc) == 0) {
         *func_desc_handle = value->func_desc_handle;
 
         _log.record(logClass::server,
@@ -109,7 +103,7 @@ class ServerFunction {
     // find installed function
 
     for (const auto& [key, value] : installed_functions) {
-      if (strcmpU(abap_func_name, value->abap_func_name) == 0) {
+      if (strcmpU(abap_func_name, value->abap_func_name_sapuc) == 0) {
         _log.record(logClass::server,
                     logLevel::debug,
                     "genericRequestHandler: JS handler function '",
@@ -192,36 +186,33 @@ class ServerFunction {
                                      .As<Napi::String>()
                                      .Utf8Value();
 
-    for (const auto& [key, value] : installed_functions) {
+    for (const auto& [abap_func_name, value] : installed_functions) {
       if (jsFunctionName == value->jsFunctionName) {
-        ServerFunction::installed_functions.erase(key);
+        ServerFunction::installed_functions.erase(abap_func_name);
         _log.record(logClass::server,
                     logLevel::debug,
-                    "JS function removed ",
-                    jsFunctionName,
-                    " as ABAP function ",
-                    value->abap_func_name,
+                    "JS function removed " + jsFunctionName,
+                    " with ABAP function " + abap_func_name,
                     " description: ",
                     (pointer_t)value->func_desc_handle);
         return jsFunction.Env().Undefined();
       }
     }
 
-    std::ostringstream errmsg;
-    errmsg << "Server removeFunction() did not find function: "
-           << jsFunctionName;
-    return nodeRfcError(errmsg.str());
+    return nodeRfcError("Server removeFunction() did not find function: " +
+                        jsFunctionName);
   }
 
   // Called by Server destructor, to clean-up TSFN instances
   static void release(Server* server) {
-    for (const auto& [key, value] : ServerFunction::installed_functions) {
+    for (const auto& [abap_func_name, value] :
+         ServerFunction::installed_functions) {
       if (server == value->server) {
         value->tsfnRequest.Unref(server->env);
         _log.record(logClass::server,
                     logLevel::debug,
                     "unref '" + value->jsFunctionName,
-                    "' with ABAP function '" + key + "'");
+                    "' with ABAP function '" + abap_func_name + "'");
       }
     }
   }
@@ -280,8 +271,9 @@ class ServerRequestBaton {
                 "\n\tClient connection ",
                 (uintptr_t)conn_handle,
                 ", ABAP function ");
-    _log.record(
-        logClass::server, logLevel::debug, serverFunction->abap_func_name);
+    _log.record(logClass::server,
+                logLevel::debug,
+                serverFunction->abap_func_name_sapuc);
   }
 
   void wait() {
@@ -735,11 +727,10 @@ class GetFunctionDescAsync : public Napi::AsyncWorker {
 };
 
 Napi::Value Server::Start(const Napi::CallbackInfo& info) {
-  std::ostringstream errmsg;
-
   if (!info[0].IsFunction()) {
-    errmsg << "Server start() requires a callback function";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(info.Env(),
+                         "Server start() requires a callback function")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
@@ -807,11 +798,10 @@ void Server::_stop() {
 }
 
 Napi::Value Server::Stop(const Napi::CallbackInfo& info) {
-  std::ostringstream errmsg;
-
   if (!info[0].IsFunction()) {
-    errmsg << "Server stop() requires a callback function";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(info.Env(),
+                         "Server stop() requires a callback function")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
@@ -836,11 +826,10 @@ Napi::Value Server::Stop(const Napi::CallbackInfo& info) {
 //    ABAP function description handle
 //    JS function TSFN object
 Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
-  std::ostringstream errmsg;
-
   if (!info[0].IsString()) {
-    errmsg << "Server addFunction() requires ABAP RFM name";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(info.Env(),
+                         "Server addFunction() requires ABAP RFM name")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
@@ -848,27 +837,31 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
 
   if (abapFunctionName.Utf8Value().length() == 0 ||
       abapFunctionName.Utf8Value().length() > 30) {
-    errmsg << "Server addFunction() accepts max. 30 characters long ABAP RFM "
-              "name";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(
+        info.Env(),
+        "Server addFunction() accepts max. 30 characters long ABAP RFM name")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
   if (!info[1].IsFunction()) {
-    errmsg << "Server addFunction() requires a NodeJS handler function";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(
+        info.Env(), "Server addFunction() requires a NodeJS handler function")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
   if (!info[2].IsFunction()) {
-    errmsg << "Server addFunction() requires a callback function";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(info.Env(),
+                         "Server addFunction() requires a callback function")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
   if (client_conn_handle == nullptr) {
-    errmsg << "Server addFunction() requires an open client connection";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(
+        info.Env(), "Server addFunction() requires an open client connection")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
@@ -886,8 +879,10 @@ Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
   std::ostringstream errmsg;
 
   if (!info[0].IsFunction()) {
-    errmsg << "Server removeFunction() requires JavaScript function argument";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(
+        info.Env(),
+        "Server removeFunction() requires JavaScript function argument")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
@@ -909,14 +904,17 @@ Napi::Value Server::GetFunctionDescription(const Napi::CallbackInfo& info) {
   std::ostringstream errmsg;
 
   if (!info[0].IsString()) {
-    errmsg << "Server getFunctionDescription() requires ABAP RFM name";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(
+        info.Env(), "Server getFunctionDescription() requires ABAP RFM name")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
   if (!info[0].IsFunction()) {
-    errmsg << "Server getFunctionDescription() requires a callback function";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(
+        info.Env(),
+        "Server getFunctionDescription() requires a callback function")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 

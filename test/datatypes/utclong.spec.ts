@@ -45,7 +45,7 @@ describe("Datatypes: UTCLONG", () => {
                 expect(ex).toEqual(
                     expect.objectContaining({
                         message:
-                            "UTCLONG string expected from NodeJS for the field of type 32",
+                            "UTCLONG string expected from NodeJS for ABAP field of type 32",
                         name: "nodeRfcError",
                         rfmPath: {
                             field: "IV_UTCLONG",

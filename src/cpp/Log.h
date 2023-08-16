@@ -7,8 +7,8 @@
 #include <chrono>
 #include <fstream>
 #include <initializer_list>
-#include <map>
 #include <string>
+#include <unordered_map>
 #include "noderfc.h"
 
 namespace node_rfc {
@@ -39,7 +39,7 @@ class Log {
   std::string log_fname;
 
   // Logging inactive by default
-  std::map<logClass, logLevel> log_config = {
+  std::unordered_map<logClass, logLevel> log_config = {
       {logClass::client, logLevel::none},
       {logClass::pool, logLevel::none},
       {logClass::server, logLevel::none},

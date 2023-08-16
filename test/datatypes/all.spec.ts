@@ -130,7 +130,7 @@ describe("Datatypes: all", () => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
-                            "Array expected from NodeJS, for RFM table of type 5",
+                            "Array expected from NodeJS, for ABAP RFM table of type 5",
                         name: "nodeRfcError",
                         rfmPath: {
                             parameter: "OPTIONS",
@@ -537,7 +537,7 @@ describe("Datatypes: all", () => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
-                            "Integer number expected from NodeJS for the field of type 10",
+                            "Integer number expected from NodeJS for ABAP field of type 10",
                         name: "nodeRfcError",
                         rfmPath: {
                             field: "RFCINT1",
@@ -567,7 +567,7 @@ describe("Datatypes: all", () => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
-                            "String expected from NodeJS for the field of type 0",
+                            "String expected from NodeJS for ABAP field of type 0",
                         name: "nodeRfcError",
                         rfmPath: {
                             field: "RFCCHAR4",
@@ -623,7 +623,7 @@ describe("Datatypes: all", () => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
-                            "ABAP date format YYYYMMDD expected from NodeJS for the field of type 1",
+                            "Date format YYYYMMDD expected from NodeJS for ABAP field of type 1",
                         name: "nodeRfcError",
                         rfmPath: {
                             field: "RFCDATE",
@@ -654,7 +654,7 @@ describe("Datatypes: all", () => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
-                            "Integer number expected from NodeJS for the field of type 10, got 1.0000000000000002",
+                            "Integer number expected from NodeJS for ABAP field of type 10, got 1.0000000000000002",
                         name: "nodeRfcError",
                         rfmPath: {
                             field: "RFCINT1",
@@ -685,7 +685,7 @@ describe("Datatypes: all", () => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
-                            "Integer number expected from NodeJS for the field of type 9, got 1.0000000000000002",
+                            "Integer number expected from NodeJS for ABAP field of type 9, got 1.0000000000000002",
                         name: "nodeRfcError",
                         rfmPath: {
                             field: "RFCINT2",
@@ -715,7 +715,7 @@ describe("Datatypes: all", () => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
-                            "Integer number expected from NodeJS for the field of type 8, got 1.0000000000000002",
+                            "Integer number expected from NodeJS for ABAP field of type 8, got 1.0000000000000002",
                         name: "nodeRfcError",
                         rfmPath: {
                             field: "RFCINT4",
@@ -745,7 +745,7 @@ describe("Datatypes: all", () => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
-                            "Integer number expected from NodeJS for the field of type 10, got Infinity",
+                            "Integer number expected from NodeJS for ABAP field of type 10, got Infinity",
                         name: "nodeRfcError",
                         rfmPath: {
                             field: "RFCINT1",
@@ -775,7 +775,7 @@ describe("Datatypes: all", () => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
-                            "Integer number expected from NodeJS for the field of type 10, got Infinity",
+                            "Integer number expected from NodeJS for ABAP field of type 10, got Infinity",
                         name: "nodeRfcError",
                         rfmPath: {
                             field: "RFCINT1",
@@ -888,7 +888,7 @@ describe("Datatypes: all", () => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
-                            "Overflow or other error when putting NodeJS value 256 into integer field of type 10",
+                            "Overflow or other error when putting NodeJS value 256 into ABAP integer field of type 10",
                         name: "nodeRfcError",
                         rfmPath: {
                             field: "RFCINT1",
@@ -918,7 +918,7 @@ describe("Datatypes: all", () => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
-                            "Overflow or other error when putting NodeJS value 32768 into integer field of type 9",
+                            "Overflow or other error when putting NodeJS value 32768 into ABAP integer field of type 9",
                         name: "nodeRfcError",
                         rfmPath: {
                             field: "RFCINT2",
@@ -948,7 +948,7 @@ describe("Datatypes: all", () => {
                 expect(err).toEqual(
                     expect.objectContaining({
                         message:
-                            "Overflow or other error when putting NodeJS value -32769 into integer field of type 9",
+                            "Overflow or other error when putting NodeJS value -32769 into ABAP integer field of type 9",
                         name: "nodeRfcError",
                         rfmPath: {
                             field: "RFCINT2",

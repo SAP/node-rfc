@@ -30,6 +30,8 @@ class Pool : public Napi::ObjectWrap<Pool> {
   Pool(const Napi::CallbackInfo& info);
   ~Pool(void);
 
+  const std::string log_id() const { return "Pool " + std::to_string(id); }
+
  private:
   Napi::Value IdGetter(const Napi::CallbackInfo& info);
   Napi::Value Acquire(const Napi::CallbackInfo& info);

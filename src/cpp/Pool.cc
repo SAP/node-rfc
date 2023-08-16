@@ -20,12 +20,7 @@ class CheckPoolAsync : public Napi::AsyncWorker {
 
     uint_t ready = pool->connReady.size();
 
-    // _log.record(logClass::pool, logLevel::debug, "CheckPoolAsync ready_low: ",
-    // pool->ready_low, "ready: ", ready);
-
     if (ready < pool->ready_low) {
-      // _log.record(logClass::pool, logLevel::debug, "  Pool up: ", ready, " to
-      // ", pool->ready_low);
       for (uint_t ii = ready; ii < pool->ready_low; ii++) {
         RFC_ERROR_INFO errorInfo;
         RFC_CONNECTION_HANDLE connectionHandle =
@@ -33,8 +28,6 @@ class CheckPoolAsync : public Napi::AsyncWorker {
                               pool->client_params.paramSize,
                               &errorInfo);
         if (errorInfo.code == RFC_OK) {
-          // _log.record(logClass::pool, logLevel::debug, "    new handle: ",
-          // (pointer_t)(connectionHandle));
           pool->connReady.insert(connectionHandle);
         } else {
           break;
@@ -59,21 +52,15 @@ class SetPoolAsync : public Napi::AsyncWorker {
   void Execute() {
     pool->lockMutex();
     uint_t ready = pool->connReady.size();
-    // _log.record(logClass::pool, logLevel::debug, "SetPoolAsync new ready_low:
-    // ", ready_low, " ready: ", ready);
     errorInfo.code = RFC_OK;
 
     if (ready < ready_low) {
-      // _log.record(logClass::pool, logLevel::debug, "Pool up: ", ready, " to ",
-      // ready_low);
       for (uint_t ii = ready; ii < ready_low; ii++) {
         connectionHandle =
             RfcOpenConnection(pool->client_params.connectionParams,
                               pool->client_params.paramSize,
                               &errorInfo);
         if (errorInfo.code == RFC_OK) {
-          // _log.record(logClass::pool, logLevel::debug, "    new handle: ",
-          // (pointer_t)(connectionHandle));
           pool->connReady.insert(connectionHandle);
         } else {
           break;
@@ -234,9 +221,6 @@ class ReleaseAsync : public Napi::AsyncWorker {
         if (pool->connReady.size() < pool->ready_high) {
           (*client)->LockMutex();
           (*client)->connectionHandle = nullptr;
-          // _log.record(logClass::pool, logLevel::debug, "ReleaseAsync
-          // ResetServerContext client: %u handle: %lu",
-          // (*client)->id, (pointer_t)connectionHandle);
           RfcResetServerContext(connectionHandle, &errorInfo);
           (*client)->UnlockMutex();
           if (errorInfo.code == RFC_OK) {
@@ -245,9 +229,6 @@ class ReleaseAsync : public Napi::AsyncWorker {
         } else {
           (*client)->LockMutex();
           (*client)->connectionHandle = nullptr;
-          // _log.record(logClass::pool, logLevel::debug, "ReleaseAsync Close
-          // client: %u handle: %lu", (*client)->id,
-          // (pointer_t)connectionHandle);
           RfcCloseConnection(connectionHandle, &errorInfo);
           (*client)->UnlockMutex();
           if (errorInfo.code != RFC_OK) {
@@ -279,16 +260,16 @@ class ReleaseAsync : public Napi::AsyncWorker {
 };
 
 uint_t checkArgsAcquire(const Napi::CallbackInfo& info) {
-  std::ostringstream errmsg;
   uint_t clients_requested = 0;
 
   if (info.Length() != 2) {
-    errmsg << "Pool acquire() expects two arguments";
-    Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::Error::New(info.Env(), "Pool acquire() expects two arguments")
+        .ThrowAsJavaScriptException();
     return clients_requested;
   }
 
   if (!info[0].IsNumber()) {
+    std::ostringstream errmsg;
     errmsg << "Pool acquire() first argument must be a number, got "
            << info[0].ToString().Utf8Value();
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
@@ -297,6 +278,7 @@ uint_t checkArgsAcquire(const Napi::CallbackInfo& info) {
 
   double arg = info[0].As<Napi::Number>().DoubleValue();
   if (arg < 1) {
+    std::ostringstream errmsg;
     errmsg << "Pool acquire() first argument must be greater or equal 1, got "
            << arg;
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
@@ -304,6 +286,7 @@ uint_t checkArgsAcquire(const Napi::CallbackInfo& info) {
   }
 
   if (!info[1].IsFunction()) {
+    std::ostringstream errmsg;
     errmsg << "Pool acquire() second argument must be a callback function, got "
            << info[1].ToString().Utf8Value();
     Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
@@ -333,18 +316,17 @@ Napi::Value Pool::Acquire(const Napi::CallbackInfo& info) {
 std::set<Client*> argsCheckRelease(const Napi::CallbackInfo& info) {
   std::set<Client*> clients = {};
 
-  std::ostringstream errmsg;
-
   if (info.Length() != 2) {
-    errmsg << "Pool release() expects two arguments";
-    Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::Error::New(info.Env(), "Pool release() expects two arguments")
+        .ThrowAsJavaScriptException();
     return clients;
   }
 
   if (!info[0].IsArray()) {
-    errmsg
-        << "Pool release() first argument must be an array of Client instances";
-    Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::Error::New(
+        info.Env(),
+        "Pool release() first argument must be an array of Client instances")
+        .ThrowAsJavaScriptException();
     return clients;
   }
 
@@ -356,9 +338,10 @@ std::set<Client*> argsCheckRelease(const Napi::CallbackInfo& info) {
   }
 
   if (!info[1].IsFunction()) {
-    errmsg << "Pool release() 2nd argument, if provided, must be a callback "
-              "function";
-    Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::Error::New(
+        info.Env(),
+        "Pool release() 2nd argument, if provided, must be a callback function")
+        .ThrowAsJavaScriptException();
     return clients;
   }
 
@@ -384,18 +367,16 @@ void Pool::releaseClient(RFC_CONNECTION_HANDLE connectionHandle) {
   // destructor
   if (connLeased.erase(connectionHandle) == 0) {
     _log.record(logClass::pool,
-               logLevel::warning,
-               "Connection handle ",
-               (pointer_t)connectionHandle,
-               " not found in pool: ",
-               id);
+                logLevel::warning,
+                "Connection handle ",
+                (pointer_t)connectionHandle,
+                " not found in " + log_id());
   } else {
     _log.record(logClass::pool,
-               logLevel::debug,
-               "Connection ",
-               (pointer_t)connectionHandle,
-               " released from Pool ",
-               id);
+                logLevel::debug,
+                "Connection ",
+                (pointer_t)connectionHandle,
+                " released from " + log_id());
   }
 }
 
@@ -429,7 +410,7 @@ bool argsCheckReady(const Napi::CallbackInfo& info,
         snprintf(errmsg,
                  ERRMSG_LENGTH - 1,
                  "Pool ready() number of connections argument must be "
-                 "positive, received %d",
+                 "positive number, received %d",
                  n);
         Napi::Error::New(info.Env(), errmsg).ThrowAsJavaScriptException();
         return false;
@@ -451,7 +432,8 @@ bool argsCheckReady(const Napi::CallbackInfo& info,
 Napi::Value Pool::Ready(const Napi::CallbackInfo& info) {
   uint_t new_ready = ready_low;
   Napi::Function callback;
-  _log.record(logClass::pool, logLevel::debug, "Pool::Ready: ", new_ready);
+  _log.record(
+      logClass::pool, logLevel::debug, log_id() + " Ready: ", new_ready);
 
   if (argsCheckReady(info, &new_ready, &callback)) {
     (new SetPoolAsync(callback, this, new_ready))->Queue();
@@ -460,7 +442,7 @@ Napi::Value Pool::Ready(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Pool::CloseAll(const Napi::CallbackInfo& info) {
-  _log.record(logClass::pool, logLevel::debug, "Pool::CloseAll ", id);
+  _log.record(logClass::pool, logLevel::debug, log_id(), " CloseAll");
 
   closeConnections();
 
@@ -516,31 +498,36 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
 
   std::ostringstream errmsg;
 
-  _log.record(
-      logClass::pool, logLevel::debug, "Pool::Pool ", ready_low, ready_high);
+  _log.record(logClass::pool,
+              logLevel::debug,
+              log_id(),
+              " constructor ",
+              ready_low,
+              ready_high);
   if (info.Length() < 1) {
-    errmsg << "Pool initialization argument missing";
-    Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::Error::New(info.Env(), "Pool initialization argument missing")
+        .ThrowAsJavaScriptException();
     return;
   }
 
   if (info.Length() > 1) {
-    errmsg << "Too many Pool initialization arguments";
-    Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::Error::New(info.Env(), "Too many Pool initialization arguments")
+        .ThrowAsJavaScriptException();
     return;
   }
 
   if (!info[0].IsObject()) {
-    errmsg << "Pool initialization argument not an object";
-    Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::Error::New(info.Env(), "Pool initialization argument not an object")
+        .ThrowAsJavaScriptException();
   }
 
   poolConfiguration = Napi::Persistent(info[0].As<Napi::Object>());
 
   if (!poolConfiguration.Value().Has(POOL_KEY_CONNECTION_PARAMS)) {
-    errmsg << "Pool configuration object must provide "
-              "\"connectionParameters\"";
-    Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::Error::New(
+        info.Env(),
+        "Pool configuration object must provide \"connectionParameters\"")
+        .ThrowAsJavaScriptException();
     return;
   }
 
@@ -553,9 +540,10 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
     //
     if (key.compare(std::string(POOL_KEY_CONNECTION_PARAMS)) == 0) {
       if (!poolConfiguration.Get(key).IsObject()) {
-        errmsg << "Pool() \"" << POOL_KEY_CONNECTION_PARAMS
-               << "\" not an object";
-        Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+        Napi::Error::New(info.Env(),
+                         "Pool() \"" + std::string(POOL_KEY_CONNECTION_PARAMS) +
+                             "\" not an object")
+            .ThrowAsJavaScriptException();
         return;
       }
 
@@ -570,8 +558,10 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
     //
     else if (key.compare(std::string(POOL_KEY_CLIENT_OPTIONS)) == 0) {
       if (!poolConfiguration.Get(key).IsObject()) {
-        errmsg << "Pool() \"" << POOL_KEY_CLIENT_OPTIONS << "\" not an object";
-        Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+        Napi::Error::New(info.Env(),
+                         "Pool() \"" + std::string(POOL_KEY_CLIENT_OPTIONS) +
+                             "\" not an object")
+            .ThrowAsJavaScriptException();
         return;
       }
 
@@ -586,8 +576,10 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
     //
     else if (key.compare(std::string(POOL_KEY_POOL_OPTIONS)) == 0) {
       if (!poolConfiguration.Get(POOL_KEY_POOL_OPTIONS).IsObject()) {
-        errmsg << "Pool \"" << POOL_KEY_POOL_OPTIONS << "\"not an object";
-        Napi::Error::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+        Napi::Error::New(
+            info.Env(),
+            "Pool \"" + std::string(POOL_KEY_POOL_OPTIONS) + "\"not an object")
+            .ThrowAsJavaScriptException();
         return;
       }
 
@@ -600,10 +592,10 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
 
         if (name == POOL_KEY_OPTION_LOW) {
           if (!value.IsNumber()) {
-            errmsg << "Pool() option \"" << name
-                   << "\" must be a number. Received: ",
-                value.ToString().Utf8Value();
-            Napi::TypeError::New(env, errmsg.str())
+            Napi::TypeError::New(env,
+                                 "Pool() option \"" + name +
+                                     "\" must be a number. Received: " +
+                                     value.ToString().Utf8Value())
                 .ThrowAsJavaScriptException();
             return;
           }
@@ -611,27 +603,26 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
 
         } else if (name == POOL_KEY_OPTION_HIGH) {
           if (!value.IsNumber()) {
-            errmsg << "Pool() option \"" << name
-                   << "\" must be a number. Received: ",
-                value.ToString().Utf8Value();
-            Napi::TypeError::New(env, errmsg.str())
+            Napi::TypeError::New(env,
+                                 "Pool() option \"" + name +
+                                     "\" must be a number. Received: " +
+                                     value.ToString().Utf8Value())
                 .ThrowAsJavaScriptException();
             return;
           }
 
           ready_high = value.As<Napi::Number>();
           if (ready_high < 1) {
-            errmsg << "Pool option \"" << name
-                   << "\" must be greater than zero";
-            Napi::TypeError::New(env, errmsg.str())
+            Napi::TypeError::New(
+                env, "Pool option \"" + name + "\" must be greater than zero")
                 .ThrowAsJavaScriptException();
             return;
           }
         } else if (name == LOG_LEVEL_KEY) {
           _log.set_log_level(logClass::pool, value);
         } else {
-          errmsg << "Pool option not allowed: \"" << name << "\"";
-          Napi::TypeError::New(env, errmsg.str()).ThrowAsJavaScriptException();
+          Napi::TypeError::New(env, "Pool option not allowed: \"" + name + "\"")
+              .ThrowAsJavaScriptException();
           return;
         }
       }
@@ -648,8 +639,8 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
     // Unknown option
     //
     else {
-      errmsg << "Pool option not allowed: \"" << key << "\"";
-      Napi::TypeError::New(info.Env(), errmsg.str())
+      Napi::TypeError::New(info.Env(),
+                           "Pool option not allowed: \"" + key + "\"")
           .ThrowAsJavaScriptException();
       return;
     }
@@ -663,11 +654,9 @@ void Pool::closeConnections() {
   // Close connections
   if (connReady.size() > 0) {
     _log.record(logClass::pool,
-               logLevel::debug,
-               "~ Pool ",
-               id,
-               " closing ready connections: ",
-               connReady.size());
+                logLevel::debug,
+                log_id() + " closeConnections() is closing ready connections: ",
+                connReady.size());
     ConnectionSetType::iterator it = connReady.begin();
     while (it != connReady.end()) {
       RFC_ERROR_INFO errorInfo;
@@ -675,32 +664,30 @@ void Pool::closeConnections() {
       RfcCloseConnection(connectionHandle, &errorInfo);
       if (errorInfo.code == RFC_OK) {
         _log.record(logClass::pool,
-                   logLevel::debug,
-                   "    closed ",
-                   (pointer_t)connectionHandle);
+                    logLevel::debug,
+                    log_id() + "    closed ",
+                    (pointer_t)connectionHandle);
       } else {
         _log.record(logClass::pool,
-                   logLevel::warning,
-                   "Pool ",
-                   id,
-                   " connection handle ",
-                   (pointer_t)connectionHandle,
-                   " closing error group: ",
-                   errorInfo.group,
-                   "code: ",
-                   errorInfo.code);
+                    logLevel::warning,
+                    log_id(),
+                    " connection handle ",
+                    (pointer_t)connectionHandle,
+                    " closing error group: ",
+                    errorInfo.group,
+                    "code: ",
+                    errorInfo.code);
       }
       connReady.erase(it++);
     }
   }
 
   if (connLeased.size() > 0) {
-    _log.record(logClass::pool,
-               logLevel::debug,
-               "~ Pool ",
-               id,
-               " closing leased connections: ",
-               connLeased.size());
+    _log.record(
+        logClass::pool,
+        logLevel::debug,
+        log_id() + " closeConnections() is closing leased connections: ",
+        connLeased.size());
     ConnectionSetType::iterator it = connLeased.begin();
     while (it != connLeased.end()) {
       RFC_ERROR_INFO errorInfo;
@@ -708,20 +695,18 @@ void Pool::closeConnections() {
       RfcCloseConnection(connectionHandle, &errorInfo);
       if (errorInfo.code == RFC_OK) {
         _log.record(logClass::pool,
-                   logLevel::debug,
-                   "    closed ",
-                   (pointer_t)connectionHandle);
+                    logLevel::debug,
+                    log_id() + "    closed ",
+                    (pointer_t)connectionHandle);
       } else {
         _log.record(logClass::pool,
-                   logLevel::warning,
-                   "Pool ",
-                   id,
-                   " connection handle ",
-                   (pointer_t)connectionHandle,
-                   " closing error group: ",
-                   errorInfo.group,
-                   "code: ",
-                   errorInfo.code);
+                    logLevel::warning,
+                    log_id() + " connection handle ",
+                    (pointer_t)connectionHandle,
+                    " closing error group: ",
+                    errorInfo.group,
+                    "code: ",
+                    errorInfo.code);
       }
       connReady.erase(it++);
     }
@@ -729,32 +714,34 @@ void Pool::closeConnections() {
 }
 
 Pool::~Pool(void) {
-  _log.record(logClass::pool, logLevel::debug, "~Pool ", id);
+  _log.record(logClass::pool, logLevel::debug, log_id() + " destructor");
 
   closeConnections();
 
   // Unreference configuration
   if (!connectionParameters.IsEmpty()) {
     _log.record(logClass::pool,
-               logLevel::debug,
-               "~ Pool::Pool unref connectionParameters");
+                logLevel::debug,
+                log_id() + " destructor unref connection parameters");
     connectionParameters.Unref();
   }
   if (!clientOptions.IsEmpty()) {
-    _log.record(
-        logClass::pool, logLevel::debug, "~ Pool::Pool unref clientOptions");
+    _log.record(logClass::pool,
+                logLevel::debug,
+                log_id() + " destructor unref client options");
     clientOptions.Unref();
   }
   if (!poolOptions.IsEmpty()) {
-    _log.record(
-        logClass::pool, logLevel::debug, "~ Pool::Pool unref poolOptions");
+    _log.record(logClass::pool,
+                logLevel::debug,
+                log_id() + " destructre: unref poolOptions");
     poolOptions.Unref();
   }
   if (!poolConfiguration.IsEmpty()) {
     poolConfiguration.Unref();
     _log.record(logClass::pool,
-               logLevel::debug,
-               "~ Pool::Pool unref poolConfiguration");
+                logLevel::debug,
+                log_id() + " destructor, unref poolConfiguration");
   }
 }
 

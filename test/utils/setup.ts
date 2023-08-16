@@ -71,7 +71,7 @@ export const CONNECTIONS = 0x20;
 
 export function direct_client(
     system = "MME",
-    options = { logLevel: RfcLoggingLevel.debug } as RfcClientOptions
+    options = { logLevel: RfcLoggingLevel.none } as RfcClientOptions
 ): Client {
     return new Client(abapSystem(system), options);
 }

@@ -146,7 +146,7 @@ Client::Client(const Napi::CallbackInfo& info)
     Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
   }
 
-  _log.record(logClass::client, logLevel::debug, "client created: ", id);
+  _log.record(logClass::client, logLevel::debug, "Client created: ", id);
 };
 
 Client::~Client(void) {
@@ -156,25 +156,19 @@ Client::~Client(void) {
       RFC_ERROR_INFO errorInfo;
       _log.record(logClass::client,
                   logLevel::debug,
-                  "Client ",
-                  id,
-                  " closing connection ",
+                  log_id() + " closing connection ",
                   (pointer_t)connectionHandle);
       RFC_RC rc = RfcCloseConnection(connectionHandle, &errorInfo);
       if (rc != RFC_OK) {
         _log.record(logClass::client,
                     logLevel::warning,
-                    "Client ",
-                    id,
-                    " error closing direct connection handle ",
+                    log_id() + " error closing direct connection handle ",
                     (pointer_t)(connectionHandle));
       }
     } else {
       _log.record(logClass::client,
                   logLevel::warning,
-                  "Client ",
-                  id,
-                  " connection ",
+                  log_id() + " connection ",
                   (uintptr_t)connectionHandle,
                   " already closed");
     }
@@ -194,9 +188,8 @@ Client::~Client(void) {
 }
 
 Napi::Value Client::connectionClosedError(const char* suffix) {
-  std::ostringstream err;
-  err << "RFM client request over closed connection: " << std::string(suffix);
-  return nodeRfcError(err.str());
+  return nodeRfcError("RFM client request over closed connection: " +
+                      std::string(suffix));
 }
 
 Napi::Object Client::NewInstance(Napi::Env env) {
@@ -548,7 +541,7 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
     if (errorInfo->code == RFC_CANCELED) {
       _log.record(logClass::client,
                   logLevel::warning,
-                  "connection cancelled ",
+                  "Connection cancelled ",
                   (pointer_t)this->connectionHandle);
     }
 
@@ -579,7 +572,7 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
 
       _log.record(logClass::pool,
                   logLevel::debug,
-                  "closed connection handle ",
+                  "Connection closed ",
                   (uintptr_t)old_handle,
                   " replaced with ",
                   (uintptr_t)new_handle);
@@ -594,14 +587,18 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
                 errorInfo->group,
                 " code ",
                 errorInfo->code,
-                " closed connection handle ",
+                " Closed connection ",
                 (pointer_t)old_handle,
                 " replaced with ",
                 (pointer_t)new_handle);
   } else {
     _log.record(logClass::client,
                 logLevel::warning,
-                "Non-critical ABAP error: ",
+                "ABAP error: group ",
+                errorInfo->group,
+                " code ",
+                errorInfo->code,
+                " for connection ",
                 (pointer_t)this->connectionHandle);
   }
 
@@ -609,20 +606,18 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
 }
 
 Napi::Value Client::Release(const Napi::CallbackInfo& info) {
-  std::ostringstream errmsg;
-
   if (!info[1].IsFunction()) {
-    errmsg << "Client release() requires a callback function";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(info.Env(),
+                         "Client release() requires a callback function")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
   Napi::Function callback = info[1].As<Napi::Function>();
 
   if (pool == nullptr) {
-    errmsg << "Client release() method is for managed clients only, use "
-              "\"close()\" instead";
-    callback.Call({nodeRfcError(errmsg.str())});
+    callback.Call({nodeRfcError("Client release() method is for managed "
+                                "clients only, use \"close()\" instead")});
     return info.Env().Undefined();
   }
 
@@ -636,16 +631,16 @@ void cancelConnection(RFC_RC* rc,
                       RFC_ERROR_INFO* errorInfo) {
   _log.record(logClass::client,
               logLevel::debug,
-              "connection cancelled ",
+              "Connection cancelled ",
               (pointer_t)connectionHandle);
   *rc = RfcCancel(connectionHandle, errorInfo);
 }
 
 Napi::Value Client::Cancel(const Napi::CallbackInfo& info) {
-  std::ostringstream errmsg;
   if (!info[0].IsFunction()) {
-    errmsg << "Client cancel() requires a callback function";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(info.Env(),
+                         "Client cancel() requires a callback function")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
@@ -666,20 +661,18 @@ Napi::Value Client::Cancel(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Client::Open(const Napi::CallbackInfo& info) {
-  std::ostringstream errmsg;
-
   if (!info[0].IsFunction()) {
-    errmsg << "Client open() requires a callback function";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(info.Env(),
+                         "Client open() requires a callback function")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
   Napi::Function callback = info[0].As<Napi::Function>();
 
   if (pool != nullptr) {
-    errmsg << "Client \"open()\" not allowed for managed clients, , use the "
-              "\"acquire()\" instead";
-    callback.Call({nodeRfcError(errmsg.str())});
+    callback.Call({nodeRfcError("Client \"open()\" not allowed for managed "
+                                "clients, , use \"acquire()\" instead")});
     return info.Env().Undefined();
   }
 
@@ -689,11 +682,10 @@ Napi::Value Client::Open(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Client::Close(const Napi::CallbackInfo& info) {
-  std::ostringstream errmsg;
-
   if (!info[0].IsFunction()) {
-    errmsg << "Client close() requires a callback function";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(info.Env(),
+                         "Client close() requires a callback function")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
@@ -701,9 +693,10 @@ Napi::Value Client::Close(const Napi::CallbackInfo& info) {
 
   if (pool != nullptr) {
     // Managed connection error
-    errmsg << "Client \"close()\" method not allowed for managed clients, use "
-              "the \"release()\" instead";
-    callback.Call({nodeRfcError(errmsg.str())});
+
+    callback.Call(
+        {nodeRfcError("Client \"close()\" method not allowed for managed "
+                      "clients, use the \"release()\" instead")});
     return info.Env().Undefined();
   }
 
@@ -713,10 +706,10 @@ Napi::Value Client::Close(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Client::ResetServerContext(const Napi::CallbackInfo& info) {
-  std::ostringstream errmsg;
   if (!info[0].IsFunction()) {
-    errmsg << "Client resetServerContext() requires a callback function";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(
+        info.Env(), "Client resetServerContext() requires a callback function")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
   Napi::Function callback = info[0].As<Napi::Function>();
@@ -728,9 +721,9 @@ Napi::Value Client::ResetServerContext(const Napi::CallbackInfo& info) {
 
 Napi::Value Client::Ping(const Napi::CallbackInfo& info) {
   if (!info[0].IsFunction()) {
-    std::ostringstream errmsg;
-    errmsg << "Client Ping() requires a callback function";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(info.Env(),
+                         "Client Ping() requires a callback function")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
@@ -746,9 +739,9 @@ Napi::Value Client::Invoke(const Napi::CallbackInfo& info) {
   Napi::Value bcd;
 
   if (!info[2].IsFunction()) {
-    std::ostringstream errmsg;
-    errmsg << "Client invoke() requires a callback function";
-    Napi::TypeError::New(info.Env(), errmsg.str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(info.Env(),
+                         "Client invoke() requires a callback function")
+        .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 

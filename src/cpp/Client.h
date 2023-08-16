@@ -32,6 +32,7 @@ class Client : public Napi::ObjectWrap<Client> {
   // cppcheck-suppress noExplicitConstructor
   Client(const Napi::CallbackInfo& info);
   ~Client(void);
+  const std::string log_id() const { return "Client " + std::to_string(id); }
 
  private:
   static Napi::Object NewInstance(Napi::Env env);

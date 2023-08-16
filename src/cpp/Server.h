@@ -51,6 +51,7 @@ class Server : public Napi::ObjectWrap<Server> {
 
   ClientOptionsStruct client_options;
   std::thread server_thread;
+  const std::string log_id() const { return "Server " + std::to_string(id); }
 
  private:
   void _stop();
