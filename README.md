@@ -1,6 +1,6 @@
 # node-rfc
 
-Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html) client and server bindings for [Node.js](http://nodejs.org/), providing convenient ABAP business logic consumption from Node.js.
+Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html) client and server bindings for [Node.js](http://nodejs.org/). Providing straightforward consumption of ABAP business logic from Node.js and extending ABAP eco-system with Node.js capabilities.
 
 [![node-rfc release](https://img.shields.io/npm/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![Node.js engines](https://img.shields.io/node/v/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
