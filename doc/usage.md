@@ -44,6 +44,13 @@
 <a name="server-toc"></a>
 
 - **[Server](#server)**
+  - [Node.js server program example](#nodejs-server-program-example)
+  - [ABAP client call example](#abap-client-call-example)
+  - [Server logging](#server-logging)
+  - [Configuration](#configuration)
+    - [Node server destinations](#node-server-destinations)
+    - [ABAP client destinations (sm59)](#abap-client-destinations-sm59)
+
 - **[Throughput](#throughput)**
 - **[Environment](#environment)**
 - **[Events](#events)**
@@ -736,7 +743,7 @@ The first JS function returns promise and the second one data value. Here is the
 
 and here the key points.
 
-### node-rfc Server
+### Node.js server program example
 
 ```ts
 import { RfcLoggingLevel, Server } from "node-rfc";
@@ -786,7 +793,7 @@ const tick = setInterval(() => {
 }, 1000);
 ```
 
-### ABAP Client Call
+### ABAP client call example
 
 ```abap
 call function 'STFC_STRUCTURE' destination 'NWRFC_SERVER_OS'
@@ -797,6 +804,10 @@ call function 'STFC_STRUCTURE' destination 'NWRFC_SERVER_OS'
 Result
 
 ![abap_call_result](./assets/ABAP_result.png)
+
+### Server logging
+
+When activated the logging is save in `_noderfc.log` file in current working directory
 
 ### Configuration
 
@@ -814,7 +825,7 @@ The client connection is required for fetching ABAP functions' definitions, not 
 
 The server connection is required for ABAP client to call Node.js server and may look like
 
-#### sapnwrfc.ini
+#### Node server destinations
 
 ```ini
 DEST=MME
@@ -834,7 +845,7 @@ PROGRAM_ID=RFCSERVER
 REG_COUNT=1
 ```
 
-#### RFC Destination
+#### ABAP client destinations (sm59)
 
 The Node.js destination is in SM59 looks like
 

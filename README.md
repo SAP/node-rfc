@@ -35,6 +35,7 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
   - **[sapnwrfc.ini](doc/usage.md#addon)**
   - **[env](doc/env#NODE_RFC_MODULE_PATH)**
   - **[Client](doc/usage.md#client-toc)**
+  - **[Server](doc/usage.md#server-toc)**
   - **[Connection Pool](doc/usage.md#connection-pool)**
   - **[Throughput](doc/usage.md#throughput)**
 - **[API](doc/api.md)**

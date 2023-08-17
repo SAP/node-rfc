@@ -356,12 +356,15 @@ Usage: [usage/server](usage.md#server)
 ### Constructor
 
 ```ts
+
+export type RfcServerConfiguration = {
+    serverConnection: RfcConnectionParameters;
+    clientConnection: RfcConnectionParameters;
+    serverOptions?: RfcServerOptions;
+};
+
 export interface RfcServerBinding {
-    new (
-        serverParams: RfcConnectionParameters,
-        clientParams: RfcConnectionParameters,
-        clientOptions?: RfcClientOptions
-    ): RfcServerBinding;
+    new (serverConfiguration: RfcServerConfiguration): RfcServerBinding;
 }
 ```
 
@@ -372,8 +375,10 @@ export interface RfcServerBinding {
 #### start
 
 ```ts
-start(callback?: Function): void | Promise<void>
+ start(callback?: Function): void | Promise<void>
 ```
+
+Launch Server instance.
 
 #### stop
 
@@ -381,15 +386,19 @@ start(callback?: Function): void | Promise<void>
 stop(callback?: Function): void | Promise<void>
 ```
 
+Stop Server instance.
+
 ### addFunction
 
 ```ts
-addFunction(
-    abapfunctionName: string,
-    jsFunction: Function,
-    callback?: Function
-): void | Promise<void>
+    addFunction(
+        abapFunctionName: string,
+        jsFunction: Function,
+        callback?: Function
+    ): void | Promise<void>
 ```
+
+Register JavaScript function as ABAP function on Node.js server.
 
 ### removeFunction
 
@@ -399,6 +408,8 @@ removeFunction(
     callback?: Function
 ): void | Promise<void>
 ```
+
+Un-register JavaScript function on Node.js server.
 
 ## Throughput
 

@@ -4,11 +4,11 @@
 #define NodeRfc_Log_H
 
 #include <sapnwrfc.h>
-#include <chrono>
 #include <fstream>
 #include <initializer_list>
 #include <string>
 #include <unordered_map>
+#include "ext/date.h"
 #include "noderfc.h"
 
 namespace node_rfc {
@@ -74,20 +74,21 @@ class Log {
       return;
     }
     using namespace std;
+    using namespace std::chrono;
+    auto now = time_point_cast<microseconds>(system_clock::now());
 
     // Enum to string mapping
     const string component_names[] = {
         "client", "pool", "server", "throughput", "nwrfc", "addon"};
     const string severity_names[] = {
         "none", "fatal", "error", "warning", "info", "debug", "all"};
-    time_t now = time(nullptr);
 
     // Write log message
     ofstream ofs;
     ofs.open(log_fname.c_str(), ofstream::out | ios::app);
     ofs << endl
         << endl
-        << put_time(localtime(&now), "%F %T [") << timestamp() << "] >> "
+        << date::format("%F %T", now) << " UTC [" << timestamp() << "] >> "
         << component_names[static_cast<uint_t>(component_id)] << " ["
         << severity_names[static_cast<uint_t>(log_level_id)] << "] thread "
         << std::this_thread::get_id() << endl

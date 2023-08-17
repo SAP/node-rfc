@@ -38,7 +38,7 @@
     "install": "node-gyp-build",
     "jest": "jest test --testPathIgnorePatterns throughput --testTimeout 60000",
     "lint": "npm run lintts && npm run lintcpp && npm audit --omit=dev && reuse lint",
-    "lintcpp": "cppcheck -I node_modules/node-addon_api --enable=all --inline-suppr src/cpp",
+    "lintcpp": "cppcheck --std=c17 -I node_modules/node-addon_api --enable=all --inline-suppr src/cpp",
     "lintts": "eslint src/ts test --ext ts",
     "test": "jest test --testPathIgnorePatterns throughput --testTimeout 60000",
     "cpp": "prebuildify --napi -t 16.20.0 -t electron@25.2.0 --force --strip --verbose",

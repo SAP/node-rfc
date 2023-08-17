@@ -35,15 +35,15 @@ export interface RfcServerBinding {
     _alive: boolean;
     _server_conn_handle: number;
     _client_conn_handle: number;
-    start(callback: Function): void;
-    stop(callback: Function): void;
+    start(callback?: Function): void;
+    stop(callback?: Function): void;
     addFunction(
         abapFunctionName: string,
         jsFunction: Function,
-        callback: Function
+        callback?: Function
     ): void;
-    removeFunction(abapFunctionName: string, callback: Function): void;
-    getFunctionDescription(rfmName: string, callback: Function): void;
+    removeFunction(abapFunctionName: string, callback?: Function): void;
+    getFunctionDescription(rfmName: string, callback?: Function): void;
 }
 
 export class Server {
