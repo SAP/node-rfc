@@ -55,6 +55,7 @@ export enum RfcLoggingClass {
     server = 2,
     throughput = 3,
     nwrfc = 4,
+    addon = 5,
 }
 
 export enum RfcLoggingLevel {

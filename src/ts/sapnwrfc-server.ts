@@ -58,35 +58,35 @@ export class Server {
     }
 
     start(callback?: Function): void | Promise<void> {
-        if (callback === undefined) {
-            return new Promise((resolve, reject) => {
-                this.__server.start((err: unknown) => {
-                    if (err === undefined) {
-                        resolve();
-                    } else {
-                        reject(err);
-                    }
-                });
-            });
+        if (typeof callback === "function") {
+            return this.__server.start(callback);
         }
 
-        this.__server.start(callback);
+        return new Promise((resolve, reject) => {
+            this.__server.start((err: unknown) => {
+                if (err === undefined) {
+                    resolve();
+                } else {
+                    reject(err);
+                }
+            });
+        });
     }
 
     stop(callback?: Function): void | Promise<void> {
-        if (callback === undefined) {
-            return new Promise((resolve, reject) => {
-                this.__server.stop((err: unknown) => {
-                    if (err === undefined) {
-                        resolve();
-                    } else {
-                        reject(err);
-                    }
-                });
-            });
+        if (typeof callback === "function") {
+            return this.__server.stop(callback);
         }
 
-        this.__server.stop(callback);
+        return new Promise((resolve, reject) => {
+            this.__server.stop((err: unknown) => {
+                if (err === undefined) {
+                    resolve();
+                } else {
+                    reject(err);
+                }
+            });
+        });
     }
 
     addFunction(
@@ -94,64 +94,65 @@ export class Server {
         jsFunction: Function,
         callback?: Function
     ): void | Promise<void> {
-        if (callback === undefined) {
-            return new Promise((resolve, reject) => {
-                this.__server.addFunction(
-                    abapFunctionName,
-                    jsFunction,
-                    (err: unknown) => {
-                        if (err === undefined) {
-                            resolve();
-                        } else {
-                            reject(err);
-                        }
-                    }
-                );
-            });
+        if (typeof callback === "function") {
+            return this.__server.addFunction(
+                abapFunctionName,
+                jsFunction,
+                callback
+            );
         }
 
-        this.__server.addFunction(abapFunctionName, jsFunction, callback);
+        return new Promise((resolve, reject) => {
+            this.__server.addFunction(
+                abapFunctionName,
+                jsFunction,
+                (err: unknown) => {
+                    if (err === undefined) {
+                        resolve();
+                    } else {
+                        reject(err);
+                    }
+                }
+            );
+        });
     }
 
     removeFunction(
         abapFunctionName: string,
         callback?: Function
     ): void | Promise<void> {
-        if (callback === undefined) {
-            return new Promise((resolve, reject) => {
-                this.__server.removeFunction(
-                    abapFunctionName,
-                    (err: unknown) => {
-                        if (err === undefined) {
-                            resolve();
-                        } else {
-                            reject(err);
-                        }
-                    }
-                );
-            });
+        if (typeof callback === "function") {
+            return this.__server.removeFunction(abapFunctionName, callback);
         }
 
-        this.__server.removeFunction(abapFunctionName, callback);
+        return new Promise((resolve, reject) => {
+            this.__server.removeFunction(abapFunctionName, (err: unknown) => {
+                if (err === undefined) {
+                    resolve();
+                } else {
+                    reject(err);
+                }
+            });
+        });
     }
 
     getFunctionDescription(rfmName: string, callback?: Function) {
-        if (callback === undefined) {
-            return new Promise((resolve, reject) => {
-                this.__server.getFunctionDescription(
-                    rfmName,
-                    (err: unknown, rfmFunctionDescription: object) => {
-                        if (err === undefined) {
-                            resolve(rfmFunctionDescription);
-                        } else {
-                            reject(err);
-                        }
-                    }
-                );
-            });
+        if (typeof callback === "function") {
+            return this.__server.getFunctionDescription(rfmName, callback);
         }
 
-        this.__server.getFunctionDescription(rfmName, callback);
+        return new Promise((resolve, reject) => {
+            this.__server.getFunctionDescription(
+                rfmName,
+                (err: unknown, rfmFunctionDescription: object) => {
+                    if (err === undefined) {
+                        resolve(rfmFunctionDescription);
+                    } else {
+                        reject(err);
+                    }
+                }
+            );
+        });
     }
 
     static get environment(): NodeRfcEnvironment {

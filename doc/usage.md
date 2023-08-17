@@ -43,7 +43,7 @@
 
 <a name="server-toc"></a>
 
-- **[Server (experimental)](#server)**
+- **[Server](#server)**
 - **[Throughput](#throughput)**
 - **[Environment](#environment)**
 - **[Events](#events)**
@@ -714,182 +714,131 @@ const result = await client.call("BAPI_USER_GET_DETAIL", {USERNAME: "DEMO"}, {ti
 
 <a name="server"></a>
 
-## Server (experimental)
+## Server
 
 API: [api/server](api.md#server)
 
-Using the node-rfc Server instance, Node.js functions can be exposed and consumed from ABAP, using `CALL FUNCTION DESTINATION` ABAP statement. Just the same way like standard RFMs from ABAP systems.
+Using the node-rfc Server bindings, Node.js functions can be exposed as ABAP functions on Node.js system and consumed by ABAP client, using `CALL FUNCTION DESTINATION` ABAP statement.
 
-To expose one Node.js function for ABAP clients, the ABAP function definition must be provided, defining ABAP parameters through which the ABAP client can invoke the Node.js function. When ABAP clients calls the Node.js function, ABAP input parameters are automatically converted to Node.js function input and the function is invoked. The function output is automatically converted to ABAP output parameters, returned back to ABAP client.
+To make Node.js function available for ABAP clients, the NodeJS function name must be mapped to valid ABAP function name (max 30 char long) that ABAP client can call. Also the description of ABAP function parameters must be provided (function description), in binary format, that ABAP client shall use to send and receive the data.
 
-ABAP function definition defines ABAP parameters and data definitions for all variables, structures and tables used in ABAP parameers. Coding these metadata down to field level is not very exciting task and node-rfc Server provides a more elegant solution here:
+The ABAP function name is therefore not any name but the name of existing function module in ABAP system.This ABAP function can be already existing one, or new created empty function module, just for node-rfc Server function definition.
 
-- Create an empty ABAP RFM in ABAP client system, with the same parameters that ABAP client shall use to invoke the Node.js function
-- Tell the node server that the function definition for Node.js function X shall be the taken from the ABAP RFM Y, in ABAP client system
+In following example the node-rfc server will expose two JS functions using function definitions of already existing ABAP function modules. The `my_stfc_connection` JS function is exposed as ABAP `STFC_CONNECTION` function module and `my_stfc_structure` as ABAP `STFC_STRUCTURE` function module.
 
-When invoked by ABAP, the Node.js function will automatically fetch the function definition from ABAP RFM and expose itself as exactly such RFM to ABAP
+The first JS function returns promise and the second one data value. Here is the example full source code:
 
-As an example, let make the `STFC_CONNECTION` available as Node.js RFM and call it from ABAP.
+- ABAP client reports
+  - [zserver_stfc_connection.abap](../examples/zserver_stfc_connection.abap)
+  - [zserver_stfc_structure.abap](../examples/zserver_stfc_stucture.abap)
+- Server: [server.mjs](../examples/server.mjs)
+- Log: [_noderfc.log](../examples/_noderfc.log)
 
-### Function Definition
+and here the key points.
 
-No work needed because the `STFC_CONNECTION` RFM is already available in ABAP client system. Let us have a look into signature. The function module accepts the `REQTEXT` input stirng and echoes it back as `ECHOTEXT` string. In addition, the `RESPTEXT` string with connection attributes is also sent back:
+### node-rfc Server
 
-```abap
-FUNCTION STFC_CONNECTION.
-*"----------------------------------------------------------------------
-*"*"Lokale Schnittstelle:
-*"       IMPORTING
-*"              REQUTEXT LIKE  SY-LISEL
-*"       EXPORTING
-*"              ECHOTEXT LIKE  SY-LISEL
-*"              RESPTEXT LIKE  SY-LISEL
-*"----------------------------------------------------------------------
-```
+```ts
+import { RfcLoggingLevel, Server } from "node-rfc";
 
-### Node.js function
+// Create server instance
+const server = new Server({
+  clientConnection: { dest: "MME" },
+  serverConnection: { dest: "MME_GATEWAY" },
+  // Server options are not mandatory
+  serverOptions: {
+    logLevel: RfcLoggingLevel.info,
+  },
+});
 
-Let provide the Node.js function, mimicking the ABAP `STFC_CONNECTION` logic. Of course any other logic can be implemented here.
-
-```node
-function my_stfc_connection(
-    request_context,
-    abap_parameters: { REQUTEXT: "" }
-) {
-    console.log("Node.js stfc invoked ", request_context);
-
-    return {
-        ECHOTEXT: abap_parameters.REQUTEXT,
-        RESPTEXT: `Python server here. Connection attributes are:\nUser '${request_context.user}' from system '${request_context.sysId}', client '${request_context.client}', host '${request_context.partnerHost}'`,
-    };
+// Define server function
+function my_stfc_structure(request_context, abap_input) {
+  return {
+    ECHOSTRUCT: {RFCINT1: 10},
+    RESPTEXT: `~~~ Node server here ~~~`
+  }
 }
+
+(async () => {
+  try {
+    // Register my_stfc_structure as ABAP STFC_STRUCTURE function module
+    await server.addFunction("STFC_STRUCTURE", my_stfc_structure);
+
+    // Start the server
+    await server.start();
+
+  } catch (ex) {
+      // Catch errors, if any
+      console.error(ex);
+  }
+})();
+
+// Close the server after 10 seconds - not for production!
+let seconds = 10;
+const tick = setInterval(() => {
+  console.log("tick", --seconds);
+  if (!seconds > 0) {
+    server.stop(() => {
+      clearInterval(tick);
+      console.log("bye!");
+    });
+  }
+}, 1000);
 ```
 
-When invoked from ABAP, the first argument `request_context` provides some information about ABAP consumer and the second argument `abap_parameters` provides input parameters sent from ABAP.
-
-### ABAP calls Node.js RFM
-
-ABAP call looks like this:
+### ABAP Client Call
 
 ```abap
-*&---------------------------------------------------------------------*
-*& Report ZNODETEST
-*&---------------------------------------------------------------------*
-*&
-*&---------------------------------------------------------------------*
-REPORT znodetest.
-
-DATA lv_echo LIKE sy-lisel.
-DATA lv_resp LIKE sy-lisel.
-
-CALL FUNCTION 'STFC_CONNECTION' DESTINATION 'NODEJS'
-  EXPORTING
-    requtext = 'Hello Nöde'
-  IMPORTING
-    echotext = lv_echo
-    resptext = lv_resp.
-
-WRITE lv_echo.
-WRITE lv_resp.
+call function 'STFC_STRUCTURE' destination 'NWRFC_SERVER_OS'
+  exporting
+    importstruct = ...
 ```
+
+Result
+
+![abap_call_result](./assets/ABAP_result.png)
 
 ### Configuration
 
-The remote destination configuration is described in chapter "5 RFC Server Programs" of **[SAP NWRFC SDK 7.50 Programming Guide](https://support.sap.com/content/dam/support/en_us/library/ssp/products/connectors/nwrfcsdk/NW_RFC_750_ProgrammingGuide.pdf)**
+The ABAP system configuration for non-ABAP RFC server is described in chapter "5 RFC Server Programs" of **[SAP NWRFC SDK 7.50 Programming Guide](https://support.sap.com/content/dam/support/en_us/library/ssp/products/connectors/nwrfcsdk/NW_RFC_750_ProgrammingGuide.pdf)**
 
-For this particular example, the configuration includes:
+For this particular example, the configuration includes the two sets of ABAP RFC connection parameters, the  `clientConnection` and `serverConnection`, as per our example:
 
-**sapnwrfc.ini**
+```ts
+const server = new Server({
+  clientConnection: { dest: "MME" },
+  serverConnection: { dest: "MME_GATEWAY" },
+```
 
-The `client` connection parameters are required for RFM function definition retrival, just like in Client scenario.
+The client connection is required for fetching ABAP functions' definitions, not necessarily from the same system, from which the ABAP client shall call Node.js server.
 
-The `gateway` parameters are for the Node.js server regitration in ABAP system.
+The server connection is required for ABAP client to call Node.js server and may look like
+
+#### sapnwrfc.ini
 
 ```ini
-DEST=client
-USER=demo
-PASSWD=welcome
-ASHOST=coevi51
+DEST=MME
+USER=(redacted)
+PASSWD=(redacte)
+#ASHOST=coevi51
+ASHOST=10.68.110.51
 SYSNR=00
 CLIENT=620
 LANG=EN
-#TRACE=3
+TRACE=0
 
-DEST=gateway
+DEST=MME_GATEWAY
 GWSERV=sapgw00
 GWHOST=coevi51
-PROGRAM_ID=SERVER1
+PROGRAM_ID=RFCSERVER
 REG_COUNT=1
 ```
 
-**SM59**
+#### RFC Destination
 
 The Node.js destination is in SM59 looks like
 
-![sm59](assets/sm59node.png)
-
-**ABAP**
-
-```abap
-*&---------------------------------------------------------------------*
-*& Report ZSERVERTEST
-*&---------------------------------------------------------------------*
-*&
-*&---------------------------------------------------------------------*
-REPORT zservertest.
-
-
-DATA lv_echo LIKE sy-lisel.
-DATA lv_resp LIKE sy-lisel.
-
-CALL FUNCTION 'STFC_CONNECTION' DESTINATION 'NODEJS'
-  EXPORTING
-    requtext = 'XYZ'
-  IMPORTING
-    echotext = lv_echo
-    resptext = lv_resp.
-
-WRITE lv_echo.
-WRITE lv_resp.
-```
-
-**Node Server**
-
-```node
-const addon = require("../../lib");
-const Server = addon.Server;
-const server = new Server({ dest: "gateway" }, { dest: "MME" });
-
-// Callback function
-function my_stfc_connection(request_context, REQUTEXT = "") {
-    console.log("stfc invoked");
-    console.log("request_context", request_context);
-    console.log("abap_parameters", abap_parameters);
-
-    return {
-        ECHOTEXT: REQUTEXT,
-        RESPTEXT: `Node server here. Connection attributes are:\nUser '${request_context.user}' from system '${request_context.sysId}', client '${request_context.client}', host '${request_context.partnerHost}'`,
-    };
-}
-
-server.start((err) => {
-    if (err) return console.error("error:", err);
-    console.log(
-        `Server alive: ${server.alive} client handle: ${server.client_connection} server handle: ${server.server_connection}`
-    );
-
-    // Expose the my_stfc_connection function as RFM with STFC_CONNECTION pararameters (function definition)
-    const RFM_NAME = "STFC_CONNECTION";
-    server.addFunction(RFM_NAME, my_stfc_connection, (err) => {
-        if (err) return console.error(`error adding ${RFM_NAME}: ${err}`);
-    });
-});
-
-// let server serve
-setTimeout(function () {
-    console.log("bye!");
-}, 20 * 1000);
-```
+![sm59](./assets/sm59-nwrfc_server_os.png)
 
 ## Throughput
 

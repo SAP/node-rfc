@@ -343,7 +343,7 @@ closeAll(callback?: Function) // close all ready and leased connections
 
 <a name="server"></a>
 
-## Server (experimental!)
+## Server
 
 Usage: [usage/server](usage.md#server)
 

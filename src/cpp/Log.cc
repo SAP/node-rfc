@@ -20,32 +20,27 @@ void Log::set_log_level(const logClass component_id,
 
 void Log::set_log_level(const logClass component_id,
                         const Napi::Value logLevelValue) {
-  char errmsg[ERRMSG_LENGTH];
   if (!logLevelValue.IsNumber()) {
-    snprintf(errmsg,
-             ERRMSG_LENGTH - 1,
-             "Logging level is not supported: \"%s\"",
-             logLevelValue.ToString().Utf8Value().c_str());
-    Napi::TypeError::New(logLevelValue.Env(), errmsg)
+    Napi::TypeError::New(logLevelValue.Env(),
+                         "Logging level not  a number: \"" +
+                             logLevelValue.ToString().Utf8Value() + "\"")
         .ThrowAsJavaScriptException();
     return;
   }
 
-  uint_t log_level = static_cast<uint_t>(logLevelValue.As<Napi::Number>());
-
-  if (log_level != static_cast<uint_t>(logLevel::none) &&
-      log_level != static_cast<uint_t>(logLevel::error) &&
-      log_level != static_cast<uint_t>(logLevel::warning) &&
-      log_level != static_cast<uint_t>(logLevel::debug)) {
-    snprintf(errmsg,
-             ERRMSG_LENGTH - 1,
-             "Logging level not supported: \"%s\"",
-             logLevelValue.ToString().Utf8Value().c_str());
-    Napi::TypeError::New(logLevelValue.Env(), errmsg)
+  // Check log level provided by application
+  logLevel log_level =
+      static_cast<logLevel>(logLevelValue.As<Napi::Number>().Int32Value());
+  if (log_level < logLevel::none || log_level > logLevel::all) {
+    Napi::TypeError::New(logLevelValue.Env(),
+                         "Logging level not supported: \"" +
+                             logLevelValue.ToString().Utf8Value() + "\"")
         .ThrowAsJavaScriptException();
     return;
   }
-  set_log_level(component_id, (logLevel)log_level);
+
+  // set log level
+  set_log_level(component_id, log_level);
 }
 
 Log::Log(std::string log_fname) : log_fname(log_fname) {

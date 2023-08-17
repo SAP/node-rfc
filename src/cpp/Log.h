@@ -18,7 +18,8 @@ enum class logClass {
   pool = 1,
   server = 2,
   throughput = 3,
-  nwrfc = 4
+  nwrfc = 4,
+  addon = 5
 };
 
 enum class logLevel {
@@ -44,7 +45,8 @@ class Log {
       {logClass::pool, logLevel::none},
       {logClass::server, logLevel::none},
       {logClass::throughput, logLevel::none},
-      {logClass::nwrfc, logLevel::none}};
+      {logClass::nwrfc, logLevel::none},
+      {logClass::addon, logLevel::none}};
 
   // Log timestamp format
   long long timestamp();
@@ -75,7 +77,7 @@ class Log {
 
     // Enum to string mapping
     const string component_names[] = {
-        "client", "pool", "server", "throughput", "nwrfc"};
+        "client", "pool", "server", "throughput", "nwrfc", "addon"};
     const string severity_names[] = {
         "none", "fatal", "error", "warning", "info", "debug", "all"};
     time_t now = time(nullptr);
@@ -96,9 +98,9 @@ class Log {
 
   // Used for SAP unicode strings logging because the handle scope may
   // not be available for standard SAP unicode to Napi::String conversion
-  void record(const logClass component_id,
-              const logLevel log_level_id,
-              const SAP_UC* message) {
+  void record_uc(const logClass component_id,
+                 const logLevel log_level_id,
+                 const SAP_UC* message) {
     if (log_level_id > log_config[component_id]) {
       return;
     }

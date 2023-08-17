@@ -1,55 +1,49 @@
-import { RfcLoggingLevel, Client, Pool, Server } from "../lib/index.js";
+import { RfcLoggingLevel, Server } from "../lib/index.js";
 
+// Create server instance, initially inactive
 const server = new Server({
   serverConnection: { dest: "MME_GATEWAY" },
   clientConnection: { dest: "MME" },
+  // Server options are optional
   serverOptions: {
-    logLevel: RfcLoggingLevel.debug,
+    logLevel: RfcLoggingLevel.info,
   },
 });
 
-const delay = (seconds = 1) =>
-  new Promise((resolve) => setTimeout(resolve, seconds * 1000));
-
+// Define couple of server functions
+// One returning the promise
 async function my_stfc_connection(request_context, abap_input) {
-  const connection_attributes = request_context["connection_attributes"];
+  const attr = request_context["connection_attributes"];
   console.log(
-    "[js] stfc context :",
-    connection_attributes["sysId"],
-    connection_attributes["client"],
-    connection_attributes["user"],
-    connection_attributes["cpicConvId"],
-    connection_attributes["progName"]
+    "[js] my_stfc_connection context:",
+    attr["sysId"],
+    attr["client"],
+    attr["user"],
+    attr["progName"]
   );
+  console.log("[js] my_stfc_conneciton input :", abap_input);
 
   const abap_output = {
     REQUTEXT: abap_input.REQUTEXT,
     ECHOTEXT: abap_input.REQUTEXT,
     RESPTEXT: `~~~ ${abap_input.REQUTEXT} ~~~`,
   };
+  console.log(`[js] my_stfc_connection response: ${abap_output.RESPTEXT}`);
 
-  const respWait = abap_input.REQUTEXT[0];
-  console.log("[js] stfc request :", abap_input, " wait", respWait);
-
-  for (let ii = 0; ii < respWait; ii++) {
-    await delay();
-  }
-
-  console.log(`[js] stfc_connection response: ${abap_output.RESPTEXT}`);
-  return abap_output;
+  return new Promise((resolve) => resolve(abap_output));
 }
 
+// Another one returning data
 function my_stfc_structure(request_context, abap_input) {
   const connection_attributes = request_context["connection_attributes"];
   console.log(
-    "[js] stfc context :",
+    "[js] my_stfc_structure context:",
     connection_attributes["sysId"],
     connection_attributes["client"],
     connection_attributes["user"],
-    connection_attributes["cpicConvId"],
     connection_attributes["progName"]
   );
-  console.log("[js] stfc request :"); // , abap_input);
+  console.log("[js] my_stfc_structure input:", abap_input.IMPORTSTRUCT);
   const echostruct = abap_input.IMPORTSTRUCT;
   echostruct.RFCINT1 = 2 * echostruct.RFCINT1;
   echostruct.RFCINT2 = 3 * echostruct.RFCINT2;
@@ -59,46 +53,45 @@ function my_stfc_structure(request_context, abap_input) {
     RESPTEXT: `~~~ Node server here ~~~`,
   };
 
-  console.log("[js] stfc_structure response:"); // , abap_output);
+  console.log("[js] my_stfc_structure response:", abap_output);
   return abap_output;
 }
 
-server.start((err) => {
-  if (err) return console.error("error:", err);
-  console.log(
-    `[js] Server alive: ${server.alive} client handle: ${server.client_connection} server handle: ${server.server_connection}`
-  );
-
-  // Expose the my_stfc_connection function as RFM with STFC_CONNECTION pararameters (function definition)
-  const RFM1 = "STFC_CONNECTION";
-  server.addFunction(RFM1, my_stfc_connection, (err) => {
-    if (err) return console.error(`error adding ${RFM1}: ${err}`);
+(async () => {
+  try {
+    // Register JS server functions to be exposed as ABAP functions
+    await server.addFunction("STFC_CONNECTION", my_stfc_connection);
     console.log(
-      `[js] Node.js function '${my_stfc_connection.name}' registered as ABAP '${RFM1}' function`
+      `[js] Node.js function '${my_stfc_connection.name}'`,
+      "registered as ABAP 'STFC_CONNECTION' function"
     );
-  });
 
-  // Expose the my_stfc_connection function as RFM with STFC_CONNECTION pararameters (function definition)
-  const RFM2 = "STFC_STRUCTURE";
-  server.addFunction(RFM2, my_stfc_structure, (err) => {
-    if (err) return console.error(`error adding ${RFM2}: ${err}`);
+    server.addFunction("STFC_STRUCTURE", my_stfc_structure);
     console.log(
-      `[js] Node.js function '${my_stfc_structure.name}' registered as ABAP '${RFM2}' function`
+      `[js] Node.js function '${my_stfc_structure.name}'`,
+      "registered as ABAP 'STFC_STRUCTURE' function"
     );
-  });
-});
 
-let i = 0;
+    // Start the server
+    await server.start();
+    console.log(
+      `[js] Server alive: ${server.alive} client handle: ${server.client_connection}`,
+      `server handle: ${server.server_connection}`
+    );
+  } catch (ex) {
+    // Catch errors, if any
+    console.error(ex);
+  }
+})();
 
-const si = setInterval(() => {
-  console.log("tick", i++);
+// Close the server after 10 seconds
+let seconds = 10;
+const tick = setInterval(() => {
+  console.log("tick", --seconds);
+  if (!seconds > 0) {
+    server.stop(() => {
+      clearInterval(tick);
+      console.log("bye!");
+    });
+  }
 }, 1000);
-
-setTimeout(() => {
-  server.stop(() => {
-    clearInterval(si);
-    console.log("bye!");
-  });
-}, 10 * 1000);
-
-// my_stfc_connection({}, {});

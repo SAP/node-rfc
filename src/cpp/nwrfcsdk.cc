@@ -29,19 +29,19 @@ SAP_UC* setString(const Napi::String napistr) {
                       &resultLen,
                       &errorInfo);
 
-  _log.record(logClass::nwrfc,
-              logLevel::all,
-              "setString: " + sstr,
-              " sapucSize: ",
-              sapucSize,
-              " resultLen ",
-              resultLen,
-              " . Error group: ",
-              errorInfo.group,
-              " code: ",
-              errorInfo.code);
-
   if (rc != RFC_OK) {
+    _log.record(
+        logClass::nwrfc,
+        logLevel::fatal,
+        "NodeJS string could not be parsed to ABAP string: '" + sstr + "'",
+        "\nsapucSize: ",
+        sapucSize,
+        " resultLen ",
+        resultLen,
+        " Error group: ",
+        errorInfo.group,
+        " code: ",
+        errorInfo.code);
     Napi::Error::Fatal("setString",
                        "NodeJS string could not be parsed to ABAP string");
   }
@@ -64,6 +64,18 @@ SAP_UC* setString(std::string sstr) {
                       &errorInfo);
 
   if (rc != RFC_OK) {
+    _log.record(
+        logClass::nwrfc,
+        logLevel::fatal,
+        "NodeJS string could not be parsed to ABAP string: '" + sstr + "'",
+        "\nsapucSize: ",
+        sapucSize,
+        " resultLen ",
+        resultLen,
+        " Error group: ",
+        errorInfo.group,
+        " code: ",
+        errorInfo.code);
     Napi::Error::Fatal("setString",
                        "NodeJS string could not be parsed to ABAP string");
   }

@@ -62,7 +62,7 @@ class ServerFunction {
         *func_desc_handle = value->func_desc_handle;
 
         _log.record(logClass::server,
-                    logLevel::debug,
+                    logLevel::info,
                     "metadataLookup: Function description set ",
                     (pointer_t)*func_desc_handle,
                     " for ABAP function '",
@@ -77,7 +77,7 @@ class ServerFunction {
         logClass::server,
         logLevel::error,
         "metadataLookup: Function description not set for ABAP function: ");
-    _log.record(logClass::server, logLevel::error, abap_func_name);
+    _log.record_uc(logClass::server, logLevel::error, abap_func_name);
 
     return RFC_NOT_FOUND;
   }
@@ -100,29 +100,27 @@ class ServerFunction {
       return nullptr;
     }
 
-    // find installed function
-
+    // Find installed function
     for (const auto& [key, value] : installed_functions) {
       if (strcmpU(abap_func_name, value->abap_func_name_sapuc) == 0) {
         _log.record(logClass::server,
-                    logLevel::debug,
-                    "genericRequestHandler: JS handler function '",
+                    logLevel::info,
+                    "genericRequestHandler: JS function '",
                     value->jsFunctionName,
                     "' found for function handle ",
                     (uintptr_t)func_handle,
-                    " of ABAP function ",
-                    key);
+                    " of ABAP function '" + key + "'");
         return value;
       }
     }
 
     _log.record(logClass::server,
-                logLevel::debug,
-                "genericRequestHandler: JS handler function not found for "
+                logLevel::error,
+                "genericRequestHandler: JS function not found for "
                 "function handle ",
                 (uintptr_t)func_handle,
                 " of ABAP function ");
-    _log.record(logClass::server, logLevel::debug, abap_func_name);
+    _log.record_uc(logClass::server, logLevel::error, abap_func_name);
 
     return nullptr;
   }
@@ -159,10 +157,10 @@ class ServerFunction {
         );
 
     _log.record(logClass::server,
-                logLevel::debug,
+                logLevel::info,
                 "Function description ",
                 (pointer_t)func_desc_handle,
-                " added for JS handler '",
+                " added for JS function '",
                 jsFunctionName,
                 "' as ABAP function '",
                 abapFunctionName.Utf8Value(),
@@ -190,7 +188,7 @@ class ServerFunction {
       if (jsFunctionName == value->jsFunctionName) {
         ServerFunction::installed_functions.erase(abap_func_name);
         _log.record(logClass::server,
-                    logLevel::debug,
+                    logLevel::info,
                     "JS function removed " + jsFunctionName,
                     " with ABAP function " + abap_func_name,
                     " description: ",
@@ -199,8 +197,13 @@ class ServerFunction {
       }
     }
 
-    return nodeRfcError("Server removeFunction() did not find function: " +
-                        jsFunctionName);
+    // Log and return error
+    std::string errmsg =
+        "Server removeFunction() did not find registered function: " +
+        jsFunctionName;
+    _log.record(logClass::server, logLevel::error, errmsg);
+
+    return nodeRfcError(errmsg);
   }
 
   // Called by Server destructor, to clean-up TSFN instances
@@ -260,7 +263,7 @@ class ServerRequestBaton {
     jsHandlerError = "";
 
     _log.record(logClass::server,
-                logLevel::debug,
+                logLevel::info,
                 "Client request [" + request_id + "]",
                 " for JS function '",
                 serverFunction->jsFunctionName,
@@ -271,9 +274,8 @@ class ServerRequestBaton {
                 "\n\tClient connection ",
                 (uintptr_t)conn_handle,
                 ", ABAP function ");
-    _log.record(logClass::server,
-                logLevel::debug,
-                serverFunction->abap_func_name_sapuc);
+    _log.record_uc(
+        logClass::server, logLevel::info, serverFunction->abap_func_name_sapuc);
   }
 
   void wait() {
@@ -496,9 +498,8 @@ Server::Server(const Napi::CallbackInfo& info)
         .ThrowAsJavaScriptException();
     return;
   }
-  printf("\nclass: %u level: %u\n", logClass::server, logLevel::debug);
   _log.record(logClass::server,
-              logLevel::debug,
+              logLevel::info,
               "created: server handle ",
               (uintptr_t)serverHandle,
               " client connection ",
@@ -665,7 +666,7 @@ class StopAsync : public Napi::AsyncWorker {
   void Execute() {
     server->LockMutex();
     _log.record(logClass::server,
-                logLevel::debug,
+                logLevel::info,
                 "stop: server handle ",
                 (pointer_t)server->serverHandle);
     server->_stop();
@@ -748,7 +749,7 @@ void Server::_start(RFC_ERROR_INFO* errorInfo) {
     return;
   }
   _log.record(logClass::server,
-              logLevel::debug,
+              logLevel::info,
               "start: generic request handler installed");
 
   RfcLaunchServer(serverHandle, errorInfo);
@@ -756,7 +757,7 @@ void Server::_start(RFC_ERROR_INFO* errorInfo) {
     return;
   }
   _log.record(logClass::server,
-              logLevel::debug,
+              logLevel::info,
               "start: launched server handle ",
               (pointer_t)serverHandle);
 }
@@ -764,7 +765,7 @@ void Server::_start(RFC_ERROR_INFO* errorInfo) {
 void Server::_stop() {
   if (serverHandle != nullptr) {
     _log.record(logClass::server,
-                logLevel::debug,
+                logLevel::info,
                 "stop: shutdown server handle ",
                 (pointer_t)serverHandle);
     RfcShutdownServer(serverHandle, 60, nullptr);
@@ -774,7 +775,7 @@ void Server::_stop() {
 
   if (client_conn_handle != nullptr) {
     _log.record(logClass::server,
-                logLevel::debug,
+                logLevel::info,
                 "stop: close client connection ",
                 (pointer_t)client_conn_handle);
     RfcCloseConnection(client_conn_handle, nullptr);
@@ -846,14 +847,15 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
 
   if (!info[1].IsFunction()) {
     Napi::TypeError::New(
-        info.Env(), "Server addFunction() requires a NodeJS handler function")
+        info.Env(), "Server addFunction() requires a NodeJS function argument")
         .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
 
   if (!info[2].IsFunction()) {
-    Napi::TypeError::New(info.Env(),
-                         "Server addFunction() requires a callback function")
+    Napi::TypeError::New(
+        info.Env(),
+        "Server addFunction() requires a callback function argument")
         .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }
@@ -876,8 +878,6 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
 };
 
 Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
-  std::ostringstream errmsg;
-
   if (!info[0].IsFunction()) {
     Napi::TypeError::New(
         info.Env(),
@@ -901,8 +901,6 @@ Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
 };
 
 Napi::Value Server::GetFunctionDescription(const Napi::CallbackInfo& info) {
-  std::ostringstream errmsg;
-
   if (!info[0].IsString()) {
     Napi::TypeError::New(
         info.Env(), "Server getFunctionDescription() requires ABAP RFM name")
@@ -970,7 +968,7 @@ void JSFunctionCall(Napi::Env env,
 
   // Call JavaScript handler
   _log.record(logClass::server,
-              logLevel::debug,
+              logLevel::info,
               "JS function call [" + requestBaton->request_id,
               "] start '",
               requestBaton->serverFunction->jsFunctionName,
@@ -986,7 +984,7 @@ void JSFunctionCall(Napi::Env env,
   }
 
   _log.record(logClass::server,
-              logLevel::debug,
+              logLevel::info,
               "JS function call [" + requestBaton->request_id,
               "] end '",
               requestBaton->serverFunction->jsFunctionName,

@@ -95,13 +95,17 @@ Napi::Value LanguageSapToIso(const Napi::CallbackInfo& info) {
   Napi::EscapableHandleScope scope(info.Env());
   RFC_ERROR_INFO errorInfo;
 
-  SAP_UC* ucLangSAP = setString(info[0].As<Napi::String>());
+  std::string lang_sap = info[0].As<Napi::String>().Utf8Value();
+  SAP_UC* ucLangSAP = setString(lang_sap);
   SAP_UC ucLangISO[8];
   RFC_RC rc = RfcLanguageSapToIso(ucLangSAP, ucLangISO, &errorInfo);
   delete[] ucLangSAP;
 
   if (rc != RFC_OK || errorInfo.code != RFC_OK) {
-    printf("%s %u\n", "error", rc);
+    _log.record(
+        logClass::addon,
+        logLevel::error,
+        "Error converting SAP language code: '" + lang_sap + "' to ISO code");
     return rfcSdkError(&errorInfo);
   }
 

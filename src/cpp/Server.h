@@ -17,7 +17,6 @@ extern Log _log;
 
 typedef struct _ServerOptions {
   logLevel log_severity = logLevel::none;
-
 } ServerOptions;
 
 class ServerRequestBaton;
@@ -87,8 +86,6 @@ class Server : public Napi::ObjectWrap<Server> {
     server_conn_handle = nullptr;
     client_conn_handle = nullptr;
     serverHandle = nullptr;
-
-    // uv_sem_init(&invocationMutex, 1);
   };
 
   static uint_t _id;
@@ -97,7 +94,6 @@ class Server : public Napi::ObjectWrap<Server> {
 
   void LockMutex();
   void UnlockMutex();
-  // uv_sem_t invocationMutex;
 };
 
 }  // namespace node_rfc
