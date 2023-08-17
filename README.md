@@ -38,6 +38,7 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
   - **[Server](doc/usage.md#server-toc)**
   - **[Connection Pool](doc/usage.md#connection-pool)**
   - **[Throughput](doc/usage.md#throughput)**
+  - **[Logging](doc/usage.md#logging)**
 - **[API](doc/api.md)**
   - **[Connection Pool](doc/api.md#connection-pool)**
   - **[Client](doc/api.md#client)**

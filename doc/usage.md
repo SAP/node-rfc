@@ -11,7 +11,7 @@
   - [cancelClient](#cancelclient)
   - [languageIsoToSap](#languageisotosap)
   - [languageSapToIso](#languagesaptoiso)
-- **[Logging](##logging)**
+- **[Logging](#logging)**
 
 <a name="client-toc"></a>
 
