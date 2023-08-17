@@ -761,7 +761,7 @@ const server = new Server({
 // Define server function
 function my_stfc_structure(request_context, abap_input) {
   return {
-    ECHOSTRUCT: {RFCINT1: 10},
+    ECHOSTRUCT: {RFCINT1: 2, RFCINT2: 6, RFCINT4: 16},
     RESPTEXT: `~~~ Node server here ~~~`
   }
 }
