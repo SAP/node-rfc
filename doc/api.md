@@ -445,7 +445,7 @@ export interface RfcThroughputStatus {
 constructor(client?: Client | Array<Client>)
 ```
 
-<a name="throughput-api"></a
+<a name="throughput-api"></a>
 
 ### Throughput API
 
