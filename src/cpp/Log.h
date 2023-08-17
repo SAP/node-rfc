@@ -37,7 +37,7 @@ enum class logLevel {
 class Log {
  private:
   // Log file name
-  std::string log_fname;
+  std::string log_path;
 
   // Logging inactive by default
   std::unordered_map<logClass, logLevel> log_config = {
@@ -53,7 +53,7 @@ class Log {
 
  public:
   // Set log file name
-  void set_log_file_name(const std::string& file_name);
+  void set_log_file_path(const std::string& file_path);
 
   // Set log level
   void set_log_level(const logClass component_id, const logLevel log_level_id);
@@ -61,7 +61,7 @@ class Log {
                      const Napi::Value logLevelValue);
 
   // Default log filename
-  explicit Log(std::string log_fname = "_noderfc.log");
+  explicit Log(std::string log_path = "_noderfc.log");
   ~Log();
 
   // Write regular arguments. Must be defined in header becuse of variadic
@@ -85,7 +85,7 @@ class Log {
 
     // Write log message
     ofstream ofs;
-    ofs.open(log_fname.c_str(), ofstream::out | ios::app);
+    ofs.open(log_path.c_str(), ofstream::out | ios::app);
     ofs << endl
         << endl
         << date::format("%F %T", now) << " UTC [" << timestamp() << "] >> "
@@ -105,7 +105,7 @@ class Log {
     if (log_level_id > log_config[component_id]) {
       return;
     }
-    FILE* fp = fopen(log_fname.c_str(), "a");
+    FILE* fp = fopen(log_path.c_str(), "a");
     fprintf(fp, "%s", "'");
     fprintfU(fp, message);
     fprintf(fp, "%s", "'");

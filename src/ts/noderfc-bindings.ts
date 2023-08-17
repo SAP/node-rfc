@@ -43,7 +43,7 @@ export interface NWRfcBinding {
     languageIsoToSap(langIso: string): string | NWRfcSdkError;
     languageSapToIso(langSap: string): string | NWRfcSdkError;
     reloadIniFile(): undefined | NWRfcSdkError;
-    setLogFileName(fileName: string): unknown;
+    setLogFilePath(filePath: string): unknown;
     verbose(): this;
 }
 

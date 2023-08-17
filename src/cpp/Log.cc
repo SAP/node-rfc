@@ -9,8 +9,8 @@ long long Log::timestamp() {
       .count();
 }
 
-void Log::set_log_file_name(const std::string& file_name) {
-  log_fname = file_name;
+void Log::set_log_file_path(const std::string& file_path) {
+  log_path = file_path;
 }
 
 void Log::set_log_level(const logClass component_id,
@@ -43,9 +43,9 @@ void Log::set_log_level(const logClass component_id,
   set_log_level(component_id, log_level);
 }
 
-Log::Log(std::string log_fname) : log_fname(log_fname) {
+Log::Log(std::string log_path) : log_path(log_path) {
   std::ofstream ofs;
-  ofs.open(log_fname, std::ofstream::out | std::ofstream::trunc);
+  ofs.open(log_path, std::ofstream::out | std::ofstream::trunc);
   ofs.close();
 }
 

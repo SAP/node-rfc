@@ -69,6 +69,14 @@ Usage: [usage/addon](usage.md#addon)
 languageSapToIso(langSapCode: string): string|Error
 ```
 
+### setLogFilePath
+
+Usage: [usage/addon](usage.md#addon)
+
+```ts
+setLogFilePath(langSapCode: string): string|Error
+```
+
 ## Client
 
 Usage: [usage/client](usage.md#client)

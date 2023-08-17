@@ -112,8 +112,8 @@ Napi::Value LanguageSapToIso(const Napi::CallbackInfo& info) {
   return scope.Escape(wrapString(ucLangISO, 2));
 }
 
-Napi::Value SetLogFileName(const Napi::CallbackInfo& info) {
-  _log.set_log_file_name(info[0].As<Napi::String>().Utf8Value());
+Napi::Value SetLogFilePath(const Napi::CallbackInfo& info) {
+  _log.set_log_file_path(info[0].As<Napi::String>().Utf8Value());
   return info.Env().Undefined();
 }
 
@@ -123,7 +123,7 @@ Napi::Object RegisterModule(Napi::Env env, Napi::Object exports) {
   }
 
   exports.Set("bindingVersions", BindingVersions(env));
-  exports.Set("setLogFileName", Napi::Function::New(env, SetLogFileName));
+  exports.Set("setLogFilePath", Napi::Function::New(env, SetLogFilePath));
   exports.Set("setIniFileDirectory",
               Napi::Function::New(env, SetIniFileDirectory));
   exports.Set("loadCryptoLibrary", Napi::Function::New(env, LoadCryptoLibrary));
