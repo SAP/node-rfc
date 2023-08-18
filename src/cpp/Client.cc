@@ -146,7 +146,7 @@ Client::Client(const Napi::CallbackInfo& info)
     Napi::TypeError::New(node_rfc::__env, errmsg).ThrowAsJavaScriptException();
   }
 
-  _log.record(logClass::client, logLevel::debug, "Client created: ", id);
+  _log.record(logClass::client, logLevel::info, "Client created: ", id);
 };
 
 Client::~Client(void) {
@@ -155,7 +155,7 @@ Client::~Client(void) {
     if (connectionHandle != nullptr) {
       RFC_ERROR_INFO errorInfo;
       _log.record(logClass::client,
-                  logLevel::debug,
+                  logLevel::info,
                   log_id() + " closing connection ",
                   (pointer_t)connectionHandle);
       RFC_RC rc = RfcCloseConnection(connectionHandle, &errorInfo);
@@ -540,7 +540,7 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
   {
     if (errorInfo->code == RFC_CANCELED) {
       _log.record(logClass::client,
-                  logLevel::warning,
+                  logLevel::info,
                   "Connection cancelled ",
                   (pointer_t)this->connectionHandle);
     }
@@ -571,7 +571,7 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
       }
 
       _log.record(logClass::pool,
-                  logLevel::debug,
+                  logLevel::info,
                   "Connection closed ",
                   (uintptr_t)old_handle,
                   " replaced with ",
@@ -582,7 +582,7 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
       this->connectionHandle = new_handle;
     }
     _log.record(logClass::client,
-                logLevel::warning,
+                logLevel::error,
                 "Critical ABAP error: group ",
                 errorInfo->group,
                 " code ",
@@ -593,7 +593,7 @@ ErrorPair Client::connectionCheck(RFC_ERROR_INFO* errorInfo) {
                 (pointer_t)new_handle);
   } else {
     _log.record(logClass::client,
-                logLevel::warning,
+                logLevel::error,
                 "ABAP error: group ",
                 errorInfo->group,
                 " code ",
@@ -630,7 +630,7 @@ void cancelConnection(RFC_RC* rc,
                       RFC_CONNECTION_HANDLE connectionHandle,
                       RFC_ERROR_INFO* errorInfo) {
   _log.record(logClass::client,
-              logLevel::debug,
+              logLevel::info,
               "Connection cancelled ",
               (pointer_t)connectionHandle);
   *rc = RfcCancel(connectionHandle, errorInfo);

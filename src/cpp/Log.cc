@@ -22,7 +22,7 @@ void Log::set_log_level(const logClass component_id,
                         const Napi::Value logLevelValue) {
   if (!logLevelValue.IsNumber()) {
     Napi::TypeError::New(logLevelValue.Env(),
-                         "Logging level not  a number: \"" +
+                         "Logging level must be a number, received: \"" +
                              logLevelValue.ToString().Utf8Value() + "\"")
         .ThrowAsJavaScriptException();
     return;

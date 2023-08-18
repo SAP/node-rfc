@@ -27,6 +27,7 @@ class ServerFunction {
  public:
   Server* server;
   // Parameters from metadataLookup
+  std::string abap_func_name;
   RFC_ABAP_NAME abap_func_name_sapuc;
   RFC_FUNCTION_DESC_HANDLE func_desc_handle;
   ServerRequestTsfn tsfnRequest;
@@ -34,23 +35,25 @@ class ServerFunction {
   static std::unordered_map<std::string, ServerFunction*> installed_functions;
 
   ServerFunction(Server* server,
-                 RFC_ABAP_NAME func_name,
+                 std::string _abap_func_name,
+                 RFC_ABAP_NAME _abap_func_name_sapuc,
                  RFC_FUNCTION_DESC_HANDLE func_desc_handle,
                  ServerRequestTsfn tsfnRequest,
                  const std::string& jsFunctionName)
       : server(server),
+        abap_func_name(_abap_func_name),
         func_desc_handle(func_desc_handle),
         tsfnRequest(tsfnRequest),
         jsFunctionName(jsFunctionName) {
-    strcpyU(abap_func_name_sapuc, func_name);
+    strcpyU(abap_func_name_sapuc, _abap_func_name_sapuc);
   }
   ~ServerFunction() { tsfnRequest.Release(); }
 
   // get request id for request baton
   std::string next_request_id() { return server->next_request_id(); }
 
-  // Called by metadataLookup handler, to find function description
-  // for ABAP function requested by ABAP client
+  // Called by metadataLookup RFC SDK server interface, to find
+  // function description of ABAP function requested by ABAP client
   static RFC_RC set_function_handle(
       SAP_UC const* abap_func_name,
       RFC_ATTRIBUTES rfc_attributes,
@@ -94,20 +97,20 @@ class ServerFunction {
     if (errorInfo->code != RFC_OK) {
       return nullptr;
     }
-    RFC_ABAP_NAME abap_func_name;
-    RFC_RC rc = RfcGetFunctionName(func_desc, abap_func_name, errorInfo);
+    RFC_ABAP_NAME abap_func_name_sapuc;
+    RFC_RC rc = RfcGetFunctionName(func_desc, abap_func_name_sapuc, errorInfo);
     if (rc != RFC_OK || errorInfo->code != RFC_OK) {
       return nullptr;
     }
 
     // Find installed function
     for (const auto& [key, value] : installed_functions) {
-      if (strcmpU(abap_func_name, value->abap_func_name_sapuc) == 0) {
+      if (strcmpU(abap_func_name_sapuc, value->abap_func_name_sapuc) == 0) {
         _log.record(logClass::server,
                     logLevel::info,
-                    "genericRequestHandler: JS function '",
+                    "JS function found: '",
                     value->jsFunctionName,
-                    "' found for function handle ",
+                    "' for function handle ",
                     (uintptr_t)func_handle,
                     " of ABAP function '" + key + "'");
         return value;
@@ -116,11 +119,10 @@ class ServerFunction {
 
     _log.record(logClass::server,
                 logLevel::error,
-                "genericRequestHandler: JS function not found for "
-                "function handle ",
+                "JS function not found for function handle ",
                 (uintptr_t)func_handle,
                 " of ABAP function ");
-    _log.record_uc(logClass::server, logLevel::error, abap_func_name);
+    _log.record_uc(logClass::server, logLevel::error, abap_func_name_sapuc);
 
     return nullptr;
   }
@@ -132,12 +134,12 @@ class ServerFunction {
                                   Napi::Function jsFunction) {
     // Obtain ABAP function description from ABAP system
     RFC_ERROR_INFO errorInfo;
-    RFC_CHAR* abap_func_name = setString(abapFunctionName);
+    RFC_CHAR* abap_func_name_sapuc = setString(abapFunctionName);
     RFC_FUNCTION_DESC_HANDLE func_desc_handle = RfcGetFunctionDesc(
-        server->client_conn_handle, abap_func_name, &errorInfo);
+        server->client_conn_handle, abap_func_name_sapuc, &errorInfo);
 
     if (errorInfo.code != RFC_OK) {
-      delete[] abap_func_name;
+      delete[] abap_func_name_sapuc;
       return rfcSdkError(&errorInfo);
     }
 
@@ -168,12 +170,13 @@ class ServerFunction {
 
     ServerFunction::installed_functions[abapFunctionName.Utf8Value()] =
         new ServerFunction(server,
-                           abap_func_name,
+                           abapFunctionName.Utf8Value(),
+                           abap_func_name_sapuc,
                            func_desc_handle,
                            tsfnRequest,
                            jsFunctionName);
 
-    delete[] abap_func_name;
+    delete[] abap_func_name_sapuc;
     return env.Undefined();
   }
 
@@ -273,9 +276,8 @@ class ServerRequestBaton {
                 (uintptr_t)serverFunction->func_desc_handle,
                 "\n\tClient connection ",
                 (uintptr_t)conn_handle,
-                ", ABAP function ");
-    _log.record_uc(
-        logClass::server, logLevel::info, serverFunction->abap_func_name_sapuc);
+                ", ABAP function ",
+                serverFunction->abap_func_name);
   }
 
   void wait() {
@@ -614,7 +616,7 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
   // Call JS handler function
   serverFunction->tsfnRequest.NonBlockingCall(requestBaton);
 
-  // Wait for JS handler function done and mutex released in JSFunctionCall
+  // Wait for JS functionn return and mutex release in JSFunctionCall
   requestBaton->wait();
 
   if (requestBaton->jsHandlerError.length() > 0) {

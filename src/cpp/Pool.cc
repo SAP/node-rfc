@@ -349,7 +349,7 @@ std::set<Client*> argsCheckRelease(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Pool::Release(const Napi::CallbackInfo& info) {
-  _log.record(logClass::pool, logLevel::debug, "Pool::Release");
+  _log.record(logClass::pool, logLevel::info, "Release", id);
 
   std::set<Client*> clients = argsCheckRelease(info);
 
@@ -373,7 +373,7 @@ void Pool::releaseClient(RFC_CONNECTION_HANDLE connectionHandle) {
                 " not found in " + log_id());
   } else {
     _log.record(logClass::pool,
-                logLevel::debug,
+                logLevel::info,
                 "Connection ",
                 (pointer_t)connectionHandle,
                 " released from " + log_id());
@@ -432,8 +432,7 @@ bool argsCheckReady(const Napi::CallbackInfo& info,
 Napi::Value Pool::Ready(const Napi::CallbackInfo& info) {
   uint_t new_ready = ready_low;
   Napi::Function callback;
-  _log.record(
-      logClass::pool, logLevel::debug, log_id() + " Ready: ", new_ready);
+  _log.record(logClass::pool, logLevel::info, log_id() + " Ready: ", new_ready);
 
   if (argsCheckReady(info, &new_ready, &callback)) {
     (new SetPoolAsync(callback, this, new_ready))->Queue();
@@ -442,7 +441,7 @@ Napi::Value Pool::Ready(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Pool::CloseAll(const Napi::CallbackInfo& info) {
-  _log.record(logClass::pool, logLevel::debug, log_id(), " CloseAll");
+  _log.record(logClass::pool, logLevel::info, log_id(), " Close all");
 
   closeConnections();
 
@@ -450,11 +449,9 @@ Napi::Value Pool::CloseAll(const Napi::CallbackInfo& info) {
     if (info[0].IsFunction()) {
       info[0].As<Napi::Function>().Call({});
     } else {
-      char errmsg[ERRMSG_LENGTH];
-      snprintf(errmsg,
-               ERRMSG_LENGTH - 1,
-               "Pool closeAll argument, if provided, must be a function");
-      Napi::Error::New(info.Env(), errmsg).ThrowAsJavaScriptException();
+      Napi::Error::New(
+          info.Env(), "Pool closeAll argument, if provided, must be a function")
+          .ThrowAsJavaScriptException();
     }
   }
 
@@ -462,7 +459,7 @@ Napi::Value Pool::CloseAll(const Napi::CallbackInfo& info) {
 }
 
 Napi::Object Pool::Init(Napi::Env env, Napi::Object exports) {
-  _log.record(logClass::pool, logLevel::debug, "Pool::Init");
+  _log.record(logClass::pool, logLevel::info, "Init");
   Napi::HandleScope scope(env);
 
   Napi::Function func =
@@ -499,7 +496,7 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
   std::ostringstream errmsg;
 
   _log.record(logClass::pool,
-              logLevel::debug,
+              logLevel::info,
               log_id(),
               " constructor ",
               ready_low,
@@ -646,15 +643,19 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
     }
   }
 
-  _log.record(
-      logClass::pool, logLevel::debug, "Pool::Pool ", ready_low, ready_high);
+  _log.record(logClass::pool,
+              logLevel::info,
+              "created ready:",
+              ready_low,
+              " max: ",
+              ready_high);
 };
 
 void Pool::closeConnections() {
   // Close connections
   if (connReady.size() > 0) {
     _log.record(logClass::pool,
-                logLevel::debug,
+                logLevel::info,
                 log_id() + " closeConnections() is closing ready connections: ",
                 connReady.size());
     ConnectionSetType::iterator it = connReady.begin();
@@ -664,7 +665,7 @@ void Pool::closeConnections() {
       RfcCloseConnection(connectionHandle, &errorInfo);
       if (errorInfo.code == RFC_OK) {
         _log.record(logClass::pool,
-                    logLevel::debug,
+                    logLevel::info,
                     log_id() + "    closed ",
                     (pointer_t)connectionHandle);
       } else {
@@ -685,7 +686,7 @@ void Pool::closeConnections() {
   if (connLeased.size() > 0) {
     _log.record(
         logClass::pool,
-        logLevel::debug,
+        logLevel::info,
         log_id() + " closeConnections() is closing leased connections: ",
         connLeased.size());
     ConnectionSetType::iterator it = connLeased.begin();
@@ -695,7 +696,7 @@ void Pool::closeConnections() {
       RfcCloseConnection(connectionHandle, &errorInfo);
       if (errorInfo.code == RFC_OK) {
         _log.record(logClass::pool,
-                    logLevel::debug,
+                    logLevel::info,
                     log_id() + "    closed ",
                     (pointer_t)connectionHandle);
       } else {
@@ -714,7 +715,7 @@ void Pool::closeConnections() {
 }
 
 Pool::~Pool(void) {
-  _log.record(logClass::pool, logLevel::debug, log_id() + " destructor");
+  _log.record(logClass::pool, logLevel::info, log_id() + " destructor");
 
   closeConnections();
 
