@@ -69,29 +69,13 @@ function terminate(workerData: unknown) {
 export function cancelClient(
     client: Client,
     callback?: Function
-): void | Promise<unknown> {
+): void | Promise<void> {
     if (callback !== undefined && typeof callback !== "function") {
         throw new TypeError(
             `cancelClient 2nd argument, if provided, must be a Function. Received: ${typeof callback}`
         );
     }
-    const old_handle = client.connectionHandle;
-    const workerData = { connectionHandle: old_handle };
-    if (typeof callback === "function") {
-        return terminate(workerData)
-            .then((res) => {
-                sapnwrfcEvents.emit("sapnwrfc:clientCancel", {
-                    id: client.id,
-                    connectionHandle: old_handle,
-                });
-                callback(undefined, res);
-            })
-            .catch((err) => {
-                callback(err);
-            });
-    } else {
-        return terminate(workerData);
-    }
+    return client.cancel(callback);
 }
 
 export function languageIsoToSap(langIso: string): string {

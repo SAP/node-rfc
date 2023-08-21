@@ -621,12 +621,39 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
 
   if (requestBaton->jsHandlerError.length() > 0) {
     // return the error message to ABAP
+    // ref Table 5-A at pg. 48 of SAP NW RFC SDK Programming Guide
     strncpyU(errorInfo->message, setString(requestBaton->jsHandlerError), 512);
     return RFC_EXTERNAL_FAILURE;
   }
 
   return RFC_OK;
 }
+
+// to-do
+// RFC_RC SAP_API authorizationHandler(RFC_CONNECTION_HANDLE rfcHandle,
+//                                     RFC_SECURITY_ATTRIBUTES* secAttributes,
+//                                     RFC_ERROR_INFO* errorInfo) {
+//   // Here you can check any combination of function name, system ID, //
+//   client,
+//   // calling ABAP report and username, as well as the backend’s SNC
+//   credentials. if (!strcmpU(secAttributes->user, cU("ADMIN"))) {
+//     // User ADMIN is allowed to call function modules FUNCTION_1,
+//     // ... FUNCTION_3.
+//     if (!strcmpU(secAttributes->functionName, cU("FUNCTION_1")) ||
+//         !strcmpU(secAttributes->functionName, cU("FUNCTION_2")) ||
+//         !strcmpU(secAttributes->functionName, cU("FUNCTION_3")))
+//       return RFC_OK;
+//     else if (!strcmpU(secAttributes->user, cU("BUSINESS_USER"))) {
+//       // User BUSINESS_USER is allowed to call function modules // BAPI_A,
+//       and
+//       // BAPI_B.
+//       if (!strcmpU(secAttributes->functionName, cU("BAPI_A")) ||
+//           !strcmpU(secAttributes->functionName, cU("BAPI_A")))
+//         return RFC_OK;
+//       // All other cases are denied.
+//       return RFC_AUTHORIZATION_FAILURE;
+//     }
+//   }
 
 class StartAsync : public Napi::AsyncWorker {
  public:
@@ -840,9 +867,9 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
 
   if (abapFunctionName.Utf8Value().length() == 0 ||
       abapFunctionName.Utf8Value().length() > 30) {
-    Napi::TypeError::New(
-        info.Env(),
-        "Server addFunction() accepts max. 30 characters long ABAP RFM name")
+    Napi::TypeError::New(info.Env(),
+                         "Server addFunction() accepts max. 30 characters "
+                         "long ABAP RFM name")
         .ThrowAsJavaScriptException();
     return info.Env().Undefined();
   }

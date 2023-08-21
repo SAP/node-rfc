@@ -4,7 +4,7 @@
 
 import { direct_client, cancelClient } from "../utils/setup";
 
-describe.skip("Connection terminate by addon", () => {
+describe("Connection terminate by addon", () => {
     const DURATION = 3;
     const CANCEL = 1;
     const RfcCanceledError = {
@@ -16,33 +16,29 @@ describe.skip("Connection terminate by addon", () => {
         message: "Connection was canceled.",
     };
 
-    test("Non-managed, addon.cancelClient() callback", function (done) {
-        const client = direct_client();
-        expect.assertions(3);
-        void client.open(() => {
-            // call function
-            const handle = client.connectionHandle;
-            client.invoke(
-                "RFC_PING_AND_WAIT",
-                {
-                    SECONDS: DURATION,
-                },
-                function (err) {
-                    expect(err).toMatchObject(RfcCanceledError);
-                    done();
-                }
-            );
-            // cancel
-
-            setTimeout(() => {
-                void cancelClient(client, (err, res) => {
-                    expect(err).toBeUndefined();
-                    expect(res).toMatchObject({
-                        connectionHandle: handle,
-                        result: "cancelled",
-                    });
-                });
-            }, CANCEL * 1000);
-        });
-    });
+    test(
+        "Non-managed, addon.cancelClient() callback",
+        function (done) {
+            const client = direct_client();
+            expect.assertions(1);
+            void client.open(() => {
+                // 3 seconds long call
+                client.invoke(
+                    "RFC_PING_AND_WAIT",
+                    {
+                        SECONDS: DURATION,
+                    },
+                    function (err: unknown) {
+                        expect(err).toMatchObject(RfcCanceledError);
+                        done();
+                    }
+                );
+                // cancel after 1 sec
+                setTimeout(() => {
+                    <void>cancelClient(client);
+                }, CANCEL * 1000);
+            });
+        },
+        DURATION * 1000
+    );
 });

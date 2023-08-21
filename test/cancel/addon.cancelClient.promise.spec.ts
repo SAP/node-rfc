@@ -4,7 +4,7 @@
 
 import { direct_client, cancelClient } from "../utils/setup";
 
-describe.skip("Connection terminate by addon", () => {
+describe("Connection terminate by addon", () => {
     const DURATION = 3;
     const CANCEL = 1;
     const RfcCanceledError = {
@@ -16,27 +16,28 @@ describe.skip("Connection terminate by addon", () => {
         message: "Connection was canceled.",
     };
 
-    test("Non-managed, addon.cancelClient() promise", async () => {
-        const client = direct_client();
-        expect.assertions(2);
-        await client.open();
-        // call function
-        const handle = client.connectionHandle;
-        try {
-            await client.call("RFC_PING_AND_WAIT", { SECONDS: DURATION });
-        } catch (err) {
-            expect(err).toMatchObject(RfcCanceledError);
-        }
+    test(
+        "Non-managed, addon.cancelClient() promise",
+        async () => {
+            try {
+                expect.assertions(1);
+                const client = direct_client();
 
-        // cancel
-        setTimeout(() => {
-            async () => {
-                const res = await (cancelClient(client) as Promise<unknown>);
-                expect(res).toMatchObject({
-                    connectionHandle: handle,
-                    result: "cancelled",
+                await client.open();
+
+                // cancel after 1 sec
+                setTimeout(() => {
+                    <void>cancelClient(client);
+                }, CANCEL * 1000);
+
+                // 3 seconds long call
+                await client.call("RFC_PING_AND_WAIT", {
+                    SECONDS: DURATION,
                 });
-            };
-        }, CANCEL * 1000);
-    });
+            } catch (err: unknown) {
+                return expect(err).toMatchObject(RfcCanceledError);
+            }
+        },
+        DURATION * 1000
+    );
 });

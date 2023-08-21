@@ -116,7 +116,6 @@ Napi::Value SetLogFilePath(const Napi::CallbackInfo& info) {
   _log.set_log_file_path(info[0].As<Napi::String>().Utf8Value());
   return info.Env().Undefined();
 }
-
 Napi::Object RegisterModule(Napi::Env env, Napi::Object exports) {
   if (node_rfc::__env == nullptr) {
     node_rfc::__env = env;

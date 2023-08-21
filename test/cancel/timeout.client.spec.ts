@@ -16,7 +16,7 @@ describe("Connection terminate timeout", () => {
         message: "Connection was canceled.",
     };
 
-    test.only("Client options timeout", function (done) {
+    test("Client options timeout", function (done) {
         const client = new Client({ dest: "MME" }, { timeout: TIMEOUT });
         expect.assertions(3);
         void client.open(() => {
@@ -37,5 +37,5 @@ describe("Connection terminate timeout", () => {
                 }
             );
         });
-    });
+    }, 10000);
 });

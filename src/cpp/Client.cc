@@ -626,6 +626,7 @@ Napi::Value Client::Release(const Napi::CallbackInfo& info) {
 
   return info.Env().Undefined();
 }
+
 void cancelConnection(RFC_RC* rc,
                       RFC_CONNECTION_HANDLE connectionHandle,
                       RFC_ERROR_INFO* errorInfo) {

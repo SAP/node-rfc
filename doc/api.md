@@ -50,7 +50,7 @@ loadCryptoLibrary(cryptoLibraryPath: string)
 Usage: [usage/addon](usage.md#cancelclient)
 
 ```ts
-cancelClient(client: Client, callback?: Function): void | Promise<any>;
+cancelClient(client: Client, callback?: Function): void | Promise<void>;
 ```
 
 ### languageIsoToSap

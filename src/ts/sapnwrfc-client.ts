@@ -432,6 +432,7 @@ export class Client {
 
     cancel(callback?: Function): void | Promise<void> {
         Client.checkCallbackArg("cancel", callback);
+
         if (typeof callback === "function") {
             try {
                 this.__client.cancel(callback);
