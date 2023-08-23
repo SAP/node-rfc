@@ -15,12 +15,7 @@ namespace node_rfc {
 extern Napi::Env __env;
 extern Log _log;
 
-typedef struct _ServerOptions {
-  logLevel log_severity = logLevel::none;
-} ServerOptions;
-
-class ServerRequestBaton;
-
+// NW RFC SDK server API
 RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
                               RFC_ATTRIBUTES rfc_attributes,
                               RFC_FUNCTION_DESC_HANDLE* func_handle);
@@ -29,12 +24,34 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
                                      RFC_FUNCTION_HANDLE func_handle,
                                      RFC_ERROR_INFO* errorInfo);
 
+RFC_RC SAP_API authorizationHandler(RFC_CONNECTION_HANDLE rfcHandle,
+                                    RFC_SECURITY_ATTRIBUTES* secAttributes,
+                                    RFC_ERROR_INFO* errorInfo);
+
+// node-rfc Server
+
+typedef struct _ServerOptions {
+  logLevel log_severity = logLevel::none;
+  Napi::FunctionReference authHandlerJS;
+
+  ~_ServerOptions() {
+    _log.debug(logClass::server, "~ServerOptions");
+    if (!authHandlerJS.IsEmpty()) {
+      authHandlerJS.Unref();
+      _log.debug(logClass::server, "auth handler unref");
+    }
+  }
+} ServerOptions;
+
+class AuthRequestBaton;
+class ServerRequestBaton;
+
 class Server : public Napi::ObjectWrap<Server> {
  public:
   friend class StartAsync;
   friend class StopAsync;
   friend class GetFunctionDescAsync;
-  friend class ServerFunction;
+  friend class HandlerFunction;
   friend class ServerRequestBaton;
 
   std::string get_request_id() {
@@ -43,6 +60,7 @@ class Server : public Napi::ObjectWrap<Server> {
   std::string next_request_id() {
     return std::to_string(id) + ":" + std::to_string(++Server::request_id);
   }
+
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
   // cppcheck-suppress noExplicitConstructor
   Server(const Napi::CallbackInfo& info);

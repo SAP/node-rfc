@@ -61,25 +61,25 @@ typedef struct _ClientOptionsStruct {
     Napi::Object options = Napi::Object::New(env);
 
     // timeout
-    options.Set(CLIENT_OPTION_KEY_TIMEOUT, Napi::Number::New(env, timeout));
+    options.Set(CLIENT_OPTION_TIMEOUT, Napi::Number::New(env, timeout));
 
     // stateless
-    options.Set(CLIENT_OPTION_KEY_STATELESS,
+    options.Set(CLIENT_OPTION_STATELESS,
                 Napi::Boolean::New(env, stateless));
 
     // filter
-    options.Set(CLIENT_OPTION_KEY_FILTER,
+    options.Set(CLIENT_OPTION_FILTER,
                 Napi::Number::New(env, filter_param_type));
 
     // bcd
     if (bcd == CLIENT_OPTION_BCD_STRING) {
-      options.Set(CLIENT_OPTION_KEY_BCD, "string");
+      options.Set(CLIENT_OPTION_BCD, "string");
     } else if (bcd == CLIENT_OPTION_BCD_NUMBER) {
-      options.Set(CLIENT_OPTION_KEY_BCD, "number");
+      options.Set(CLIENT_OPTION_BCD, "number");
     } else if (bcd == CLIENT_OPTION_BCD_FUNCTION) {
-      options.Set(CLIENT_OPTION_KEY_BCD, bcdFunction.Value());
+      options.Set(CLIENT_OPTION_BCD, bcdFunction.Value());
     } else {
-      options.Set(CLIENT_OPTION_KEY_BCD, "?");
+      options.Set(CLIENT_OPTION_BCD, "?");
     }
 
     // date
@@ -94,7 +94,7 @@ typedef struct _ClientOptionsStruct {
     } else {
       odate.Set("fromABAP", "string");
     }
-    options.Set(CLIENT_OPTION_KEY_DATE, odate);
+    options.Set(CLIENT_OPTION_DATE, odate);
 
     // time
     Napi::Object otime = Napi::Object::New(env);
@@ -108,7 +108,7 @@ typedef struct _ClientOptionsStruct {
     } else {
       otime.Set("fromABAP", "string");
     }
-    options.Set(CLIENT_OPTION_KEY_TIME, otime);
+    options.Set(CLIENT_OPTION_TIME, otime);
 
     Napi::EscapableHandleScope scope(env);
     return scope.Escape(options);

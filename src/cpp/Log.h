@@ -65,6 +65,31 @@ class Log {
   explicit Log(std::string log_path = "_noderfc.log");
   ~Log();
 
+  template <typename... Args>
+  void fatal(const logClass component_id, Args&&... args) {
+    record(component_id, logLevel::fatal, args...);
+  }
+
+  template <typename... Args>
+  void error(const logClass component_id, Args&&... args) {
+    record(component_id, logLevel::error, args...);
+  }
+
+  template <typename... Args>
+  void warning(const logClass component_id, Args&&... args) {
+    record(component_id, logLevel::warning, args...);
+  }
+
+  template <typename... Args>
+  void info(const logClass component_id, Args&&... args) {
+    record(component_id, logLevel::info, args...);
+  }
+
+  template <typename... Args>
+  void debug(const logClass component_id, Args&&... args) {
+    record(component_id, logLevel::debug, args...);
+  }
+
   // Write regular arguments. Must be defined in header becuse of variadic
   // interface
   template <typename... Args>

@@ -102,9 +102,8 @@ Napi::Value LanguageSapToIso(const Napi::CallbackInfo& info) {
   delete[] ucLangSAP;
 
   if (rc != RFC_OK || errorInfo.code != RFC_OK) {
-    _log.record(
+    _log.error(
         logClass::addon,
-        logLevel::error,
         "Error converting SAP language code: '" + lang_sap + "' to ISO code");
     return rfcSdkError(&errorInfo);
   }

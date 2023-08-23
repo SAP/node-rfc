@@ -10,20 +10,21 @@ namespace node_rfc {
 uint_t Server::_id = 1;
 uint_t Server::request_id = 0;
 
-using DataType = ServerRequestBaton*;
+class sapnwrfcServerAPI;
 
-void JSFunctionCall(Napi::Env env,
-                    Napi::Function callback,
-                    std::nullptr_t* context,
-                    DataType requestBaton);
+using DataType = ServerRequestBaton*;
+void JSHandlerCall(Napi::Env env,
+                   Napi::Function callback,
+                   std::nullptr_t* context,
+                   DataType requestBaton);
 
 using ServerRequestTsfn = Napi::
-    TypedThreadSafeFunction<std::nullptr_t, ServerRequestBaton, JSFunctionCall>;
+    TypedThreadSafeFunction<std::nullptr_t, ServerRequestBaton, JSHandlerCall>;
 
 // When JS function handler is registered in Server::AddFunction,
-// the ServerFunction instance is created, with TSFN reference
+// the HandlerFunction instance is created, with TSFN reference
 // to JS function handler
-class ServerFunction {
+class HandlerFunction {
  public:
   Server* server;
   // Parameters from metadataLookup
@@ -32,14 +33,17 @@ class ServerFunction {
   RFC_FUNCTION_DESC_HANDLE func_desc_handle;
   ServerRequestTsfn tsfnRequest;
   std::string jsFunctionName;
-  static std::unordered_map<std::string, ServerFunction*> installed_functions;
+  // Installed JS handler functions
+  static std::unordered_map<std::string, HandlerFunction*> installed_functions;
+  // Installed JS auth handler function
+  static Napi::FunctionReference authHandlerJS;
 
-  ServerFunction(Server* server,
-                 std::string _abap_func_name,
-                 RFC_ABAP_NAME _abap_func_name_sapuc,
-                 RFC_FUNCTION_DESC_HANDLE func_desc_handle,
-                 ServerRequestTsfn tsfnRequest,
-                 const std::string& jsFunctionName)
+  HandlerFunction(Server* server,
+                  std::string _abap_func_name,
+                  RFC_ABAP_NAME _abap_func_name_sapuc,
+                  RFC_FUNCTION_DESC_HANDLE func_desc_handle,
+                  ServerRequestTsfn tsfnRequest,
+                  const std::string& jsFunctionName)
       : server(server),
         abap_func_name(_abap_func_name),
         func_desc_handle(func_desc_handle),
@@ -47,7 +51,7 @@ class ServerFunction {
         jsFunctionName(jsFunctionName) {
     strcpyU(abap_func_name_sapuc, _abap_func_name_sapuc);
   }
-  ~ServerFunction() { tsfnRequest.Release(); }
+  ~HandlerFunction() { tsfnRequest.Release(); }
 
   // get request id for request baton
   std::string next_request_id() { return server->next_request_id(); }
@@ -64,21 +68,19 @@ class ServerFunction {
       if (strcmpU(abap_func_name, value->abap_func_name_sapuc) == 0) {
         *func_desc_handle = value->func_desc_handle;
 
-        _log.record(logClass::server,
-                    logLevel::info,
-                    "metadataLookup: Function description set ",
-                    (pointer_t)*func_desc_handle,
-                    " for ABAP function '",
-                    key,
-                    "'");
+        _log.info(logClass::server,
+                  "metadataLookup: Function description set ",
+                  (pointer_t)*func_desc_handle,
+                  " for ABAP function '",
+                  key,
+                  "'");
 
         return RFC_OK;
       }
     }
 
-    _log.record(
+    _log.error(
         logClass::server,
-        logLevel::error,
         "metadataLookup: Function description not set for ABAP function: ");
     _log.record_uc(logClass::server, logLevel::error, abap_func_name);
 
@@ -86,9 +88,9 @@ class ServerFunction {
   }
 
   // Called by genericRequestHandler, to find JS handler function reference
-  static ServerFunction* get_function(RFC_CONNECTION_HANDLE conn_handle,
-                                      RFC_FUNCTION_HANDLE func_handle,
-                                      RFC_ERROR_INFO* errorInfo) {
+  static HandlerFunction* get_function(RFC_CONNECTION_HANDLE conn_handle,
+                                       RFC_FUNCTION_HANDLE func_handle,
+                                       RFC_ERROR_INFO* errorInfo) {
     UNUSED(conn_handle);
 
     // Obtain ABAP function name
@@ -106,22 +108,19 @@ class ServerFunction {
     // Find installed function
     for (const auto& [key, value] : installed_functions) {
       if (strcmpU(abap_func_name_sapuc, value->abap_func_name_sapuc) == 0) {
-        _log.record(logClass::server,
-                    logLevel::info,
-                    "JS function found: '",
-                    value->jsFunctionName,
-                    "' for function handle ",
-                    (uintptr_t)func_handle,
-                    " of ABAP function '" + key + "'");
+        _log.info(logClass::server,
+                  "JS function found: '" + value->jsFunctionName,
+                  "' for function handle ",
+                  (uintptr_t)func_handle,
+                  " of ABAP function '" + key + "'");
         return value;
       }
     }
 
-    _log.record(logClass::server,
-                logLevel::error,
-                "JS function not found for function handle ",
-                (uintptr_t)func_handle,
-                " of ABAP function ");
+    _log.error(logClass::server,
+               "JS function not found for function handle ",
+               (uintptr_t)func_handle,
+               " of ABAP function ");
     _log.record_uc(logClass::server, logLevel::error, abap_func_name_sapuc);
 
     return nullptr;
@@ -152,29 +151,25 @@ class ServerFunction {
 
     ServerRequestTsfn tsfnRequest =
         ServerRequestTsfn::New(env,
-                               jsFunction,           // JavaScript server
+                               jsFunction,  // JavaScript server function
                                "ServerRequestTsfn",  // Resource name
                                0,                    // Unlimited queue
                                1  // Only one thread will use this initially
         );
 
-    _log.record(logClass::server,
-                logLevel::info,
-                "Function description ",
-                (pointer_t)func_desc_handle,
-                " added for JS function '",
-                jsFunctionName,
-                "' as ABAP function '",
-                abapFunctionName.Utf8Value(),
-                "'");
+    _log.info(logClass::server,
+              "Function description ",
+              (pointer_t)func_desc_handle,
+              " added for JS function '" + jsFunctionName +
+                  "' as ABAP function '" + abapFunctionName.Utf8Value() + "'");
 
-    ServerFunction::installed_functions[abapFunctionName.Utf8Value()] =
-        new ServerFunction(server,
-                           abapFunctionName.Utf8Value(),
-                           abap_func_name_sapuc,
-                           func_desc_handle,
-                           tsfnRequest,
-                           jsFunctionName);
+    HandlerFunction::installed_functions[abapFunctionName.Utf8Value()] =
+        new HandlerFunction(server,
+                            abapFunctionName.Utf8Value(),
+                            abap_func_name_sapuc,
+                            func_desc_handle,
+                            tsfnRequest,
+                            jsFunctionName);
 
     delete[] abap_func_name_sapuc;
     return env.Undefined();
@@ -189,44 +184,178 @@ class ServerFunction {
 
     for (const auto& [abap_func_name, value] : installed_functions) {
       if (jsFunctionName == value->jsFunctionName) {
-        ServerFunction::installed_functions.erase(abap_func_name);
-        _log.record(logClass::server,
-                    logLevel::info,
-                    "JS function removed " + jsFunctionName,
-                    " with ABAP function " + abap_func_name,
-                    " description: ",
-                    (pointer_t)value->func_desc_handle);
+        HandlerFunction::installed_functions.erase(abap_func_name);
+        _log.info(logClass::server,
+                  "JS function removed " + jsFunctionName,
+                  " with ABAP function " + abap_func_name,
+                  " description: ",
+                  (pointer_t)value->func_desc_handle);
         return jsFunction.Env().Undefined();
       }
     }
 
     // Log and return error
     std::string errmsg =
-        "Server removeFunction() did not find registered function: " +
-        jsFunctionName;
-    _log.record(logClass::server, logLevel::error, errmsg);
+        "Server removeFunction() did not find function: " + jsFunctionName;
+    _log.error(logClass::server, errmsg);
 
     return nodeRfcError(errmsg);
   }
 
   // Called by Server destructor, to clean-up TSFN instances
   static void release(Server* server) {
+    // release JS handler functions
     for (const auto& [abap_func_name, value] :
-         ServerFunction::installed_functions) {
+         HandlerFunction::installed_functions) {
       if (server == value->server) {
         value->tsfnRequest.Unref(server->env);
-        _log.record(logClass::server,
-                    logLevel::debug,
-                    "unref '" + value->jsFunctionName,
-                    "' with ABAP function '" + abap_func_name + "'");
+        _log.debug(logClass::server,
+                   "unref '" + value->jsFunctionName,
+                   "' with ABAP function '" + abap_func_name + "'");
       }
     }
   }
 };
 
-// JS handler functions registered by Server instances
-std::unordered_map<std::string, ServerFunction*>
-    ServerFunction::installed_functions;
+// JS handler functions registered by server
+std::unordered_map<std::string, HandlerFunction*>
+    HandlerFunction::installed_functions;
+
+//
+// Authorization handler
+//
+
+using DataTypeAuth = AuthRequestBaton*;
+void JSAuthCall(Napi::Env env,
+                Napi::Function callback,
+                std::nullptr_t* context,
+                DataTypeAuth requestBaton);
+
+using AuthRequestTsfn =
+    Napi::TypedThreadSafeFunction<std::nullptr_t, AuthRequestBaton, JSAuthCall>;
+
+class AuthRequestBaton {
+ private:
+  // set when auth handler registered
+  AuthRequestTsfn tsfn;
+  // set by SAP NW RFC SDK API
+  RFC_CONNECTION_HANDLE auth_connection_handle;
+  RFC_SECURITY_ATTRIBUTES* secAttributes;
+  RFC_ERROR_INFO* errorInfo;
+  // set when JS auth handler registered
+  bool tsfn_created = false;
+
+  // js handler synchronization
+  bool js_call_completed = false;
+  std::mutex js_call_mutex;
+  std::condition_variable js_call_condition;
+
+  std::string jsHandlerError;
+
+ public:
+  AuthRequestBaton() { jsHandlerError = ""; }
+
+  bool is_registered() { return tsfn_created; }
+
+  void unregister() {
+    if (tsfn_created) {
+      _log.debug(logClass::server, "stop: auth handler unref");
+      tsfn.Unref(__env);
+      tsfn_created = false;
+    }
+  }
+
+  void registerJsHandler(Napi::FunctionReference& func) {
+    tsfn = AuthRequestTsfn::New(func.Env(),
+                                func.Value(),       // JavaScript auth function
+                                "AuthRequestTsfn",  // Resource name
+                                0,                  // Unlimited queue
+                                1  // Only one thread will use this initially)
+    );
+    tsfn_created = true;
+    _log.debug(logClass::server, "stop: auth handler registered");
+  }
+
+  // ABAP request data to JS
+  Napi::Value getRequestData() {
+    Napi::EscapableHandleScope scope(__env);
+    Napi::Object data = Napi::Object::New(__env);
+    data.Set("connectionHandle",
+             Napi::Number::New(__env, (pointer_t)auth_connection_handle));
+    data.Set("AbapFunctionName", wrapString(secAttributes->functionName));
+    data.Set("sysId", wrapString(secAttributes->sysId));
+    data.Set("client", wrapString(secAttributes->client));
+    data.Set("user", wrapString(secAttributes->user));
+    data.Set("progName", wrapString(secAttributes->progName));
+    if (secAttributes->ssoTicket != nullptr)
+      data.Set("ssoTicket", wrapString(secAttributes->ssoTicket));
+    if (secAttributes->sncAclKeyLength > 0 &&
+        secAttributes->sncAclKey != nullptr)
+      data.Set(
+          "sncAclKey",
+          Napi::Buffer<SAP_RAW>::New(node_rfc::__env,
+                                     this->secAttributes->sncAclKey,
+                                     this->secAttributes->sncAclKeyLength));
+    return scope.Escape(data);
+  }
+
+  // JS response data to ABAP
+  void setResponseData(Napi::Value jsAuthResponse) {
+    if (jsAuthResponse.IsUndefined()) {
+      errorInfo->code = RFC_OK;
+    } else {
+      errorInfo->code = RFC_AUTHORIZATION_FAILURE;
+      strcpyU(errorInfo->message, cU("Unauthorized"));
+    }
+
+    // ABAP response is ready
+    done();
+  };
+
+  RFC_RC SAP_API callJS(RFC_CONNECTION_HANDLE conn_handle,
+                        RFC_SECURITY_ATTRIBUTES* secAttributes,
+                        RFC_ERROR_INFO* errorInfo) {
+    this->auth_connection_handle = conn_handle;
+    this->secAttributes = secAttributes;
+    this->errorInfo = errorInfo;
+
+    tsfn.NonBlockingCall(this);
+
+    wait();  // for done() from JSAuthCall, when the ABAP response is ready
+
+    return errorInfo->code;
+  }
+
+  void wait() {
+    js_call_completed = false;
+    std::unique_lock<std::mutex> lock(js_call_mutex);
+    js_call_condition.wait(lock, [this] { return js_call_completed; });
+  }
+
+  void done(const std::string& errorObj = "") {
+    jsHandlerError = errorObj;
+    js_call_completed = true;
+    js_call_condition.notify_one();
+    _log.record(
+        logClass::server,
+        (jsHandlerError.length() > 0) ? logLevel::error : logLevel::debug,
+        "JS auth handler call done ",
+        (jsHandlerError.length() > 0) ? "', error: " + jsHandlerError : "'");
+  }
+};
+
+class sapnwrfcServerAPI {
+ public:
+  static AuthRequestBaton authorizationHandler;
+
+  // ~sapnwrfcServerAPI() {
+  //   if (sapnwrfcServerAPI::authorizationHandler != nullptr) {
+  //     sapnwrfcServerAPI::authorizationHandler.Release();
+  //   }
+  // }
+};
+
+AuthRequestBaton sapnwrfcServerAPI::authorizationHandler = AuthRequestBaton();
 
 // Created in genericRequestHandler, to wait for JS handler response,
 // check for errors and send response to ABAP system
@@ -242,7 +371,7 @@ class ServerRequestBaton {
   RFC_FUNCTION_HANDLE func_handle;
   RFC_ERROR_INFO* errorInfo;
   // JS server function to handle the request
-  ServerFunction* serverFunction;
+  HandlerFunction* handlerFunction;
   // JS server function result
   std::string jsHandlerError;
 
@@ -256,51 +385,48 @@ class ServerRequestBaton {
   ServerRequestBaton(RFC_CONNECTION_HANDLE conn_handle,
                      RFC_FUNCTION_HANDLE func_handle,
                      RFC_ERROR_INFO* errorInfo,
-                     ServerFunction* serverFunction)
+                     HandlerFunction* handlerFunction)
       : request_connection_handle(conn_handle),
         func_handle(func_handle),
         errorInfo(errorInfo),
-        serverFunction(serverFunction) {
-    request_id = this->serverFunction->next_request_id();
+        handlerFunction(handlerFunction) {
+    request_id = this->handlerFunction->next_request_id();
     errorPath = RfmErrorPath();
     jsHandlerError = "";
 
-    _log.record(logClass::server,
-                logLevel::info,
-                "Client request [" + request_id + "]",
-                " for JS function '",
-                serverFunction->jsFunctionName,
-                "' using function handle ",
-                (uintptr_t)func_handle,
-                " and descriptor ",
-                (uintptr_t)serverFunction->func_desc_handle,
-                "\n\tClient connection ",
-                (uintptr_t)conn_handle,
-                ", ABAP function ",
-                serverFunction->abap_func_name);
+    _log.info(logClass::server,
+              "Client request [" + request_id + "]",
+              " for JS function '",
+              handlerFunction->jsFunctionName,
+              "' using function handle ",
+              (uintptr_t)func_handle,
+              " and descriptor ",
+              (uintptr_t)handlerFunction->func_desc_handle,
+              "\n\tClient connection ",
+              (uintptr_t)conn_handle,
+              ", ABAP function ",
+              handlerFunction->abap_func_name);
   }
 
   void wait() {
-    _log.record(logClass::server,
-                logLevel::debug,
-                "JS function call [" + request_id,
-                "] lock '",
-                serverFunction->jsFunctionName,
-                "' with ABAP function handle ",
-                (uintptr_t)func_handle,
-                " ",
-                server_call_completed);
+    _log.debug(logClass::server,
+               "JS function call [" + request_id,
+               "] lock '",
+               handlerFunction->jsFunctionName,
+               "' with ABAP function handle ",
+               (uintptr_t)func_handle,
+               " ",
+               server_call_completed);
     std::unique_lock<std::mutex> lock(server_call_mutex);
     server_call_condition.wait(lock, [this] { return server_call_completed; });
-    _log.record(logClass::server,
-                logLevel::debug,
-                "JS function call [" + request_id,
-                "] unlock '",
-                serverFunction->jsFunctionName,
-                "' with ABAP function handle ",
-                (uintptr_t)func_handle,
-                " ",
-                server_call_completed);
+    _log.debug(logClass::server,
+               "JS function call [" + request_id,
+               "] unlock '",
+               handlerFunction->jsFunctionName,
+               "' with ABAP function handle ",
+               (uintptr_t)func_handle,
+               " ",
+               server_call_completed);
   }
 
   void done(const std::string& errorObj) {
@@ -309,8 +435,8 @@ class ServerRequestBaton {
         logClass::server,
         (jsHandlerError.length() > 0) ? logLevel::error : logLevel::debug,
         "JS function call [" + request_id,
-        " done '",
-        serverFunction->jsFunctionName,
+        "] done '",
+        handlerFunction->jsFunctionName,
         (jsHandlerError.length() > 0) ? "', error: " + jsHandlerError : "'",
         " ",
         server_call_completed);
@@ -319,8 +445,32 @@ class ServerRequestBaton {
     server_call_condition.notify_one();
   }
 
+  Napi::Value getServerRequestContext() {
+    const std::string call_type[4] = {
+        "synchronous", "transactional", "queued", "background_unit"};
+
+    Napi::Object requestContext = Napi::Object::New(node_rfc::__env);
+
+    requestContext.Set("client_connection",
+                       Napi::Number::New(node_rfc::__env,
+                                         (uintptr_t)request_connection_handle));
+    requestContext.Set(
+        "connection_attributes",
+        getConnectionAttributes(node_rfc::__env, request_connection_handle));
+
+    RFC_SERVER_CONTEXT context;
+
+    RFC_RC rc =
+        RfcGetServerContext(request_connection_handle, &context, errorInfo);
+
+    if (rc != RFC_OK || errorInfo->code != RFC_OK) {
+      _log.error(logClass::server, "Request context not set", requestContext);
+    }
+    return requestContext;
+  }
+
   // Transform JavaScript parameters' data to ABAP
-  void setABAPParameters(Napi::Env env, Napi::Value jsResult) {
+  void setResponseData(Napi::Env env, Napi::Value jsResult) {
     Napi::Value errorObj = env.Undefined();
     Napi::Object params = jsResult.As<Napi::Object>();
     Napi::Array paramNames = params.GetPropertyNames();
@@ -330,7 +480,7 @@ class ServerRequestBaton {
       Napi::Value value = params.Get(name);
 
       // _log.record(logClass::server, logLevel::debug, name, value);
-      errorObj = setRfmParameter(serverFunction->func_desc_handle,
+      errorObj = setRfmParameter(handlerFunction->func_desc_handle,
                                  func_handle,
                                  name,
                                  value,
@@ -353,21 +503,31 @@ class ServerRequestBaton {
 
 void getServerOptions(Napi::Object serverOptions,
                       ServerOptions* server_options) {
-  UNUSED(server_options);
-  char errmsg[ERRMSG_LENGTH];
   Napi::Array optionNames = serverOptions.GetPropertyNames();
   uint_t optionCount = optionNames.Length();
   for (uint_t ii = 0; ii < optionCount; ii++) {
     std::string name = optionNames.Get(ii).ToString().Utf8Value();
     Napi::Value value = serverOptions.Get(name);
-    if (name == LOG_LEVEL_KEY) {
+    if (name == SRV_OPTION_LOG_LEVEL) {
       _log.set_log_level(logClass::server, value);
+    } else if (name == SRV_OPTION_AUTH) {
+      if (!value.IsFunction()) {
+        Napi::TypeError::New(node_rfc::__env,
+                             "Server option '" + name + "' must be JS function")
+            .ThrowAsJavaScriptException();
+        return;
+      }
+      server_options->log_severity = logLevel::none;
+      server_options->authHandlerJS =
+          Napi::Persistent(value.As<Napi::Function>());
+
+      // Register authorization handler
+      sapnwrfcServerAPI::authorizationHandler.registerJsHandler(
+          server_options->authHandlerJS);
+
     } else {
-      snprintf(errmsg,
-               ERRMSG_LENGTH - 1,
-               "Server option not allowed: \"%s\"",
-               name.c_str());
-      Napi::TypeError::New(node_rfc::__env, errmsg)
+      Napi::TypeError::New(node_rfc::__env,
+                           "Server option not allowed: '" + name + "'")
           .ThrowAsJavaScriptException();
       return;
     }
@@ -474,11 +634,8 @@ Server::Server(const Napi::CallbackInfo& info)
       getServerOptions(value, &server_options);
       //
     } else {
-      snprintf(errmsg,
-               ERRMSG_LENGTH - 1,
-               "Server parameter not allowed: \"%s\"",
-               key.c_str());
-      Napi::TypeError::New(node_rfc::__env, errmsg)
+      Napi::TypeError::New(node_rfc::__env,
+                           "Server parameter not allowed: '" + key + "'")
           .ThrowAsJavaScriptException();
       return;
     }
@@ -500,12 +657,11 @@ Server::Server(const Napi::CallbackInfo& info)
         .ThrowAsJavaScriptException();
     return;
   }
-  _log.record(logClass::server,
-              logLevel::info,
-              "created: server handle ",
-              (uintptr_t)serverHandle,
-              " client connection ",
-              (uintptr_t)client_conn_handle);
+  _log.info(logClass::server,
+            "created: server handle ",
+            (uintptr_t)serverHandle,
+            " client connection ",
+            (uintptr_t)client_conn_handle);
 };
 
 Napi::Value wrapUnitIdentifier(RFC_UNIT_IDENTIFIER* uIdentifier) {
@@ -560,10 +716,7 @@ Napi::Value getServerRequestContext(ServerRequestBaton* requestBaton) {
                                   requestBaton->errorInfo);
 
   if (rc != RFC_OK || requestBaton->errorInfo->code != RFC_OK) {
-    _log.record(logClass::server,
-                logLevel::error,
-                "Request context not set",
-                requestContext);
+    _log.error(logClass::server, "Request context not set", requestContext);
     return requestContext;
   }
 
@@ -587,7 +740,7 @@ Napi::Value getServerRequestContext(ServerRequestBaton* requestBaton) {
 RFC_RC SAP_API metadataLookup(SAP_UC const* abap_func_name,
                               RFC_ATTRIBUTES rfc_attributes,
                               RFC_FUNCTION_DESC_HANDLE* func_desc_handle) {
-  return ServerFunction::set_function_handle(
+  return HandlerFunction::set_function_handle(
       abap_func_name, rfc_attributes, func_desc_handle);
 }
 
@@ -595,28 +748,28 @@ RFC_RC SAP_API metadataLookup(SAP_UC const* abap_func_name,
 // handle and function handle - a handle to function module data
 // container.
 // Here we obtain a function module name and look for TSFN object
-// in serverFunctions global map.
+// in handlerFunctions global map.
 // When TSFN object found, the
 RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
                                      RFC_FUNCTION_HANDLE func_handle,
                                      RFC_ERROR_INFO* errorInfo) {
   // Check if JS handler function registered
-  ServerFunction* serverFunction =
-      ServerFunction::get_function(conn_handle, func_handle, errorInfo);
-  if (serverFunction == nullptr) {
+  HandlerFunction* handlerFunction =
+      HandlerFunction::get_function(conn_handle, func_handle, errorInfo);
+  if (handlerFunction == nullptr) {
     return RFC_EXTERNAL_FAILURE;
   }
 
   // Create request "baton" for TSFN call, to pass ABAP data
   // and wait until JS handler function completed.
-  // The JS handler is invoked via thread safe JSFunctionCall
+  // The JS handler is invoked via thread safe JSHandlerCall
   ServerRequestBaton* requestBaton = new ServerRequestBaton(
-      conn_handle, func_handle, errorInfo, serverFunction);
+      conn_handle, func_handle, errorInfo, handlerFunction);
 
   // Call JS handler function
-  serverFunction->tsfnRequest.NonBlockingCall(requestBaton);
+  handlerFunction->tsfnRequest.NonBlockingCall(requestBaton);
 
-  // Wait for JS functionn return and mutex release in JSFunctionCall
+  // Wait for JS functionn return and mutex release in JSHandlerCall
   requestBaton->wait();
 
   if (requestBaton->jsHandlerError.length() > 0) {
@@ -629,31 +782,17 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
   return RFC_OK;
 }
 
-// to-do
-// RFC_RC SAP_API authorizationHandler(RFC_CONNECTION_HANDLE rfcHandle,
-//                                     RFC_SECURITY_ATTRIBUTES* secAttributes,
-//                                     RFC_ERROR_INFO* errorInfo) {
-//   // Here you can check any combination of function name, system ID, //
-//   client,
-//   // calling ABAP report and username, as well as the backend’s SNC
-//   credentials. if (!strcmpU(secAttributes->user, cU("ADMIN"))) {
-//     // User ADMIN is allowed to call function modules FUNCTION_1,
-//     // ... FUNCTION_3.
-//     if (!strcmpU(secAttributes->functionName, cU("FUNCTION_1")) ||
-//         !strcmpU(secAttributes->functionName, cU("FUNCTION_2")) ||
-//         !strcmpU(secAttributes->functionName, cU("FUNCTION_3")))
-//       return RFC_OK;
-//     else if (!strcmpU(secAttributes->user, cU("BUSINESS_USER"))) {
-//       // User BUSINESS_USER is allowed to call function modules // BAPI_A,
-//       and
-//       // BAPI_B.
-//       if (!strcmpU(secAttributes->functionName, cU("BAPI_A")) ||
-//           !strcmpU(secAttributes->functionName, cU("BAPI_A")))
-//         return RFC_OK;
-//       // All other cases are denied.
-//       return RFC_AUTHORIZATION_FAILURE;
-//     }
-//   }
+RFC_RC SAP_API authorizationHandler(RFC_CONNECTION_HANDLE rfcHandle,
+                                    RFC_SECURITY_ATTRIBUTES* secAttributes,
+                                    RFC_ERROR_INFO* errorInfo) {
+  if (sapnwrfcServerAPI::authorizationHandler.is_registered()) {
+    // Auth handler is registered
+    return sapnwrfcServerAPI::authorizationHandler.callJS(
+        rfcHandle, secAttributes, errorInfo);
+  }
+  // otherwise grant the authorization
+  return RFC_OK;
+}
 
 class StartAsync : public Napi::AsyncWorker {
  public:
@@ -664,10 +803,10 @@ class StartAsync : public Napi::AsyncWorker {
   void Execute() {
     errorInfo.code = RFC_OK;
     server->LockMutex();
-    _log.record(logClass::server, logLevel::debug, "StartAsync locked");
+    _log.debug(logClass::server, "StartAsync locked");
     server->server_thread = std::thread(&Server::_start, server, &errorInfo);
     server->UnlockMutex();
-    _log.record(logClass::server, logLevel::debug, "StartAsync unlocked");
+    _log.debug(logClass::server, "StartAsync unlocked");
   }
 
   void OnOK() {
@@ -694,10 +833,9 @@ class StopAsync : public Napi::AsyncWorker {
 
   void Execute() {
     server->LockMutex();
-    _log.record(logClass::server,
-                logLevel::info,
-                "stop: server handle ",
-                (pointer_t)server->serverHandle);
+    _log.info(logClass::server,
+              "stop: server handle ",
+              (pointer_t)server->serverHandle);
     server->_stop();
 
     server->UnlockMutex();
@@ -772,57 +910,85 @@ Napi::Value Server::Start(const Napi::CallbackInfo& info) {
 };
 
 void Server::_start(RFC_ERROR_INFO* errorInfo) {
+  // authorization handler
+  if (sapnwrfcServerAPI::authorizationHandler.is_registered()) {
+    RfcInstallAuthorizationCheckHandler(authorizationHandler, errorInfo);
+    if (errorInfo->code != RFC_OK) {
+      _log.error(
+          logClass::server,
+          "start: authorization handler not installed, ABAP error group: ",
+          errorInfo->group,
+          " code: ",
+          errorInfo->code);
+      return;
+    }
+    _log.info(logClass::server, "start: authorization handler installed");
+  }
+
+  // generic server function
   RfcInstallGenericServerFunction(
       genericRequestHandler, metadataLookup, errorInfo);
   if (errorInfo->code != RFC_OK) {
+    _log.error(
+        logClass::server,
+        "start: generic request handler not installed, ABAP error group: ",
+        errorInfo->group,
+        " code: ",
+        errorInfo->code);
     return;
   }
-  _log.record(logClass::server,
-              logLevel::info,
-              "start: generic request handler installed");
+  _log.info(logClass::server, "start: generic request handler installed");
 
+  // launch server
   RfcLaunchServer(serverHandle, errorInfo);
   if (errorInfo->code != RFC_OK) {
+    _log.error(logClass::server,
+               "start: launch failed, ABAP error group: ",
+               errorInfo->group,
+               " code: ",
+               errorInfo->code);
     return;
   }
-  _log.record(logClass::server,
-              logLevel::info,
-              "start: launched server handle ",
-              (pointer_t)serverHandle);
+  _log.info(logClass::server,
+            "start: launched server handle ",
+            (pointer_t)serverHandle);
 }
 
 void Server::_stop() {
-  if (serverHandle != nullptr) {
-    _log.record(logClass::server,
-                logLevel::info,
-                "stop: shutdown server handle ",
-                (pointer_t)serverHandle);
-    RfcShutdownServer(serverHandle, 60, nullptr);
-    RfcDestroyServer(serverHandle, nullptr);
-    serverHandle = nullptr;
+  if (serverHandle == nullptr) {
+    _log.debug(logClass::server, "stop: already stopped");
+    return;
   }
 
+  if (sapnwrfcServerAPI::authorizationHandler.is_registered()) {
+    sapnwrfcServerAPI::authorizationHandler.unregister();
+  }
+
+  _log.info(logClass::server,
+            "stop: shutdown server handle ",
+            (pointer_t)serverHandle);
+  RfcShutdownServer(serverHandle, 60, nullptr);
+  RfcDestroyServer(serverHandle, nullptr);
+  serverHandle = nullptr;
+
   if (client_conn_handle != nullptr) {
-    _log.record(logClass::server,
-                logLevel::info,
-                "stop: close client connection ",
-                (pointer_t)client_conn_handle);
+    _log.info(logClass::server,
+              "stop: close client connection ",
+              (pointer_t)client_conn_handle);
     RfcCloseConnection(client_conn_handle, nullptr);
     client_conn_handle = nullptr;
   }
 
   if (!serverConfigurationRef.IsEmpty()) {
-    // serverConfigurationRef.Reset();
+    // serverConfigurationRef.Unref();
   };
 
   // release registered tsfn functions
-  ServerFunction::release(this);
+  HandlerFunction::release(this);
 
   if (server_thread.joinable()) {
-    _log.record(logClass::server,
-                logLevel::debug,
-                "stop: server thread join ",
-                server_thread.get_id());
+    _log.debug(
+        logClass::server, "stop: server thread join ", server_thread.get_id());
     server_thread.join();
   }
 }
@@ -848,7 +1014,7 @@ Napi::Value Server::Stop(const Napi::CallbackInfo& info) {
 // when async client request received by genericRequestHandler.
 // Save the reference to server instance, to be available in
 // genericRequestHandler, if needed there.
-// serverFunctions global map is updated as follows
+// handlerFunctions global map is updated as follows
 // - key:  ABAP function name as std::string
 // - value:
 //    server instance,
@@ -899,7 +1065,7 @@ Napi::Value Server::AddFunction(const Napi::CallbackInfo& info) {
   Napi::Function jsFunction = info[1].As<Napi::Function>();
   Napi::Function callback = info[2].As<Napi::Function>();
 
-  Napi::Value errorInfo = ServerFunction::add_function(
+  Napi::Value errorInfo = HandlerFunction::add_function(
       this, info.Env(), abapFunctionName, jsFunction);
 
   callback.Call({errorInfo});
@@ -919,7 +1085,7 @@ Napi::Value Server::RemoveFunction(const Napi::CallbackInfo& info) {
 
   Napi::Function callback = info[1].As<Napi::Function>();
 
-  Napi::Value rc = ServerFunction::remove_function(jsFunction);
+  Napi::Value rc = HandlerFunction::remove_function(jsFunction);
 
   if (rc.IsUndefined()) {
     callback.Call({});
@@ -954,7 +1120,8 @@ Napi::Value Server::GetFunctionDescription(const Napi::CallbackInfo& info) {
 };
 
 Server::~Server(void) {
-  this->_stop();
+  //  this->_stop();
+  _log.debug(logClass::server, "~Server");
 }
 
 void Server::LockMutex() {
@@ -965,23 +1132,75 @@ void Server::UnlockMutex() {
   // uv_sem_post(&invocationMutex);
 }
 
-// using DataType = ServerRequestBaton*;
+// Thread safe JavaScript auth handler call
+// Request "baton" is used to pass ABAP data and
+// wait until JavaScript auth handler processing completed
+void JSAuthCall(Napi::Env env,
+                Napi::Function callback,
+                std::nullptr_t* context,
+                DataTypeAuth requestBaton) {
+  UNUSED(context);
+
+  // get JS request data
+  Napi::Value requestData = requestBaton->getRequestData();
+
+  // call JS auth handler
+  Napi::Value jsResult;
+  try {
+    jsResult = callback.Call({requestData});
+  } catch (const Error& e) {
+    requestBaton->done(e.Message());
+    return;
+  }
+
+  _log.info(logClass::server,
+            "JS auth handler call end returned ",
+            jsResult.IsPromise() ? "promise" : "data");
+
+  // set ABAP response data
+  if (jsResult.IsPromise()) {
+    Napi::Promise jsPromise = jsResult.As<Napi::Promise>();
+    Napi::Function jsThen = jsPromise.Get("then").As<Napi::Function>();
+    jsThen.Call(jsPromise,
+                {Napi::Function::New(env,
+                                     [=](const CallbackInfo& info) {
+                                       Napi::Object jsResult =
+                                           info[0].As<Napi::Object>();
+                                       requestBaton->setResponseData(jsResult);
+                                     }),
+                 Napi::Function::New(env,
+                                     [=](const CallbackInfo& info) {
+                                       std::string jsHandlerError =
+                                           "internal error";
+                                       if (info.Length() > 0) {
+                                         jsHandlerError =
+                                             info[0].ToString().Utf8Value();
+                                       }
+                                       requestBaton->done(jsHandlerError);
+                                     })
+
+                });
+
+  } else {
+    requestBaton->setResponseData(jsResult);
+  }
+}
 
 // Thread safe call of JavaScript handler.
 // Request "baton" is used to pass ABAP data and
 // wait until JavaScript handler processing completed
-void JSFunctionCall(Napi::Env env,
-                    Napi::Function callback,
-                    std::nullptr_t* context,
-                    DataType requestBaton) {
+void JSHandlerCall(Napi::Env env,
+                   Napi::Function callback,
+                   std::nullptr_t* context,
+                   DataType requestBaton) {
   UNUSED(context);
 
-  // set server context
-  Napi::Value requestContext = getServerRequestContext(requestBaton);
+  // s=get server context
+  Napi::Value requestContext = requestBaton->getServerRequestContext();
 
   // Transform ABAP parameters' data to JavaScript
   ValuePair jsParameters =
-      getRfmParameters(requestBaton->serverFunction->func_desc_handle,
+      getRfmParameters(requestBaton->handlerFunction->func_desc_handle,
                        requestBaton->func_handle,
                        &requestBaton->errorPath,
                        &requestBaton->client_options);
@@ -996,13 +1215,12 @@ void JSFunctionCall(Napi::Env env,
   }
 
   // Call JavaScript handler
-  _log.record(logClass::server,
-              logLevel::info,
-              "JS function call [" + requestBaton->request_id,
-              "] start '",
-              requestBaton->serverFunction->jsFunctionName,
-              "' with ABAP function handle ",
-              (uintptr_t)requestBaton->func_handle);
+  _log.info(logClass::server,
+            "JS function call [" + requestBaton->request_id,
+            "] start '",
+            requestBaton->handlerFunction->jsFunctionName,
+            "' with ABAP function handle ",
+            (uintptr_t)requestBaton->func_handle);
 
   Napi::Value jsResult;
   try {
@@ -1012,15 +1230,14 @@ void JSFunctionCall(Napi::Env env,
     return;
   }
 
-  _log.record(logClass::server,
-              logLevel::info,
-              "JS function call [" + requestBaton->request_id,
-              "] end '",
-              requestBaton->serverFunction->jsFunctionName,
-              "' with ABAP function handle ",
-              (uintptr_t)requestBaton->func_handle,
-              " returned ",
-              (jsResult.IsPromise()) ? "promise" : "data");
+  _log.info(logClass::server,
+            "JS function call [" + requestBaton->request_id,
+            "] end '",
+            requestBaton->handlerFunction->jsFunctionName,
+            "' with ABAP function handle ",
+            (uintptr_t)requestBaton->func_handle,
+            " returned ",
+            (jsResult.IsPromise()) ? "promise" : "data");
 
   // Check if JS handler result is promise or data
   if (jsResult.IsPromise()) {
@@ -1032,7 +1249,7 @@ void JSFunctionCall(Napi::Env env,
                              [=](const CallbackInfo& info) {
                                Napi::Object jsResult =
                                    info[0].As<Napi::Object>();
-                               requestBaton->setABAPParameters(env, jsResult);
+                               requestBaton->setResponseData(env, jsResult);
                              }),
          Napi::Function::New(env,
                              [=](const CallbackInfo& info) {
@@ -1047,7 +1264,7 @@ void JSFunctionCall(Napi::Env env,
         });
 
   } else {
-    requestBaton->setABAPParameters(env, jsResult);
+    requestBaton->setResponseData(env, jsResult);
   }
 }
 

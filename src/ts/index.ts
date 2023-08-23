@@ -5,8 +5,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { EventEmitter } from "events";
-
-import { Worker } from "worker_threads";
 import { Client } from "./sapnwrfc-client";
 
 import fs from "fs";
@@ -51,20 +49,6 @@ export function setLogFilePath(filePath: string) {
 }
 
 export const sapnwrfcEvents = new EventEmitter();
-
-function terminate(workerData: unknown) {
-    return new Promise((resolve, reject) => {
-        const terminator = new Worker(path.join(__dirname, "./cancel.js"), {
-            workerData,
-        });
-        terminator.on("message", resolve);
-        terminator.on("error", reject);
-        terminator.on("exit", (code) => {
-            if (code !== 0)
-                reject(new Error(`Terminator stopped with exit code ${code}`));
-        });
-    });
-}
 
 export function cancelClient(
     client: Client,

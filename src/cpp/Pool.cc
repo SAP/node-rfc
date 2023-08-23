@@ -301,8 +301,7 @@ uint_t checkArgsAcquire(const Napi::CallbackInfo& info) {
 Napi::Value Pool::Acquire(const Napi::CallbackInfo& info) {
   uint_t clients_requested = checkArgsAcquire(info);
 
-  _log.record(
-      logClass::pool, logLevel::debug, "Pool::Acquire: ", clients_requested);
+  _log.debug(logClass::pool, "Acquire: ", clients_requested);
 
   Napi::Function callback = info[1].As<Napi::Function>();
 
@@ -349,7 +348,7 @@ std::set<Client*> argsCheckRelease(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Pool::Release(const Napi::CallbackInfo& info) {
-  _log.record(logClass::pool, logLevel::info, "Release", id);
+  _log.info(logClass::pool, "Release", id);
 
   std::set<Client*> clients = argsCheckRelease(info);
 
@@ -366,17 +365,15 @@ void Pool::releaseClient(RFC_CONNECTION_HANDLE connectionHandle) {
   // synchronous because called with locked client mutex or from client
   // destructor
   if (connLeased.erase(connectionHandle) == 0) {
-    _log.record(logClass::pool,
-                logLevel::warning,
-                "Connection handle ",
-                (pointer_t)connectionHandle,
-                " not found in " + log_id());
+    _log.warning(logClass::pool,
+                 "Connection handle ",
+                 (pointer_t)connectionHandle,
+                 " not found in " + log_id());
   } else {
-    _log.record(logClass::pool,
-                logLevel::info,
-                "Connection ",
-                (pointer_t)connectionHandle,
-                " released from " + log_id());
+    _log.info(logClass::pool,
+              "Connection ",
+              (pointer_t)connectionHandle,
+              " released from " + log_id());
   }
 }
 
@@ -432,7 +429,7 @@ bool argsCheckReady(const Napi::CallbackInfo& info,
 Napi::Value Pool::Ready(const Napi::CallbackInfo& info) {
   uint_t new_ready = ready_low;
   Napi::Function callback;
-  _log.record(logClass::pool, logLevel::info, log_id() + " Ready: ", new_ready);
+  _log.info(logClass::pool, log_id() + " Ready: ", new_ready);
 
   if (argsCheckReady(info, &new_ready, &callback)) {
     (new SetPoolAsync(callback, this, new_ready))->Queue();
@@ -441,7 +438,7 @@ Napi::Value Pool::Ready(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Pool::CloseAll(const Napi::CallbackInfo& info) {
-  _log.record(logClass::pool, logLevel::info, log_id(), " Close all");
+  _log.info(logClass::pool, log_id(), " Close all");
 
   closeConnections();
 
@@ -459,7 +456,7 @@ Napi::Value Pool::CloseAll(const Napi::CallbackInfo& info) {
 }
 
 Napi::Object Pool::Init(Napi::Env env, Napi::Object exports) {
-  _log.record(logClass::pool, logLevel::info, "Init");
+  _log.debug(logClass::pool, "Init");
   Napi::HandleScope scope(env);
 
   Napi::Function func =
@@ -495,12 +492,7 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
 
   std::ostringstream errmsg;
 
-  _log.record(logClass::pool,
-              logLevel::info,
-              log_id(),
-              " constructor ",
-              ready_low,
-              ready_high);
+  _log.info(logClass::pool, log_id(), " created ", ready_low, ready_high);
   if (info.Length() < 1) {
     Napi::Error::New(info.Env(), "Pool initialization argument missing")
         .ThrowAsJavaScriptException();
@@ -615,7 +607,7 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
                 .ThrowAsJavaScriptException();
             return;
           }
-        } else if (name == LOG_LEVEL_KEY) {
+        } else if (name == SRV_OPTION_LOG_LEVEL) {
           _log.set_log_level(logClass::pool, value);
         } else {
           Napi::TypeError::New(env, "Pool option not allowed: \"" + name + "\"")
@@ -643,71 +635,59 @@ Pool::Pool(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pool>(info) {
     }
   }
 
-  _log.record(logClass::pool,
-              logLevel::info,
-              "created ready:",
-              ready_low,
-              " max: ",
-              ready_high);
+  _log.info(logClass::pool, "created ready:", ready_low, " max: ", ready_high);
 };
 
 void Pool::closeConnections() {
   // Close connections
   if (connReady.size() > 0) {
-    _log.record(logClass::pool,
-                logLevel::info,
-                log_id() + " closeConnections() is closing ready connections: ",
-                connReady.size());
+    _log.info(logClass::pool,
+              log_id() + " closeConnections() is closing ready connections: ",
+              connReady.size());
     ConnectionSetType::iterator it = connReady.begin();
     while (it != connReady.end()) {
       RFC_ERROR_INFO errorInfo;
       RFC_CONNECTION_HANDLE connectionHandle = *it;
       RfcCloseConnection(connectionHandle, &errorInfo);
       if (errorInfo.code == RFC_OK) {
-        _log.record(logClass::pool,
-                    logLevel::info,
-                    log_id() + "    closed ",
-                    (pointer_t)connectionHandle);
+        _log.info(logClass::pool,
+                  log_id() + "    closed ",
+                  (pointer_t)connectionHandle);
       } else {
-        _log.record(logClass::pool,
-                    logLevel::warning,
-                    log_id(),
-                    " connection handle ",
-                    (pointer_t)connectionHandle,
-                    " closing error group: ",
-                    errorInfo.group,
-                    "code: ",
-                    errorInfo.code);
+        _log.warning(logClass::pool,
+                     log_id(),
+                     " connection handle ",
+                     (pointer_t)connectionHandle,
+                     " closing error group: ",
+                     errorInfo.group,
+                     "code: ",
+                     errorInfo.code);
       }
       connReady.erase(it++);
     }
   }
 
   if (connLeased.size() > 0) {
-    _log.record(
-        logClass::pool,
-        logLevel::info,
-        log_id() + " closeConnections() is closing leased connections: ",
-        connLeased.size());
+    _log.info(logClass::pool,
+              log_id() + " closeConnections() is closing leased connections: ",
+              connLeased.size());
     ConnectionSetType::iterator it = connLeased.begin();
     while (it != connLeased.end()) {
       RFC_ERROR_INFO errorInfo;
       RFC_CONNECTION_HANDLE connectionHandle = *it;
       RfcCloseConnection(connectionHandle, &errorInfo);
       if (errorInfo.code == RFC_OK) {
-        _log.record(logClass::pool,
-                    logLevel::info,
-                    log_id() + "    closed ",
-                    (pointer_t)connectionHandle);
+        _log.info(logClass::pool,
+                  log_id() + "    closed ",
+                  (pointer_t)connectionHandle);
       } else {
-        _log.record(logClass::pool,
-                    logLevel::warning,
-                    log_id() + " connection handle ",
-                    (pointer_t)connectionHandle,
-                    " closing error group: ",
-                    errorInfo.group,
-                    "code: ",
-                    errorInfo.code);
+        _log.warning(logClass::pool,
+                     log_id() + " connection handle ",
+                     (pointer_t)connectionHandle,
+                     " closing error group: ",
+                     errorInfo.group,
+                     "code: ",
+                     errorInfo.code);
       }
       connReady.erase(it++);
     }
@@ -715,34 +695,28 @@ void Pool::closeConnections() {
 }
 
 Pool::~Pool(void) {
-  _log.record(logClass::pool, logLevel::info, log_id() + " destructor");
+  _log.info(logClass::pool, log_id() + " destructor");
 
   closeConnections();
 
   // Unreference configuration
   if (!connectionParameters.IsEmpty()) {
-    _log.record(logClass::pool,
-                logLevel::debug,
-                log_id() + " destructor unref connection parameters");
+    _log.debug(logClass::pool,
+               log_id() + " destructor unref connection parameters");
     connectionParameters.Unref();
   }
   if (!clientOptions.IsEmpty()) {
-    _log.record(logClass::pool,
-                logLevel::debug,
-                log_id() + " destructor unref client options");
+    _log.debug(logClass::pool, log_id() + " destructor unref client options");
     clientOptions.Unref();
   }
   if (!poolOptions.IsEmpty()) {
-    _log.record(logClass::pool,
-                logLevel::debug,
-                log_id() + " destructre: unref poolOptions");
+    _log.debug(logClass::pool, log_id() + " destructre: unref poolOptions");
     poolOptions.Unref();
   }
   if (!poolConfiguration.IsEmpty()) {
     poolConfiguration.Unref();
-    _log.record(logClass::pool,
-                logLevel::debug,
-                log_id() + " destructor, unref poolConfiguration");
+    _log.debug(logClass::pool,
+               log_id() + " destructor, unref poolConfiguration");
   }
 }
 

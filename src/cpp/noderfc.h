@@ -23,23 +23,25 @@
 #define UNUSED(x) (void)(x)
 
 //
-// Logging options constants
+// Server options constants
 //
 
-#define LOG_LEVEL_KEY "logLevel"
+#define SRV_OPTION_LOG_LEVEL "logLevel"
+#define SRV_OPTION_PORT "port"
+#define SRV_OPTION_AUTH "authHandler"
 
 //
 // Client options constants
 //
-#define CLIENT_OPTION_KEY_BCD "bcd"
-#define CLIENT_OPTION_KEY_DATE "date"
-#define CLIENT_OPTION_KEY_TIME "time"
-#define CLIENT_OPTION_KEY_FILTER "filter"
-#define CLIENT_OPTION_KEY_STATELESS "stateless"
-#define CLIENT_OPTION_KEY_TIMEOUT "timeout"
+#define CLIENT_OPTION_BCD "bcd"
+#define CLIENT_OPTION_DATE "date"
+#define CLIENT_OPTION_TIME "time"
+#define CLIENT_OPTION_FILTER "filter"
+#define CLIENT_OPTION_STATELESS "stateless"
+#define CLIENT_OPTION_TIMEOUT "timeout"
 
 #define CALL_OPTION_KEY_NOTREQUESTED "notRequested"
-#define CALL_OPTION_KEY_TIMEOUT CLIENT_OPTION_KEY_TIMEOUT
+#define CALL_OPTION_KEY_TIMEOUT CLIENT_OPTION_TIMEOUT
 
 #define CLIENT_OPTION_BCD_STRING 0
 #define CLIENT_OPTION_BCD_NUMBER 1

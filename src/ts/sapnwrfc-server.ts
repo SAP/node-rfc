@@ -16,9 +16,28 @@ import { RfcConnectionParameters } from "./sapnwrfc-client";
 // RfcServer
 //
 
+export type RfcSecurityAttributes = {
+    functionName: string[30];
+    sysId: string;
+    client: string[3];
+    user: string;
+    progName: string;
+    sncName: string;
+    ssoTicket: string;
+    sncAclKey: string;
+    sncAclKeyLength: number;
+};
+
+export type RfcAuthHandlerFunction = (
+    connectionHandle: number,
+    securityAttributes: RfcSecurityAttributes,
+    ...[unknown]
+) => unknown;
+
 export type RfcServerOptions = {
     logLevel?: RfcLoggingLevel;
     port?: number;
+    authHandler?: RfcAuthHandlerFunction;
 };
 
 export type RfcServerConfiguration = {

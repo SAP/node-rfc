@@ -30,9 +30,8 @@ SAP_UC* setString(const Napi::String napistr) {
                       &errorInfo);
 
   if (rc != RFC_OK) {
-    _log.record(
+    _log.fatal(
         logClass::nwrfc,
-        logLevel::fatal,
         "NodeJS string could not be parsed to ABAP string: '" + sstr + "'",
         "\nsapucSize: ",
         sapucSize,
@@ -64,9 +63,8 @@ SAP_UC* setString(std::string sstr) {
                       &errorInfo);
 
   if (rc != RFC_OK) {
-    _log.record(
+    _log.fatal(
         logClass::nwrfc,
-        logLevel::fatal,
         "NodeJS string could not be parsed to ABAP string: '" + sstr + "'",
         "\nsapucSize: ",
         sapucSize,
@@ -681,12 +679,11 @@ ValuePair getVariable(RFCTYPE typ,
           functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
       if (rc == 23)  // Buffer too small, use returned requried result length
       {
-        _log.record(logClass::nwrfc,
-                    logLevel::warning,
-                    "Buffer for BCD type ",
-                    typ,
-                    " too small, for ",
-                    errorPath->pathstr());
+        _log.warning(logClass::nwrfc,
+                     "Buffer for BCD type ",
+                     typ,
+                     " too small, for ",
+                     errorPath->pathstr());
         delete[] sapuc;
         strLen = resultLen;
         sapuc = new SAP_UC[strLen + 1];
@@ -729,12 +726,11 @@ ValuePair getVariable(RFCTYPE typ,
           functionHandle, cName, sapuc, strLen + 1, &resultLen, &errorInfo);
       if (rc == 23)  // Buffer too small, use returned requried result length
       {
-        _log.record(logClass::nwrfc,
-                    logLevel::warning,
-                    "Buffer for BCD type ",
-                    typ,
-                    " too small, for ",
-                    errorPath->pathstr());
+        _log.warning(logClass::nwrfc,
+                     "Buffer for BCD type ",
+                     typ,
+                     " too small, for ",
+                     errorPath->pathstr());
         delete[] sapuc;
         strLen = resultLen;
         sapuc = new SAP_UC[strLen + 1];
@@ -988,7 +984,7 @@ void checkClientOptions(Napi::Object clientOptionsObject,
     Napi::Value opt = clientOptionsObject.Get(key).As<Napi::Value>();
 
     // Client option: "bcd"
-    if (key == CLIENT_OPTION_KEY_BCD) {
+    if (key == CLIENT_OPTION_BCD) {
       if (opt.IsFunction()) {
         client_options->bcd = CLIENT_OPTION_BCD_FUNCTION;
         client_options->bcdFunction =
@@ -1001,7 +997,7 @@ void checkClientOptions(Napi::Object clientOptionsObject,
           snprintf(errmsg,
                    ERRMSG_LENGTH - 1,
                    "Client option \"%s\" value not allowed: \"%s\"",
-                   CLIENT_OPTION_KEY_BCD,
+                   CLIENT_OPTION_BCD,
                    &bcdString[0]);
           Napi::TypeError::New(node_rfc::__env, errmsg)
               .ThrowAsJavaScriptException();
@@ -1010,7 +1006,7 @@ void checkClientOptions(Napi::Object clientOptionsObject,
     }
 
     // Client option: "date"
-    else if (key == CLIENT_OPTION_KEY_DATE) {
+    else if (key == CLIENT_OPTION_DATE) {
       if (!opt.IsObject()) {
         opt = node_rfc::__env.Null();
       } else {
@@ -1021,7 +1017,7 @@ void checkClientOptions(Napi::Object clientOptionsObject,
                    ERRMSG_LENGTH - 1,
                    "Client option \"%s\" is not an object with toABAP() and "
                    "fromABAP() functions",
-                   CLIENT_OPTION_KEY_DATE);
+                   CLIENT_OPTION_DATE);
           Napi::TypeError::New(node_rfc::__env, errmsg)
               .ThrowAsJavaScriptException();
         } else {
@@ -1034,7 +1030,7 @@ void checkClientOptions(Napi::Object clientOptionsObject,
     }
 
     // Client option: "time"
-    else if (key == CLIENT_OPTION_KEY_TIME) {
+    else if (key == CLIENT_OPTION_TIME) {
       if (!opt.IsObject()) {
         opt = node_rfc::__env.Null();
       } else {
@@ -1045,7 +1041,7 @@ void checkClientOptions(Napi::Object clientOptionsObject,
                    ERRMSG_LENGTH - 1,
                    "Client option \"%s\" is not an object with toABAP() and "
                    "fromABAP() functions",
-                   CLIENT_OPTION_KEY_TIME);
+                   CLIENT_OPTION_TIME);
           Napi::TypeError::New(node_rfc::__env, errmsg)
               .ThrowAsJavaScriptException();
           ;
@@ -1059,7 +1055,7 @@ void checkClientOptions(Napi::Object clientOptionsObject,
     }
 
     // Client option: "filter"
-    else if (key == CLIENT_OPTION_KEY_FILTER) {
+    else if (key == CLIENT_OPTION_FILTER) {
       client_options->filter_param_type =
           (RFC_DIRECTION)clientOptionsObject.Get(key)
               .As<Napi::Number>()
@@ -1069,7 +1065,7 @@ void checkClientOptions(Napi::Object clientOptionsObject,
         snprintf(errmsg,
                  ERRMSG_LENGTH - 1,
                  "Client option \"%s\" value allowed: \"%u\"",
-                 CLIENT_OPTION_KEY_FILTER,
+                 CLIENT_OPTION_FILTER,
                  (uint_t)client_options->filter_param_type);
         Napi::TypeError::New(node_rfc::__env, errmsg)
             .ThrowAsJavaScriptException();
@@ -1077,12 +1073,12 @@ void checkClientOptions(Napi::Object clientOptionsObject,
     }
 
     // Client option: "stateless"
-    else if (key == CLIENT_OPTION_KEY_STATELESS) {
+    else if (key == CLIENT_OPTION_STATELESS) {
       if (!opt.IsBoolean()) {
         snprintf(errmsg,
                  ERRMSG_LENGTH - 1,
                  "Client option \"%s\" requires a boolean value",
-                 CLIENT_OPTION_KEY_STATELESS);
+                 CLIENT_OPTION_STATELESS);
         Napi::TypeError::New(node_rfc::__env, errmsg)
             .ThrowAsJavaScriptException();
       }
@@ -1090,19 +1086,19 @@ void checkClientOptions(Napi::Object clientOptionsObject,
     }
 
     // Client option: "timeout"
-    else if (key == CLIENT_OPTION_KEY_TIMEOUT) {
+    else if (key == CLIENT_OPTION_TIMEOUT) {
       if (!opt.IsNumber()) {
         snprintf(errmsg,
                  ERRMSG_LENGTH - 1,
                  "Client option \"%s\" requires a number of seconds",
-                 CLIENT_OPTION_KEY_TIMEOUT);
+                 CLIENT_OPTION_TIMEOUT);
         Napi::TypeError::New(node_rfc::__env, errmsg)
             .ThrowAsJavaScriptException();
       }
       client_options->timeout = opt.As<Napi::Number>();
     }
 
-    else if (key == LOG_LEVEL_KEY) {
+    else if (key == SRV_OPTION_LOG_LEVEL) {
       _log.set_log_level(logClass::client, opt);
     }
 
@@ -1120,10 +1116,6 @@ void checkClientOptions(Napi::Object clientOptionsObject,
 
 Napi::Value getConnectionAttributes(Napi::Env env,
                                     RFC_CONNECTION_HANDLE connectionHandle) {
-  // if (connectionHandle == nullptr) {
-  //   return connectionClosedError("connectionInfo");
-  // }
-
   Napi::Object infoObj = Napi::Object::New(env);
   RFC_ERROR_INFO errorInfo;
   RFC_ATTRIBUTES connInfo;

@@ -88,7 +88,7 @@ function my_stfc_structure(request_context, abap_input) {
 let seconds = 10;
 const tick = setInterval(() => {
   console.log("tick", --seconds);
-  if (!seconds > 0) {
+  if (seconds <= 0) {
     server.stop(() => {
       clearInterval(tick);
       console.log("bye!");
