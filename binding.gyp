@@ -83,6 +83,7 @@
                 'src/cpp/Client.cc',
                 'src/cpp/Pool.cc',
                 'src/cpp/Server.cc',
+                'src/cpp/server_api.cc',
                 'src/cpp/Throughput.cc'
             ],
             'defines': [

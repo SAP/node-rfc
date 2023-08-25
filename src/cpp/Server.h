@@ -5,9 +5,7 @@
 #ifndef NodeRfc_Server_H
 #define NodeRfc_Server_H
 
-#include <condition_variable>
 #include <thread>
-#include <unordered_map>
 #include "Client.h"
 
 namespace node_rfc {
@@ -15,20 +13,9 @@ namespace node_rfc {
 extern Napi::Env __env;
 extern Log _log;
 
-// NW RFC SDK server API
-RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
-                              RFC_ATTRIBUTES rfc_attributes,
-                              RFC_FUNCTION_DESC_HANDLE* func_handle);
-
-RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
-                                     RFC_FUNCTION_HANDLE func_handle,
-                                     RFC_ERROR_INFO* errorInfo);
-
-RFC_RC SAP_API authorizationHandler(RFC_CONNECTION_HANDLE rfcHandle,
-                                    RFC_SECURITY_ATTRIBUTES* secAttributes,
-                                    RFC_ERROR_INFO* errorInfo);
-
-// node-rfc Server
+//
+// Server
+//
 
 typedef struct _ServerOptions {
   logLevel log_severity = logLevel::none;
@@ -43,9 +30,6 @@ typedef struct _ServerOptions {
   }
 } ServerOptions;
 
-class AuthRequestBaton;
-class ServerRequestBaton;
-
 class Server : public Napi::ObjectWrap<Server> {
  public:
   friend class StartAsync;
@@ -53,6 +37,7 @@ class Server : public Napi::ObjectWrap<Server> {
   friend class GetFunctionDescAsync;
   friend class HandlerFunction;
   friend class ServerRequestBaton;
+  friend class GenericFunctionHandler;
 
   std::string get_request_id() {
     return std::to_string(id) + ":" + std::to_string(Server::request_id);
@@ -95,6 +80,9 @@ class Server : public Napi::ObjectWrap<Server> {
   ServerOptions server_options = ServerOptions();
 
   Napi::ObjectReference serverConfigurationRef;
+
+  void getServerOptions(Napi::Object serverOptions,
+                        ServerOptions* server_options);
 
   void init(Napi::Env env) {
     id = Server::_id++;
