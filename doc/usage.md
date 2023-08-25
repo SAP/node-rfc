@@ -725,6 +725,8 @@ const result = await client.call("BAPI_USER_GET_DETAIL", {USERNAME: "DEMO"}, {ti
 
 API: [api/server](api.md#server)
 
+Blog: [Call Node.js or Python Functions from ABAP](https://blogs.sap.com/2023/08/25/call-node.js-or-python-functions-from-abap/)
+
 Using the node-rfc Server bindings, Node.js functions can be exposed as ABAP functions on Node.js system and consumed by ABAP client, using `CALL FUNCTION DESTINATION` ABAP statement.
 
 To make Node.js function available for ABAP clients, the NodeJS function name must be mapped to valid ABAP function name (max 30 char long) that ABAP client can call. Also the description of ABAP function parameters must be provided (function description), in binary format, that ABAP client shall use to send and receive the data.
