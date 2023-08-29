@@ -11,21 +11,6 @@
 #include "nwrfcsdk.h"
 
 namespace node_rfc {
-//
-// NW RFC SDK server API
-//
-
-RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
-                              RFC_ATTRIBUTES rfc_attributes,
-                              RFC_FUNCTION_DESC_HANDLE* func_handle);
-
-RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
-                                     RFC_FUNCTION_HANDLE func_handle,
-                                     RFC_ERROR_INFO* errorInfo);
-
-RFC_RC SAP_API authorizationHandler(RFC_CONNECTION_HANDLE rfcHandle,
-                                    RFC_SECURITY_ATTRIBUTES* secAttributes,
-                                    RFC_ERROR_INFO* errorInfo);
 
 //
 // Tsfn type definitions
@@ -148,6 +133,9 @@ class AuthRequestHandler {
   void wait();
 
   void done(const std::string& errorObj = "");
+
+  // start
+  void start(RFC_ERROR_INFO* errorInfo);
 };
 
 //
@@ -157,8 +145,25 @@ class AuthRequestHandler {
 class GenericFunctionHandler;
 class ServerRequestBaton;
 
+//
+// NW RFC SDK Server API
+//
+
 class sapnwrfcServerAPI {
  public:
+  // sapnwrfc native api, invoking sapnwrfc api handler functions
+  static RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
+                                       RFC_ATTRIBUTES rfc_attributes,
+                                       RFC_FUNCTION_DESC_HANDLE* func_handle);
+
+  static RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
+                                              RFC_FUNCTION_HANDLE func_handle,
+                                              RFC_ERROR_INFO* errorInfo);
+
+  static RFC_RC SAP_API authHandler(RFC_CONNECTION_HANDLE rfcHandle,
+                                    RFC_SECURITY_ATTRIBUTES* secAttributes,
+                                    RFC_ERROR_INFO* errorInfo);
+  // sapnwrfc api handler functions
   static AuthRequestHandler authorizationHandler;
   static GenericFunctionHandler genericFunctionHandler;
 };

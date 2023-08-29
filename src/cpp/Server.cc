@@ -367,7 +367,7 @@ Napi::Value Server::Start(const Napi::CallbackInfo& info) {
 void Server::_start(RFC_ERROR_INFO* errorInfo) {
   // authorization handler
   if (sapnwrfcServerAPI::authorizationHandler.is_registered()) {
-    RfcInstallAuthorizationCheckHandler(authorizationHandler, errorInfo);
+    sapnwrfcServerAPI::authorizationHandler.start(errorInfo);
     if (errorInfo->code != RFC_OK) {
       _log.error(
           logClass::server,
@@ -381,8 +381,11 @@ void Server::_start(RFC_ERROR_INFO* errorInfo) {
   }
 
   // generic server function
-  RfcInstallGenericServerFunction(
-      genericRequestHandler, metadataLookup, errorInfo);
+  // RfcInstallGenericServerFunction(
+  //     genericRequestHandler, metadataLookup, errorInfo);
+  RfcInstallGenericServerFunction(sapnwrfcServerAPI::genericRequestHandler,
+                                  sapnwrfcServerAPI::metadataLookup,
+                                  errorInfo);
   if (errorInfo->code != RFC_OK) {
     _log.error(
         logClass::server,

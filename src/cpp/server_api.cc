@@ -223,6 +223,11 @@ void AuthRequestHandler::registerJsHandler(Napi::FunctionReference& func) {
   _log.debug(logClass::server, "stop: auth handler registered");
 }
 
+void AuthRequestHandler::start(RFC_ERROR_INFO* errorInfo) {
+  RfcInstallAuthorizationCheckHandler(sapnwrfcServerAPI::authHandler,
+                                      errorInfo);
+}
+
 // ABAP request data to JS
 Napi::Value AuthRequestHandler::getRequestData() {
   Napi::EscapableHandleScope scope(__env);
@@ -567,9 +572,10 @@ void ServerRequestBaton::setResponseData(Napi::Env env, Napi::Value jsResult) {
 
 // Thread unsafe. Invoked by ABAP client to check if function description
 // is available so that generic request handler can do the call
-RFC_RC SAP_API metadataLookup(SAP_UC const* abap_func_name,
-                              RFC_ATTRIBUTES rfc_attributes,
-                              RFC_FUNCTION_DESC_HANDLE* func_desc_handle) {
+RFC_RC SAP_API
+sapnwrfcServerAPI::metadataLookup(SAP_UC const* abap_func_name,
+                                  RFC_ATTRIBUTES rfc_attributes,
+                                  RFC_FUNCTION_DESC_HANDLE* func_desc_handle) {
   return HandlerFunction::set_function_handle(
       abap_func_name, rfc_attributes, func_desc_handle);
 }
@@ -580,9 +586,10 @@ RFC_RC SAP_API metadataLookup(SAP_UC const* abap_func_name,
 // Here we obtain a function module name and look for TSFN object
 // in handlerFunctions global map.
 // When TSFN object found, the
-RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
-                                     RFC_FUNCTION_HANDLE func_handle,
-                                     RFC_ERROR_INFO* errorInfo) {
+RFC_RC SAP_API
+sapnwrfcServerAPI::genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
+                                         RFC_FUNCTION_HANDLE func_handle,
+                                         RFC_ERROR_INFO* errorInfo) {
   if (sapnwrfcServerAPI::genericFunctionHandler.is_registered()) {
   }
   // if (sapnwrfcServerAPI::genericFunctionHandler.registered()) {
@@ -617,9 +624,10 @@ RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
   return RFC_OK;
 }
 
-RFC_RC SAP_API authorizationHandler(RFC_CONNECTION_HANDLE rfcHandle,
-                                    RFC_SECURITY_ATTRIBUTES* secAttributes,
-                                    RFC_ERROR_INFO* errorInfo) {
+RFC_RC SAP_API
+sapnwrfcServerAPI::authHandler(RFC_CONNECTION_HANDLE rfcHandle,
+                               RFC_SECURITY_ATTRIBUTES* secAttributes,
+                               RFC_ERROR_INFO* errorInfo) {
   if (sapnwrfcServerAPI::authorizationHandler.is_registered()) {
     // Auth handler is registered
     return sapnwrfcServerAPI::authorizationHandler.callJS(
