@@ -229,7 +229,7 @@ Napi::Value AuthRequestHandler::getRequestData() {
   Napi::Object data = Napi::Object::New(__env);
   data.Set("connectionHandle",
            Napi::Number::New(__env, (pointer_t)auth_connection_handle));
-  data.Set("AbapFunctionName", wrapString(secAttributes->functionName));
+  data.Set("abapFunctionName", wrapString(secAttributes->functionName));
   data.Set("sysId", wrapString(secAttributes->sysId));
   data.Set("client", wrapString(secAttributes->client));
   data.Set("user", wrapString(secAttributes->user));
@@ -246,11 +246,26 @@ Napi::Value AuthRequestHandler::getRequestData() {
 
 // JS response data to ABAP
 void AuthRequestHandler::setResponseData(Napi::Value jsAuthResponse) {
+  // unauthorized by default
+  errorInfo->code = RFC_AUTHORIZATION_FAILURE;
+
   if (jsAuthResponse.IsUndefined()) {
+    // undefined -> authorized
     errorInfo->code = RFC_OK;
-  } else {
-    errorInfo->code = RFC_AUTHORIZATION_FAILURE;
-    strcpyU(errorInfo->message, cU("Unauthorized"));
+  } else if (jsAuthResponse.IsString()) {
+    std::string message = jsAuthResponse.As<Napi::String>().Utf8Value();
+    if (message.length() == 0) {
+      // empty string -> authorized
+      errorInfo->code = RFC_OK;
+    } else {
+      // non-empty string ->unauthorized, pass it as error message to ABAP
+      strcpyU(errorInfo->message, setString(message));
+    }
+  } else if (jsAuthResponse.IsBoolean()) {
+    // true -> authorized
+    if (jsAuthResponse.As<Napi::Boolean>().Value()) {
+      errorInfo->code = RFC_OK;
+    }
   }
 
   // ABAP response is ready
@@ -676,25 +691,26 @@ void JSHandlerCall(Napi::Env env,
   if (jsResult.IsPromise()) {
     Napi::Promise jsPromise = jsResult.As<Napi::Promise>();
     Napi::Function jsThen = jsPromise.Get("then").As<Napi::Function>();
-    jsThen.Call(
-        jsPromise,
-        {Napi::Function::New(env,
-                             [=](const CallbackInfo& info) {
-                               Napi::Object jsResult =
-                                   info[0].As<Napi::Object>();
-                               requestBaton->setResponseData(env, jsResult);
-                             }),
-         Napi::Function::New(env,
-                             [=](const CallbackInfo& info) {
-                               std::string jsHandlerError = "internal error";
-                               if (info.Length() > 0) {
-                                 jsHandlerError =
-                                     info[0].ToString().Utf8Value();
-                               }
-                               requestBaton->done(jsHandlerError);
-                             })
+    jsThen.Call(jsPromise,
+                {Napi::Function::New(env,
+                                     [=](const CallbackInfo& info) {
+                                       Napi::Object jsResult =
+                                           info[0].As<Napi::Object>();
+                                       requestBaton->setResponseData(env,
+                                                                     jsResult);
+                                     }),
+                 Napi::Function::New(env,
+                                     [=](const CallbackInfo& info) {
+                                       std::string jsHandlerError =
+                                           "Server handler function failed";
+                                       if (info.Length() > 0) {
+                                         jsHandlerError =
+                                             info[0].ToString().Utf8Value();
+                                       }
+                                       requestBaton->done(jsHandlerError);
+                                     })
 
-        });
+                });
 
   } else {
     requestBaton->setResponseData(env, jsResult);
@@ -718,7 +734,7 @@ void JSAuthCall(Napi::Env env,
   try {
     jsResult = callback.Call({requestData});
   } catch (const Error& e) {
-    requestBaton->done(e.Message());
+    requestBaton->setResponseData(Napi::String::New(__env, e.Message()));
     return;
   }
 
@@ -737,16 +753,16 @@ void JSAuthCall(Napi::Env env,
                                            info[0].As<Napi::Object>();
                                        requestBaton->setResponseData(jsResult);
                                      }),
-                 Napi::Function::New(env,
-                                     [=](const CallbackInfo& info) {
-                                       std::string jsHandlerError =
-                                           "internal error";
-                                       if (info.Length() > 0) {
-                                         jsHandlerError =
-                                             info[0].ToString().Utf8Value();
-                                       }
-                                       requestBaton->done(jsHandlerError);
-                                     })
+                 Napi::Function::New(
+                     env,
+                     [=](const CallbackInfo& info) {
+                       if (info.Length() > 0) {
+                         requestBaton->setResponseData(info[0].ToString());
+                       } else {
+                         requestBaton->setResponseData(Napi::String::New(
+                             info.Env(), "Authorization denied by Node.js"));
+                       };
+                     })
 
                 });
 

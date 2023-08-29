@@ -10,12 +10,9 @@ import {
     RfcLoggingLevel,
 } from "./noderfc-bindings";
 
-import {
-    Client,
-    RfcClientBinding,
-    RfcConnectionParameters,
-    RfcClientOptions,
-} from "./sapnwrfc-client";
+import { RfcConnectionParameters } from "./sapnwrfc";
+
+import { Client, RfcClientBinding, RfcClientOptions } from "./sapnwrfc-client";
 
 //
 // RfcPool

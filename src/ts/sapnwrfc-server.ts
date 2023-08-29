@@ -10,14 +10,14 @@ import {
     RfcLoggingLevel,
 } from "./noderfc-bindings";
 
-import { RfcConnectionParameters } from "./sapnwrfc-client";
+import { RfcConnectionParameters, RFC_RC } from "./sapnwrfc";
 
 //
 // RfcServer
 //
 
 export type RfcSecurityAttributes = {
-    functionName: string[30];
+    abapFunctionName: string[30];
     sysId: string;
     client: string[3];
     user: string;
@@ -28,16 +28,24 @@ export type RfcSecurityAttributes = {
     sncAclKeyLength: number;
 };
 
+export type RfcAuthHandlerResponse =
+    | undefined
+    | RFC_RC.RFC_OK
+    | boolean
+    | string;
+
 export type RfcAuthHandlerFunction = (
-    connectionHandle: number,
     securityAttributes: RfcSecurityAttributes,
     ...[unknown]
-) => unknown;
+) => RfcAuthHandlerResponse | Promise<RfcAuthHandlerResponse>;
+
+export type bgRFChandler = () => RFC_RC;
 
 export type RfcServerOptions = {
     logLevel?: RfcLoggingLevel;
     port?: number;
     authHandler?: RfcAuthHandlerFunction;
+    // bgrfcHandlers?: {};
 };
 
 export type RfcServerConfiguration = {

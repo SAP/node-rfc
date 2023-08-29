@@ -15,6 +15,7 @@ export * from "./sapnwrfc-client";
 export * from "./sapnwrfc-pool";
 export * from "./sapnwrfc-throughput";
 export * from "./sapnwrfc-server";
+export * from "./sapnwrfc";
 
 import { noderfc_binding } from "./noderfc-bindings";
 
