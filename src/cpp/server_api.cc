@@ -294,14 +294,13 @@ void AuthRequestHandler::wait() {
 }
 
 void AuthRequestHandler::done(const std::string& errorObj) {
-  jsHandlerError = errorObj;
   js_call_completed = true;
   js_call_condition.notify_one();
-  _log.record(
-      logClass::server,
-      (jsHandlerError.length() > 0) ? logLevel::error : logLevel::debug,
-      "JS auth handler call done ",
-      (jsHandlerError.length() > 0) ? "', error: " + jsHandlerError : "'");
+  _log.record(logClass::server,
+              (errorInfo->code != RFC_OK) ? logLevel::error : logLevel::debug,
+              "JS auth handler call done: ",
+              errorInfo->code,
+              (errorInfo->code != RFC_OK) ? ", error: '" + errorObj : "'");
 }
 
 //
@@ -734,7 +733,7 @@ void JSAuthCall(Napi::Env env,
   try {
     jsResult = callback.Call({requestData});
   } catch (const Error& e) {
-    requestBaton->setResponseData(Napi::String::New(__env, e.Message()));
+    requestBaton->setResponseData(Napi::String::New(env, e.Message()));
     return;
   }
 
@@ -753,18 +752,17 @@ void JSAuthCall(Napi::Env env,
                                            info[0].As<Napi::Object>();
                                        requestBaton->setResponseData(jsResult);
                                      }),
-                 Napi::Function::New(
-                     env,
-                     [=](const CallbackInfo& info) {
-                       if (info.Length() > 0) {
-                         requestBaton->setResponseData(info[0].ToString());
-                       } else {
-                         requestBaton->setResponseData(Napi::String::New(
-                             info.Env(), "Authorization denied by Node.js"));
-                       };
-                     })
-
-                });
+                 Napi::Function::New(env, [=](const CallbackInfo& info) {
+                   // if error message not empty, send back to ABAP
+                   if (info.Length() > 0) {
+                     if (info[0].ToString().Utf8Value() != "Error") {
+                       return requestBaton->setResponseData(info[0].ToString());
+                     }
+                   }
+                   // otherwise send the default error message
+                   requestBaton->setResponseData(Napi::String::New(
+                       env, "Authorization denied by Node.js"));
+                 })});
 
   } else {
     requestBaton->setResponseData(jsResult);

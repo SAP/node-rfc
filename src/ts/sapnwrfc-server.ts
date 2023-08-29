@@ -7,10 +7,9 @@ import {
     noderfc_binding,
     environment,
     NodeRfcEnvironment,
-    RfcLoggingLevel,
 } from "./noderfc-bindings";
 
-import { RfcConnectionParameters, RFC_RC } from "./sapnwrfc";
+import { RfcConnectionParameters, RfcLoggingLevel, RFC_RC } from "./sapnwrfc";
 
 //
 // RfcServer

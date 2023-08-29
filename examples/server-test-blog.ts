@@ -1,5 +1,5 @@
 import { RfcLoggingLevel, Server } from "../lib/index.js";
-import { authHandler, my_stfc_structure } from "./server_functions.js";
+import { authHandler, my_stfc_structure } from "./server_functions.ts";
 
 // Create server instance, initially inactive
 const server = new Server({

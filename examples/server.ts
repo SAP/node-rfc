@@ -1,4 +1,4 @@
-import { RfcLoggingLevel, Server } from "../lib/index.js";
+import { RfcLoggingLevel, Server } from "../lib";
 import {
   authHandler,
   my_stfc_structure,

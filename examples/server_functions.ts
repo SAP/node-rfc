@@ -1,11 +1,7 @@
-import {
-  RfcSecurityAttributes,
-  RfcAuthHandlerResponse,
-  RFC_RC,
-} from "../lib/index.js";
+import { RfcSecurityAttributes, RfcAuthHandlerResponse } from "../lib/index.js";
 
 // Server authorization handler
-export function authHandler(
+export async function authHandler(
   context: RfcSecurityAttributes
 ): Promise<RfcAuthHandlerResponse> {
   // To grant authorization return:
@@ -38,14 +34,14 @@ export function authHandler(
       authorized = true;
   }
 
-  // ret = authorized;
+  const ret = authorized;
   // const ret = new Promise<boolean>((resolve) => resolve(authorized));
   //   const ret = new Promise<string>((resolve) =>
   //     resolve("unauthorized by Node.js")
   //   );
-  //   console.log("[js] auth handler returns:", ret);
-  //   return ret;
-  throw new Error("~~~ unauthorized by Node.js ~~~");
+  throw new Error(""); // ~~~ unauthorized by Node.js ~~~");
+  //console.log("[js] auth handler returns:", ret);
+  //return ret;
 }
 
 // JavaScript handler for ABAP STFC_CONNECTION function
