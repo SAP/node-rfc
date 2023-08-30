@@ -25,7 +25,8 @@ HandlerFunction::HandlerFunction(Server* server,
       func_desc_handle(func_desc_handle),
       tsfnRequest(tsfnRequest),
       jsFunctionName(jsFunctionName) {
-  strcpyU(abap_func_name_sapuc, _abap_func_name_sapuc);
+  strncpyU(
+      abap_func_name_sapuc, _abap_func_name_sapuc, _abap_func_name.length());
 }
 
 HandlerFunction::~HandlerFunction() {
@@ -264,7 +265,7 @@ void AuthRequestHandler::setResponseData(Napi::Value jsAuthResponse) {
       errorInfo->code = RFC_OK;
     } else {
       // non-empty string ->unauthorized, pass it as error message to ABAP
-      strcpyU(errorInfo->message, setString(message));
+      strncpyU(errorInfo->message, setString(message), message.length());
     }
   } else if (jsAuthResponse.IsBoolean()) {
     // true -> authorized

@@ -38,7 +38,7 @@
     "install": "node-gyp-build",
     "jest": "jest test --testPathIgnorePatterns throughput --testTimeout 60000",
     "lint": "npm run lintts && npm run lintcpp && npm audit --omit=dev && reuse lint",
-    "lintcpp": "cppcheck --suppressions-list=src/cpp/suppressions.txt -isrc/cpp/ext  -inode_modules/node-addon_api --enable=all --inline-suppr --force src/cpp/Client.cc",
+    "lintcpp": "clang-tidy src/cpp/*.cc -- -I/usr/local/sap/nwrfcsdk/include -Inode_modules/node-addon-api -I$NVM_BIN/../include/node",
     "lintts": "eslint src/ts test --ext ts",
     "test": "jest test --testPathIgnorePatterns throughput --testTimeout 60000",
     "cpp": "prebuildify --napi -t 16.20.0 -t electron@25.2.0 --force --strip --verbose",

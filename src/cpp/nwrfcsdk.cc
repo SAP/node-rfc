@@ -30,6 +30,7 @@ SAP_UC* setString(const Napi::String napistr) {
                       &errorInfo);
 
   if (rc != RFC_OK) {
+    delete[] sapuc;
     _log.fatal(
         logClass::nwrfc,
         "NodeJS string could not be parsed to ABAP string: '" + sstr + "'",
@@ -63,6 +64,7 @@ SAP_UC* setString(std::string sstr) {
                       &errorInfo);
 
   if (rc != RFC_OK) {
+    delete[] sapuc;
     _log.fatal(
         logClass::nwrfc,
         "NodeJS string could not be parsed to ABAP string: '" + sstr + "'",
@@ -648,7 +650,7 @@ ValuePair getVariable(RFCTYPE typ,
 
     case RFCTYPE_XSTRING: {
       uint_t strLen, resultLen;
-      rc = RfcGetStringLength(functionHandle, cName, &strLen, &errorInfo);
+      RfcGetStringLength(functionHandle, cName, &strLen, &errorInfo);
 
       SAP_RAW* byteValue = new SAP_RAW[strLen + 1];
       byteValue[strLen] = '\0';

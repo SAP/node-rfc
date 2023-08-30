@@ -61,6 +61,7 @@ Napi::Object Throughput::Init(Napi::Env env, Napi::Object exports) {
   constructor = Napi::Persistent(t);
   constructor.SuppressDestruct();
 
+  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
   exports.Set("Throughput", t);
   return exports;
 }
