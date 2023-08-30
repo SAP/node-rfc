@@ -5,7 +5,6 @@
 #ifndef NodeRfc_Client_H
 #define NodeRfc_Client_H
 
-#include <tuple>
 #include "Log.h"
 #include "nwrfcsdk.h"
 

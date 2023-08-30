@@ -29,7 +29,12 @@
 #define SRV_OPTION_LOG_LEVEL "logLevel"
 #define SRV_OPTION_PORT "port"
 #define SRV_OPTION_AUTH "authHandler"
-
+#define SRV_OPTION_BGRFC "bgRfcHandlers"
+#define SRV_OPTION_BGRFC_CHECK "check"
+#define SRV_OPTION_BGRFC_COMMIT "commit"
+#define SRV_OPTION_BGRFC_ROLLBACK "rollback"
+#define SRV_OPTION_BGRFC_CONFIRM "confirm"
+#define SRV_OPTION_BGRFC_GET_STATE "getState"
 //
 // Client options constants
 //

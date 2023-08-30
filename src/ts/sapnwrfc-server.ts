@@ -33,18 +33,34 @@ export type RfcAuthHandlerResponse =
     | boolean
     | string;
 
-export type RfcAuthHandlerFunction = (
+export type RfcAuthHandler = (
     securityAttributes: RfcSecurityAttributes,
     ...[unknown]
 ) => RfcAuthHandlerResponse | Promise<RfcAuthHandlerResponse>;
 
-export type bgRFChandler = () => RFC_RC;
+export type RfcUnitIdentifier = {
+    queued: boolean;
+    id: string;
+};
+
+export type RfcBgRfcHandler = (
+    connHandle: number,
+    unitIdentifier: RfcUnitIdentifier
+) => RFC_RC | Promise<RFC_RC>;
+
+export type RfcBgRfcHandlers = {
+    check?: RfcBgRfcHandler;
+    commit?: RfcBgRfcHandler;
+    rollback?: RfcBgRfcHandler;
+    confirm?: RfcBgRfcHandler;
+    getState?: RfcBgRfcHandler;
+};
 
 export type RfcServerOptions = {
     logLevel?: RfcLoggingLevel;
     port?: number;
-    authHandler?: RfcAuthHandlerFunction;
-    // bgrfcHandlers?: {};
+    authHandler?: RfcAuthHandler;
+    bgRfcHandlers?: RfcBgRfcHandlers;
 };
 
 export type RfcServerConfiguration = {

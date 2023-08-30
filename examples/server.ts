@@ -1,10 +1,11 @@
-import { RfcLoggingLevel, Server } from "../lib";
+import { RFC_RC, RfcLoggingLevel, Server } from "../lib";
 import {
   authHandler,
   my_stfc_structure,
   my_stfc_connection,
 } from "./server_functions";
 
+console.log("ok");
 // Create server instance, initially inactive
 const server = new Server({
   serverConnection: { dest: "MME_GATEWAY" },
@@ -13,6 +14,11 @@ const server = new Server({
   serverOptions: {
     logLevel: RfcLoggingLevel.all,
     authHandler: authHandler,
+    bgRfcHandlers: {
+      check: () => {
+        return RFC_RC.RFC_OK;
+      },
+    },
   },
 });
 

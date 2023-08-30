@@ -5,6 +5,7 @@
 #include "Client.h"
 #include <mutex>
 #include <thread>
+#include <tuple>
 #include "Pool.h"
 
 namespace node_rfc {

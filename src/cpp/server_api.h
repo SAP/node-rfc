@@ -151,7 +151,10 @@ class ServerRequestBaton;
 
 class sapnwrfcServerAPI {
  public:
+  //
   // sapnwrfc native api, invoking sapnwrfc api handler functions
+  //
+  // (mandatory)
   static RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
                                        RFC_ATTRIBUTES rfc_attributes,
                                        RFC_FUNCTION_DESC_HANDLE* func_handle);
@@ -159,10 +162,22 @@ class sapnwrfcServerAPI {
   static RFC_RC SAP_API genericRequestHandler(RFC_CONNECTION_HANDLE conn_handle,
                                               RFC_FUNCTION_HANDLE func_handle,
                                               RFC_ERROR_INFO* errorInfo);
-
+  // (optional)
   static RFC_RC SAP_API authHandler(RFC_CONNECTION_HANDLE rfcHandle,
                                     RFC_SECURITY_ATTRIBUTES* secAttributes,
                                     RFC_ERROR_INFO* errorInfo);
+  // bgRFC
+  static RFC_RC SAP_API bgRfcCheck(RFC_CONNECTION_HANDLE rfcHandle,
+                                   const RFC_UNIT_IDENTIFIER* identifier);
+  static RFC_RC SAP_API bgRfcCommit(RFC_CONNECTION_HANDLE rfcHandle,
+                                    const RFC_UNIT_IDENTIFIER* identifier);
+  static RFC_RC SAP_API bgRfcRollback(RFC_CONNECTION_HANDLE rfcHandle,
+                                      const RFC_UNIT_IDENTIFIER* identifier);
+  static RFC_RC SAP_API bgRfcConfirm(RFC_CONNECTION_HANDLE rfcHandle,
+                                     const RFC_UNIT_IDENTIFIER* identifier);
+  static RFC_RC SAP_API bgRfcGetState(RFC_CONNECTION_HANDLE rfcHandle,
+                                      const RFC_UNIT_IDENTIFIER* identifier,
+                                      RFC_UNIT_STATE* unitState);
   // sapnwrfc api handler functions
   static AuthRequestHandler authorizationHandler;
   static GenericFunctionHandler genericFunctionHandler;

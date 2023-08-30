@@ -18,8 +18,7 @@ uint_t Server::request_id = 0;
 void Server::getServerOptions(Napi::Object serverOptions,
                               ServerOptions* server_options) {
   Napi::Array optionNames = serverOptions.GetPropertyNames();
-  uint_t optionCount = optionNames.Length();
-  for (uint_t ii = 0; ii < optionCount; ii++) {
+  for (uint_t ii = 0; ii < optionNames.Length(); ii++) {
     std::string name = optionNames.Get(ii).ToString().Utf8Value();
     Napi::Value value = serverOptions.Get(name);
     if (name == SRV_OPTION_LOG_LEVEL) {
@@ -39,6 +38,49 @@ void Server::getServerOptions(Napi::Object serverOptions,
       sapnwrfcServerAPI::authorizationHandler.registerJsHandler(
           server_options->authHandlerJS);
 
+    } else if (name == SRV_OPTION_BGRFC) {
+      if (!value.IsObject()) {
+        Napi::TypeError::New(
+            node_rfc::__env,
+            "Server option '" + name + "' must be an JS object")
+            .ThrowAsJavaScriptException();
+        return;
+      }
+      Napi::Array handlerNames = value.As<Napi::Object>().GetPropertyNames();
+      for (uint_t jj = 0; jj < handlerNames.Length(); jj++) {
+        std::string handler_name = handlerNames.Get(jj).ToString().Utf8Value();
+        Napi::Value handlerFunction =
+            value.As<Napi::Object>().Get(handler_name);
+        if (!handlerFunction.IsFunction()) {
+          Napi::TypeError::New(
+              node_rfc::__env,
+              "bgRFC handler '" + name + "' must be JS function")
+              .ThrowAsJavaScriptException();
+          return;
+        }
+        if (handler_name == SRV_OPTION_BGRFC_CHECK) {
+          server_options->bgRfcHandlerCheck =
+              Napi::Persistent(handlerFunction.As<Napi::Function>());
+        } else if (handler_name == SRV_OPTION_BGRFC_COMMIT) {
+          server_options->bgRfcHandlerCommit =
+              Napi::Persistent(handlerFunction.As<Napi::Function>());
+        } else if (handler_name == SRV_OPTION_BGRFC_CONFIRM) {
+          server_options->bgRfcHandlerConfirm =
+              Napi::Persistent(handlerFunction.As<Napi::Function>());
+        } else if (handler_name == SRV_OPTION_BGRFC_ROLLBACK) {
+          server_options->bgRfcHandlerRollback =
+              Napi::Persistent(handlerFunction.As<Napi::Function>());
+        } else if (handler_name == SRV_OPTION_BGRFC_GET_STATE) {
+          server_options->bgRfcHandlerGetState =
+              Napi::Persistent(handlerFunction.As<Napi::Function>());
+        } else {
+          Napi::TypeError::New(
+              node_rfc::__env,
+              "bgRFC handler name '" + handler_name + "' is not supported")
+              .ThrowAsJavaScriptException();
+          return;
+        }
+      }
     } else {
       Napi::TypeError::New(node_rfc::__env,
                            "Server option not allowed: '" + name + "'")
@@ -180,12 +222,12 @@ Server::Server(const Napi::CallbackInfo& info)
 
 Napi::Value wrapUnitIdentifier(RFC_UNIT_IDENTIFIER* uIdentifier) {
   Napi::Object unitIdentifier = Napi::Object::New(node_rfc::__env);
-  unitIdentifier.Set("queued", wrapString(&uIdentifier->unitType, 1));
+  unitIdentifier.Set("queued", uIdentifier->unitType == cU("Q")[0]);
   unitIdentifier.Set("id", wrapString(uIdentifier->unitID));
   return unitIdentifier;
 }
 
-Napi::Value wrapUnitAttributes(RFC_UNIT_ATTRIBUTES* u_attr) {
+Napi::Value wrapUnitAttributes(const RFC_UNIT_ATTRIBUTES* u_attr) {
   Napi::Env env = node_rfc::__env;
   Napi::Object unitAttr = Napi::Object::New(node_rfc::__env);
 
@@ -380,9 +422,7 @@ void Server::_start(RFC_ERROR_INFO* errorInfo) {
     _log.info(logClass::server, "start: authorization handler installed");
   }
 
-  // generic server function
-  // RfcInstallGenericServerFunction(
-  //     genericRequestHandler, metadataLookup, errorInfo);
+  // generic server functions
   RfcInstallGenericServerFunction(sapnwrfcServerAPI::genericRequestHandler,
                                   sapnwrfcServerAPI::metadataLookup,
                                   errorInfo);

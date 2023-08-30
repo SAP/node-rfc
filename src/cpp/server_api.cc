@@ -637,6 +637,40 @@ sapnwrfcServerAPI::authHandler(RFC_CONNECTION_HANDLE rfcHandle,
   return RFC_OK;
 }
 
+RFC_RC SAP_API sapnwrfcServerAPI::bgRfcCheck(
+    RFC_CONNECTION_HANDLE rfcHandle, const RFC_UNIT_IDENTIFIER* identifier) {
+  UNUSED(rfcHandle);
+  UNUSED(identifier);
+  return RFC_OK;
+};
+RFC_RC SAP_API sapnwrfcServerAPI::bgRfcCommit(
+    RFC_CONNECTION_HANDLE rfcHandle, const RFC_UNIT_IDENTIFIER* identifier) {
+  UNUSED(rfcHandle);
+  UNUSED(identifier);
+  return RFC_OK;
+};
+RFC_RC SAP_API sapnwrfcServerAPI::bgRfcRollback(
+    RFC_CONNECTION_HANDLE rfcHandle, const RFC_UNIT_IDENTIFIER* identifier) {
+  UNUSED(rfcHandle);
+  UNUSED(identifier);
+  return RFC_OK;
+};
+RFC_RC SAP_API sapnwrfcServerAPI::bgRfcConfirm(
+    RFC_CONNECTION_HANDLE rfcHandle, const RFC_UNIT_IDENTIFIER* identifier) {
+  UNUSED(rfcHandle);
+  UNUSED(identifier);
+  return RFC_OK;
+};
+RFC_RC SAP_API
+sapnwrfcServerAPI::bgRfcGetState(RFC_CONNECTION_HANDLE rfcHandle,
+                                 const RFC_UNIT_IDENTIFIER* identifier,
+                                 RFC_UNIT_STATE* unitState) {
+  UNUSED(rfcHandle);
+  UNUSED(identifier);
+  UNUSED(unitState);
+  return RFC_OK;
+};
+
 //
 // Tsfn
 //
