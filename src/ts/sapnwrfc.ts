@@ -244,3 +244,11 @@ export enum RfcLoggingLevel {
     debug = 5,
     all = 6,
 }
+
+export enum RFC_UNIT_STATE {
+    RFC_UNIT_NOT_FOUND, ///< No information for this unit ID and unit type can be found in the target system. If you are sure, that target system, unit ID and unit type are correct, it means that your previous attempt did not even reach the target system. Send the unit again. However, if you get this status after the Confirm step has already been executed, it means that everything is ok. Don't re-execute in this case!
+    RFC_UNIT_IN_PROCESS, ///< Backend system is still in the process of persisting (or executing if type 'T') the payload data. Give it some more time and check the state again later. If this takes "too long", an admin should probably have a look at why there is no progress here.
+    RFC_UNIT_COMMITTED, ///< Data has been persisted (or executed if type 'T') ok on receiver side. Confirm event may now be triggered.
+    RFC_UNIT_ROLLED_BACK, ///< An error of any type has occurred. Unit needs to be resent.
+    RFC_UNIT_CONFIRMED, ///< Temporary state between the Confirm event and the time, when the status data will be erased for good. Nothing to be done. Just delete the payload and status information on your side.
+}

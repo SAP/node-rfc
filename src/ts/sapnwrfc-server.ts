@@ -9,7 +9,12 @@ import {
     NodeRfcEnvironment,
 } from "./noderfc-bindings";
 
-import { RfcConnectionParameters, RfcLoggingLevel, RFC_RC } from "./sapnwrfc";
+import {
+    RfcConnectionParameters,
+    RfcLoggingLevel,
+    RFC_RC,
+    RFC_UNIT_STATE,
+} from "./sapnwrfc";
 
 //
 // RfcServer
@@ -48,12 +53,17 @@ export type RfcBgRfcHandler = (
     unitIdentifier: RfcUnitIdentifier
 ) => RFC_RC | Promise<RFC_RC>;
 
+export type RfcBgRfcHandlerGetState = (
+    connHandle: number,
+    unitIdentifier: RfcUnitIdentifier
+) => RFC_UNIT_STATE | Promise<RFC_UNIT_STATE>;
+
 export type RfcBgRfcHandlers = {
     check?: RfcBgRfcHandler;
     commit?: RfcBgRfcHandler;
     rollback?: RfcBgRfcHandler;
     confirm?: RfcBgRfcHandler;
-    getState?: RfcBgRfcHandler;
+    getState?: RfcBgRfcHandlerGetState;
 };
 
 export type RfcServerOptions = {
