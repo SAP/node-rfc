@@ -217,6 +217,7 @@ export type RfcStructure = {
     [key: string]: RfcVariable | RfcStructure | RfcTable;
 };
 export type RfcTable = Array<RfcStructure | RfcVariable>;
+export type RfcTableOfStructures = Array<RfcStructure>;
 export type RfcParameterValue =
     | RfcVariable
     | RfcArray
