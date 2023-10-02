@@ -4,7 +4,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "NodeNext",
-    "moduleResolution": "nodenext",
+    "moduleResolution": "NodeNext",
     "strict": true,
     "declaration": true,
     "removeComments": true,
@@ -15,6 +15,6 @@
     "outDir": "./lib",
   },
   "include": [
-    "src/**/*"
+    "src/ts/*"
   ]
 }

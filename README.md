@@ -258,10 +258,14 @@ If you encounter an issue or have a feature request, you can create a [ticket](h
 
 Check out the SCN Forum (search for "node-rfc") and stackoverflow (use the tag "node-rfc"), to discuss code-related problems and questions.
 
-## **Contributing**
+## Contributing
 
 We appreciate contributions from the community to **node-rfc**!
 See [CONTRIBUTING.md](CONTRIBUTING.md) for more details on our philosophy around extending this module.
+
+## Code of Conduct
+
+See [Code of Conduct](./CODE_OF_CONDUCT.md)
 
 ## License
 
