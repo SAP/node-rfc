@@ -125,7 +125,7 @@ npm install node-rfc
 Alternatively, when the `node-rfc` package is not provided for your platform for example, the package shall be built from source. This installation method is highly recommended on Linux platforms:
 
 ```shell
-git clone --single-branch https://github.com/SAP/node-rfc.git
+git clone https://github.com/SAP/node-rfc.git
 cd node-rfc
 npm install
 npm run addon # rebuild native addon

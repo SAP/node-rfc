@@ -1,3 +1,5 @@
+# Installation
+
 - **[SAP NWRFC SDK installation](#sap-nwrfc-sdk-installation)**
   - [Windows](#windows)
   - [Linux](#linux)
@@ -134,17 +136,17 @@ echo `strings $SAPNWRFC_HOME/lib/libsapnwrfc.so | grep "Patch Level"`
 echo `strings $SAPNWRFC_HOME/lib/libsapnwrfc.dylib | grep "Patch Level"`
 ```
 
-## Verify SAP NWRFC SDK installation
+## Verify SAP NW RFC SDK installation
+
+To verify SAP NW RFC SDK installation run the `startrfc -v` from SAP NW RFC SDK `bin` folder. The output should be like:
 
 ```shell
 cd $SAPNWRFC_HOME/bin
-sudo chmod a+x rfcexec
-./rfcexec # should show something like:
-  Error: Not all mandatory parameters specified
-    Please start the program in the following way:
-    rfcexec -t -a <program ID> -g <gateway host> -x <gateway service>
-     -f <file with list of allowed commands> -s <allowed Sys ID>
-  The options "-t" (trace), "-f" and "-s" are optional.
+./startrfc -v
+RfcLogWrite: could not open /usr/local/sap/nwrfcsdk/./dev_rfc_17149.log. Trace directory set to ./NW RFC Library Version: 750 Patch Level 12
+Compiler Version:
+Version not available.
+Startrfc Version: 2018-08-15
 ```
 
 The output like below, shows that either 32 bit NWRFC SDK is installed on 64 bit system, or NWRFC SDK for another platform is installed:
