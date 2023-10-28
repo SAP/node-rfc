@@ -41,8 +41,8 @@
     "lintcpp": "clang-tidy src/cpp/*.cc -- -I/usr/local/sap/nwrfcsdk/include -Inode_modules/node-addon-api -I$NVM_BIN/../include/node",
     "lintts": "eslint src/ts test --ext ts",
     "test": "jest test --testPathIgnorePatterns throughput --testTimeout 60000",
-    "cpp": "prebuildify --napi -t 16.20.0 -t electron@25.2.0 --force --strip --verbose",
-    "dev": "prebuildify --napi -t 16.20.0 --force --strip --verbose",
+    "cpp": "prebuildify --napi -t 18.18.2 -t electron@25.2.0 --force --strip --verbose",
+    "dev": "prebuildify --napi -t 18.18.2 --force --strip --verbose",
     "ts": "tsc",
     "build": "npm run ts && npm run cpp",
     "rebuild": "npm install --build-from-source"
@@ -78,7 +78,7 @@
     "typescript": "^5.0.2"
   },
   "engines": {
-    "node": "^16 || ^18 || >= 20"
+    "node": "^18 || >= 20"
   },
   "gypfile": true
 }
