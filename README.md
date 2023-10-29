@@ -52,6 +52,12 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 
 ## Supported platforms
 
+- Kyma and BTP Node.JS buildpack: [ABAP RFC connectivity from Kyma and BTP Node.JS buildpack](https://blogs.sap.com/2023/10/26/abap-rfc-connectivity-from-btp-node.js-buildpack/)
+
+- AWS Lambdas, heroku ...
+  - Create GitHub issue to get up-to-date information
+  - Create SAP feature request for `Security Services` category of the [SAP Cloud Platform – Platform Foundation](https://influence.sap.com/sap/ino/#/campaign/2277)
+
 - Operating systems: the _node-rfc_ connector can be built from source([build instructions](#download-and-installation)) on all platforms supported by both [SAP NW RFC SDK](https://launchpad.support.sap.com/#/notes/2573790) and by [Node.js](https://github.com/nodejs/node/blob/master/BUILDING.md#supported-platforms-1)
 
 - Node.js: [current and active LTS releases](https://github.com/nodejs/LTS)
@@ -63,10 +69,6 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 - Deno: latest release
 
 Other platforms and frameworks:
-
-- SAP Cloud Platform, AWS Lambdas, heroku ...
-  - Create GitHub issue to get up-to-date information
-  - Create SAP feature request for `Security Services` category of the [SAP Cloud Platform – Platform Foundation](https://influence.sap.com/sap/ino/#/campaign/2277)
 
 - NW.js
   - Feature request: #144
