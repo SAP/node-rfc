@@ -3,7 +3,6 @@
 #ifndef NodeRfc_Log_H
 #define NodeRfc_Log_H
 
-#include <sapnwrfc.h>
 #include <fstream>
 #include <initializer_list>
 #include <string>

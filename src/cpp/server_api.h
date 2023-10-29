@@ -7,6 +7,7 @@
 #define NodeRfc_ServerAPI_H
 
 #include <napi.h>
+#include <condition_variable>
 #include "Server.h"
 #include "nwrfcsdk.h"
 
