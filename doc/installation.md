@@ -80,7 +80,7 @@ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off
 2. Set SAPNWRFC_HOME environment variable: SAPNWRFC_HOME=/usr/local/sap/nwrfcsdk
 3. Unpack the SAP NWRFC SDK archive to it, e.g. /usr/local/sap/nwrfcsdk/lib shall exist.
 
-Set the remote paths in SAP NW RFC SDK by running [paths_fix.sh](https://github.com/SAP/PyRFC/blob/master/ci/utils/paths_fix.sh) script.
+Set the remote paths in SAP NW RFC SDK by running [paths_fix.sh](https://github.com/SAP/fundamental-tools/blob/main/docker/sap_nwrfcsdk_utils/paths_fix.sh) script.
 
 **Custom SAP NWRFC SDK location**
 
