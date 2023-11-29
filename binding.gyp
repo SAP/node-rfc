@@ -6,8 +6,9 @@
 
 {
     'variables': {
-        # SAPNWRFC_HOME_CF_STAGING used
-        'nwrfcsdk_dir': '<!(node -p "process.env.SAPNWRFC_HOME || process.env.SAPNWRFC_HOME_CF_STAGING")',
+        # SAPNWRFC_HOME_CLOUD is used in cloud deployents, like on Cloud Foundry
+        # https://blogs.sap.com/2023/10/26/abap-rfc-connectivity-from-btp-node.js-buildpack/
+        'nwrfcsdk_dir': '<!(node -p "process.env.SAPNWRFC_HOME || process.env.SAPNWRFC_HOME_CLOUD")',
         'nwrfcsdk_include_dir': '<(nwrfcsdk_dir)/include',
         'nwrfcsdk_lib_dir': '<(nwrfcsdk_dir)/lib',
         'napi_include_dir': "<!(node -p \"require('node-addon-api').include_dir\")",
