@@ -17,7 +17,7 @@
 #define pointer_t uintptr_t
 
 // client binding version
-#define NODERFC_VERSION "3.3.0"
+#define NODERFC_VERSION "3.3.1"
 
 // surpress unused parameter warnings
 #define UNUSED(x) (void)(x)
