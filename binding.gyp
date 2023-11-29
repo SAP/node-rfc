@@ -6,17 +6,17 @@
 
 {
     'variables': {
-        'nwrfcsdk_dir': '<!(echo $SAPNWRFC_HOME)',
-        'nwrfcsdk_include_dir': "<(nwrfcsdk_dir)/include",
-        'nwrfcsdk_lib_dir': "<(nwrfcsdk_dir)/lib",
+        # SAPNWRFC_HOME_CF_STAGING used
+        'nwrfcsdk_dir': '<!(node -p "process.env.SAPNWRFC_HOME || process.env.SAPNWRFC_HOME_CF_STAGING")',
+        'nwrfcsdk_include_dir': '<(nwrfcsdk_dir)/include',
+        'nwrfcsdk_lib_dir': '<(nwrfcsdk_dir)/lib',
         'napi_include_dir': "<!(node -p \"require('node-addon-api').include_dir\")",
         'napi_version': "<!(node -p \"require('./package.json').config.napi_version\")",
-        'node_abi_version': "<!(node -p 'process.versions.modules')",
+        'node_abi_version': '<!(node -p "process.versions.modules")',
         # per NodeJS build requirements: https://github.com/nodejs/node/blob/main/BUILDING.md
         'macosx_version_min': '10.15',
         'cpp_standard': 'c++17',
         'target_name': 'sapnwrfc',
-
         'ccflags_defaults': [
             '-fno-rtti',
             '-Wno-unused-variable',
@@ -28,6 +28,7 @@
         'win_delay_load_hook': 'true',
         'product_prefix': '',
         'default_configuration': 'Release',
+        'include_dirs': ['<(napi_include_dir)', '<(nwrfcsdk_include_dir)'],
 
         # C++ exceptions are enabled: https://github.com/nodejs/node-addon-api/blob/main/doc/setup.md
         'cflags!': [ '-fno-exceptions' ],
@@ -112,7 +113,6 @@
                                 '-MD', '-MT'
                             ]
                         },
-                        'include_dirs': ['<(napi_include_dir)', '<(nwrfcsdk_include_dir)'],
                         'cflags_cc': [
                             '<@(ccflags_defaults)'
                             '<@(ccflags_mac)'
@@ -154,7 +154,6 @@
                 [
                     'OS=="linux"',
                     {
-                        'include_dirs': ['<(napi_include_dir)', '<(nwrfcsdk_include_dir)'],
                         'cflags_cc': [
                             '-std=<(cpp_standard)',
                             '-std=<(cpp_standard)',
@@ -182,12 +181,6 @@
                 [
                     'OS=="win"',
                     {
-                        'variables': {
-                            'nwrfcsdk_dir': '<!(echo %SAPNWRFC_HOME%)',
-                            'nwrfcsdk_include_dir': "<(nwrfcsdk_dir)/include",
-                            'nwrfcsdk_lib_dir': "<(nwrfcsdk_dir)/lib",
-                        },
-                        'include_dirs': ['<(napi_include_dir)', '<(nwrfcsdk_include_dir)'],
                         'defines': [
                             'PLATFORM="win32"',
                             'WIN32',
@@ -226,7 +219,6 @@
                                 'AdditionalDependencies': ['sapnwrfc.lib', 'libsapucum.lib'],
                             },
                         },
-
                     },
                 ],
             ],
