@@ -254,3 +254,36 @@ export enum RFC_UNIT_STATE {
     RFC_UNIT_ROLLED_BACK, ///< An error of any type has occurred. Unit needs to be resent.
     RFC_UNIT_CONFIRMED, ///< Temporary state between the Confirm event and the time, when the status data will be erased for good. Nothing to be done. Just delete the payload and status information on your side.
 }
+
+// Errors
+
+export interface INodeRfcError {
+    name: "nodeRfcError";
+    message: "string";
+    rfmPath?: "string";
+}
+
+export interface IRfcLibError {
+    name: "RfcLibError";
+    group: number;
+    code: number;
+    key: string;
+    message: string;
+}
+
+export interface IABAPError {
+    name: "ABAPError";
+    group: number;
+    code: number;
+    key: string;
+    message: string;
+    abapNsgClass: string;
+    abapMsgType: string;
+    abapMsgNumber: string;
+    abapMsgV1: string;
+    abapMsgV2: string;
+    abapMsgV3: string;
+    abapMsgV4: string;
+}
+
+export type RfcError = INodeRfcError | IABAPError | IRfcLibError;
