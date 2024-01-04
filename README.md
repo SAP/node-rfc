@@ -10,7 +10,7 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 [![dpm](https://img.shields.io/npm/dm/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/node-rfc)](https://api.reuse.software/info/github.com/SAP/node-rfc)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4350/badge)](https://bestpractices.coreinfrastructure.org/projects/4350)
-[![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 
 ## Key features
 
@@ -48,7 +48,6 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 - **[More resource and info about SAP Connectors and RFC communication](#resources)**
 - **[Code of Conduct](CODE_OF_CONDUCT.md)**
 - **[Contributing](#contributing)**
-- **[License](#license)**
 
 ## Supported platforms
 
@@ -268,7 +267,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for more details on our philosophy around
 ## Code of Conduct
 
 See [Code of Conduct](./CODE_OF_CONDUCT.md)
-
-## License
-
-Copyright (c) 2018 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the [LICENSE file](LICENSES/Apache-2.0.txt).
