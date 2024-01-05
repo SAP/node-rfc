@@ -33,5 +33,3 @@ License: Apache-2.0
 Files: doc/** lib/** *.md .gitignore .clang-format binding.gyp .editorconfig .prettierignore .eslintrc.js CHANGES .github/**
 Copyright: 2015-2023 SAP SE Srdjan Boskovic <srdjan.boskovic@sap.com>
 License: Apache-2.0
-
-
