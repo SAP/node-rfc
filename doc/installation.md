@@ -101,44 +101,44 @@ The `node-rfc` package can be installed from npm, or built from source: [Install
 
 ## Troubleshooting
 
+The most frequent installation issues are:
+
+- SAP NW RFC SDK is not the one for your platform, when Linux version is installed on Windows system for example
+- User does not have read permissions for SAP NW RFC SDK `lib` folder
+- The 32 bit version of SAP NW RFC SDK is installed and fails with 64 bit nodejs
+- (Windows) Required version of Microsoft Visual C++ redistributable is not installed, see [dependencies](../README.md#requirements)
+
+Here are some of the most frequent error codes, related to installation
+
 `ImportError: DLL load failed: The specified module could not be found`
 
-(Windows) This error indicates that the node-rfc connector was not able to find the SAP NWRFC SDK libraries on your system.
-
-Verify:
-
-1. `SAPNWRFC_HOME\lib` directory is in your PATH environment variable
-2. SAP NWRFC SDK for your platform is installed, not Linux SDK for example on Windows system
-3. SAP NWRFC SDK 32bit is installed when runnung 32bit Node.js, not 64bit SDK
+(Windows) This error indicates that the node-rfc connector was not able to find the SAP NW RFC SDK on your system, or Microsoft Visual C++ redistributable is not installed
 
 `ImportError: DLL load failed: %1 is not a valid Win32 application`
 
-(Windows) This error occurs when SAP NWRFC Library 64bit version is installed on a system with 32bit version Node.js.
+(Windows) This error occurs when SAP NW RFC SDK 64bit version is installed on a system with 32bit version Node.js.
 
-## Verify SAP NWRFC SDK release
+`ERR_DLOPEN_FAILED` usually means that required version of Microsoft Visual C++ redistributable is not installed
 
-**Windows**
+### Check SAP NW RFC SDK installation
+
+To verify the SAP NW RFC SDK installation, before investigating possible issue with node-rfc, first check if `SAPNWRFC_HOME\lib` directory is in your `PATH` environment variable (Windows) or `LD_LIBRARY_PATH` (Linux)
+
+Then verify SAP NW RFC SDK release
 
 ```shell
+# Windows
 @echo off
 findstr Patch %SAPNWRFC_HOME%\lib\sapnwrfc.dll
-```
 
-**Linux**
-
-```shell
+# Linux
 echo `strings $SAPNWRFC_HOME/lib/libsapnwrfc.so | grep "Patch Level"`
-```
 
-**macOS**
-
-```shell
+# macOS
 echo `strings $SAPNWRFC_HOME/lib/libsapnwrfc.dylib | grep "Patch Level"`
 ```
 
-## Verify SAP NW RFC SDK installation
-
-To verify SAP NW RFC SDK installation run the `startrfc -v` from SAP NW RFC SDK `bin` folder. The output should be like:
+Finally, verify SAP NW RFC SDK installation using `startrfc -v` command in  SAP NW RFC SDK `bin` folder. The output should be like:
 
 ```shell
 cd $SAPNWRFC_HOME/bin
@@ -149,7 +149,7 @@ Version not available.
 Startrfc Version: 2018-08-15
 ```
 
-The output like below, shows that either 32 bit NWRFC SDK is installed on 64 bit system, or NWRFC SDK for another platform is installed:
+Another test, using `rfcexec` command, will fail if either 32 bit NWRFC SDK is installed on 64 bit system, or NWRFC SDK for another platform is installed:
 
 ```shell
 ./rfcexec
