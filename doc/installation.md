@@ -6,7 +6,7 @@
   - [macOS](#macos)
 - **[node-rfc installation](#node-rfc-installation)**
 - **[Troubleshooting](#troubleshooting)**
-  - [Verify SAP NWRFC SDK release](#verify-sap-nwrfc-sdk-release)
+  - [Verify SAP NW RFC SDK installation](#verify-sap-nw-rfc-sdk-installation)
   - [Verify node-rfc installation](#verify-node-rfc-installation)
   - [Verify node-rfc environment](#verify-node-rfc-environment)
 - **[Publish release](#publish-release) (maintainers)**
@@ -120,7 +120,7 @@ Here are some of the most frequent error codes, related to installation
 
 `ERR_DLOPEN_FAILED` usually means that required version of Microsoft Visual C++ redistributable is not installed
 
-### Check SAP NW RFC SDK installation
+### Verify SAP NW RFC SDK installation
 
 To verify the SAP NW RFC SDK installation, before investigating possible issue with node-rfc, first check if `SAPNWRFC_HOME\lib` directory is in your `PATH` environment variable (Windows) or `LD_LIBRARY_PATH` (Linux)
 

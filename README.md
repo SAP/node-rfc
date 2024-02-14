@@ -11,7 +11,6 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/node-rfc)](https://api.reuse.software/info/github.com/SAP/node-rfc)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4350/badge)](https://bestpractices.coreinfrastructure.org/projects/4350)
 
-
 ## Key features
 
 - Based on [N-API](https://github.com/nodejs/node-addon-api) standard
@@ -45,6 +44,7 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
   - **[Server](doc/api.md#server)**
   - **[Throughput](doc/api.md#throughput)**
 - **[Troubleshooting](doc/troubleshooting.md)**
+  - **[Verify SAP NW RFC SDK installation](doc/installation.md#verify-sap-nw-rfc-sdk-installation)**
 - **[More resource and info about SAP Connectors and RFC communication](#resources)**
 - **[Code of Conduct](CODE_OF_CONDUCT.md)**
 - **[Contributing](#contributing)**
