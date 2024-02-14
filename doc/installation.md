@@ -160,7 +160,7 @@ cannot open shared object file: No such file or directory
 If all looks good and node-rfc still fails to load
 
 - Try with installation in another folder, or
-- Capture Process Monitor output for the command `node -p "require('node-rfc')"`, to find out which DLL is not loaded. More info are in [issues/284#comment](https://github.com/SAP/node-rfc/issues/284#issuecomment-1490272036)and [issues/115#comment](https://github.com/SAP/node-rfc/issues/115#issuecomment-570248671)
+- Capture Process Monitor output for the command `node -p "require('node-rfc')"`, to find out which DLL is not loaded. More info are in [issues/284#comment](https://github.com/SAP/node-rfc/issues/284#issuecomment-1490272036) and [issues/115#comment](https://github.com/SAP/node-rfc/issues/115#issuecomment-570248671)
 
 ## Verify node-rfc installation
 
