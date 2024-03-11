@@ -638,30 +638,74 @@ sapnwrfcServerAPI::authHandler(RFC_CONNECTION_HANDLE rfcHandle,
   return RFC_OK;
 }
 
+// TRFC handlers
+
+RFC_RC SAP_API sapnwrfcServerAPI::trfcCheck(RFC_CONNECTION_HANDLE rfcHandle,
+                                            const SAP_UC* tid) {
+  UNUSED(rfcHandle);
+  UNUSED(tid);
+  _log.debug(logClass::server, "trfc check");
+  return RFC_OK;
+};
+
+RFC_RC SAP_API sapnwrfcServerAPI::trfcCommit(RFC_CONNECTION_HANDLE rfcHandle,
+                                             const SAP_UC* tid) {
+  UNUSED(rfcHandle);
+  UNUSED(tid);
+  _log.debug(logClass::server, "trfc commit");
+  return RFC_OK;
+};
+
+RFC_RC SAP_API sapnwrfcServerAPI::trfcConfirm(RFC_CONNECTION_HANDLE rfcHandle,
+                                              const SAP_UC* tid) {
+  UNUSED(rfcHandle);
+  UNUSED(tid);
+  _log.debug(logClass::server, "trfc confirm");
+  return RFC_OK;
+};
+
+RFC_RC SAP_API sapnwrfcServerAPI::trfcRollback(RFC_CONNECTION_HANDLE rfcHandle,
+                                               const SAP_UC* tid) {
+  UNUSED(rfcHandle);
+  UNUSED(tid);
+  _log.debug(logClass::server, "trfc rollback");
+  return RFC_OK;
+};
+
+// bgRFC handlers
+
 RFC_RC SAP_API sapnwrfcServerAPI::bgRfcCheck(
     RFC_CONNECTION_HANDLE rfcHandle, const RFC_UNIT_IDENTIFIER* identifier) {
   UNUSED(rfcHandle);
   UNUSED(identifier);
+  _log.debug(logClass::server, "bgrfc check");
   return RFC_OK;
 };
+
 RFC_RC SAP_API sapnwrfcServerAPI::bgRfcCommit(
     RFC_CONNECTION_HANDLE rfcHandle, const RFC_UNIT_IDENTIFIER* identifier) {
   UNUSED(rfcHandle);
   UNUSED(identifier);
+  _log.debug(logClass::server, "bgrfc commit");
   return RFC_OK;
 };
+
 RFC_RC SAP_API sapnwrfcServerAPI::bgRfcRollback(
     RFC_CONNECTION_HANDLE rfcHandle, const RFC_UNIT_IDENTIFIER* identifier) {
   UNUSED(rfcHandle);
   UNUSED(identifier);
+  _log.debug(logClass::server, "bgrfc rollback");
   return RFC_OK;
 };
+
 RFC_RC SAP_API sapnwrfcServerAPI::bgRfcConfirm(
     RFC_CONNECTION_HANDLE rfcHandle, const RFC_UNIT_IDENTIFIER* identifier) {
   UNUSED(rfcHandle);
   UNUSED(identifier);
+  _log.debug(logClass::server, "bgrfc confirm");
   return RFC_OK;
 };
+
 RFC_RC SAP_API
 sapnwrfcServerAPI::bgRfcGetState(RFC_CONNECTION_HANDLE rfcHandle,
                                  const RFC_UNIT_IDENTIFIER* identifier,
@@ -669,6 +713,7 @@ sapnwrfcServerAPI::bgRfcGetState(RFC_CONNECTION_HANDLE rfcHandle,
   UNUSED(rfcHandle);
   UNUSED(identifier);
   UNUSED(unitState);
+  _log.debug(logClass::server, "bgrfc getState");
   return RFC_OK;
 };
 

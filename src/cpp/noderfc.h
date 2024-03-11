@@ -30,11 +30,13 @@
 #define SRV_OPTION_PORT "port"
 #define SRV_OPTION_AUTH "authHandler"
 #define SRV_OPTION_BGRFC "bgRfcHandlers"
-#define SRV_OPTION_BGRFC_CHECK "check"
-#define SRV_OPTION_BGRFC_COMMIT "commit"
-#define SRV_OPTION_BGRFC_ROLLBACK "rollback"
-#define SRV_OPTION_BGRFC_CONFIRM "confirm"
-#define SRV_OPTION_BGRFC_GET_STATE "getState"
+#define SRV_OPTION_TRFC "trfcHandlers"
+#define SRV_HANDLER_SYSID "sysId"
+#define SRV_HANDLER_FUNC_CHECK "check"
+#define SRV_HANDLER_FUNC_COMMIT "commit"
+#define SRV_HANDLER_FUNC_ROLLBACK "rollback"
+#define SRV_HANDLER_FUNC_CONFIRM "confirm"
+#define SRV_HANDLER_FUNC_GET_STATE "getState"
 //
 // Client options constants
 //

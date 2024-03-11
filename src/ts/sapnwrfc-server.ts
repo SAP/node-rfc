@@ -59,6 +59,7 @@ export type RfcBgRfcHandlerGetState = (
 ) => RFC_UNIT_STATE | Promise<RFC_UNIT_STATE>;
 
 export type RfcBgRfcHandlers = {
+    sysId?: string;
     check?: RfcBgRfcHandler;
     commit?: RfcBgRfcHandler;
     rollback?: RfcBgRfcHandler;
@@ -66,10 +67,24 @@ export type RfcBgRfcHandlers = {
     getState?: RfcBgRfcHandlerGetState;
 };
 
+export type RfcTrfcHandler = (
+    connHandle: number,
+    tid: string
+) => RFC_RC | Promise<RFC_RC>;
+
+export type RfcTrfcHandlers = {
+    sysId?: string;
+    check?: RfcTrfcHandler;
+    commit?: RfcTrfcHandler;
+    rollback?: RfcTrfcHandler;
+    confirm?: RfcTrfcHandler;
+};
+
 export type RfcServerOptions = {
     logLevel?: RfcLoggingLevel;
     port?: number;
     authHandler?: RfcAuthHandler;
+    trfcHandlers?: RfcTrfcHandlers;
     bgRfcHandlers?: RfcBgRfcHandlers;
 };
 

@@ -20,6 +20,16 @@ extern Log _log;
 typedef struct _ServerOptions {
   logLevel log_severity = logLevel::none;
   Napi::FunctionReference authHandlerJS;
+  // trfc handlers
+  uint8_t install_trfc_handlers = 0;
+  std::string trfc_handlers_sysid = "";
+  Napi::FunctionReference trfcHandlerCheck;
+  Napi::FunctionReference trfcHandlerCommit;
+  Napi::FunctionReference trfcHandlerRollback;
+  Napi::FunctionReference trfcHandlerConfirm;
+  // bgRFC handlers
+  uint8_t install_bgrfc_handlers = 0;
+  std::string bgrfc_handlers_sysid = "";
   Napi::FunctionReference bgRfcHandlerCheck;
   Napi::FunctionReference bgRfcHandlerCommit;
   Napi::FunctionReference bgRfcHandlerRollback;
@@ -33,35 +43,60 @@ typedef struct _ServerOptions {
       authHandlerJS.Unref();
       _log.debug(logClass::server, "auth handler unref");
     }
+    // tRFC handlers
+    if (!trfcHandlerCheck.IsEmpty()) {
+      trfcHandlerCheck.Unref();
+      _log.debug(
+          logClass::server,
+          "trfc handler '" + std::string(SRV_HANDLER_FUNC_CHECK) + "' unref");
+    }
+    if (!trfcHandlerCommit.IsEmpty()) {
+      trfcHandlerCommit.Unref();
+      _log.debug(
+          logClass::server,
+          "trfc handler '" + std::string(SRV_HANDLER_FUNC_COMMIT) + "' unref");
+    }
+    if (!trfcHandlerRollback.IsEmpty()) {
+      trfcHandlerRollback.Unref();
+      _log.debug(logClass::server,
+                 "trfc handler '" + std::string(SRV_HANDLER_FUNC_ROLLBACK) +
+                     "' unref");
+    }
+    if (!trfcHandlerConfirm.IsEmpty()) {
+      trfcHandlerConfirm.Unref();
+      _log.debug(
+          logClass::server,
+          "trfc handler '" + std::string(SRV_HANDLER_FUNC_CONFIRM) + "' unref");
+    }
     // bgRFC handlers
     if (!bgRfcHandlerCheck.IsEmpty()) {
       bgRfcHandlerCheck.Unref();
       _log.debug(
           logClass::server,
-          "bgrfc handler '" + std::string(SRV_OPTION_BGRFC_CHECK) + "' unref");
+          "bgrfc handler '" + std::string(SRV_HANDLER_FUNC_CHECK) + "' unref");
     }
     if (!bgRfcHandlerCommit.IsEmpty()) {
       bgRfcHandlerCommit.Unref();
       _log.debug(
           logClass::server,
-          "bgrfc handler '" + std::string(SRV_OPTION_BGRFC_COMMIT) + "' unref");
+          "bgrfc handler '" + std::string(SRV_HANDLER_FUNC_COMMIT) + "' unref");
     }
     if (!bgRfcHandlerRollback.IsEmpty()) {
       bgRfcHandlerRollback.Unref();
       _log.debug(logClass::server,
-                 "bgrfc handler '" + std::string(SRV_OPTION_BGRFC_ROLLBACK) +
+                 "bgrfc handler '" + std::string(SRV_HANDLER_FUNC_ROLLBACK) +
                      "' unref");
     }
     if (!bgRfcHandlerConfirm.IsEmpty()) {
       bgRfcHandlerConfirm.Unref();
       _log.debug(logClass::server,
-                 "bgrfc handler '" + std::string(SRV_OPTION_BGRFC_CONFIRM) +
+                 "bgrfc handler '" + std::string(SRV_HANDLER_FUNC_CONFIRM) +
                      "' unref");
     }
     if (!bgRfcHandlerGetState.IsEmpty()) {
       bgRfcHandlerGetState.Unref();
       _log.debug(logClass::server,
-                 "bgrfc handler '" + std::string(SRV_OPTION_BGRFC_GET_STATE) +
+                 "bgrfc handler '" + std::string(SRV_HANDLER_FUNC_GET_STATE) +
                      "' unref");
     }
   }

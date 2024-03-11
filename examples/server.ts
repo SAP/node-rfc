@@ -14,7 +14,14 @@ const server = new Server({
   serverOptions: {
     logLevel: RfcLoggingLevel.all,
     authHandler: authHandler,
+    trfcHandlers: {
+      sysId: "MME",
+      check: () => {
+        return RFC_RC.RFC_OK;
+      },
+    },
     bgRfcHandlers: {
+      sysId: "MME",
       check: () => {
         return RFC_RC.RFC_OK;
       },

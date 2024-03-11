@@ -51,32 +51,87 @@ void Server::getServerOptions(Napi::Object serverOptions,
         std::string handler_name = handlerNames.Get(jj).ToString().Utf8Value();
         Napi::Value handlerFunction =
             value.As<Napi::Object>().Get(handler_name);
-        if (!handlerFunction.IsFunction()) {
+        if (handler_name != SRV_HANDLER_SYSID &&
+            !handlerFunction.IsFunction()) {
           Napi::TypeError::New(
               node_rfc::__env,
               "bgRFC handler '" + name + "' must be JS function")
               .ThrowAsJavaScriptException();
           return;
         }
-        if (handler_name == SRV_OPTION_BGRFC_CHECK) {
+        if (handler_name == SRV_HANDLER_SYSID) {
+          server_options->trfc_handlers_sysid = handler_name;
+        } else if (handler_name == SRV_HANDLER_FUNC_CHECK) {
           server_options->bgRfcHandlerCheck =
               Napi::Persistent(handlerFunction.As<Napi::Function>());
-        } else if (handler_name == SRV_OPTION_BGRFC_COMMIT) {
+          server_options->install_bgrfc_handlers++;
+        } else if (handler_name == SRV_HANDLER_FUNC_COMMIT) {
           server_options->bgRfcHandlerCommit =
               Napi::Persistent(handlerFunction.As<Napi::Function>());
-        } else if (handler_name == SRV_OPTION_BGRFC_CONFIRM) {
+          server_options->install_bgrfc_handlers++;
+        } else if (handler_name == SRV_HANDLER_FUNC_CONFIRM) {
           server_options->bgRfcHandlerConfirm =
               Napi::Persistent(handlerFunction.As<Napi::Function>());
-        } else if (handler_name == SRV_OPTION_BGRFC_ROLLBACK) {
+          server_options->install_bgrfc_handlers++;
+        } else if (handler_name == SRV_HANDLER_FUNC_ROLLBACK) {
           server_options->bgRfcHandlerRollback =
               Napi::Persistent(handlerFunction.As<Napi::Function>());
-        } else if (handler_name == SRV_OPTION_BGRFC_GET_STATE) {
+          server_options->install_bgrfc_handlers++;
+        } else if (handler_name == SRV_HANDLER_FUNC_GET_STATE) {
           server_options->bgRfcHandlerGetState =
               Napi::Persistent(handlerFunction.As<Napi::Function>());
+          server_options->install_bgrfc_handlers++;
         } else {
           Napi::TypeError::New(
               node_rfc::__env,
               "bgRFC handler name '" + handler_name + "' is not supported")
+              .ThrowAsJavaScriptException();
+          return;
+        }
+      }
+    } else if (name == SRV_OPTION_TRFC) {
+      if (!value.IsObject()) {
+        Napi::TypeError::New(
+            node_rfc::__env,
+            "Server option '" + name + "' must be an JS object")
+            .ThrowAsJavaScriptException();
+        return;
+      }
+      Napi::Array handlerNames = value.As<Napi::Object>().GetPropertyNames();
+      for (uint_t jj = 0; jj < handlerNames.Length(); jj++) {
+        std::string handler_name = handlerNames.Get(jj).ToString().Utf8Value();
+        Napi::Value handlerFunction =
+            value.As<Napi::Object>().Get(handler_name);
+        if (handler_name != SRV_HANDLER_SYSID &&
+            !handlerFunction.IsFunction()) {
+          Napi::TypeError::New(
+              node_rfc::__env,
+              "TRFC handler '" + name + "' must be JS function")
+              .ThrowAsJavaScriptException();
+          return;
+        }
+        if (handler_name == SRV_HANDLER_SYSID) {
+          server_options->bgrfc_handlers_sysid = handler_name;
+        } else if (handler_name == SRV_HANDLER_FUNC_CHECK) {
+          server_options->trfcHandlerCheck =
+              Napi::Persistent(handlerFunction.As<Napi::Function>());
+          server_options->install_trfc_handlers++;
+        } else if (handler_name == SRV_HANDLER_FUNC_COMMIT) {
+          server_options->trfcHandlerCommit =
+              Napi::Persistent(handlerFunction.As<Napi::Function>());
+          server_options->install_trfc_handlers++;
+        } else if (handler_name == SRV_HANDLER_FUNC_CONFIRM) {
+          server_options->trfcHandlerConfirm =
+              Napi::Persistent(handlerFunction.As<Napi::Function>());
+          server_options->install_trfc_handlers++;
+        } else if (handler_name == SRV_HANDLER_FUNC_ROLLBACK) {
+          server_options->trfcHandlerRollback =
+              Napi::Persistent(handlerFunction.As<Napi::Function>());
+          server_options->install_trfc_handlers++;
+        } else {
+          Napi::TypeError::New(
+              node_rfc::__env,
+              "TRFC handler name '" + handler_name + "' is not supported")
               .ThrowAsJavaScriptException();
           return;
         }
@@ -437,6 +492,63 @@ void Server::_start(RFC_ERROR_INFO* errorInfo) {
     return;
   }
   _log.info(logClass::server, "start: generic request handler installed");
+
+  // install trfc handlers
+  if (server_options.install_trfc_handlers > 0) {
+    const SAP_UC* ucSysId = setString(server_options.trfc_handlers_sysid);
+    RFC_ERROR_INFO errorInfo;
+    RFC_RC rc = RfcInstallTransactionHandlers(ucSysId,
+                                              sapnwrfcServerAPI::trfcCheck,
+                                              sapnwrfcServerAPI::trfcCommit,
+                                              sapnwrfcServerAPI::trfcRollback,
+                                              sapnwrfcServerAPI::trfcConfirm,
+                                              &errorInfo);
+    delete[] ucSysId;
+    if (rc != RFC_OK || errorInfo.code != RFC_OK) {
+      _log.error(logClass::server,
+                 "start: TRFC handlers not installed, ABAP error group: ",
+                 errorInfo.group,
+                 " code: ",
+                 errorInfo.code);
+      Napi::Error error =
+          Napi::Error::New(node_rfc::__env, "TRFC handlers not installed");
+      error.Set("rfcSdkError", rfcSdkError(&errorInfo));
+      error.ThrowAsJavaScriptException();
+      return;
+    }
+    _log.debug(logClass::server,
+               "TRFC handlers installed ",
+               (uint_t)server_options.install_trfc_handlers);
+  }
+
+  // install bgrfc handlers
+  if (server_options.install_bgrfc_handlers > 0) {
+    const SAP_UC* ucSysId = setString(server_options.bgrfc_handlers_sysid);
+    RFC_ERROR_INFO errorInfo;
+    RFC_RC rc = RfcInstallBgRfcHandlers(ucSysId,
+                                        sapnwrfcServerAPI::bgRfcCheck,
+                                        sapnwrfcServerAPI::bgRfcCommit,
+                                        sapnwrfcServerAPI::bgRfcRollback,
+                                        sapnwrfcServerAPI::bgRfcConfirm,
+                                        sapnwrfcServerAPI::bgRfcGetState,
+                                        &errorInfo);
+    delete[] ucSysId;
+    if (rc != RFC_OK || errorInfo.code != RFC_OK) {
+      _log.error(logClass::server,
+                 "start: bgRFC handlers not installed, ABAP error group: ",
+                 errorInfo.group,
+                 " code: ",
+                 errorInfo.code);
+      Napi::Error error =
+          Napi::Error::New(node_rfc::__env, "bgRFC handlers not installed");
+      error.Set("rfcSdkError", rfcSdkError(&errorInfo));
+      error.ThrowAsJavaScriptException();
+      return;
+    }
+    _log.debug(logClass::server,
+               "bgRFC handlers installed ",
+               (uint_t)server_options.install_bgrfc_handlers);
+  }
 
   // launch server
   RfcLaunchServer(serverHandle, errorInfo);

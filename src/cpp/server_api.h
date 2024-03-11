@@ -155,6 +155,7 @@ class sapnwrfcServerAPI {
   //
   // sapnwrfc native api, invoking sapnwrfc api handler functions
   //
+
   // (mandatory)
   static RFC_RC SAP_API metadataLookup(SAP_UC const* func_name,
                                        RFC_ATTRIBUTES rfc_attributes,
@@ -167,6 +168,16 @@ class sapnwrfcServerAPI {
   static RFC_RC SAP_API authHandler(RFC_CONNECTION_HANDLE rfcHandle,
                                     RFC_SECURITY_ATTRIBUTES* secAttributes,
                                     RFC_ERROR_INFO* errorInfo);
+  // TRFC
+  static RFC_RC SAP_API trfcCheck(RFC_CONNECTION_HANDLE rfcHandle,
+                                  const SAP_UC* tid);
+  static RFC_RC SAP_API trfcCommit(RFC_CONNECTION_HANDLE rfcHandle,
+                                   const SAP_UC* tid);
+  static RFC_RC SAP_API trfcRollback(RFC_CONNECTION_HANDLE rfcHandle,
+                                     const SAP_UC* tid);
+  static RFC_RC SAP_API trfcConfirm(RFC_CONNECTION_HANDLE rfcHandle,
+                                    const SAP_UC* tid);
+
   // bgRFC
   static RFC_RC SAP_API bgRfcCheck(RFC_CONNECTION_HANDLE rfcHandle,
                                    const RFC_UNIT_IDENTIFIER* identifier);

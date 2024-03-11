@@ -37,8 +37,8 @@ typedef struct _ConnectionParamsStruct {
         delete[] connectionParams[i].name;
         delete[] connectionParams[i].value;
       }
-      connectionParams = nullptr;
       delete[] connectionParams;
+      connectionParams = nullptr;
     }
   }
 } ConnectionParamsStruct;
@@ -64,8 +64,7 @@ typedef struct _ClientOptionsStruct {
     options.Set(CLIENT_OPTION_TIMEOUT, Napi::Number::New(env, timeout));
 
     // stateless
-    options.Set(CLIENT_OPTION_STATELESS,
-                Napi::Boolean::New(env, stateless));
+    options.Set(CLIENT_OPTION_STATELESS, Napi::Boolean::New(env, stateless));
 
     // filter
     options.Set(CLIENT_OPTION_FILTER,
