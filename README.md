@@ -11,6 +11,10 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/node-rfc)](https://api.reuse.software/info/github.com/SAP/node-rfc)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4350/badge)](https://bestpractices.coreinfrastructure.org/projects/4350)
 
+## Call for Maintainers
+
+This project is currently looking for new maintainers. Please see [this issue](https://github.com/SAP/node-rfc/issues/329) for details.
+
 ## Key features
 
 - Based on [N-API](https://github.com/nodejs/node-addon-api) standard
