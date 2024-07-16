@@ -88,7 +88,14 @@ Build toolchain is based on `node-gyp` and Python. For further details check: [n
 
 ### SAP NW RFC SDK 7.50 PL12
 
+- see [SAP Note 3337381: SAP NetWeaver RFC SDK 7.50 -- Patch Level 12](https://me.sap.com/notes/3337381) for a list of bug fixes and enhancements made with this patch release.
+- **Only the latest patch level is supported by SAP**
+- The latest version is fully backwards compatible, from today S4, down to R/3 release 4.6C.
+- Can be downloaded from SAP Software Download Center of the SAP Support Portal, like described at https://support.sap.com/nwrfcsdk.
+- If you are lacking the required authorization for downloading software from the SAP Service Marketplace, please follow the instructions of [SAP Note 1037575](https://launchpad.support.sap.com/#/notes/1037575) for requesting this authorization.
+
 - Release notes: [SAP Note 3337381 - SAP NetWeaver RFC SDK 7.50 -- Patch Level 12](https://me.sap.com/notes/3337381)
+- Only the latest path level is supported by SAP
 
 - SAP NW RFC SDK C++ binaries must be downloaded from SAP Suport Portal and locally installed. Check [installation instructions](doc/installation.md#sap-nwrfc-sdk-installation) and [SAP NW RFC SDK section on SAP Support Portal](https://support.sap.com/en/product/connectors/nwrfcsdk.html). Using the latest version is reccomended as SAP NW RFC SDK is fully backwards compatible, supporting all NetWeaver systems, from today S4, down to R/3 release 4.6C.
 
