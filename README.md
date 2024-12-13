@@ -1,3 +1,11 @@
+## Deprecation Notice
+
+This public repository is no longer maintained. Please see [this issue](https://github.com/SAP/node-rfc/issues/329) for details.
+
+![](https://img.shields.io/badge/STATUS-NOT%20CURRENTLY%20MAINTAINED-red.svg?longCache=true&style=flat)
+
+---
+
 # node-rfc
 
 Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/product/connectors/nwrfcsdk.html) client and server bindings for [Node.js](http://nodejs.org/). Direct consumption of ABAP business logic from Node.js and extending ABAP eco-system with Node.js capabilities, with automatic ABAP <-> Node.js data conversions.
@@ -10,10 +18,6 @@ Asynchronous, non-blocking [SAP NetWeaver RFC SDK](https://support.sap.com/en/pr
 [![dpm](https://img.shields.io/npm/dm/node-rfc.svg)](https://www.npmjs.com/package/node-rfc)
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/node-rfc)](https://api.reuse.software/info/github.com/SAP/node-rfc)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4350/badge)](https://bestpractices.coreinfrastructure.org/projects/4350)
-
-## Call for Maintainers
-
-This project is currently looking for new maintainers. Please see [this issue](https://github.com/SAP/node-rfc/issues/329) for details.
 
 ## Key features
 
